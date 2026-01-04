@@ -1,14 +1,39 @@
 "use client";
 
 import React from "react";
+import { motion } from "motion/react";
 import { useOnboarding } from "@/app/provider/OnboardingContext";
 import { StepItem } from "./StepItem";
 import { ConnectingLine } from "./ConnectingLine";
 import Image from "next/image";
 
+// Staggered reveal animation variants
+const stepsContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const stepItemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.32, 0.72, 0, 1], // Organic flow easing
+    },
+  },
+};
+
 /**
  * Desktop sidebar component that displays all onboarding steps
- * with connecting lines and animations
+ * with connecting lines and staggered reveal animations on initial mount
  */
 export const OnboardingAside = () => {
   const { steps, currentStepIndex } = useOnboarding();
@@ -23,7 +48,12 @@ export const OnboardingAside = () => {
     >
       {/* Logo and brand */}
       <div>
-        <div className="flex items-center gap-3 text-white mb-8 md:mb-16">
+        <motion.div
+          className="flex items-center gap-3 text-white mb-8 md:mb-16"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+        >
           <div className="w-10 h-10 rounded-lg relative">
             <Image
               src={"/Fundbrave_icon_light.png"}
@@ -33,10 +63,15 @@ export const OnboardingAside = () => {
             />
           </div>
           <span className="text-2xl font-bold">FundBrave</span>
-        </div>
+        </motion.div>
 
-        {/* Steps with connecting lines */}
-        <div className="relative">
+        {/* Steps with connecting lines - staggered reveal cascade */}
+        <motion.div
+          className="relative"
+          variants={stepsContainerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {steps.map((step, index) => {
             const status =
               currentStepIndex > index
@@ -48,7 +83,7 @@ export const OnboardingAside = () => {
                 : "inactive";
 
             return (
-              <div key={step.slug}>
+              <motion.div key={step.slug} variants={stepItemVariants}>
                 <StepItem {...step} status={status} index={index} />
 
                 {/* Render connecting line between steps */}
@@ -57,14 +92,19 @@ export const OnboardingAside = () => {
                   totalSteps={steps.length}
                   currentStepIndex={currentStepIndex}
                 />
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
 
       {/* Footer link - Mobile-first: min-h-11 for 44px touch target, active state for mobile */}
-      <div className="text-muted-foreground text-sm">
+      <motion.div
+        className="text-muted-foreground text-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.4 }}
+      >
         <a
           href="/"
           className="min-h-11 px-2 -mx-2 rounded-lg inline-flex items-center gap-2 transition-colors hover:text-white active:text-white active:bg-white/10"
@@ -72,7 +112,7 @@ export const OnboardingAside = () => {
           <span>&larr;</span>
           <span>Back to home</span>
         </a>
-      </div>
+      </motion.div>
     </aside>
   );
 };

@@ -44,7 +44,7 @@ export const ConnectingLine = ({
         }}
         transition={{
           duration: 0.6,
-          ease: [0.4, 0, 0.2, 1],
+          ease: [0.32, 0.72, 0, 1], // Organic flow easing
         }}
       />
     </div>
@@ -68,15 +68,15 @@ export const ConnectingLineHorizontal = ({
 
   return (
     <div
-      className="relative flex items-center flex-1 -mx-1 -z-20"
-      style={{ height: "2px", marginTop: "15px" }}
+      className="relative flex items-center flex-1 -mx-1 -z-20 self-center"
+      style={{ height: "2px" }}
     >
       {/* Background line (unfilled state) */}
-      <div className="absolute h-0.5 w-full bg-slate-700 left-0 top-0" />
+      <div className="absolute h-0.5 w-full bg-slate-700 left-0 top-1/2 -translate-y-1/2" />
 
       {/* Animated foreground line (filled state) - grows from left to right */}
       <motion.div
-        className="absolute h-0.5 left-0 top-0"
+        className="absolute h-0.5 left-0 top-1/2 -translate-y-1/2"
         style={{
           background: "linear-gradient(97deg, #450CF0 0%, #CD82FF 100%)",
           transformOrigin: "left",
@@ -87,7 +87,7 @@ export const ConnectingLineHorizontal = ({
         }}
         transition={{
           duration: 0.6,
-          ease: [0.4, 0, 0.2, 1],
+          ease: [0.32, 0.72, 0, 1], // Organic flow easing
         }}
       />
     </div>

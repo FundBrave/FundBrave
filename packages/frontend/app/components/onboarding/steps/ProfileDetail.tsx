@@ -85,7 +85,7 @@ const ProfileDetails: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
                 onChange={handleInputChange}
                 onBlur={() => handleBlur("name")}
                 placeholder="John Doe"
-                className="flex-1 bg-transparent text-white text-base outline-none placeholder:text-muted-foreground font-medium tracking-wide"
+                className="flex-1 min-w-0 bg-transparent text-white text-base outline-none placeholder:text-muted-foreground font-medium tracking-wide"
               />
             </div>
             {errors.name && touchedFields.has("name") && (
@@ -118,7 +118,7 @@ const ProfileDetails: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
                 onChange={handleInputChange}
                 onBlur={() => handleBlur("username")}
                 placeholder="johndoe"
-                className="flex-1 bg-transparent text-white text-base outline-none placeholder:text-gray-500 font-medium tracking-wide"
+                className="flex-1 min-w-0 bg-transparent text-white text-base outline-none placeholder:text-gray-500 font-medium tracking-wide"
               />
             </div>
             {errors.username && touchedFields.has("username") && (
@@ -157,7 +157,7 @@ const ProfileDetails: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
               onChange={handleInputChange}
               onBlur={() => handleBlur("email")}
               placeholder="johndoe@gmail.com"
-              className="flex-1 bg-transparent text-white text-base outline-none placeholder:text-muted-foreground font-medium tracking-wide"
+              className="flex-1 min-w-0 bg-transparent text-white text-base outline-none placeholder:text-muted-foreground font-medium tracking-wide"
             />
           </div>
           {errors.email && touchedFields.has("email") && (

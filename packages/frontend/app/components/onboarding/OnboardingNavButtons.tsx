@@ -14,9 +14,17 @@ interface OnboardingNavButtonsProps {
   animationDelay?: number;
 }
 
+// Spring transition for snappy tactile feedback
+const buttonSpring = {
+  type: "spring" as const,
+  stiffness: 400,
+  damping: 17,
+};
+
 /**
  * Shared navigation buttons for onboarding steps.
  * Eliminates duplicated button styling across ProfileDetail, SocialProfile, Goals, etc.
+ * Features tactile feedback with lift effect on hover and spring tap response.
  */
 const OnboardingNavButtons: React.FC<OnboardingNavButtonsProps> = ({
   onBack,
@@ -35,22 +43,39 @@ const OnboardingNavButtons: React.FC<OnboardingNavButtonsProps> = ({
       transition={{ delay: animationDelay }}
     >
       {onBack && (
-        <button
+        <motion.button
           onClick={onBack}
           disabled={isLoading}
-          className="w-full sm:w-auto sm:min-w-[180px] min-h-[44px] h-14 px-10 py-4 bg-[rgba(69,12,240,0.1)] border border-[#450cf0] rounded-[20px] text-white font-semibold text-base tracking-wide backdrop-blur-md shadow-[0px_8px_30px_0px_rgba(29,5,82,0.35)] hover:bg-[rgba(69,12,240,0.15)] active:scale-[0.98] active:bg-[rgba(69,12,240,0.25)] transition-all disabled:opacity-50"
+          className="w-full sm:w-auto sm:min-w-[180px] min-h-[44px] h-14 px-10 py-4 bg-[rgba(69,12,240,0.1)] border border-[#450cf0] rounded-[20px] text-white font-semibold text-base tracking-wide backdrop-blur-md disabled:opacity-50"
+          style={{
+            boxShadow: "0px 8px 30px 0px rgba(29,5,82,0.35)",
+          }}
+          whileHover={{
+            y: -1,
+            backgroundColor: "rgba(69,12,240,0.15)",
+            boxShadow: "0px 10px 35px 0px rgba(29,5,82,0.45)",
+          }}
+          whileTap={{ scale: 0.97, y: 0 }}
+          transition={buttonSpring}
         >
           {backLabel}
-        </button>
+        </motion.button>
       )}
       {onNext && (
-        <button
+        <motion.button
           onClick={onNext}
           disabled={isLoading}
-          className="w-full sm:w-auto sm:min-w-[180px] min-h-[44px] h-14 px-8 py-4 rounded-[20px] text-white font-semibold text-lg tracking-wide shadow-[0px_3px_3px_0px_rgba(254,254,254,0.25)] transition-all hover:shadow-lg active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
+          className="w-full sm:w-auto sm:min-w-[180px] min-h-[44px] h-14 px-8 py-4 rounded-[20px] text-white font-semibold text-lg tracking-wide disabled:opacity-70 flex items-center justify-center gap-2"
           style={{
             background: "linear-gradient(97deg, #450CF0 0%, #CD82FF 100%)",
+            boxShadow: "0px 3px 3px 0px rgba(254,254,254,0.25)",
           }}
+          whileHover={{
+            y: -2,
+            boxShadow: "0px 8px 25px 0px rgba(69, 12, 240, 0.5)",
+          }}
+          whileTap={{ scale: 0.97, y: 0 }}
+          transition={buttonSpring}
         >
           {isLoading ? (
             <>
@@ -60,7 +85,7 @@ const OnboardingNavButtons: React.FC<OnboardingNavButtonsProps> = ({
           ) : (
             nextLabel
           )}
-        </button>
+        </motion.button>
       )}
     </motion.div>
   );

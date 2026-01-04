@@ -13,6 +13,38 @@ interface OnboardingStepPageProps {
   }>;
 }
 
+// Page transition variants with blur effect
+// Faster exit, gentler entrance for smooth flow
+const pageVariants = {
+  initial: {
+    opacity: 0,
+    x: 60,
+    scale: 0.98,
+    filter: "blur(4px)",
+  },
+  animate: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+    filter: "blur(0px)",
+  },
+  exit: {
+    opacity: 0,
+    x: -40,
+    scale: 0.98,
+    filter: "blur(4px)",
+  },
+};
+
+// Transition configuration - gentler entrance, faster exit
+const pageTransition = {
+  type: "spring" as const,
+  stiffness: 260,
+  damping: 25,
+  opacity: { duration: 0.25 },
+  filter: { duration: 0.3 },
+};
+
 export default function OnboardingStepPage({
   params,
 }: OnboardingStepPageProps) {
@@ -33,15 +65,11 @@ export default function OnboardingStepPage({
     <AnimatePresence mode="wait">
       <motion.div
         key={stepSlug}
-        initial={{ opacity: 0, x: 100, scale: 0.95 }}
-        animate={{ opacity: 1, x: 0, scale: 1 }}
-        exit={{ opacity: 0, x: -100, scale: 0.95 }}
-        transition={{
-          type: "spring",
-          stiffness: 300,
-          damping: 30,
-          opacity: { duration: 0.2 },
-        }}
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={pageTransition}
         className="w-full h-full flex items-center justify-center"
         style={{
           background: "linear-gradient(to bottom, #09011A 0%, #09011A 50%)",
