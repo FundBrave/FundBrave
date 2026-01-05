@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/ISwapAdapter.sol";
 
 /**
@@ -16,7 +17,7 @@ import "./interfaces/ISwapAdapter.sol";
  * @notice Sends Tokens + Data (Action: Donate/Stake) across chains.
  * @dev Implements OApp for messaging.
  */
-contract FundBraveBridge is OApp, ReentrancyGuard {
+contract FundBraveBridge is OApp, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
     using OptionsBuilder for bytes;
 
@@ -42,10 +43,9 @@ contract FundBraveBridge is OApp, ReentrancyGuard {
         address _usdcToken,
         address _localFundraiserFactory,
         address _owner
-    ) 
-        OApp(_endpoint, _owner)
+    )
         Ownable(_owner)
-        ReentrancyGuard()
+        OApp(_endpoint, _owner)
     { 
         require(_endpoint != address(0), "Invalid Endpoint");
         require(_swapAdapter != address(0), "Invalid Adapter");
@@ -63,7 +63,7 @@ contract FundBraveBridge is OApp, ReentrancyGuard {
         uint8 _action, // 0=Donate, 1=Stake
         address _tokenIn,
         uint256 _amountIn
-    ) external payable nonReentrant {
+    ) external payable nonReentrant whenNotPaused {
         require(_amountIn > 0, "Amount must be > 0");
         
         // 1. Swap to USDC locally
@@ -126,7 +126,7 @@ contract FundBraveBridge is OApp, ReentrancyGuard {
         bytes calldata _payload,
         address /*_executor*/,
         bytes calldata /*_extraData*/
-    ) internal override {
+    ) internal override whenNotPaused {
         (address donor, uint256 fundraiserId, uint8 action, uint256 amount) = 
             abi.decode(_payload, (address, uint256, uint8, uint256));
 
@@ -166,6 +166,22 @@ contract FundBraveBridge is OApp, ReentrancyGuard {
             IERC20(_token).safeTransfer(owner(), balance);
             emit EmergencyWithdraw(_token, balance, owner());
         }
+    }
+
+    /**
+     * @notice Pause the bridge in case of emergency
+     * @dev Only owner can pause. Prevents new cross-chain transactions.
+     */
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /**
+     * @notice Unpause the bridge after emergency is resolved
+     * @dev Only owner can unpause
+     */
+    function unpause() external onlyOwner {
+        _unpause();
     }
 
     receive() external payable {}

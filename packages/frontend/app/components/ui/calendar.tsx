@@ -1,50 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { DayPicker, DayPickerProps, DropdownProps } from "react-day-picker";
-import { ChevronLeft, ChevronRight, ChevronDown } from "@/app/components/ui/icons";
+import { DayPicker, DayPickerProps } from "react-day-picker";
+import { ChevronLeft, ChevronRight } from "@/app/components/ui/icons";
 import { cn } from "@/lib/utils";
-
-// Custom dropdown with styled chevron arrow
-function CustomDropdown({ value, onChange, options, className, "aria-label": ariaLabel }: DropdownProps) {
-  return (
-    <div className="relative inline-block">
-      <select
-        value={value}
-        onChange={onChange}
-        aria-label={ariaLabel}
-        className={cn(
-          "appearance-none bg-neutral-dark-400 border border-purple-900/50 rounded-lg pl-3 pr-9 py-1.5",
-          "text-white text-sm font-medium cursor-pointer",
-          "hover:border-purple-500/70 hover:bg-purple-900/20",
-          "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent",
-          "transition-all duration-200",
-          className
-        )}
-      >
-        {options?.map((option) => (
-          <option key={option.value} value={option.value} className="bg-neutral-dark-500 text-white">
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-400 pointer-events-none" />
-    </div>
-  );
-}
-
-// Custom DropdownNav to render Year before Month
-function CustomDropdownNav({ children, className }: { children?: React.ReactNode; className?: string }) {
-  // Children are the month and year dropdowns - reverse their order
-  const childArray = React.Children.toArray(children);
-  const reversed = [...childArray].reverse();
-
-  return (
-    <div className={cn("flex items-center justify-center gap-2", className)}>
-      {reversed}
-    </div>
-  );
-}
 
 export type CalendarProps = DayPickerProps;
 
@@ -114,8 +73,6 @@ function Calendar({
           const Icon = orientation === "left" ? ChevronLeft : ChevronRight;
           return <Icon className="h-4 w-4" />;
         },
-        Dropdown: CustomDropdown,
-        DropdownNav: CustomDropdownNav,
       }}
       {...props}
     />

@@ -77,11 +77,11 @@ export function CommentCard({ comment }: CommentCardProps) {
           <p className="text-white mt-2">{comment.content}</p>
           <div className="flex items-center gap-4 mt-3 text-white/40 text-sm">
             <span>{formatRelativeTime(comment.commentedAt)}</span>
-            <button className="flex items-center gap-1 min-h-11 px-3 py-2 hover:text-white/60 active:text-white/80 transition-colors">
+            <button className="flex items-center gap-1 hover:text-white/60 transition-colors">
               <HeartIcon className="w-3.5 h-3.5" />
               {comment.likesCount}
             </button>
-            <button className="flex items-center gap-1 min-h-11 px-3 py-2 hover:text-white/60 active:text-white/80 transition-colors">
+            <button className="flex items-center gap-1 hover:text-white/60 transition-colors">
               <CommentIcon className="w-3.5 h-3.5" />
               {comment.repliesCount} replies
             </button>

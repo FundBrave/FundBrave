@@ -61,10 +61,6 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
             value={digit}
             onChange={(e) => handleInputChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
-            inputMode="numeric"
-            pattern="[0-9]*"
-            autoComplete="one-time-code"
-            aria-label={`Verification code digit ${i + 1}`}
             className="w-12 h-12 md:w-16 md:h-16 text-2xl md:text-3xl text-center bg-neutral-dark-400 rounded-lg text-white border border-border focus:border-purple-500 outline-none transition"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -75,12 +71,12 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
 
       <p className="text-muted-foreground mb-6 text-sm md:text-base">
         Didn&apos;t get a code?{" "}
-        <button className="text-purple-400 hover:text-purple-300 active:text-purple-200 transition-colors min-h-[44px] px-3 rounded-lg active:bg-purple-500/10">
+        <button className="text-purple-400 hover:text-purple-300 transition-colors">
           Click to resend
         </button>
       </p>
 
-      <Button variant="primary" size="md" onClick={onNext} className="w-full max-w-xs mx-auto min-h-11">
+      <Button variant="primary" size="md" onClick={onNext} className="w-full max-w-xs mx-auto">
         Continue
       </Button>
     </motion.div>

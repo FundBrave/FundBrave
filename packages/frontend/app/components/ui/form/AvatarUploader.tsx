@@ -36,13 +36,13 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
       transition={{ delay: animationDelay }}
     >
       {/* Avatar Circle */}
-      <div className="relative w-[100px] h-[100px] cursor-pointer bg-transparent flex items-center justify-center shrink-0">
+      <div className="relative w-[100px] h-[100px] rounded-full cursor-pointer bg-gradient-to-br from-purple-900/50 to-purple-800/30 flex items-center justify-center shrink-0 overflow-hidden">
         {avatarPreview ? (
           <>
             <img
               src={avatarPreview}
               alt="Avatar preview"
-              className="w-full h-full object-cover rounded-full"
+              className="w-full h-full object-cover"
             />
             <button
               onClick={onRemove}

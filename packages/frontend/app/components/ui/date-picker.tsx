@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { format } from "date-fns";
-import { motion, AnimatePresence } from "motion/react";
 import { CalendarIcon } from "@/app/components/ui/icons";
 import { Calendar } from "./calendar";
 import { cn } from "@/lib/utils";
@@ -102,32 +101,24 @@ export function DatePicker({
       </button>
 
       {/* Dropdown Calendar */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.96 }}
-            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="absolute top-full left-0 mt-2 z-50 bg-neutral-dark-400 border border-purple-900/50 rounded-xl shadow-2xl shadow-purple-900/20"
-          >
-            <Calendar
-              mode="single"
-              selected={value}
-              captionLayout="dropdown"
-              startMonth={startMonth}
-              endMonth={endMonth}
-              onSelect={handleSelect}
-              disabled={(date) => {
-                if (minDate && date < minDate) return true;
-                if (maxDate && date > maxDate) return true;
-                return false;
-              }}
-              defaultMonth={value || endMonth}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 z-50 bg-neutral-dark-400 border border-purple-900/50 rounded-xl shadow-2xl shadow-purple-900/20 animate-in fade-in-0 zoom-in-95">
+          <Calendar
+            mode="single"
+            selected={value}
+            captionLayout="dropdown"
+            startMonth={startMonth}
+            endMonth={endMonth}
+            onSelect={handleSelect}
+            disabled={(date) => {
+              if (minDate && date < minDate) return true;
+              if (maxDate && date > maxDate) return true;
+              return false;
+            }}
+            defaultMonth={value || endMonth}
+          />
+        </div>
+      )}
     </div>
   );
 }

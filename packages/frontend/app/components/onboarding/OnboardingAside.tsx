@@ -56,10 +56,10 @@ export const OnboardingAside = () => {
         >
           <div className="w-10 h-10 rounded-lg relative">
             <Image
-              src={"/Fundbrave_icon_light.png"}
+              src={"/Funbrave_icon_dark.png"}
               alt="FundBrave logo"
               fill
-              className="object-contain"
+              className="w-[150px]"
             />
           </div>
           <span className="text-2xl font-bold">FundBrave</span>
@@ -107,7 +107,7 @@ export const OnboardingAside = () => {
       >
         <a
           href="/"
-          className="min-h-11 px-2 -mx-2 rounded-lg inline-flex items-center gap-2 transition-colors hover:text-white active:text-white active:bg-white/10"
+          className="hover:text-white transition-colors inline-flex items-center gap-2"
         >
           <span>&larr;</span>
           <span>Back to home</span>

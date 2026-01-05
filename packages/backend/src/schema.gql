@@ -1,0 +1,2065 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type CategoryCount {
+  category: String!
+  count: Int!
+}
+
+type Comment {
+  author: PostAuthor!
+  content: String!
+  createdAt: DateTime!
+  id: ID!
+  isLiked: Boolean
+  likesCount: Int!
+  parentId: ID
+  postId: ID!
+  replies: [Comment!]!
+  updatedAt: DateTime!
+}
+
+type Conversation {
+  """Timestamp when the conversation was created"""
+  createdAt: DateTime!
+  id: ID!
+
+  """The most recent message in the conversation"""
+  lastMessage: Message
+
+  """Timestamp of the last message in the conversation"""
+  lastMessageAt: DateTime
+
+  """Participants in this conversation"""
+  participants: [ConversationParticipant!]!
+
+  """Total number of unread messages for the current user"""
+  unreadCount: Int!
+
+  """Timestamp when the conversation was last updated"""
+  updatedAt: DateTime!
+}
+
+type ConversationParticipant {
+  id: ID!
+
+  """Timestamp when the user joined the conversation"""
+  joinedAt: DateTime!
+
+  """Timestamp when the user last read messages"""
+  lastReadAt: DateTime
+
+  """Count of unread messages for this participant"""
+  unreadCount: Int!
+
+  """The participant user"""
+  user: UserMinimal!
+}
+
+type ConversationUnreadCount {
+  conversationId: ID!
+
+  """Preview of the last unread message"""
+  lastMessagePreview: String
+
+  """Sender of the last unread message"""
+  lastMessageSender: UserMinimal
+  unreadCount: Int!
+}
+
+input CreateCommentInput {
+  content: String!
+  parentId: String
+  postId: String!
+}
+
+input CreateDAOProposalInput {
+  category: ProposalCategory!
+  description: String!
+  quorumRequired: String!
+  targetFundraisers: [FundraiserAllocationInput!]
+  title: String!
+  votingDurationHours: Int!
+}
+
+input CreateFundraiserInput {
+  beneficiary: String!
+  categories: [String!]!
+  currency: String! = "USDC"
+  deadline: String!
+  description: String!
+  goalAmount: String!
+  images: [String!]!
+  milestones: [CreateMilestoneInput!]
+  name: String!
+  region: String
+}
+
+input CreateFundraiserUpdateInput {
+  content: String!
+  mediaUrls: [String!]
+  title: String!
+}
+
+input CreateMilestoneInput {
+  description: String
+  targetAmount: String!
+  title: String!
+}
+
+input CreatePostInput {
+  content: String
+  fundraiserId: String
+  mediaUrls: [String!]
+  mentions: [String!]
+  parentId: String
+  tags: [String!]
+  type: PostType! = TEXT
+  visibility: PostVisibility! = PUBLIC
+}
+
+input CreateReportInput {
+  description: String
+  entityId: String
+  entityType: String
+  postId: String
+  reason: ReportReason!
+  reportedId: String!
+}
+
+type DAOProposal {
+  category: ProposalCategory!
+  createdAt: DateTime!
+  description: String!
+  executedAt: DateTime
+  executionTxHash: String
+  id: String!
+  isPassing: Boolean!
+  isQuorumReached: Boolean!
+  proposerAddress: String!
+  proposerUsername: String
+  quorumRequired: String!
+  status: ProposalStatus!
+  targetFundraisers: [FundraiserAllocation!]
+  timeRemaining: String!
+  title: String!
+  totalVotesAbstain: String!
+  totalVotesAgainst: String!
+  totalVotesFor: String!
+  totalVotingPower: String!
+  votersCount: Int!
+  votingEndTime: DateTime!
+  votingStartTime: DateTime!
+}
+
+type DAOProposalCreatedPayload {
+  proposal: DAOProposal!
+}
+
+type DAOProposalStatusChangedPayload {
+  newStatus: ProposalStatus!
+  previousStatus: ProposalStatus!
+  proposalId: String!
+  timestamp: DateTime!
+}
+
+type DAOVote {
+  choice: VoteChoice!
+  createdAt: DateTime!
+  id: String!
+  proposalId: String!
+  signature: String
+  voterAddress: String!
+  voterUsername: String
+  votingPower: String!
+  votingPowerPercent: String!
+}
+
+type DAOVoteCastPayload {
+  choice: VoteChoice!
+  proposalId: String!
+  timestamp: DateTime!
+  voterAddress: String!
+  votingPower: String!
+}
+
+type DAOVotingStats {
+  activeProposals: Int!
+  averageParticipationRate: String!
+  executedProposals: Int!
+  passedProposals: Int!
+  rejectedProposals: Int!
+  totalProposals: Int!
+  totalVotingPowerUsed: String!
+  uniqueVoters: Int!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Donation {
+  amount: String!
+  amountUSD: String!
+  blockNumber: Float
+  chainId: Int!
+  createdAt: DateTime!
+  donor: DonorInfo!
+  fundraiser: FundraiserBasicInfo!
+  id: ID!
+  indexedAt: DateTime!
+  isAnonymous: Boolean!
+  message: String
+  sourceChain: String!
+  token: String!
+  txHash: String!
+}
+
+input DonationFilterInput {
+  chainId: Int
+  donorAddress: String
+  donorId: String
+  endDate: DateTime
+  fundraiserId: String
+  maxAmount: String
+  minAmount: String
+  startDate: DateTime
+  token: String
+}
+
+type DonationLeaderboard {
+  entries: [DonationLeaderboardEntry!]!
+  period: String!
+  total: Int!
+}
+
+type DonationLeaderboardEntry {
+  donationsCount: Int!
+  donor: DonorInfo!
+  rank: Int!
+  totalDonated: String!
+}
+
+enum DonationSortBy {
+  AMOUNT
+  CREATED_AT
+}
+
+type DonationStats {
+  averageDonation: String!
+  donationsCount: Int!
+  largestDonation: String!
+  lastDonationAt: DateTime
+  totalDonated: String!
+  uniqueDonorsCount: Int!
+}
+
+type DonorInfo {
+  avatarUrl: String
+  displayName: String
+  id: ID
+  isAnonymous: Boolean!
+  username: String
+  walletAddress: String!
+}
+
+type EndowmentInfo {
+  causeYieldPaid: String!
+  donationId: String!
+  donorAddress: String!
+  donorStockValue: String!
+  fundraiserId: Int!
+  lastHarvestTime: DateTime
+  lifetimeYield: String!
+  pendingCauseYield: String!
+  pendingDonorYield: String!
+  principal: String!
+}
+
+type EndowmentYieldHarvestedPayload {
+  causeShare: String!
+  donationId: String!
+  donorShare: String!
+  timestamp: DateTime!
+  txHash: String!
+  yieldAmount: String!
+}
+
+type FBTBurnEvent {
+  amount: String!
+  burnedAt: DateTime!
+  burnerAddress: String!
+  id: String!
+  reason: String
+  txHash: String!
+}
+
+type FBTBurnedPayload {
+  amount: String!
+  burnerAddress: String!
+  reason: String
+  timestamp: DateTime!
+  txHash: String!
+}
+
+type FBTStake {
+  amount: String!
+  claimedYield: String!
+  id: String!
+  isActive: Boolean!
+  pendingYield: String!
+  shareOfTreasury: String!
+  stakedAt: DateTime!
+  stakerAddress: String!
+  txHash: String!
+  unstakedAt: DateTime
+}
+
+type FBTStakeUpdatedPayload {
+  eventType: String!
+  stake: FBTStake!
+}
+
+type FBTStaker {
+  address: String!
+  amount: String!
+  avatarUrl: String
+  pendingYield: String!
+  shareOfTreasury: String!
+  username: String
+}
+
+type FeeReceivedPayload {
+  amount: String!
+  sourceContract: String!
+  sourceType: FeeSourceType!
+  timestamp: DateTime!
+  txHash: String!
+}
+
+"""Source of platform fees"""
+enum FeeSourceType {
+  FUNDRAISER
+  IMPACT_DAO_POOL
+  OTHER
+  STAKING_POOL
+  WEALTH_BUILDING
+}
+
+type Feed {
+  hasMore: Boolean!
+  nextCursor: String
+  posts: [Post!]!
+}
+
+enum FeedType {
+  EXPLORE
+  FOLLOWING
+  HOME
+}
+
+type FollowRelation {
+  createdAt: DateTime!
+  id: ID!
+  user: UserMinimal!
+}
+
+type Fundraiser {
+  beneficiary: String!
+  categories: [String!]!
+  createdAt: DateTime!
+  creator: FundraiserCreator!
+  currency: String!
+  deadline: DateTime!
+  description: String!
+  endowmentEnabled: Boolean!
+  goalAmount: String!
+  goalReached: Boolean!
+  id: ID!
+  images: [String!]!
+  isActive: Boolean!
+  isFeatured: Boolean!
+  milestones: [FundraiserMilestone!]
+  name: String!
+  onChainId: Int!
+  raisedAmount: String!
+  region: String
+  stakingPoolAddr: String
+  stats: FundraiserStats!
+  txHash: String!
+  updatedAt: DateTime!
+  updates: [FundraiserUpdate!]
+}
+
+type FundraiserAllocation {
+  allocationBps: Int!
+  allocationPercent: String!
+  fundraiserId: Int!
+  fundraiserName: String!
+}
+
+input FundraiserAllocationInput {
+  allocationBps: Int!
+  fundraiserId: Int!
+}
+
+type FundraiserBasicInfo {
+  id: ID!
+  images: [String!]!
+  name: String!
+  onChainId: Int!
+}
+
+type FundraiserCreator {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  isVerifiedCreator: Boolean!
+  username: String
+  walletAddress: String!
+}
+
+input FundraiserFilterInput {
+  categories: [String!]
+  creatorId: String
+  endowmentEnabled: Boolean
+  goalReached: Boolean
+  isActive: Boolean
+  isFeatured: Boolean
+  maxGoalAmount: String
+  minGoalAmount: String
+  regions: [String!]
+  searchQuery: String
+}
+
+type FundraiserMilestone {
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isReached: Boolean!
+  reachedAt: DateTime
+  targetAmount: String!
+  title: String!
+}
+
+type FundraiserMinimal {
+  deadline: DateTime!
+  donorsCount: Int!
+  goalAmount: String!
+  id: ID!
+  images: [String!]!
+  isActive: Boolean!
+  name: String!
+  onChainId: Int!
+  raisedAmount: String!
+}
+
+enum FundraiserSortBy {
+  CREATED_AT
+  DEADLINE
+  DONORS_COUNT
+  GOAL_AMOUNT
+  RAISED_AMOUNT
+}
+
+input FundraiserSortInput {
+  order: SortOrder! = DESC
+  sortBy: FundraiserSortBy! = CREATED_AT
+}
+
+type FundraiserStakingInfo {
+  id: ID!
+  name: String!
+  onChainId: Int!
+  stakingPoolAddr: String
+}
+
+type FundraiserStats {
+  avgDonation: String!
+  daysLeft: Int!
+  donorsCount: Int!
+  endowmentPrincipal: String
+  endowmentYield: String
+  percentageRaised: Float!
+  stakersCount: Int!
+  totalDonations: String!
+  totalStaked: String!
+  updatesCount: Int!
+}
+
+type FundraiserUpdate {
+  content: String!
+  createdAt: DateTime!
+  id: ID!
+  mediaUrls: [String!]!
+  title: String!
+}
+
+type FundraisersMinimalResponse {
+  hasMore: Boolean!
+  items: [FundraiserMinimal!]!
+  total: Int!
+}
+
+input GetMessagesInput {
+  """Cursor-based pagination: get messages after this message ID"""
+  afterMessageId: ID
+
+  """Cursor-based pagination: get messages before this message ID"""
+  beforeMessageId: ID
+
+  """The ID of the conversation to retrieve messages from"""
+  conversationId: ID!
+
+  """Maximum number of messages to retrieve (default: 50)"""
+  limit: Int! = 50
+
+  """Number of messages to skip for pagination (default: 0)"""
+  offset: Int! = 0
+}
+
+input GetNotificationsInput {
+  limit: Int! = 20
+  offset: Int! = 0
+  types: [NotificationType!]
+  unreadOnly: Boolean = false
+}
+
+input GetReportsInput {
+  limit: Int! = 20
+  offset: Int! = 0
+  reason: ReportReason
+  reportedId: String
+  status: ReportStatus
+}
+
+type GlobalPoolEpoch {
+  distributionTx: String
+  endDate: DateTime!
+  epochNumber: Int!
+  id: ID!
+  isCalculated: Boolean!
+  isDistributed: Boolean!
+  startDate: DateTime!
+  totalYield: String!
+}
+
+type GlobalPoolStats {
+  apy: String!
+  currentEpoch: Float!
+  nextEpochStartDate: DateTime
+  pendingYield: String!
+  stakersCount: Int!
+  totalStaked: String!
+  totalYieldDistributed: String!
+}
+
+type GlobalPoolVoteAllocation {
+  fundraiserId: ID!
+  fundraiserName: String!
+  percentage: Float!
+  weight: String!
+}
+
+input GlobalPoolVoteInput {
+  allocations: [VoteAllocationInput!]!
+  epochNumber: Int!
+}
+
+input ImpactDAORecordStakeInput {
+  txHash: String!
+}
+
+type ImpactDAOStake {
+  claimedFBTReward: String!
+  claimedUSDCYield: String!
+  id: String!
+  isActive: Boolean!
+  pendingFBTReward: String!
+  pendingUSDCYield: String!
+  principal: String!
+  stakedAt: DateTime!
+  stakerAddress: String!
+  unstakedAt: DateTime
+  yieldSplit: YieldSplit!
+}
+
+type ImpactDAOStakeUpdatedPayload {
+  eventType: String!
+  stake: ImpactDAOStake!
+}
+
+type ImpactDAOStaker {
+  address: String!
+  avatarUrl: String
+  pendingFBTReward: String!
+  pendingYield: String!
+  principal: String!
+  username: String
+  yieldSplit: YieldSplit!
+}
+
+type ImpactDAOStats {
+  defaultYieldSplit: YieldSplit!
+  lastHarvestAt: DateTime
+  pendingYield: String!
+  periodFinish: DateTime
+  rewardRate: String!
+  rewardsDuration: Int!
+  stakersCount: Int!
+  totalFBTDistributed: String!
+  totalStakedPrincipal: String!
+  totalYieldHarvested: String!
+}
+
+type ImpactDAOYieldHarvest {
+  blockNumber: Int
+  daoAmount: String!
+  harvestedAt: DateTime!
+  id: String!
+  platformAmount: String!
+  stakeId: String!
+  stakerAmount: String!
+  totalYield: String!
+  txHash: String!
+}
+
+type ImpactDAOYieldHarvestedPayload {
+  daoAmount: String!
+  platformAmount: String!
+  stakerAmount: String!
+  timestamp: DateTime!
+  totalYield: String!
+  txHash: String!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+enum LeaderboardPeriod {
+  ALL
+  NINETY_DAYS
+  SEVEN_DAYS
+  THIRTY_DAYS
+}
+
+input MarkMessagesReadInput {
+  """The ID of the conversation to mark messages as read"""
+  conversationId: ID!
+
+  """Optional: mark messages up to this specific message ID as read"""
+  upToMessageId: ID
+}
+
+input MarkNotificationsReadInput {
+  notificationIds: [ID!]!
+}
+
+type MarkReadResult {
+  """The conversation ID"""
+  conversationId: ID!
+
+  """Number of messages marked as read"""
+  messagesMarkedRead: Int!
+
+  """Whether the operation was successful"""
+  success: Boolean!
+}
+
+type Message {
+  """The text content of the message"""
+  content: String!
+
+  """The ID of the conversation this message belongs to"""
+  conversationId: ID!
+
+  """Timestamp when the message was created"""
+  createdAt: DateTime!
+
+  """Current delivery status of the message"""
+  deliveryStatus: MessageDeliveryStatus!
+  id: ID!
+
+  """Optional media URL attached to the message"""
+  mediaUrl: String
+
+  """Whether the message has been read by the recipient"""
+  read: Boolean!
+
+  """Timestamp when the message was read"""
+  readAt: DateTime
+
+  """The user who received the message"""
+  receiver: UserMinimal!
+
+  """The user who sent the message"""
+  sender: UserMinimal!
+}
+
+"""The delivery status of a message"""
+enum MessageDeliveryStatus {
+  DELIVERED
+  READ
+  SENT
+}
+
+enum ModerationAction {
+  BAN_USER
+  HIDE_CONTENT
+  NONE
+  REMOVE_CONTENT
+  SUSPEND_USER
+  WARNING
+}
+
+type ModerationStats {
+  pendingReports: Int!
+  resolvedThisWeek: Int!
+  reviewedToday: Int!
+  totalReports: Int!
+}
+
+type Mutation {
+  addFundraiserUpdate(fundraiserId: ID!, input: CreateFundraiserUpdateInput!): FundraiserUpdate!
+  addMilestone(fundraiserId: ID!, input: CreateMilestoneInput!): FundraiserMilestone!
+  blockUser(reason: String, userId: ID!): Boolean!
+  bookmarkPost(postId: ID!): Boolean!
+
+  """Close a DAO proposal and determine outcome (admin only)"""
+  closeDAOProposal(proposalId: String!): DAOProposal!
+  createComment(input: CreateCommentInput!): Comment!
+
+  """Create a new DAO proposal"""
+  createDAOProposal(input: CreateDAOProposalInput!): DAOProposal!
+  createFundraiser(input: CreateFundraiserInput!, onChainId: Int!, txHash: String!): Fundraiser!
+  createPost(input: CreatePostInput!): Post!
+  createReport(input: CreateReportInput!): ReportOperationResult!
+  deleteAllNotifications: NotificationOperationResult!
+  deleteComment(commentId: ID!): Boolean!
+  deleteNotification(notificationId: ID!): NotificationOperationResult!
+  deletePost(postId: ID!): Boolean!
+  dismissReport(reportId: ID!): ReportOperationResult!
+
+  """Execute a passed yield distribution proposal (admin only)"""
+  executeYieldDistribution(executionTxHash: String!, proposalId: String!): DAOProposal!
+  followUser(userId: ID!): Boolean!
+  forceRecalculateTrending: Boolean!
+  likeComment(commentId: ID!): Boolean!
+  likePost(postId: ID!): Boolean!
+  markAllNotificationsAsRead: NotificationOperationResult!
+
+  """Mark messages as read in a conversation"""
+  markMessagesAsRead(input: MarkMessagesReadInput!): MarkReadResult!
+  markNotificationAsRead(notificationId: ID!): NotificationOperationResult!
+  markNotificationsAsRead(input: MarkNotificationsReadInput!): NotificationOperationResult!
+  processUnstake(input: UnstakeInput!): Boolean!
+  recordDonation(input: RecordDonationInput!): Donation!
+
+  """Record a stake transaction hash for tracking"""
+  recordImpactDAOStake(input: ImpactDAORecordStakeInput!): Boolean!
+  recordStake(input: RecordStakeInput!): Stake!
+  removeBookmark(postId: ID!): Boolean!
+  removeRepost(postId: ID!): Boolean!
+  repost(input: RepostInput!): Boolean!
+  reviewReport(input: ReviewReportInput!): ReportOperationResult!
+
+  """Send a direct message to a user (creates conversation if needed)"""
+  sendDirectMessage(input: SendDirectMessageInput!): Message!
+
+  """Send a message in a conversation"""
+  sendMessage(input: SendMessageInput!): Message!
+
+  """Send typing indicator to a conversation"""
+  sendTypingIndicator(conversationId: ID!, isTyping: Boolean!): Boolean!
+
+  """Start a new conversation with a user (or get existing one)"""
+  startConversation(input: StartConversationInput!): Conversation!
+  submitGlobalPoolVotes(input: GlobalPoolVoteInput!): UserGlobalPoolVotes!
+  unblockUser(userId: ID!): Boolean!
+  unfollowUser(userId: ID!): Boolean!
+  unlikeComment(commentId: ID!): Boolean!
+  unlikePost(postId: ID!): Boolean!
+  updateFundraiser(fundraiserId: ID!, input: UpdateFundraiserInput!): Fundraiser!
+  updateNotificationSettings(input: UpdateNotificationSettingsInput!): NotificationSettings!
+  updatePost(input: UpdatePostInput!, postId: ID!): Post!
+  updateProfile(input: UpdateProfileInput!): User!
+
+  """Vote on a DAO proposal"""
+  voteOnProposal(input: VoteOnProposalInput!): DAOVote!
+}
+
+type Notification {
+  actor: NotificationActor
+  createdAt: DateTime!
+  entityId: String
+  entityType: String
+  id: ID!
+  message: String
+  metadata: JSON
+  read: Boolean!
+  readAt: DateTime
+  title: String
+  type: NotificationType!
+}
+
+type NotificationActor {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  username: String
+  walletAddress: String!
+}
+
+type NotificationCount {
+  total: Int!
+  unread: Int!
+}
+
+type NotificationOperationResult {
+  affectedCount: Int
+  message: String
+  success: Boolean!
+}
+
+type NotificationSettings {
+  emailEnabled: Boolean!
+  notifyOnComment: Boolean!
+  notifyOnDAOProposal: Boolean!
+  notifyOnDonation: Boolean!
+  notifyOnFBTVesting: Boolean!
+  notifyOnFollow: Boolean!
+  notifyOnLike: Boolean!
+  notifyOnMention: Boolean!
+  notifyOnStake: Boolean!
+  notifyOnStockPurchase: Boolean!
+  notifyOnYieldHarvest: Boolean!
+  pushEnabled: Boolean!
+}
+
+enum NotificationType {
+  COMMENT
+  DAO_VOTE_ENDED
+  DAO_VOTE_STARTED
+  DONATION_RECEIVED
+  FBT_REWARD
+  FBT_VESTED
+  FOLLOW
+  GOAL_REACHED
+  LIKE
+  MENTION
+  MESSAGE
+  MILESTONE_REACHED
+  PROPOSAL_CREATED
+  PROPOSAL_EXECUTED
+  REPOST
+  STAKE_RECEIVED
+  STOCK_PURCHASED
+  SYSTEM
+  YIELD_HARVESTED
+}
+
+type PaginatedComments {
+  hasMore: Boolean!
+  items: [Comment!]!
+  total: Int!
+}
+
+type PaginatedConversations {
+  """Whether there are more conversations to load"""
+  hasMore: Boolean!
+
+  """List of conversations"""
+  items: [Conversation!]!
+
+  """Total number of conversations"""
+  total: Int!
+}
+
+type PaginatedDAOProposals {
+  hasMore: Boolean!
+  items: [DAOProposal!]!
+  total: Int!
+}
+
+type PaginatedDAOVotes {
+  hasMore: Boolean!
+  items: [DAOVote!]!
+  total: Int!
+}
+
+type PaginatedDonations {
+  hasMore: Boolean!
+  items: [Donation!]!
+  total: Int!
+}
+
+type PaginatedFBTBurns {
+  hasMore: Boolean!
+  items: [FBTBurnEvent!]!
+  total: Int!
+}
+
+type PaginatedFBTStakers {
+  hasMore: Boolean!
+  items: [FBTStaker!]!
+  total: Int!
+}
+
+type PaginatedFollows {
+  hasMore: Boolean!
+  items: [FollowRelation!]!
+  total: Int!
+}
+
+type PaginatedFundraisers {
+  hasMore: Boolean!
+  items: [Fundraiser!]!
+  total: Int!
+}
+
+type PaginatedImpactDAOStakers {
+  hasMore: Boolean!
+  items: [ImpactDAOStaker!]!
+  total: Int!
+}
+
+type PaginatedMessages {
+  """Whether there are more messages to load"""
+  hasMore: Boolean!
+
+  """List of messages"""
+  items: [Message!]!
+
+  """ID of the newest message in this batch (for cursor pagination)"""
+  newestMessageId: ID
+
+  """ID of the oldest message in this batch (for cursor pagination)"""
+  oldestMessageId: ID
+
+  """Total number of messages in the conversation"""
+  total: Int!
+}
+
+type PaginatedNotifications {
+  hasMore: Boolean!
+  items: [Notification!]!
+  total: Int!
+  unreadCount: Int!
+}
+
+type PaginatedPlatformFees {
+  hasMore: Boolean!
+  items: [PlatformFee!]!
+  total: Int!
+}
+
+type PaginatedPosts {
+  hasMore: Boolean!
+  items: [Post!]!
+  total: Int!
+}
+
+type PaginatedReports {
+  hasMore: Boolean!
+  items: [Report!]!
+  total: Int!
+}
+
+type PaginatedStakes {
+  hasMore: Boolean!
+  items: [Stake!]!
+  total: Int!
+}
+
+type PaginatedStockPurchases {
+  hasMore: Boolean!
+  items: [StockPurchaseEvent!]!
+  total: Int!
+}
+
+type PaginatedUsers {
+  hasMore: Boolean!
+  items: [User!]!
+  total: Int!
+}
+
+type PaginatedVestingClaims {
+  hasMore: Boolean!
+  items: [VestingClaimEvent!]!
+  total: Int!
+}
+
+type PaginatedVestingSchedules {
+  hasMore: Boolean!
+  items: [VestingSchedule!]!
+  total: Int!
+}
+
+type PaginatedWealthBuildingDonations {
+  hasMore: Boolean!
+  items: [WealthBuildingDonation!]!
+  total: Int!
+}
+
+type PaginatedYieldHarvests {
+  hasMore: Boolean!
+  items: [ImpactDAOYieldHarvest!]!
+  total: Int!
+}
+
+type PendingEndowmentYield {
+  causeYield: String!
+  donationId: String!
+  donorYield: String!
+  fundraiserId: Int!
+  totalYield: String!
+}
+
+type PendingStakingRewards {
+  fbtRewards: String!
+  totalValueUSD: String!
+  usdcYield: String!
+}
+
+type PendingYield {
+  daoShare: String!
+  platformShare: String!
+  stakerShare: String!
+  totalYield: String!
+}
+
+type PlatformFee {
+  amount: String!
+  blockNumber: Int
+  id: String!
+  isStaked: Boolean!
+  receivedAt: DateTime!
+  sourceContract: String!
+  sourceType: FeeSourceType!
+  stakedAt: DateTime
+  stakedTxHash: String
+  txHash: String!
+}
+
+type Post {
+  author: PostAuthor!
+  bookmarksCount: Int!
+  content: String
+  createdAt: DateTime!
+  fundraiser: PostFundraiserLink
+  id: ID!
+  isBookmarked: Boolean
+  isEdited: Boolean!
+  isLiked: Boolean
+  isPinned: Boolean!
+  isReposted: Boolean
+  likesCount: Int!
+  media: [PostMedia!]!
+  mentions: [String!]!
+  parentId: ID
+  replyCount: Int!
+  repostsCount: Int!
+  tags: [String!]!
+  type: PostType!
+  updatedAt: DateTime!
+  viewsCount: Int!
+  visibility: PostVisibility!
+}
+
+type PostAuthor {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  isVerifiedCreator: Boolean!
+  username: String
+  walletAddress: String!
+}
+
+input PostFilterInput {
+  authorId: String
+  fundraiserId: String
+  hasMedia: Boolean
+  tag: String
+  type: PostType
+  visibility: PostVisibility
+}
+
+type PostFundraiserLink {
+  goalAmount: String!
+  id: ID!
+  images: [String!]!
+  name: String!
+  onChainId: Int!
+  raisedAmount: String!
+}
+
+type PostMedia {
+  alt: String
+  height: Int
+  id: ID!
+  mimeType: String
+  thumbnail: String
+  type: String!
+  url: String!
+  width: Int
+}
+
+enum PostSortBy {
+  CREATED_AT
+  ENGAGEMENT_SCORE
+  LIKES_COUNT
+}
+
+enum PostType {
+  DONATION_EVENT
+  FUNDRAISER_NEW
+  FUNDRAISER_UPDATE
+  MEDIA
+  MILESTONE_REACHED
+  POLL
+  TEXT
+}
+
+enum PostVisibility {
+  FOLLOWERS
+  PRIVATE
+  PUBLIC
+}
+
+"""Category of DAO proposal"""
+enum ProposalCategory {
+  EMERGENCY
+  FEATURE_REQUEST
+  OTHER
+  PARAMETER_CHANGE
+  YIELD_DISTRIBUTION
+}
+
+type ProposalResults {
+  abstainPercent: String!
+  againstPercent: String!
+  finalStatus: ProposalStatus!
+  forPercent: String!
+  isPassing: Boolean!
+  proposalId: String!
+  quorumReached: Boolean!
+  quorumRequired: String!
+  totalVotesAbstain: String!
+  totalVotesAgainst: String!
+  totalVotesFor: String!
+  totalVotingPower: String!
+  votersCount: Int!
+}
+
+"""Status of DAO proposal"""
+enum ProposalStatus {
+  ACTIVE
+  CANCELLED
+  DRAFT
+  EXECUTED
+  PASSED
+  REJECTED
+}
+
+type Query {
+  """Get active DAO proposals"""
+  activeDAOProposals(limit: Int! = 20, offset: Int! = 0): PaginatedDAOProposals!
+
+  """Get a specific conversation by ID"""
+  conversation(conversationId: ID!): Conversation!
+
+  """Get all conversations for the current user sorted by last message time"""
+  conversations(limit: Int! = 20, offset: Int! = 0): PaginatedConversations!
+  currentEpoch: GlobalPoolEpoch
+
+  """Get a specific DAO proposal"""
+  daoProposal(proposalId: String!): DAOProposal!
+
+  """Get votes for a DAO proposal"""
+  daoProposalVotes(limit: Int! = 20, offset: Int! = 0, proposalId: String!): PaginatedDAOVotes!
+
+  """Get all DAO proposals with optional filters"""
+  daoProposals(category: ProposalCategory, limit: Int! = 20, offset: Int! = 0, status: ProposalStatus): PaginatedDAOProposals!
+
+  """Get DAO voting statistics"""
+  daoVotingStats: DAOVotingStats!
+  donation(id: ID!): Donation!
+  donationByTxHash(txHash: String!): Donation!
+  donationLeaderboard(limit: Int! = 10, period: LeaderboardPeriod! = ALL): DonationLeaderboard!
+  donations(filter: DonationFilterInput, limit: Int! = 20, offset: Int! = 0, order: SortOrder! = DESC, sortBy: DonationSortBy! = CREATED_AT): PaginatedDonations!
+  donationsByAddress(address: String!, limit: Int! = 20, offset: Int! = 0): PaginatedDonations!
+
+  """Get detailed endowment information for a donation"""
+  endowmentInfo(donationId: String!): EndowmentInfo!
+  epoch(epochNumber: Int!): GlobalPoolEpoch
+
+  """Get FBT burn history"""
+  fbtBurnHistory(limit: Int! = 20, offset: Int! = 0): PaginatedFBTBurns!
+
+  """Get FBT burn history for a specific address"""
+  fbtBurnsByAddress(address: String!, limit: Int! = 20, offset: Int! = 0): PaginatedFBTBurns!
+
+  """Get FBT stake by wallet address"""
+  fbtStakeByAddress(address: String!): FBTStake
+
+  """Get all FBT stakers in treasury"""
+  fbtStakers(limit: Int! = 20, offset: Int! = 0): PaginatedFBTStakers!
+  featuredFundraisers(limit: Int! = 6): [Fundraiser!]!
+  feed(cursor: String, feedType: FeedType! = HOME, limit: Int! = 20): Feed!
+  followers(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedFollows!
+  following(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedFollows!
+  fundraiser(id: ID!): Fundraiser!
+  fundraiserByOnChainId(onChainId: Int!): Fundraiser!
+  fundraiserCategories: [CategoryCount!]!
+  fundraiserDonationStats(fundraiserId: ID!): DonationStats!
+  fundraiserDonations(fundraiserId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedDonations!
+
+  """Get all wealth building donations for a fundraiser"""
+  fundraiserEndowments(fundraiserId: String!, limit: Int! = 20, offset: Int! = 0): PaginatedWealthBuildingDonations!
+  fundraiserRegions: [RegionCount!]!
+  fundraiserStakes(fundraiserId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedStakes!
+  fundraisers(filter: FundraiserFilterInput, limit: Int! = 20, offset: Int! = 0, sort: FundraiserSortInput): PaginatedFundraisers!
+  fundraisersByCreator(creatorId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedFundraisers!
+  fundraisersMinimal(filter: FundraiserFilterInput, limit: Int! = 50, offset: Int! = 0): FundraisersMinimalResponse!
+  globalPoolStakes(limit: Int! = 20, offset: Int! = 0): PaginatedStakes!
+  globalPoolStats: GlobalPoolStats!
+  hasReported(entityId: String, reportedId: ID!): Boolean!
+
+  """Get Impact DAO stake by wallet address"""
+  impactDAOStakeByAddress(address: String!): ImpactDAOStake
+
+  """Get all Impact DAO stakers with pagination"""
+  impactDAOStakers(limit: Int! = 20, offset: Int! = 0): PaginatedImpactDAOStakers!
+
+  """Get Impact DAO pool statistics"""
+  impactDAOStats: ImpactDAOStats!
+
+  """Get yield harvest history for a stake"""
+  impactDAOYieldHarvests(limit: Int! = 20, offset: Int! = 0, stakeId: String!): PaginatedYieldHarvests!
+  isFollowing(userId: ID!): Boolean!
+  isUsernameAvailable(username: String!): Boolean!
+  me: User!
+
+  """Get messages for a conversation with pagination"""
+  messages(input: GetMessagesInput!): PaginatedMessages!
+  moderationStats: ModerationStats!
+  myActivity: UserActivitySummary!
+  myBookmarks(limit: Int! = 20, offset: Int! = 0): PaginatedPosts!
+
+  """Get claimable USDC yield from FBT staking"""
+  myClaimableTreasuryYield: String!
+
+  """Get total claimable vested FBT"""
+  myClaimableVestedFBT: String!
+
+  """Get pending FBT rewards for current user"""
+  myDAOFBTRewards: String!
+
+  """Get current user's DAO votes"""
+  myDAOVotes(limit: Int! = 20, offset: Int! = 0): PaginatedDAOVotes!
+
+  """Get current user's custom yield split configuration"""
+  myDAOYieldSplit: YieldSplit
+  myDonationStats: UserDonationStats!
+  myDonations(limit: Int! = 20, offset: Int! = 0): PaginatedDonations!
+  myEpochVotes(epochNumber: Int!): UserGlobalPoolVotes
+
+  """Get current user's FBT stake in treasury"""
+  myFBTStake: FBTStake
+  myFollowers(limit: Int! = 20, offset: Int! = 0): PaginatedFollows!
+  myFollowing(limit: Int! = 20, offset: Int! = 0): PaginatedFollows!
+  myFundraisers(limit: Int! = 20, offset: Int! = 0): PaginatedFundraisers!
+
+  """Get the current user's Impact DAO stake"""
+  myImpactDAOStake: ImpactDAOStake
+  myNotificationSettings: NotificationSettings!
+
+  """Get pending yield breakdown for current user"""
+  myPendingDAOYield: PendingYield!
+
+  """Get pending yield for all user's endowments"""
+  myPendingEndowmentYield: [PendingEndowmentYield!]!
+  myPendingRewards: PendingStakingRewards!
+  myReports(limit: Int! = 20, offset: Int! = 0): PaginatedReports!
+  myStakes(limit: Int! = 20, offset: Int! = 0): PaginatedStakes!
+  myStakingStats: UserStakingStats!
+
+  """Get current user's stock portfolio from donations"""
+  myStockPortfolio: StockPortfolio!
+
+  """Get total vested FBT not yet claimed"""
+  myTotalVested: String!
+
+  """Get current user's vesting schedules"""
+  myVestingSchedules(limit: Int! = 20, offset: Int! = 0): PaginatedVestingSchedules!
+
+  """Get vesting summary for current user"""
+  myVestingSummary: VestingSummary!
+
+  """Get current user's voting power"""
+  myVotingPower: VotingPowerInfo!
+
+  """Get current user's wealth building donations"""
+  myWealthBuildingDonations(limit: Int! = 20, offset: Int! = 0): PaginatedWealthBuildingDonations!
+  notification(id: ID!): Notification
+  notificationCounts: NotificationCount!
+  notifications(input: GetNotificationsInput): PaginatedNotifications!
+  notificationsByType(limit: Int! = 20, offset: Int! = 0, types: [NotificationType!]!): PaginatedNotifications!
+
+  """Get operational funds balance"""
+  operationalFunds: String!
+  pendingReports(limit: Int! = 20, offset: Int! = 0): PaginatedReports!
+  platformDonationStats: DonationStats!
+
+  """Get platform fee collection history"""
+  platformFees(limit: Int! = 20, offset: Int! = 0): PaginatedPlatformFees!
+
+  """Get platform fees filtered by source type"""
+  platformFeesBySource(limit: Int! = 20, offset: Int! = 0, sourceType: FeeSourceType!): PaginatedPlatformFees!
+  poolStats(poolAddress: String!): StakingPoolStats!
+  post(id: ID!): Post!
+  postComments(limit: Int! = 20, offset: Int! = 0, postId: ID!): PaginatedComments!
+  postReplies(limit: Int! = 20, offset: Int! = 0, postId: ID!): PaginatedPosts!
+  posts(filter: PostFilterInput, limit: Int! = 20, offset: Int! = 0, order: SortOrder! = DESC, sortBy: PostSortBy! = CREATED_AT): PaginatedPosts!
+  postsByHashtag(limit: Int! = 20, offset: Int! = 0, tag: String!): PaginatedPosts!
+
+  """Get proposal results breakdown"""
+  proposalResults(proposalId: String!): ProposalResults!
+  recentDonations(limit: Int! = 20): [RecentDonationActivity!]!
+  report(id: ID!): Report
+  reportedContent(entityId: String!, entityType: String!): PaginatedReports!
+  reports(input: GetReportsInput): PaginatedReports!
+  reportsByReason(limit: Int! = 20, offset: Int! = 0, reason: ReportReason!): PaginatedReports!
+  searchFundraisers(limit: Int! = 20, offset: Int! = 0, query: String!): PaginatedFundraisers!
+  searchUsers(limit: Int! = 10, query: String!): UserSearchResult!
+  stake(id: ID!): Stake!
+  stakes(filter: StakeFilterInput, limit: Int! = 20, offset: Int! = 0, order: SortOrder! = DESC, sortBy: StakeSortBy! = STAKED_AT): PaginatedStakes!
+  stakingLeaderboard(limit: Int! = 10): [StakingLeaderboardEntry!]!
+
+  """Get stock purchase history for an address"""
+  stockPurchaseHistory(address: String!, limit: Int! = 20, offset: Int! = 0): PaginatedStockPurchases!
+
+  """Get list of supported stock tokens"""
+  supportedStocks: [SupportedStockInfo!]!
+  topDonors(fundraiserId: ID!, limit: Int! = 10): [DonationLeaderboardEntry!]!
+
+  """Get total number of unread messages"""
+  totalUnreadMessages: Int!
+
+  """Get treasury's endowment information"""
+  treasuryEndowmentInfo: TreasuryEndowmentInfo!
+
+  """Get platform treasury statistics"""
+  treasuryStats: TreasuryStats!
+  trendingFundraisers(limit: Int! = 10, period: TrendingPeriod! = TWENTY_FOUR_HOURS): [TrendingFundraiser!]!
+  trendingHashtags(limit: Int! = 10, period: TrendingPeriod! = TWENTY_FOUR_HOURS): [TrendingHashtag!]!
+  trendingUsers(limit: Int! = 10, period: TrendingPeriod! = TWENTY_FOUR_HOURS): [TrendingUser!]!
+
+  """Get unread message counts across all conversations"""
+  unreadMessages: UnreadMessagesSummary!
+  unreadNotificationCount: Int!
+  unreadNotifications(limit: Int! = 20, offset: Int! = 0): PaginatedNotifications!
+  user(id: ID!): User!
+  userActivity(userId: ID!): UserActivitySummary!
+  userByUsername(username: String!): User!
+  userByWallet(walletAddress: String!): User!
+  userDonationStats(userId: ID!): UserDonationStats!
+  userDonations(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedDonations!
+  userPosts(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedPosts!
+  userStakes(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedStakes!
+  userStakingStats(userId: ID!): UserStakingStats!
+  users(filter: UserFilterInput, limit: Int! = 20, offset: Int! = 0): PaginatedUsers!
+
+  """Get a specific vesting schedule"""
+  vestingSchedule(scheduleId: String!): VestingSchedule!
+
+  """Get claim history for a vesting schedule"""
+  vestingScheduleClaims(limit: Int! = 20, offset: Int! = 0, scheduleId: String!): PaginatedVestingClaims!
+
+  """Get vesting schedules by wallet address"""
+  vestingSchedulesByAddress(address: String!, limit: Int! = 20, offset: Int! = 0): PaginatedVestingSchedules!
+
+  """Get platform-wide vesting statistics"""
+  vestingStats: VestingStats!
+
+  """Get platform-wide wealth building statistics"""
+  wealthBuildingStats: WealthBuildingStats!
+}
+
+type RecentDonationActivity {
+  amountUSD: String!
+  createdAt: DateTime!
+  donorAddress: String!
+  donorUsername: String
+  fundraiserId: String!
+  fundraiserName: String!
+  id: ID!
+}
+
+input RecordDonationInput {
+  amount: String!
+  chainId: Int!
+  fundraiserId: String!
+  isAnonymous: Boolean
+  message: String
+  token: String!
+  txHash: String!
+}
+
+input RecordStakeInput {
+  amount: String!
+  chainId: Int!
+  fundraiserId: String
+  isGlobal: Boolean
+  poolAddress: String!
+  shares: String!
+  txHash: String!
+  yieldSplit: YieldSplitInput
+}
+
+type RegionCount {
+  count: Int!
+  region: String!
+}
+
+type Report {
+  createdAt: DateTime!
+  description: String
+  entityId: String
+  entityType: String
+  id: ID!
+  post: ReportedPost
+  reason: ReportReason!
+  reported: ReportUser!
+  reporter: ReportUser!
+  resolvedAt: DateTime
+  resolvedBy: String
+  status: ReportStatus!
+}
+
+type ReportOperationResult {
+  message: String
+  reportId: ID
+  success: Boolean!
+}
+
+enum ReportReason {
+  FAKE_FUNDRAISER
+  HARASSMENT
+  HATE_SPEECH
+  INAPPROPRIATE_CONTENT
+  OTHER
+  SCAM
+  SPAM
+  VIOLENCE
+}
+
+enum ReportStatus {
+  DISMISSED
+  PENDING
+  RESOLVED
+  REVIEWED
+}
+
+type ReportUser {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  username: String
+  walletAddress: String!
+}
+
+type ReportedPost {
+  content: String
+  createdAt: DateTime!
+  id: ID!
+  mediaUrls: [String!]!
+}
+
+input RepostInput {
+  comment: String
+  postId: String!
+}
+
+input ReviewReportInput {
+  action: ModerationAction!
+  notes: String
+  reportId: ID!
+  status: ReportStatus!
+  suspensionDays: Int
+  suspensionReason: String
+}
+
+input SendDirectMessageInput {
+  """The text content of the message"""
+  content: String!
+
+  """Optional media URL attached to the message"""
+  mediaUrl: String
+
+  """The ID of the user to send the message to"""
+  receiverId: ID!
+}
+
+input SendMessageInput {
+  """The text content of the message"""
+  content: String!
+
+  """The ID of the conversation to send the message to"""
+  conversationId: ID!
+
+  """Optional media URL attached to the message"""
+  mediaUrl: String
+}
+
+type SocialTrendingHashtag {
+  postsCount: Int!
+  tag: String!
+}
+
+enum SortOrder {
+  ASC
+  DESC
+}
+
+type Stake {
+  amount: String!
+  blockNumber: Float
+  chainId: Int!
+  fundraiser: FundraiserStakingInfo
+  id: ID!
+  isActive: Boolean!
+  isGlobal: Boolean!
+  poolAddress: String!
+  shares: String!
+  stakedAt: DateTime!
+  staker: StakerInfo!
+  txHash: String!
+  unstakedAt: DateTime
+  updatedAt: DateTime!
+  yieldSplit: YieldSplitConfig
+}
+
+input StakeFilterInput {
+  chainId: Int
+  fundraiserId: String
+  isActive: Boolean
+  isGlobal: Boolean
+  poolAddress: String
+  stakerAddress: String
+  stakerId: String
+}
+
+enum StakeSortBy {
+  AMOUNT
+  STAKED_AT
+}
+
+type StakerInfo {
+  avatarUrl: String
+  displayName: String
+  id: ID
+  username: String
+  walletAddress: String!
+}
+
+type StakingLeaderboardEntry {
+  rank: Int!
+  staker: StakerInfo!
+  stakesCount: Int!
+  totalStaked: String!
+}
+
+type StakingPoolStats {
+  apy: String!
+  fundraiserName: String
+  poolAddress: String!
+  stakersCount: Int!
+  totalStaked: String!
+  totalYieldGenerated: String!
+}
+
+input StartConversationInput {
+  """The ID of the user to start a conversation with"""
+  participantId: ID!
+}
+
+type StockHolding {
+  balance: String!
+  currentValueUSD: String!
+  gainLossPercent: String!
+  stockSymbol: String!
+  stockToken: String!
+  totalUSDCInvested: String!
+}
+
+type StockPortfolio {
+  holdings: [StockHolding!]!
+  holdingsCount: Int!
+  totalGainLossPercent: String!
+  totalInvestedUSD: String!
+  totalValueUSD: String!
+}
+
+type StockPurchaseEvent {
+  donorAddress: String!
+  purchasedAt: DateTime!
+  stockAmount: String!
+  stockSymbol: String!
+  stockToken: String!
+  txHash: String!
+  usdcAmount: String!
+}
+
+type StockPurchasedPayload {
+  donorAddress: String!
+  stockAmount: String!
+  stockSymbol: String!
+  stockToken: String!
+  timestamp: DateTime!
+  txHash: String!
+  usdcAmount: String!
+}
+
+type Subscription {
+  """Subscribe to new DAO proposals"""
+  daoProposalCreated: DAOProposalCreatedPayload!
+
+  """Subscribe to proposal status changes"""
+  daoProposalStatusChanged(proposalId: String): DAOProposalStatusChangedPayload!
+
+  """Subscribe to votes cast on proposals"""
+  daoVoteCast(proposalId: String): DAOVoteCastPayload!
+
+  """Subscribe to yield harvest events for a user"""
+  endowmentYieldHarvested(userId: String): EndowmentYieldHarvestedPayload!
+
+  """Subscribe to FBT burned events"""
+  fbtBurned: FBTBurnedPayload!
+
+  """Subscribe to FBT stake updates"""
+  fbtStakeUpdated(address: String): FBTStakeUpdatedPayload!
+
+  """Subscribe to platform fee received events"""
+  feeReceived: FeeReceivedPayload!
+
+  """Subscribe to Impact DAO stake updates"""
+  impactDAOStakeUpdated(address: String): ImpactDAOStakeUpdatedPayload!
+
+  """Subscribe to Impact DAO yield harvest events"""
+  impactDAOYieldHarvested: ImpactDAOYieldHarvestedPayload!
+
+  """Subscribe to stock purchase events for a user"""
+  stockPurchased(address: String): StockPurchasedPayload!
+
+  """Subscribe to treasury stats updates"""
+  treasuryStatsUpdated: TreasuryStatsUpdatedPayload!
+
+  """Subscribe to vested tokens claimed events"""
+  vestedTokensClaimed(address: String): VestedTokensClaimedPayload!
+
+  """Subscribe to new vesting schedules"""
+  vestingScheduleCreated(address: String): VestingScheduleCreatedPayload!
+
+  """Subscribe to new wealth building donations"""
+  wealthBuildingDonationCreated(fundraiserId: Int): WealthBuildingDonationCreatedPayload!
+}
+
+type SupportedStockInfo {
+  decimals: Int!
+  isDefault: Boolean!
+  lastPrice: String
+  lastPriceAt: DateTime
+  name: String!
+  symbol: String!
+  tokenAddress: String!
+  underlyingAsset: String
+}
+
+type TreasuryEndowmentInfo {
+  causeYieldPaid: String!
+  lifetimeYield: String!
+  pendingYield: String!
+  principal: String!
+}
+
+type TreasuryStats {
+  endowmentLifetimeYield: String!
+  endowmentPrincipal: String!
+  lastFeeStakedAt: DateTime
+  lastYieldHarvestedAt: DateTime
+  minStakeThreshold: String!
+  operationalFunds: String!
+  pendingFeesToStake: String!
+  totalFBTStaked: String!
+  totalFBTStakers: Int!
+  totalFeesCollected: String!
+  totalFeesStaked: String!
+  totalYieldDistributed: String!
+  yieldPerTokenStored: String!
+}
+
+type TreasuryStatsUpdatedPayload {
+  stats: TreasuryStats!
+}
+
+type TrendingFundraiser {
+  calculatedAt: DateTime!
+  description: String
+  donorsCount: Int!
+  fundraiserId: String!
+  goalAmount: String!
+  id: String!
+  images: [String!]!
+  name: String!
+  period: TrendingPeriod!
+  raisedAmount: String!
+  score: Float!
+}
+
+type TrendingHashtag {
+  calculatedAt: DateTime!
+  id: String!
+  period: TrendingPeriod!
+  postsCount: Int!
+  score: Float!
+  tag: String!
+}
+
+enum TrendingPeriod {
+  ONE_HOUR
+  SEVEN_DAYS
+  TWENTY_FOUR_HOURS
+}
+
+type TrendingUser {
+  avatarUrl: String
+  calculatedAt: DateTime!
+  displayName: String
+  followersCount: Int!
+  id: String!
+  period: TrendingPeriod!
+  score: Float!
+  userId: String!
+  username: String
+  walletAddress: String!
+}
+
+type UnreadMessagesSummary {
+  """Unread counts per conversation"""
+  byConversation: [ConversationUnreadCount!]!
+
+  """Number of conversations with unread messages"""
+  conversationsWithUnread: Int!
+
+  """Total number of unread messages"""
+  totalUnread: Int!
+}
+
+input UnstakeInput {
+  amount: String
+  stakeId: String!
+  txHash: String!
+}
+
+input UpdateFundraiserInput {
+  categories: [String!]
+  description: String
+  images: [String!]
+  name: String
+  region: String
+}
+
+input UpdateNotificationSettingsInput {
+  emailEnabled: Boolean
+  notifyOnComment: Boolean
+  notifyOnDAOProposal: Boolean
+  notifyOnDonation: Boolean
+  notifyOnFBTVesting: Boolean
+  notifyOnFollow: Boolean
+  notifyOnLike: Boolean
+  notifyOnMention: Boolean
+  notifyOnStake: Boolean
+  notifyOnStockPurchase: Boolean
+  notifyOnYieldHarvest: Boolean
+  pushEnabled: Boolean
+}
+
+input UpdatePostInput {
+  content: String
+  tags: [String!]
+  visibility: PostVisibility
+}
+
+input UpdateProfileInput {
+  avatarUrl: String
+  bannerUrl: String
+  bio: String
+  displayName: String
+  email: String
+  isPrivate: Boolean
+  location: String
+  username: String
+  website: String
+}
+
+type User {
+  avatarUrl: String
+  bannerUrl: String
+  bio: String
+  createdAt: DateTime!
+  displayName: String
+  email: String
+  emailVerified: Boolean!
+  id: ID!
+  isActive: Boolean!
+  isBlocked: Boolean
+  isFollowedBy: Boolean
+  isFollowing: Boolean
+  isPrivate: Boolean!
+  isVerifiedCreator: Boolean!
+  lastSeenAt: DateTime
+  location: String
+  stats: UserStats!
+  updatedAt: DateTime!
+  username: String
+  verificationBadge: VerificationBadge
+  walletAddress: String!
+  website: String
+  worldIdVerified: Boolean!
+}
+
+type UserActivitySummary {
+  commentsLast30Days: Int!
+  donatedAmountLast30Days: String!
+  donationsLast30Days: Int!
+  earnedFBTLast30Days: String!
+  postsLast30Days: Int!
+  stakesLast30Days: Int!
+}
+
+type UserDonationStats {
+  averageDonation: String!
+  donationsCount: Int!
+  firstDonationAt: DateTime
+  fundraisersDonatedTo: Int!
+  lastDonationAt: DateTime
+  totalDonated: String!
+}
+
+input UserFilterInput {
+  isVerifiedCreator: Boolean
+  searchQuery: String
+  worldIdVerified: Boolean
+}
+
+type UserGlobalPoolVotes {
+  allocations: [GlobalPoolVoteAllocation!]!
+  epochNumber: Int!
+  totalWeight: String!
+}
+
+type UserMinimal {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  isVerifiedCreator: Boolean!
+  username: String
+  verificationBadge: VerificationBadge
+  walletAddress: String!
+}
+
+type UserSearchResult {
+  total: Int!
+  users: [UserMinimal!]!
+}
+
+type UserStakingStats {
+  activeStakesCount: Int!
+  fundraisersStakedIn: Int!
+  globalPoolStake: String
+  pendingYield: String!
+  totalStaked: String!
+  totalYieldEarned: String!
+}
+
+type UserStats {
+  fbtBalance: String!
+  fbtStakedBalance: String!
+  fbtVestedClaimed: String!
+  fbtVestedTotal: String!
+  followersCount: Int!
+  followingCount: Int!
+  fundraisersCount: Int!
+  postsCount: Int!
+  reputationScore: Int!
+  totalDonated: String!
+  totalStaked: String!
+}
+
+enum VerificationBadge {
+  GOLD
+  NONE
+  OFFICIAL
+  VERIFIED_CREATOR
+  WORLD_ID
+}
+
+type VestedTokensClaimedPayload {
+  amount: String!
+  recipientAddress: String!
+  scheduleId: String!
+  timestamp: DateTime!
+  txHash: String!
+}
+
+type VestingBreakdown {
+  donationRewards: String!
+  ecosystem: String!
+  engagementRewards: String!
+  investor: String!
+  teamAllocation: String!
+}
+
+type VestingClaimEvent {
+  amount: String!
+  claimedAt: DateTime!
+  scheduleId: String!
+  txHash: String!
+}
+
+type VestingSchedule {
+  claimableAmount: String!
+  createdAt: DateTime!
+  duration: Int!
+  id: String!
+  isFullyClaimed: Boolean!
+  isFullyVested: Boolean!
+  progressPercent: String!
+  recipientAddress: String!
+  releasedAmount: String!
+  startTime: DateTime!
+  totalAmount: String!
+  txHash: String
+  vestingType: VestingType!
+}
+
+type VestingScheduleCreatedPayload {
+  schedule: VestingSchedule!
+}
+
+type VestingStats {
+  activeSchedules: Int!
+  byType: VestingBreakdown!
+  totalBurnedAmount: String!
+  totalClaimedAmount: String!
+  totalPendingAmount: String!
+  totalSchedules: Int!
+  totalVestedAmount: String!
+  uniqueRecipients: Int!
+}
+
+type VestingSummary {
+  activeScheduleCount: Int!
+  completedScheduleCount: Int!
+  scheduleCount: Int!
+  totalClaimable: String!
+  totalPending: String!
+  totalReleased: String!
+  totalVested: String!
+}
+
+"""Type of vesting schedule"""
+enum VestingType {
+  DONATION_REWARD
+  ECOSYSTEM
+  ENGAGEMENT_REWARD
+  INVESTOR
+  TEAM_ALLOCATION
+}
+
+input VoteAllocationInput {
+  fundraiserId: String!
+  weight: String!
+}
+
+"""Vote choice on a proposal"""
+enum VoteChoice {
+  ABSTAIN
+  AGAINST
+  FOR
+}
+
+input VoteOnProposalInput {
+  message: String
+  proposalId: String!
+  signature: String
+  vote: VoteChoice!
+  votingPower: String!
+}
+
+type VotingPowerInfo {
+  availableVotingPower: String!
+  lockedInVotes: String!
+  stakedBalance: String!
+  totalVotingPower: String!
+  vestedBalance: String!
+  walletBalance: String!
+}
+
+type WealthBuildingDonation {
+  beneficiaryAddr: String!
+  causeYieldPaid: String!
+  createdAt: DateTime!
+  directAmount: String!
+  donorAddress: String!
+  donorStockValue: String!
+  endowmentAmount: String!
+  endowmentPrincipal: String!
+  fundraiserId: Int!
+  fundraiserName: String!
+  id: String!
+  lastHarvestAt: DateTime
+  lifetimeYield: String!
+  platformFee: String!
+  totalAmount: String!
+  txHash: String!
+}
+
+type WealthBuildingDonationCreatedPayload {
+  donation: WealthBuildingDonation!
+}
+
+type WealthBuildingStats {
+  activeFundraisersCount: Int!
+  donationsCount: Int!
+  totalCauseYieldPaid: String!
+  totalDirectToBeneficiaries: String!
+  totalDonations: String!
+  totalDonorStockValue: String!
+  totalEndowmentPrincipal: String!
+  totalYieldGenerated: String!
+  uniqueDonorsCount: Int!
+}
+
+type YieldSplit {
+  daoShare: Int!
+  platformShare: Int!
+  stakerShare: Int!
+}
+
+type YieldSplitConfig {
+  causeShare: Int!
+  platformShare: Int!
+  stakerShare: Int!
+}
+
+input YieldSplitInput {
+  causeShare: Int!
+  platformShare: Int!
+  stakerShare: Int!
+}

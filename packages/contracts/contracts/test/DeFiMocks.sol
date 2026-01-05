@@ -12,11 +12,16 @@ contract MockERC20 is ERC20 {
     function mint(address to, uint256 amount) external {
         _mint(to, amount);
     }
-    
+
+    function burn(address from, uint256 amount) external {
+        _burn(from, amount);
+    }
+
     // Helper for 6 decimal tokens like USDC
     function decimals() public view virtual override returns (uint8) {
-        if (keccak256(bytes(symbol())) == keccak256(bytes("USDC")) || 
-            keccak256(bytes(symbol())) == keccak256(bytes("aUSDC"))) {
+        if (keccak256(bytes(symbol())) == keccak256(bytes("USDC")) ||
+            keccak256(bytes(symbol())) == keccak256(bytes("aUSDC")) ||
+            keccak256(bytes(symbol())) == keccak256(bytes("rcptUSDC"))) {
             return 6;
         }
         return 18;

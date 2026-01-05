@@ -27,7 +27,7 @@ export function DonationCard({ donation }: DonationCardProps) {
         <div className="flex-1 min-w-0">
           <Link
             href={`/campaigns/${donation.campaignId}`}
-            className="min-h-11 inline-flex items-center text-white font-semibold hover:text-primary active:text-primary/80 transition-colors line-clamp-2"
+            className="text-white font-semibold hover:text-primary transition-colors line-clamp-2"
           >
             {donation.campaignTitle}
           </Link>

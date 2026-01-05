@@ -37,9 +37,9 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
   return (
     <div className="flex flex-col gap-5">
       {/* Top Section - Name and Social Links */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex items-start justify-between">
         {/* User Info */}
-        <div className="flex flex-col gap-1.5 sm:max-w-md md:max-w-lg lg:max-w-xl">
+        <div className="flex flex-col gap-1.5 max-w-[795px]">
           {/* Name and Country Flag */}
           <div className="flex items-center gap-2">
             <h1 className="text-white text-xl font-semibold leading-[30px] tracking-wide font-['Poppins']">
@@ -73,16 +73,16 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
         </div>
 
         {/* Social Links */}
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-5 items-center">
           {user.socialLinks.linkedin && (
             <a
               href={user.socialLinks.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-11 h-11 flex items-center justify-center text-white hover:text-primary active:scale-95 active:bg-white/10 transition-all rounded-lg"
+              className="w-6 h-6 text-white hover:text-primary transition-colors"
               aria-label="LinkedIn"
             >
-              <LinkedInIcon className="w-5 h-5" />
+              <LinkedInIcon className="w-full h-full" />
             </a>
           )}
           {user.socialLinks.instagram && (
@@ -90,10 +90,10 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
               href={user.socialLinks.instagram}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-11 h-11 flex items-center justify-center text-white hover:text-primary active:scale-95 active:bg-white/10 transition-all rounded-lg"
+              className="w-6 h-6 text-white hover:text-primary transition-colors"
               aria-label="Instagram"
             >
-              <InstagramIcon className="w-5 h-5" />
+              <InstagramIcon className="w-full h-full" />
             </a>
           )}
           {user.socialLinks.twitter && (
@@ -101,10 +101,10 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
               href={user.socialLinks.twitter}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-11 h-11 flex items-center justify-center text-white hover:text-primary active:scale-95 active:bg-white/10 transition-all rounded-lg"
+              className="w-6 h-6 text-white hover:text-primary transition-colors"
               aria-label="Twitter/X"
             >
-              <XIcon className="w-5 h-5" />
+              <XIcon className="w-full h-full" />
             </a>
           )}
           {user.socialLinks.facebook && (
@@ -112,17 +112,17 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
               href={user.socialLinks.facebook}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-11 h-11 flex items-center justify-center text-white hover:text-primary active:scale-95 active:bg-white/10 transition-all rounded-lg"
+              className="w-6 h-6 text-white hover:text-primary transition-colors"
               aria-label="Facebook"
             >
-              <FacebookIcon className="w-5 h-5" />
+              <FacebookIcon className="w-full h-full" />
             </a>
           )}
         </div>
       </div>
 
       {/* Stats Row - Followers/Following and Member Since */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex gap-4 text-base">
           <p className="font-bold">
             <span className="text-white tracking-wide">{user.followers}</span>{" "}

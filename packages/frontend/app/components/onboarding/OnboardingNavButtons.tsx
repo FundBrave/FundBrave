@@ -12,6 +12,8 @@ interface OnboardingNavButtonsProps {
   loadingLabel?: string;
   backLabel?: string;
   animationDelay?: number;
+  backWidth?: string;
+  nextWidth?: string;
 }
 
 // Spring transition for snappy tactile feedback
@@ -34,10 +36,12 @@ const OnboardingNavButtons: React.FC<OnboardingNavButtonsProps> = ({
   loadingLabel = "Saving...",
   backLabel = "Back",
   animationDelay = 0.6,
+  backWidth = "w-[200px]",
+  nextWidth = "w-[200px]",
 }) => {
   return (
     <motion.div
-      className="flex flex-col sm:flex-row gap-4 items-center justify-center w-full"
+      className="flex gap-4 items-center justify-center w-full"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: animationDelay }}

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { Navbar } from "@/app/components/common";
 import {
   CommunitySidebar,
   MobileCommunityToggle,
@@ -184,8 +183,7 @@ export default function CommunityPage() {
 
   return (
     <>
-      <Navbar />
-      <div className="flex h-screen w-full flex-col bg-neutral-dark-500 pt-20 md:flex-row">
+      <div className="flex h-screen w-full flex-col bg-neutral-dark-500 md:flex-row">
       {/* Mobile Community Selector */}
       <div className="border-b border-border-subtle p-4 md:hidden">
         <MobileCommunityToggle

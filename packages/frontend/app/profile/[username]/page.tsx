@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
-import { Navbar } from "@/app/components/common";
 import { Plus } from "@/app/components/ui/icons";
 import {
   ProfileHeader,
@@ -125,7 +124,7 @@ export default function ProfilePage() {
           </p>
           <button
             onClick={() => router.push("/")}
-            className="px-6 py-2 min-h-11 bg-primary text-white rounded-full hover:bg-primary/80 active:scale-[0.98] transition-colors"
+            className="px-6 py-2 bg-primary text-white rounded-full hover:bg-primary/80 transition-colors"
           >
             Go Home
           </button>
@@ -136,8 +135,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Navbar />
-      <div className="min-h-screen pt-20">
+      <div className="min-h-screen">
         <div className="max-w-4xl mx-auto">
           {/* Cover Photo Section */}
           <div className="relative h-[200px] sm:h-[250px] lg:h-[300px]">
@@ -160,11 +158,11 @@ export default function ProfilePage() {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pb-2">
-                <button className="p-3 min-h-11 min-w-11 rounded-full border border-border-subtle hover:bg-white/5 active:scale-[0.98] transition-colors flex items-center justify-center">
+                <button className="p-2.5 rounded-full border border-border-subtle hover:bg-white/5 transition-colors">
                   <MessageIcon className="w-5 h-5 text-white" />
                 </button>
                 <Link href="/settings/profile">
-                  <button className="px-5 py-2 min-h-11 rounded-full bg-white text-black font-bold text-sm hover:bg-white/90 active:scale-[0.98] transition-colors">
+                  <button className="px-5 py-2 rounded-full bg-white text-black font-bold text-sm hover:bg-white/90 transition-colors">
                     Edit profile
                   </button>
                 </Link>
@@ -206,7 +204,7 @@ export default function ProfilePage() {
       {/* Floating Create Post Button */}
       <button
         onClick={handleCreatePostClick}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-primary-600 to-soft-purple-500 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all flex items-center justify-center z-40"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-primary-600 to-soft-purple-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center z-40"
         aria-label="Create post"
       >
         <Plus ref={plusIconRef} size={24} />

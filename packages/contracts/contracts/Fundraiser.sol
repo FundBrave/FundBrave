@@ -7,14 +7,17 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "./libraries/CircuitBreaker.sol";
 
 /**
  * @title Fundraiser
  * @dev Campaign Contract
- * Features: Donations, Voting, Proposals, Media Archives.
+ * Features: Donations, Voting, Proposals, Media Archives, Refunds, Circuit Breaker.
  */
-contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable {
+contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable, UUPSUpgradeable {
     using SafeERC20 for IERC20;
+    using CircuitBreaker for CircuitBreaker.BreakerConfig;
 
     // --- Structs (Restored) ---
     struct Donation {
@@ -75,6 +78,8 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
     event ProposalExecuted(uint256 id);
     event MediaArchiveCreated(uint256 id, string title, string url, bool verified);
     event Withdraw(uint256 amount, address token);
+    event RefundClaimed(address indexed donor, uint256 amount);
+    event RefundsEnabled(uint256 timestamp);
 
     // --- State Variables ---
     uint256 public id;
@@ -92,6 +97,14 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
     uint256 public donationsCount;
     uint256 public goal;
     uint256 public deadline;
+
+    // --- Refund State ---
+    bool public refundsEnabled;
+    mapping(address => uint256) public donorDonations;
+    uint256 public donorsCount;
+
+    // --- Circuit Breaker ---
+    CircuitBreaker.BreakerConfig private circuitBreaker;
 
     // --- Constructor (Locks Implementation) ---
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -118,6 +131,7 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
         __Ownable_init(_creator);
         __ReentrancyGuard_init();
         __Pausable_init();
+        __UUPSUpgradeable_init();
 
         // Init State
         id = _id;
@@ -132,6 +146,14 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
         usdc = IERC20(_usdc);
         platformFeeRecipient = _platformFeeRecipient;
         factoryAddress = _factoryAddress;
+
+        // Initialize circuit breaker with default limits
+        // Max single: 1M USDC, Max hourly: 5M USDC, Max daily: 20M USDC
+        circuitBreaker.initialize(
+            1_000_000 * 10 ** 6, // 1M USDC max single transaction
+            5_000_000 * 10 ** 6, // 5M USDC max hourly volume
+            20_000_000 * 10 ** 6 // 20M USDC max daily volume
+        );
     }
 
     // --- Modifiers ---
@@ -157,10 +179,14 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
      * Matches the signature called in FundraiserFactory.sol
      */
     function creditDonation(
-        address donor, 
-        uint256 amount, 
+        address donor,
+        uint256 amount,
         string memory sourceChain
     ) external nonReentrant whenNotPaused onlyFactory beforeDeadline {
+        // Check circuit breaker
+        require(!circuitBreaker.isTriggered(), "Circuit breaker triggered");
+        require(circuitBreaker.checkTransaction(amount), "Transaction blocked by circuit breaker");
+
         _recordDonation(donor, amount, address(usdc), sourceChain);
         emit DonationCredited(donor, amount, sourceChain);
     }
@@ -192,14 +218,17 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
 
         _donations[donor].push(donation);
         _allDonations[id].push(allDonation);
-        
+
         totalDonations += value;
         donationsCount++;
         totalDonationsCount++;
 
+        // Track donor donation amount for refunds
         if (!_donors[donor]) {
             _donors[donor] = true;
+            donorsCount++;
         }
+        donorDonations[donor] += value;
 
         // Voting power increases with donation
         donorVotingPower[donor] += value;
@@ -393,13 +422,126 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
     }
 
     function withdrawUSDT() external onlyOwner nonReentrant {
+        require(!refundsEnabled, "Refunds are enabled, cannot withdraw");
         uint256 balance = usdc.balanceOf(address(this));
         require(balance > 0, "No funds to withdraw");
         usdc.safeTransfer(beneficiary, balance);
         emit Withdraw(balance, address(usdc));
     }
 
+    // --- Refund Functions ---
+
+    /**
+     * @notice Enable refunds if fundraiser failed to reach goal
+     * @dev Can only be called after deadline if goal not reached
+     */
+    function enableRefunds() external {
+        require(block.timestamp > deadline, "Fundraiser not ended");
+        require(!goalReached(), "Goal was reached");
+        require(!refundsEnabled, "Refunds already enabled");
+
+        refundsEnabled = true;
+        emit RefundsEnabled(block.timestamp);
+    }
+
+    /**
+     * @notice Claim refund for donations if fundraiser failed
+     * @dev Only available if refunds are enabled (goal not reached)
+     */
+    function claimRefund() external nonReentrant {
+        require(refundsEnabled, "Refunds not enabled");
+        require(donorDonations[msg.sender] > 0, "No donations to refund");
+
+        uint256 refundAmount = donorDonations[msg.sender];
+        donorDonations[msg.sender] = 0;
+
+        // Update donor tracking
+        if (_donors[msg.sender]) {
+            _donors[msg.sender] = false;
+            if (donorsCount > 0) {
+                donorsCount--;
+            }
+        }
+
+        usdc.safeTransfer(msg.sender, refundAmount);
+
+        emit RefundClaimed(msg.sender, refundAmount);
+    }
+
+    /**
+     * @notice Check how much a donor can claim as refund
+     * @param donor Address of the donor
+     * @return Amount available for refund
+     */
+    function getRefundAmount(address donor) external view returns (uint256) {
+        if (!refundsEnabled) return 0;
+        return donorDonations[donor];
+    }
+
+    // --- Circuit Breaker Functions ---
+
+    /**
+     * @notice Reset the circuit breaker after investigation
+     * @dev Only owner can reset. Use with caution.
+     */
+    function resetCircuitBreaker() external onlyOwner {
+        circuitBreaker.reset();
+    }
+
+    /**
+     * @notice Update circuit breaker limits
+     * @param maxTransaction Maximum single transaction amount
+     * @param maxHourly Maximum hourly volume
+     * @param maxDaily Maximum daily volume
+     */
+    function updateCircuitBreakerLimits(
+        uint256 maxTransaction,
+        uint256 maxHourly,
+        uint256 maxDaily
+    ) external onlyOwner {
+        circuitBreaker.updateLimits(maxTransaction, maxHourly, maxDaily);
+    }
+
+    /**
+     * @notice Check if circuit breaker is triggered
+     * @return True if circuit breaker is triggered
+     */
+    function isCircuitBreakerTriggered() external view returns (bool) {
+        return circuitBreaker.isTriggered();
+    }
+
+    /**
+     * @notice Get remaining transaction capacity
+     * @return maxSingle Maximum single transaction allowed
+     * @return hourlyRemaining Remaining hourly capacity
+     * @return dailyRemaining Remaining daily capacity
+     */
+    function getCircuitBreakerStatus()
+        external
+        view
+        returns (
+            uint256 maxSingle,
+            uint256 hourlyRemaining,
+            uint256 dailyRemaining
+        )
+    {
+        return (
+            circuitBreaker.getMaxTransactionAmount(),
+            circuitBreaker.getRemainingHourlyCapacity(),
+            circuitBreaker.getRemainingDailyCapacity()
+        );
+    }
+
+    // --- UUPS Upgrade Authorization ---
+
+    /**
+     * @notice Authorize contract upgrades
+     * @param newImplementation Address of the new implementation
+     * @dev Only owner can authorize upgrades
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
     function version() external pure returns (string memory) {
-        return "1.0.0";
+        return "1.1.0";
     }
 }

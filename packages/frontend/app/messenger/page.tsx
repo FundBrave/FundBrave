@@ -12,7 +12,6 @@ import {
   type Message,
   type SharedFile,
 } from "@/app/components/messenger";
-import { Navbar } from "@/app/components/common";
 
 // Mock data for chats
 const mockChats: Chat[] = [
@@ -308,9 +307,7 @@ export default function MessengerPage() {
   const selectedChat = mockChats.find((c) => c.id === selectedChatId);
 
   return (
-    <>
-      <Navbar />
-      <div className="flex h-[calc(100vh-80px)] w-full flex-col bg-neutral-dark-500 md:flex-row mt-20">
+    <div className="flex h-screen w-full flex-col bg-neutral-dark-500 md:flex-row">
       {/* Mobile Chat Selector */}
       <div className="border-b border-white/10 p-4 md:hidden">
         <MobileChatToggle
@@ -391,6 +388,5 @@ export default function MessengerPage() {
         </div>
       </aside>
     </div>
-    </>
   );
 }

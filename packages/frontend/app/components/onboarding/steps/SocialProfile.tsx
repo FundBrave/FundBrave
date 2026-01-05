@@ -145,7 +145,7 @@ const SocialProfile: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-lg px-4">
+    <div className="flex flex-col w-full max-w-[554px] px-4 overflow-y-auto">
       {/* Header */}
       <motion.div
         className="flex flex-col gap-1 mb-8"
@@ -188,7 +188,6 @@ const SocialProfile: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
               <input
                 id={field.id}
                 type="url"
-                inputMode="url"
                 name={field.id}
                 value={formData[field.id]}
                 onChange={handleInputChange}

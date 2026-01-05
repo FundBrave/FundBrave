@@ -94,7 +94,7 @@ const Goals: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-xl px-4">
+    <div className="flex flex-col w-full max-w-[600px] px-4 overflow-y-auto">
       {/* Header */}
       <motion.div
         className="flex flex-col gap-1 mb-8"
@@ -118,7 +118,7 @@ const Goals: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
             <motion.button
               key={goal.id}
               onClick={() => toggleGoal(goal.id)}
-              className={`relative flex flex-col gap-3 p-5 rounded-2xl text-left transition-all active:scale-[0.98] min-h-[88px] ${
+              className={`relative flex flex-col gap-3 p-5 rounded-2xl text-left transition-all ${
                 isSelected
                   ? "bg-gradient-to-br from-purple-800/50 to-purple-900/40 border border-purple-400/30"
                   : "bg-gradient-to-br from-[#1a1525] to-[#13101d] border border-white/10 hover:border-purple-400/25"

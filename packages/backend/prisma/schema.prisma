@@ -47,8 +47,14 @@ model User {
   followingCount   Int    @default(0)
   postsCount       Int    @default(0)
   fundraisersCount Int    @default(0)
-  totalDonated     String @default("0")
-  totalStaked      String @default("0")
+  totalDonated     BigInt @default(0) // Total amount donated (wei)
+  totalStaked      BigInt @default(0) // Total amount staked (wei)
+
+  // FBT Token Stats (Denormalized)
+  fbtBalance       BigInt @default(0) // FBT balance (wei)
+  fbtStakedBalance BigInt @default(0) // FBT staked in treasury (wei)
+  fbtVestedTotal   BigInt @default(0) // Total FBT vested (wei)
+  fbtVestedClaimed BigInt @default(0) // FBT claimed from vesting (wei)
 
   // Privacy
   isPrivate        Boolean @default(false)
@@ -86,10 +92,19 @@ model User {
   reports          Report[]                  @relation("reporter")
   reportedContent  Report[]                  @relation("reported")
 
-  // New Global Pool Relations
+  // Global Pool Relations
   globalVotes GlobalPoolVote[]
   fbtClaims   RewardClaim[]
   fbtLocks    GlobalPoolLock[]
+
+  // New Contract Relations
+  impactDAOStakes          ImpactDAOStake[]
+  wealthBuildingDonations  WealthBuildingDonation[]
+  donorStockPortfolios     DonorStockPortfolio[]
+  fbtStakes                FBTStake[]
+  fbtVestingSchedules      FBTVestingSchedule[]
+  daoProposals             DAOProposal[]            @relation("proposer")
+  daoVotes                 DAOVote[]
 
   notificationSetting NotificationSetting?
   deviceTokens        DeviceToken[]
@@ -388,9 +403,14 @@ model Fundraiser {
   region      String?
 
   // Financials
-  goalAmount   String // BigDecimal as string (USDC)
-  raisedAmount String @default("0")
+  goalAmount   String @default("0") // Goal amount in USD (decimal string)
+  raisedAmount BigInt @default(0)   // Raised amount (wei)
   currency     String @default("USDC")
+
+  // Endowment Tracking (for WealthBuildingDonation)
+  endowmentEnabled   Boolean @default(false)
+  endowmentPrincipal BigInt  @default(0) // Total endowment principal (wei)
+  endowmentYield     BigInt  @default(0) // Total yield generated (wei)
 
   // Addresses
   beneficiary     String
@@ -416,15 +436,15 @@ model Fundraiser {
   updatesCount Int @default(0)
 
   // Relations
-  donations  Donation[]
-  stakes     Stake[]
-  posts      Post[]
-  updates    FundraiserUpdate[]
-  milestones Milestone[]
-  proposals  Proposal[]
-  votes      Vote[]
-
-  globalVotes GlobalPoolVote[]
+  donations              Donation[]
+  stakes                 Stake[]
+  posts                  Post[]
+  updates                FundraiserUpdate[]
+  milestones             Milestone[]
+  proposals              Proposal[]
+  votes                  Vote[]
+  globalVotes            GlobalPoolVote[]
+  wealthBuildingDonations WealthBuildingDonation[]
 
   @@index([creatorId])
   @@index([onChainId])
@@ -452,7 +472,7 @@ model Milestone {
   fundraiser   Fundraiser @relation(fields: [fundraiserId], references: [id], onDelete: Cascade)
   title        String
   description  String?
-  targetAmount String
+  targetAmount BigInt     // Target amount (wei)
   isReached    Boolean    @default(false)
   reachedAt    DateTime?
   createdAt    DateTime   @default(now())
@@ -466,8 +486,8 @@ model Donation {
   txHash String @unique
 
   // Amounts
-  amount    String // Original amount
-  amountUSD String // Converted to USD
+  amount    BigInt // Original blockchain amount (wei)
+  amountUSD String // Converted to USD (decimal string)
   token     String // Token symbol
 
   // Blockchain
@@ -503,8 +523,8 @@ model Stake {
   id          String @id @default(uuid())
   txHash      String @unique
   poolAddress String
-  amount      String
-  shares      String // Receipt tokens
+  amount      BigInt // Staked amount (wei)
+  shares      BigInt // Receipt tokens (wei)
 
   fundraiserId String?
   fundraiser   Fundraiser? @relation(fields: [fundraiserId], references: [id])
@@ -513,6 +533,11 @@ model Stake {
   stakerId      String
   staker        User   @relation(fields: [stakerId], references: [id])
   stakerAddress String
+
+  // Yield Split Configuration (for enhanced StakingPool)
+  causeShare    Int? // Basis points to cause
+  stakerShare   Int? // Basis points to staker
+  platformShare Int? // Basis points to platform
 
   // Blockchain
   chainId     Int
@@ -548,9 +573,9 @@ model Proposal {
   creator   User   @relation(fields: [creatorId], references: [id])
 
   // Voting
-  requiredVotes String // BigDecimal as string
-  upvotes       String @default("0")
-  downvotes     String @default("0")
+  requiredVotes BigInt // Required votes (wei)
+  upvotes       BigInt @default(0)
+  downvotes     BigInt @default(0)
 
   // Status
   executed   Boolean   @default(false)
@@ -576,12 +601,550 @@ model Vote {
   voterId      String
   voter        User       @relation(fields: [voterId], references: [id])
   isUpvote     Boolean
-  votingPower  String // Amount of USDC donated
+  votingPower  BigInt     // Amount of USDC donated (wei)
   createdAt    DateTime   @default(now())
 
   @@unique([proposalId, voterId])
   @@index([proposalId])
   @@map("votes")
+}
+
+// ==================== IMPACT DAO POOL ====================
+
+model ImpactDAOStake {
+  id     String @id @default(uuid())
+  txHash String @unique
+
+  // Staker
+  stakerId      String
+  staker        User   @relation(fields: [stakerId], references: [id])
+  stakerAddress String
+
+  // Amounts
+  principal BigInt // USDC principal staked (wei)
+
+  // Yield Split Configuration
+  daoShare      Int @default(7900) // Basis points (79% default)
+  stakerShare   Int @default(1900) // Basis points (19% default)
+  platformShare Int @default(200)  // Basis points (2% default, minimum)
+
+  // Accumulated Yields
+  pendingUSDCYield BigInt @default(0)
+  pendingFBTReward BigInt @default(0)
+  claimedUSDCYield BigInt @default(0)
+  claimedFBTReward BigInt @default(0)
+
+  // Blockchain
+  chainId     Int
+  blockNumber Int?
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  stakedAt   DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  unstakedAt DateTime?
+
+  // Relations
+  yieldHarvests ImpactDAOYieldHarvest[]
+
+  @@index([stakerId])
+  @@index([stakerAddress])
+  @@index([isActive])
+  @@map("impact_dao_stakes")
+}
+
+model ImpactDAOYieldHarvest {
+  id String @id @default(uuid())
+
+  // Stake reference
+  stakeId String
+  stake   ImpactDAOStake @relation(fields: [stakeId], references: [id], onDelete: Cascade)
+
+  // Yield amounts
+  totalYield     BigInt // Total yield before split (wei)
+  daoAmount      BigInt // Amount to YieldDistributor (wei)
+  stakerAmount   BigInt // Amount to staker (wei)
+  platformAmount BigInt // Amount to platform (wei)
+
+  // Transaction
+  txHash      String   @unique
+  blockNumber Int?
+  chainId     Int
+
+  // Timestamp
+  harvestedAt DateTime @default(now())
+
+  @@index([stakeId])
+  @@map("impact_dao_yield_harvests")
+}
+
+model ImpactDAOPoolStats {
+  id String @id @default(uuid())
+
+  // Pool Statistics
+  totalStakedPrincipal BigInt @default(0)
+  totalYieldHarvested  BigInt @default(0)
+  totalFBTDistributed  BigInt @default(0)
+  stakersCount         Int    @default(0)
+
+  // Reward Configuration
+  rewardRate        BigInt @default(0) // FBT per second (wei)
+  periodFinish      DateTime?
+  rewardsDuration   Int    @default(604800) // 7 days in seconds
+
+  // Last Update
+  lastHarvestAt DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  @@map("impact_dao_pool_stats")
+}
+
+// ==================== WEALTH BUILDING DONATION ====================
+
+model WealthBuildingDonation {
+  id     String @id @default(uuid())
+  txHash String @unique
+
+  // Donor
+  donorId      String
+  donor        User   @relation(fields: [donorId], references: [id])
+  donorAddress String
+
+  // Fundraiser
+  fundraiserId   String
+  fundraiser     Fundraiser @relation(fields: [fundraiserId], references: [id])
+  beneficiaryAddr String
+
+  // Donation Amounts
+  totalAmount     BigInt // Total donation (wei)
+  directAmount    BigInt // 78% to beneficiary (wei)
+  endowmentAmount BigInt // 20% to Aave (wei)
+  platformFee     BigInt // 2% platform fee (wei)
+
+  // Endowment Tracking
+  endowmentPrincipal BigInt @default(0)
+  lifetimeYield      BigInt @default(0)
+  causeYieldPaid     BigInt @default(0)
+  donorStockValue    BigInt @default(0)
+
+  // Blockchain
+  chainId     Int
+  blockNumber Int?
+
+  // Timestamps
+  createdAt        DateTime  @default(now())
+  lastHarvestAt    DateTime?
+  updatedAt        DateTime  @updatedAt
+
+  // Relations
+  yieldHarvests WealthBuildingYieldHarvest[]
+  stockPortfolio DonorStockPortfolio[]
+
+  @@index([donorId])
+  @@index([fundraiserId])
+  @@index([donorAddress])
+  @@map("wealth_building_donations")
+}
+
+model WealthBuildingYieldHarvest {
+  id String @id @default(uuid())
+
+  // Donation reference
+  donationId String
+  donation   WealthBuildingDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  // Yield amounts
+  yieldAmount BigInt // Total yield (wei)
+  causeShare  BigInt // 30% to fundraiser (wei)
+  donorShare  BigInt // 70% to donor as stocks (wei)
+
+  // Transaction
+  txHash      String   @unique
+  blockNumber Int?
+  chainId     Int
+
+  // Timestamp
+  harvestedAt DateTime @default(now())
+
+  @@index([donationId])
+  @@map("wealth_building_yield_harvests")
+}
+
+model DonorStockPortfolio {
+  id String @id @default(uuid())
+
+  // Owner
+  donorId      String
+  donor        User   @relation(fields: [donorId], references: [id])
+  donorAddress String
+
+  // Stock Token
+  stockToken   String // Address of tokenized stock (e.g., bCSPX)
+  stockSymbol  String // Symbol for display
+  stockBalance BigInt // Amount of stock tokens (wei)
+
+  // Value Tracking
+  totalUSDCInvested BigInt @default(0) // Total USDC swapped to stocks (wei)
+  currentValueUSD   BigInt @default(0) // Estimated current value (wei)
+
+  // Source Donation (optional)
+  donationId String?
+  donation   WealthBuildingDonation? @relation(fields: [donationId], references: [id])
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([donorId, stockToken])
+  @@index([donorId])
+  @@index([stockToken])
+  @@map("donor_stock_portfolios")
+}
+
+model StockPurchase {
+  id String @id @default(uuid())
+
+  // Donor
+  donorAddress String
+
+  // Transaction details
+  stockToken    String // Stock token address
+  stockSymbol   String
+  usdcAmount    BigInt // USDC used for purchase (wei)
+  stockAmount   BigInt // Stock tokens received (wei)
+
+  // Blockchain
+  txHash      String   @unique
+  blockNumber Int?
+  chainId     Int
+
+  // Timestamp
+  purchasedAt DateTime @default(now())
+
+  @@index([donorAddress])
+  @@index([stockToken])
+  @@map("stock_purchases")
+}
+
+model SupportedStock {
+  id String @id @default(uuid())
+
+  // Token Info
+  tokenAddress String @unique
+  symbol       String
+  name         String
+  decimals     Int    @default(18)
+
+  // Backed Finance specific
+  isBackedToken Boolean @default(true)
+  underlyingAsset String? // e.g., "S&P 500" for bCSPX
+
+  // Status
+  isActive  Boolean @default(true)
+  isDefault Boolean @default(false)
+
+  // Price tracking
+  lastPrice    String?   // Last known price in USD
+  lastPriceAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("supported_stocks")
+}
+
+// ==================== PLATFORM TREASURY ====================
+
+model PlatformFee {
+  id String @id @default(uuid())
+
+  // Source
+  sourceContract String // Contract address that sent the fee
+  sourceType     FeeSourceType
+
+  // Amount
+  amount BigInt // USDC amount (wei)
+
+  // Transaction
+  txHash      String   @unique
+  blockNumber Int?
+  chainId     Int
+
+  // Staking Status
+  isStaked   Boolean   @default(false)
+  stakedAt   DateTime?
+  stakedTxHash String?
+
+  // Timestamp
+  receivedAt DateTime @default(now())
+
+  @@index([sourceContract])
+  @@index([sourceType])
+  @@index([isStaked])
+  @@map("platform_fees")
+}
+
+enum FeeSourceType {
+  STAKING_POOL
+  IMPACT_DAO_POOL
+  WEALTH_BUILDING
+  FUNDRAISER
+  OTHER
+}
+
+model FBTStake {
+  id String @id @default(uuid())
+
+  // Staker
+  stakerId      String
+  staker        User   @relation(fields: [stakerId], references: [id])
+  stakerAddress String
+
+  // Stake Amount
+  amount BigInt // FBT staked (wei)
+
+  // Yield Tracking
+  pendingYield BigInt @default(0) // USDC yield from treasury (wei)
+  claimedYield BigInt @default(0)
+
+  // Transaction
+  txHash      String @unique
+  blockNumber Int?
+  chainId     Int
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  stakedAt   DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  unstakedAt DateTime?
+
+  @@index([stakerId])
+  @@index([stakerAddress])
+  @@index([isActive])
+  @@map("fbt_stakes")
+}
+
+model TreasuryStats {
+  id String @id @default(uuid())
+
+  // Fee Statistics
+  totalFeesCollected   BigInt @default(0)
+  totalFeesStaked      BigInt @default(0)
+  pendingFeesToStake   BigInt @default(0)
+
+  // FBT Staking
+  totalFBTStaked       BigInt @default(0)
+
+  // Yield Statistics
+  totalYieldDistributed BigInt @default(0)
+  operationalFunds      BigInt @default(0)
+
+  // Endowment (via WealthBuildingDonation)
+  endowmentPrincipal     BigInt @default(0)
+  endowmentLifetimeYield BigInt @default(0)
+
+  // Configuration
+  minStakeThreshold    BigInt @default(1000000000) // 1000 USDC (wei)
+
+  // Timestamps
+  lastFeeStakedAt      DateTime?
+  lastYieldHarvestedAt DateTime?
+  updatedAt            DateTime @updatedAt
+
+  @@map("treasury_stats")
+}
+
+// ==================== FBT VESTING ====================
+
+model FBTVestingSchedule {
+  id String @id @default(uuid())
+
+  // Recipient
+  recipientId      String
+  recipient        User   @relation(fields: [recipientId], references: [id])
+  recipientAddress String
+
+  // Schedule Details
+  totalAmount      BigInt // Total tokens to vest (wei)
+  releasedAmount   BigInt @default(0) // Already claimed (wei)
+  startTime        DateTime
+  duration         Int    // Duration in seconds
+  vestingType      VestingType
+
+  // Calculated fields (denormalized for performance)
+  claimableAmount  BigInt  @default(0)
+  isFullyVested    Boolean @default(false)
+  isFullyClaimed   Boolean @default(false)
+
+  // Transaction (if created on-chain)
+  txHash      String? @unique
+  blockNumber Int?
+  chainId     Int?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Claims
+  claims FBTVestingClaim[]
+
+  @@index([recipientId])
+  @@index([recipientAddress])
+  @@index([vestingType])
+  @@map("fbt_vesting_schedules")
+}
+
+enum VestingType {
+  DONATION_REWARD    // 30 days
+  ENGAGEMENT_REWARD  // 7 days
+  TEAM_ALLOCATION    // Custom
+  INVESTOR           // Custom
+  ECOSYSTEM          // Custom
+}
+
+model FBTVestingClaim {
+  id String @id @default(uuid())
+
+  // Schedule reference
+  scheduleId String
+  schedule   FBTVestingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  // Claim details
+  amount BigInt // Claimed amount (wei)
+
+  // Transaction
+  txHash      String   @unique
+  blockNumber Int?
+  chainId     Int
+
+  // Timestamp
+  claimedAt DateTime @default(now())
+
+  @@index([scheduleId])
+  @@map("fbt_vesting_claims")
+}
+
+model FBTBurn {
+  id String @id @default(uuid())
+
+  // Burner
+  burnerAddress String
+
+  // Burn details
+  amount BigInt // Burned amount (wei)
+  reason String? // e.g., "premium_feature", "governance_burn"
+
+  // Transaction
+  txHash      String   @unique
+  blockNumber Int?
+  chainId     Int
+
+  // Timestamp
+  burnedAt DateTime @default(now())
+
+  @@index([burnerAddress])
+  @@map("fbt_burns")
+}
+
+// ==================== DAO VOTING (OFF-CHAIN) ====================
+
+model DAOProposal {
+  id String @id @default(uuid())
+
+  // Proposal Content
+  title       String
+  description String   @db.Text
+  category    ProposalCategory
+
+  // Proposer
+  proposerId String
+  proposer   User   @relation("proposer", fields: [proposerId], references: [id])
+
+  // Voting Configuration
+  votingStartTime DateTime
+  votingEndTime   DateTime
+  quorumRequired  BigInt // Minimum FBT voting power needed (wei)
+
+  // Results
+  totalVotesFor     BigInt @default(0)
+  totalVotesAgainst BigInt @default(0)
+  totalVotesAbstain BigInt @default(0)
+  votersCount       Int    @default(0)
+
+  // Status
+  status         ProposalStatus @default(ACTIVE)
+  executedAt     DateTime?
+  executionTxHash String?
+
+  // For yield distribution proposals
+  targetFundraisers Json? // Array of fundraiser IDs and allocation percentages
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  votes DAOVote[]
+
+  @@index([proposerId])
+  @@index([status])
+  @@index([votingEndTime])
+  @@map("dao_proposals")
+}
+
+enum ProposalCategory {
+  YIELD_DISTRIBUTION   // Allocate DAO yield to fundraisers
+  PARAMETER_CHANGE     // Change platform parameters
+  FEATURE_REQUEST      // Request new features
+  EMERGENCY            // Emergency actions
+  OTHER
+}
+
+enum ProposalStatus {
+  DRAFT
+  ACTIVE
+  PASSED
+  REJECTED
+  EXECUTED
+  CANCELLED
+}
+
+model DAOVote {
+  id String @id @default(uuid())
+
+  // Proposal
+  proposalId String
+  proposal   DAOProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  // Voter
+  voterId String
+  voter   User   @relation(fields: [voterId], references: [id])
+
+  // Vote
+  choice      VoteChoice
+  votingPower BigInt // FBT voting power at time of vote (wei)
+
+  // Signature (for off-chain voting verification)
+  signature String?
+  message   String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  @@unique([proposalId, voterId])
+  @@index([proposalId])
+  @@index([voterId])
+  @@map("dao_votes")
+}
+
+enum VoteChoice {
+  FOR
+  AGAINST
+  ABSTAIN
 }
 
 // ==================== NOTIFICATIONS ====================
@@ -637,6 +1200,13 @@ enum NotificationType {
   PROPOSAL_EXECUTED
   MESSAGE
   SYSTEM
+  // New notification types
+  YIELD_HARVESTED
+  STOCK_PURCHASED
+  FBT_VESTED
+  FBT_REWARD
+  DAO_VOTE_STARTED
+  DAO_VOTE_ENDED
 }
 
 // ==================== MESSAGING ====================
@@ -767,6 +1337,16 @@ enum ActivityType {
   PROFILE_VIEW
   FUNDRAISER_VIEW
   SEARCH
+  // New activity types
+  IMPACT_DAO_STAKE
+  IMPACT_DAO_UNSTAKE
+  WEALTH_BUILDING_DONATE
+  FBT_STAKE
+  FBT_UNSTAKE
+  FBT_VEST_CLAIM
+  DAO_VOTE
+  YIELD_HARVEST
+  STOCK_CLAIM
 }
 
 model Trending {
@@ -790,13 +1370,56 @@ model BlockchainSync {
   chainId         Int
   chainName       String
   contractAddress String
+  contractName    String?  // e.g., "ImpactDAOPool", "WealthBuildingDonation"
   lastBlock       Int      @default(0)
   lastSyncAt      DateTime @default(now())
-  status          String   @default("SYNCING") // 'SYNCING', 'SYNCED', 'ERROR'
+  status          SyncStatus @default(SYNCING)
   error           String?
 
   @@unique([chainId, contractAddress])
+  @@index([contractName])
   @@map("blockchain_sync")
+}
+
+enum SyncStatus {
+  SYNCING
+  SYNCED
+  ERROR
+  PAUSED
+}
+
+model BlockchainEvent {
+  id              String   @id @default(uuid())
+
+  // Event Info
+  eventName       String
+  contractAddress String
+  contractName    String?
+
+  // Transaction
+  txHash          String
+  blockNumber     Int
+  logIndex        Int
+  chainId         Int
+
+  // Event Data
+  args            Json     // Event arguments
+
+  // Processing
+  processed       Boolean  @default(false)
+  processedAt     DateTime?
+  error           String?
+
+  // Timestamps
+  blockTimestamp  DateTime
+  indexedAt       DateTime @default(now())
+
+  @@unique([txHash, logIndex, chainId])
+  @@index([eventName])
+  @@index([contractAddress])
+  @@index([processed])
+  @@index([blockNumber])
+  @@map("blockchain_events")
 }
 
 model NotificationSetting {
@@ -815,6 +1438,12 @@ model NotificationSetting {
   notifyOnMention  Boolean @default(true)
   notifyOnDonation Boolean @default(true) // "Someone donated to your fundraiser"
   notifyOnStake    Boolean @default(true)
+
+  // New notification controls
+  notifyOnYieldHarvest Boolean @default(true)
+  notifyOnStockPurchase Boolean @default(true)
+  notifyOnFBTVesting   Boolean @default(true)
+  notifyOnDAOProposal  Boolean @default(true)
 
   updatedAt DateTime @updatedAt
 
@@ -874,7 +1503,7 @@ model GlobalPoolEpoch {
   epochNumber Int      @unique
   startDate   DateTime
   endDate     DateTime
-  totalYield  String   @default("0")
+  totalYield  BigInt   @default(0) // Total yield for epoch (wei)
 
   isCalculated  Boolean @default(false)
   isDistributed Boolean @default(false)
@@ -898,7 +1527,7 @@ model GlobalPoolVote {
   fundraiserId String
   fundraiser   Fundraiser @relation(fields: [fundraiserId], references: [id])
 
-  weight String
+  weight BigInt // Voting weight (wei)
 
   createdAt DateTime @default(now())
 
@@ -915,10 +1544,10 @@ model GlobalPoolLock {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  amount      String
+  amount      BigInt   // Locked amount (wei)
   unlockDate  DateTime
   multiplier  Float
-  votingPower String
+  votingPower BigInt   // Calculated voting power (wei)
 
   createdAt DateTime @default(now())
 
@@ -932,11 +1561,36 @@ model RewardClaim {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  amount String
+  amount BigInt // Claimed reward amount (wei)
   txHash String @unique
 
   claimedAt DateTime @default(now())
 
   @@index([userId])
   @@map("reward_claims")
+}
+
+// ==================== CONTRACT ADDRESSES REGISTRY ====================
+
+model ContractRegistry {
+  id String @id @default(uuid())
+
+  chainId         Int
+  contractName    String  // e.g., "ImpactDAOPool", "WealthBuildingDonation"
+  contractAddress String
+  deploymentTx    String?
+  deploymentBlock Int?
+
+  // ABI version for upgrade tracking
+  version         String  @default("1.0.0")
+
+  isActive        Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([chainId, contractName])
+  @@unique([chainId, contractAddress])
+  @@index([contractName])
+  @@map("contract_registry")
 }

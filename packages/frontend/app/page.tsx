@@ -1,129 +1,27 @@
-"use client";
+import Link from "next/link";
+import Navbar from "./components/Navbar";
 
-import { useState, useCallback } from "react";
-
-// Common components
-import { Navbar, ProfileSidebar, Leaderboard, PeopleToFollow } from "@/app/components/common";
-
-// Home components
-import {
-  HomeLayout,
-  StoriesRow,
-  CreatePostInline,
-  FeedFilters,
-  FeedList,
-} from "@/app/components/home";
-
-// Mock data
-import {
-  MOCK_STORIES,
-  MOCK_TOP_FUNDERS,
-  MOCK_SUGGESTED_USERS,
-  MOCK_CURRENT_USER,
-} from "@/lib/constants/mock-home-data";
-
-// Types
-import type { FeedFilter } from "@/app/types/home";
-
-/**
- * Home Page - Main feed page
- * Route: /
- *
- * Features:
- * - Global Navbar at top
- * - 3-column responsive layout:
- *   - Left: ProfileSidebar (user info, stats, nav)
- *   - Center: Stories, Create Post, Feed with filters
- *   - Right: Top Funders leaderboard, People to Follow
- * - Twitter-like infinite scroll pagination
- * - Instagram-like stories row
- */
-
-export default function HomePage() {
-  const [feedFilter, setFeedFilter] = useState<FeedFilter>("popular");
-
-  // Handlers
-  const handleCreateStory = useCallback(() => {
-    console.log("Create story clicked");
-  }, []);
-
-  const handleStoryClick = useCallback((storyId: string) => {
-    console.log("Story clicked:", storyId);
-  }, []);
-
-  const handleTryPremium = useCallback(() => {
-    console.log("Premium clicked");
-  }, []);
-
-  const handleFollowUser = useCallback((userId: string) => {
-    console.log("Follow user:", userId);
-  }, []);
-
-  const handleRefreshSuggestions = useCallback(() => {
-    console.log("Refresh suggestions");
-  }, []);
-
-  // Left Sidebar Content
-  const leftSidebar = (
-    <ProfileSidebar
-      user={MOCK_CURRENT_USER}
-      onTryPremium={handleTryPremium}
-      showDarkModeToggle
-    />
-  );
-
-  // Right Sidebar Content
-  const rightSidebar = (
-    <div className="flex flex-col gap-4">
-      {/* Top Funders Leaderboard */}
-      <Leaderboard
-        entries={MOCK_TOP_FUNDERS}
-        title="Top Funders"
-        viewAllLink="/leaderboard"
-        viewAllText="View All"
-        maxHeight="350px"
-      />
-
-      {/* People to Follow */}
-      <PeopleToFollow
-        users={MOCK_SUGGESTED_USERS}
-        onFollow={handleFollowUser}
-        onRefresh={handleRefreshSuggestions}
-      />
-    </div>
-  );
-
+export default function Home() {
   return (
-    <div className="min-h-screen bg-neutral-dark-500">
-      {/* Global Navbar */}
+    <>
       <Navbar />
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-4 text-primary-900 dark:text-white bg:brand-light-100 dark:bg-brand-dark-80">
+          Welcome to FundBrave
+        </h1>
+        <p className="text-lg text-primary-700 dark:text-gray-300">
+          A decentralized fundraising platform.
+        </p>
 
-      {/* Main Layout */}
-      <HomeLayout leftSidebar={leftSidebar} rightSidebar={rightSidebar}>
-        {/* Stories Row */}
-        <StoriesRow
-          stories={MOCK_STORIES}
-          onCreateStory={handleCreateStory}
-          onStoryClick={handleStoryClick}
-          className="mb-4 mt-8"
-        />
-
-        {/* Create Post Inline */}
-        <CreatePostInline
-          userAvatar={MOCK_CURRENT_USER.avatar}
-          className="mb-4"
-        />
-
-        {/* Feed Filters */}
-        <FeedFilters
-          activeFilter={feedFilter}
-          onChange={setFeedFilter}
-          className="mb-4"
-        />
-
-        {/* Feed List with Infinite Scroll */}
-        <FeedList filter={feedFilter} />
-      </HomeLayout>
-    </div>
+        {/* <!-- Add more content here as needed --> */}
+        <section className="mt-8 bg-brand-purple">
+          <li className=" bg:brand-light-100 dark:bg-brand-dark-800 p-6 rounded-lg shadow-md text-4xl font-semibold text-center block hover:shadow-lg transition-shadow cursor-pointer text-brand-light-100">
+            <Link className="m-2" href="/themePage">
+              Go to Theme Page
+            </Link>
+          </li>
+        </section>
+      </main>
+    </>
   );
 }

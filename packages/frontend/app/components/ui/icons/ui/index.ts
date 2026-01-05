@@ -21,5 +21,4 @@ export {
   ArrowLeft,
   MessageSquare,
   PartyPopper,
-  Settings,
 } from './UIIcons';

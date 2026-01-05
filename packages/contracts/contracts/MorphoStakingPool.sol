@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/IMetaMorpho.sol";
@@ -13,7 +14,7 @@ import "./interfaces/IMetaMorpho.sol";
  * It has the SAME external functions as your Aave pool,
  * but its internal logic calls a Morpho MetaMorpho (ERC4626) vault.
  */
-contract MorphoStakingPool is ReentrancyGuard, Ownable {
+contract MorphoStakingPool is ReentrancyGuard, Ownable, Pausable {
     using SafeERC20 for IERC20;
 
     // --- Morpho & Token Addresses ---
@@ -107,6 +108,7 @@ contract MorphoStakingPool is ReentrancyGuard, Ownable {
         external
         onlyFactory
         nonReentrant
+        whenNotPaused
         updateReward(staker)
     {
         require(usdtAmount > 0, "Amount must be > 0");
@@ -125,6 +127,7 @@ contract MorphoStakingPool is ReentrancyGuard, Ownable {
     function unstake(uint256 usdtAmount)
         external
         nonReentrant
+        whenNotPaused
         updateReward(msg.sender)
     {
         require(usdtAmount > 0, "Amount must be > 0");
@@ -140,7 +143,7 @@ contract MorphoStakingPool is ReentrancyGuard, Ownable {
 
     // --- Reward Claiming ---
 
-    function claimAllRewards() external nonReentrant updateReward(msg.sender) {
+    function claimAllRewards() external nonReentrant whenNotPaused updateReward(msg.sender) {
         _claimUSDT();
         _claimFBT();
     }
@@ -166,7 +169,7 @@ contract MorphoStakingPool is ReentrancyGuard, Ownable {
     /**
      * @dev Legacy support for claiming just staking rewards (USDT)
      */
-    function claimStakerRewards() external nonReentrant updateReward(msg.sender) {
+    function claimStakerRewards() external nonReentrant whenNotPaused updateReward(msg.sender) {
         _claimUSDT();
     }
 
@@ -175,7 +178,7 @@ contract MorphoStakingPool is ReentrancyGuard, Ownable {
     /**
      * @dev Harvests yield from Morpho and splits it 79/19/2.
      */
-    function harvestAndDistribute() external nonReentrant {
+    function harvestAndDistribute() external nonReentrant whenNotPaused {
         // Calculate Yield from Morpho
         uint256 totalShares = METAMORPHO_VAULT.balanceOf(address(this));
         uint256 currentAssetValue = METAMORPHO_VAULT.previewRedeem(totalShares);
@@ -253,5 +256,21 @@ contract MorphoStakingPool is ReentrancyGuard, Ownable {
     function setRewardsDuration(uint256 _rewardsDuration) external onlyOwner {
         require(block.timestamp > periodFinish, "Period not finished");
         rewardsDuration = _rewardsDuration;
+    }
+
+    /**
+     * @notice Pause the staking pool in case of emergency
+     * @dev Only owner can pause
+     */
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /**
+     * @notice Unpause the staking pool after emergency is resolved
+     * @dev Only owner can unpause
+     */
+    function unpause() external onlyOwner {
+        _unpause();
     }
 }

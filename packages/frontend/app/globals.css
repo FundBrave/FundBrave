@@ -511,16 +511,6 @@
     scrollbar-color: rgba(135, 98, 250, 0.5) transparent;
   }
 
-  /* Hide scrollbar completely but allow scrolling (Twitter-style) */
-  .scrollbar-hidden {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .scrollbar-hidden::-webkit-scrollbar {
-    display: none;
-  }
-
   /* Brand gradient backgrounds for buttons and elements */
   .bg-brand-gradient {
     background: linear-gradient(
