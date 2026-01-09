@@ -84,7 +84,7 @@ export function StoriesRow({
     <div
       ref={containerRef}
       className={cn(
-        "flex gap-4 overflow-x-auto scrollbar-hidden py-4 px-3.5",
+        "flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hidden py-4 px-3.5",
         "border-b border-border-default",
         className
       )}
@@ -95,12 +95,12 @@ export function StoriesRow({
         onClick={onCreateStory}
         className={cn(
           "flex flex-col items-center shrink-0 group transition-all duration-300",
-          isExpanded ? "w-[150px]" : "w-[80px]"
+          isExpanded ? "w-[130px] sm:w-[150px]" : "w-[80px]"
         )}
       >
         {isExpanded ? (
           // Expanded: Large card with purple background
-          <div className="relative w-[150px] h-[196px] rounded-xl bg-primary-500/10 flex flex-col items-center justify-center gap-8 overflow-hidden">
+          <div className="relative w-[130px] sm:w-[150px] h-[196px] rounded-xl bg-primary-500/10 flex flex-col items-center justify-center gap-8 overflow-hidden">
             {/* Icon */}
             <div className="relative z-10 size-14 rounded-full bg-gradient-to-br from-primary-500 to-soft-purple-500 flex items-center justify-center shadow-lg shadow-primary-500/30">
               <Plus className="w-5 h-5 text-white" />
