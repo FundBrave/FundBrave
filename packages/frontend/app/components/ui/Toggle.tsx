@@ -38,13 +38,13 @@ export function Toggle({
   return (
     <div className={cn("flex items-center justify-between", className)}>
       {label && (
-        <span className="text-sm text-neutral-dark-100" id={labelId}>
+        <span className="text-sm text-text-secondary" id={labelId}>
           {label}
         </span>
       )}
       <div className="flex items-center gap-2">
         {showIndicator && (
-          <span className="text-sm text-neutral-dark-200">
+          <span className="text-sm text-text-tertiary">
             {checked ? "On" : "Off"}
           </span>
         )}
@@ -56,8 +56,8 @@ export function Toggle({
           aria-checked={checked}
           aria-labelledby={labelId}
           className={cn(
-            "relative h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-neutral-dark-500",
-            checked ? "bg-primary-500" : "bg-neutral-dark-400",
+            "relative h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-background",
+            checked ? "bg-primary-500" : "bg-surface-sunken",
             disabled && "cursor-not-allowed opacity-50"
           )}
         >

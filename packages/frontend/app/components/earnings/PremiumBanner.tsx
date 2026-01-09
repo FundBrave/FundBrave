@@ -30,8 +30,8 @@ export function PremiumBanner({ onTryPremium, className }: PremiumBannerProps) {
     <div
       className={cn(
         "relative overflow-hidden rounded-xl",
-        "bg-gradient-to-br from-neutral-dark-400 via-neutral-dark-400 to-primary-900/30",
-        "border border-white/10",
+        "bg-gradient-to-br from-surface-elevated via-surface-elevated to-primary-900/30",
+        "border border-border-default",
         "p-4",
         className
       )}
@@ -48,7 +48,7 @@ export function PremiumBanner({ onTryPremium, className }: PremiumBannerProps) {
 
         {/* Text Content */}
         <div className="flex-1">
-          <p className="text-sm text-white/80 leading-snug mb-3">
+          <p className="text-sm text-text-secondary leading-snug mb-3">
             Reach more audience with premium
           </p>
 

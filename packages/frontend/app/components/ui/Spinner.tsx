@@ -20,9 +20,9 @@ const sizeClasses: Record<SpinnerSize, string> = {
 };
 
 const colorClasses: Record<NonNullable<SpinnerProps["color"]>, string> = {
-  white: "text-white",
+  white: "text-white", // Keep white for spinners on gradient/primary buttons
   primary: "text-primary",
-  current: "",
+  current: "", // Inherit from parent
 };
 
 /**

@@ -34,11 +34,11 @@ export function Leaderboard({
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
-        <h3 className="text-base font-semibold text-white">Your Rank</h3>
+      <div className="flex items-center justify-between px-4 py-4 border-b border-border-default">
+        <h3 className="text-base font-semibold text-foreground">Your Rank</h3>
         <Link
           href="/leaderboard"
-          className="text-sm text-white/60 hover:text-white transition-colors"
+          className="text-sm text-text-secondary hover:text-foreground transition-colors"
         >
           View All
         </Link>
@@ -59,8 +59,8 @@ export function Leaderboard({
       {/* Empty State */}
       {entries.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12">
-          <Trophy className="w-10 h-10 text-white/20 mb-3" />
-          <p className="text-white/40 text-sm">No rankings available</p>
+          <Trophy className="w-10 h-10 text-text-tertiary mb-3" />
+          <p className="text-text-tertiary text-sm">No rankings available</p>
         </div>
       )}
     </div>
@@ -81,13 +81,13 @@ function LeaderboardItem({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors",
-        !isLast && "border-b border-white/5",
+        "flex items-center gap-3 px-4 py-3 hover:bg-surface-overlay/50 transition-colors",
+        !isLast && "border-b border-border-subtle",
         isCurrentUser && "bg-primary-500/10"
       )}
     >
       {/* Rank Number */}
-      <span className="w-8 text-sm font-medium text-white/60 shrink-0">
+      <span className="w-8 text-sm font-medium text-text-secondary shrink-0">
         {entry.rank}
       </span>
 
@@ -101,8 +101,8 @@ function LeaderboardItem({
 
       {/* Name and Username */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-white truncate">{entry.name}</p>
-        <p className="text-xs text-white/50 truncate">{entry.username}</p>
+        <p className="text-sm font-medium text-foreground truncate">{entry.name}</p>
+        <p className="text-xs text-text-secondary truncate">{entry.username}</p>
       </div>
 
       {/* Points with Trophy */}

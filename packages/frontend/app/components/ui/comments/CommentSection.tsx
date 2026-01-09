@@ -39,7 +39,7 @@ export function CommentSection({
       {/* Header */}
       {showHeader && comments.length > 0 && (
         <div className="flex items-center gap-2">
-          <h4 className="text-sm font-semibold text-white/60">
+          <h4 className="text-sm font-semibold text-text-secondary">
             {comments.length} {comments.length === 1 ? "Comment" : "Comments"}
           </h4>
           <div className="flex-1 h-px bg-border-subtle" />
@@ -70,7 +70,7 @@ export function CommentSection({
 
       {/* Empty State */}
       {comments.length === 0 && (
-        <p className="text-center text-white/30 text-sm py-4">
+        <p className="text-center text-text-tertiary text-sm py-4">
           No comments yet. Be the first to comment!
         </p>
       )}

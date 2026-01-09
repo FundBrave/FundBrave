@@ -35,8 +35,8 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
           className={cn(
             "transition-colors whitespace-nowrap",
             activeTab === "post"
-              ? "text-white/80"
-              : "text-white/60 hover:text-white/70"
+              ? "text-foreground/80"
+              : "text-text-secondary hover:text-foreground/70"
           )}
         >
           <span className="hidden sm:inline">Create a post</span>
@@ -48,8 +48,8 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
           className={cn(
             "transition-colors whitespace-nowrap",
             activeTab === "campaign-update"
-              ? "text-white/80"
-              : "text-white/60 hover:text-white/70"
+              ? "text-foreground/80"
+              : "text-text-secondary hover:text-foreground/70"
           )}
         >
           <span className="hidden sm:inline">Create a campaign update</span>
@@ -60,7 +60,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
       {/* Tab Indicator */}
       <div className="absolute bottom-0 left-0 right-0 h-px">
         <div className="relative w-full h-full">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
           <motion.div
             className={
               "absolute top-0 h-full w-[100px] sm:w-[150px] lg:w-[200px] bg-gradient-to-r from-purple-500 to-blue-500"

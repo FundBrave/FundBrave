@@ -17,8 +17,8 @@ export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
   return (
     <OnboardingDataProvider>
       <OnboardingProvider>
-        <div className="min-h-screen bg-neutral-dark-500 flex items-center justify-center font-sans">
-          <div className="w-full bg-neutral-dark-500 flex flex-col md:flex-row h-dvh h-vdh">
+        <div className="min-h-screen bg-background flex items-center justify-center font-sans">
+          <div className="w-full bg-background flex flex-col md:flex-row h-dvh h-vdh">
             {/* Desktop Sidebar */}
             <OnboardingAside />
 
@@ -27,9 +27,8 @@ export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
 
             {/* Main content area with animated step transitions */}
             <main
-              className="w-full md:w-2/3 p-6 md:p-12 flex items-start justify-center relative overflow-y-auto overflow-x-hidden custom-scrollbar"
+              className="w-full md:w-2/3 p-6 md:p-12 flex items-start justify-center relative overflow-y-auto overflow-x-hidden custom-scrollbar bg-background"
               style={{
-                background: "linear-gradient(to bottom, #09011A 0%, #09011A 50%)",
                 transformOrigin: "top",
               }}
             >

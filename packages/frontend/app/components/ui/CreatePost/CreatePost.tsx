@@ -69,7 +69,7 @@ const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
       />
     </div>
     <div className="flex flex-col gap-1 min-w-0">
-      <div className="font-['Poppins'] font-medium text-[12px] sm:text-[14px] text-white tracking-[0.24px] truncate">
+      <div className="font-['Poppins'] font-medium text-[12px] sm:text-[14px] text-foreground tracking-[0.24px] truncate">
         {user.name}
       </div>
       <AudienceDropdown
@@ -314,7 +314,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
         {/* Modal */}
         <div
           className={cn(
-            "relative bg-[#09011A] rounded-[20px] w-full",
+            "relative bg-brand-dark rounded-[20px] w-full",
             "max-w-[360px] sm:max-w-[500px] md:max-w-[700px] lg:max-w-[900px]",
             "max-h-[90vh] overflow-hidden"
           )}
@@ -330,9 +330,9 @@ const CreatePost: React.FC<CreatePostProps> = ({
             type="button"
             className={cn(
               "absolute flex items-center justify-center w-8 h-8",
-              "text-white/60 hover:text-white transition-colors",
+              "text-text-secondary hover:text-foreground transition-colors",
               "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50",
-              "rounded-full hover:bg-white/10",
+              "rounded-full hover:bg-surface-overlay",
               "top-4 right-4 sm:top-6 sm:right-6 lg:top-[37px] lg:right-[37px]"
             )}
           >

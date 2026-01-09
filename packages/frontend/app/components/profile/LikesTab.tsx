@@ -25,7 +25,7 @@ export default function LikesTab({ likes }: LikesTabProps) {
 
   if (likes.length === 0) {
     return (
-      <div className="text-center py-12 text-white/50">
+      <div className="text-center py-12 text-text-secondary">
         <p>No likes yet</p>
       </div>
     );

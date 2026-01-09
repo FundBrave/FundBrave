@@ -49,16 +49,16 @@ export default function WalletConnection({
       ) : (
         <div className="space-y-3">
           {/* Connected Wallet Info */}
-          <div className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3">
+          <div className="flex items-center justify-between bg-surface-overlay rounded-xl px-4 py-3">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm text-white/70">
+              <span className="text-sm text-text-secondary">
                 Connected: {walletAddress}
               </span>
             </div>
             <button
               onClick={onDisconnect}
-              className="text-xs text-white/50 hover:text-white/70 transition-colors"
+              className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
             >
               Disconnect
             </button>
@@ -71,7 +71,7 @@ export default function WalletConnection({
             className={cn(
               "w-full h-14 rounded-[20px] text-white font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2",
               amount <= 0
-                ? "bg-white/10 text-white/30 cursor-not-allowed"
+                ? "bg-surface-elevated text-text-tertiary cursor-not-allowed"
                 : isDonating
                 ? "bg-gradient-to-r from-primary-500 to-soft-purple-500 opacity-80 cursor-not-allowed"
                 : "bg-gradient-to-r from-primary-500 to-soft-purple-500 shadow-[0px_3px_3px_0px_rgba(254,254,254,0.25)] hover:shadow-[0px_6px_20px_0px_rgba(139,92,246,0.4)] hover:scale-[1.01] active:scale-[0.99]"
@@ -93,13 +93,13 @@ export default function WalletConnection({
       )}
 
       {/* Terms and conditions text */}
-      <p className="text-white/60 text-sm leading-6 text-center">
+      <p className="text-text-secondary text-sm leading-6 text-center">
         By choosing this payment method, you agree to the{" "}
-        <span className="text-white/80 hover:text-white cursor-pointer transition-colors">
+        <span className="text-foreground/80 hover:text-foreground cursor-pointer transition-colors">
           FundBrave terms and conditions
         </span>{" "}
         and acknowledge the{" "}
-        <span className="text-white/80 hover:text-white cursor-pointer transition-colors">
+        <span className="text-foreground/80 hover:text-foreground cursor-pointer transition-colors">
           privacy policy
         </span>
       </p>

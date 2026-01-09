@@ -70,7 +70,7 @@ export function CommentInput({
       onKeyDown={handleKeyDown}
     >
       {/* User Avatar */}
-      <div className="w-8 h-8 rounded-full bg-neutral-dark-400 border border-border-subtle flex-shrink-0 overflow-hidden">
+      <div className="w-8 h-8 rounded-full bg-surface-sunken border border-border-subtle flex-shrink-0 overflow-hidden">
         <img
           src={userAvatar}
           alt="Your avatar"
@@ -91,7 +91,7 @@ export function CommentInput({
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between">
-          <span className="text-xs text-white/30">
+          <span className="text-xs text-text-tertiary">
             {content.length > 0 && (
               <>
                 {content.length} characters
@@ -105,7 +105,7 @@ export function CommentInput({
             {(isReply || onCancel) && (
               <button
                 onClick={handleCancel}
-                className="px-3 py-1.5 text-xs text-white/50 hover:text-white/80 transition-colors"
+                className="px-3 py-1.5 text-xs text-text-secondary hover:text-foreground transition-colors"
               >
                 Cancel
               </button>
@@ -117,7 +117,7 @@ export function CommentInput({
                 "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
                 content.trim() && !isSubmitting
                   ? "bg-primary text-white hover:bg-primary/90"
-                  : "bg-white/10 text-white/30 cursor-not-allowed"
+                  : "bg-surface-overlay text-text-tertiary cursor-not-allowed"
               )}
             >
               {isSubmitting ? (

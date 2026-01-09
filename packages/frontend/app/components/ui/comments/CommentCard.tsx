@@ -129,7 +129,7 @@ export function CommentCard({
     <div className={cn("flex flex-col gap-3", depth > 0 && "ml-8 pl-4 border-l border-border-subtle/50")}>
       <div className="flex gap-3">
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-neutral-dark-400 border border-border-subtle flex-shrink-0 overflow-hidden">
+        <div className="w-8 h-8 rounded-full bg-surface-sunken border border-border-subtle flex-shrink-0 overflow-hidden">
           <img
             src={comment.author.avatar}
             alt={comment.author.name}
@@ -141,7 +141,7 @@ export function CommentCard({
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-white text-sm hover:underline cursor-pointer">
+            <span className="font-semibold text-foreground text-sm hover:underline cursor-pointer">
               {comment.author.name}
             </span>
             {comment.author.isVerified && (
@@ -153,17 +153,17 @@ export function CommentCard({
                 <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81s-1.27 2.52-.81 3.91c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.9.81 3.91s2.52 1.27 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.67-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.04 4.3l-3.71-3.71 1.41-1.41 2.3 2.3 5.3-5.3 1.41 1.41-6.71 6.71z" />
               </svg>
             )}
-            <span className="text-white/40 text-xs">
+            <span className="text-text-tertiary text-xs">
               @{comment.author.username}
             </span>
-            <span className="text-white/30 text-xs">•</span>
-            <span className="text-white/40 text-xs">
+            <span className="text-text-tertiary text-xs">•</span>
+            <span className="text-text-tertiary text-xs">
               {formatRelativeTime(comment.createdAt)}
             </span>
           </div>
 
           {/* Comment Content */}
-          <p className="text-white/90 text-sm mt-1 leading-relaxed">
+          <p className="text-foreground text-sm mt-1 leading-relaxed">
             {comment.content}
           </p>
 
@@ -176,7 +176,7 @@ export function CommentCard({
                 "flex items-center gap-1.5 text-xs font-medium transition-colors",
                 comment.isLiked
                   ? "text-pink-500 hover:text-pink-400"
-                  : "text-white/50 hover:text-pink-500"
+                  : "text-text-secondary hover:text-pink-500"
               )}
             >
               <Heart
@@ -203,7 +203,7 @@ export function CommentCard({
               <div className="relative">
                 <button
                   onClick={() => setShowMenu(!showMenu)}
-                  className="p-1 rounded text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+                  className="p-1 rounded text-text-tertiary hover:text-text-secondary hover:bg-surface-overlay transition-colors"
                 >
                   <MoreHorizontal size={14} />
                 </button>
@@ -213,7 +213,7 @@ export function CommentCard({
                       className="fixed inset-0 z-10"
                       onClick={() => setShowMenu(false)}
                     />
-                    <div className="absolute left-0 top-full mt-1 z-20 bg-neutral-dark-400 border border-border-subtle rounded-lg shadow-xl overflow-hidden">
+                    <div className="absolute left-0 top-full mt-1 z-20 bg-surface-sunken border border-border-subtle rounded-lg shadow-xl overflow-hidden">
                       <button
                         onClick={handleDelete}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors w-full"

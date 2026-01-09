@@ -32,7 +32,7 @@ export default function CampaignInfoHeader({
         {/* Donation Impact Indicator */}
         {showImpact && amount > 0 && (
           <div className="absolute inset-0 bg-gradient-to-t from-primary-500/80 to-transparent flex items-end justify-center pb-3 animate-in fade-in duration-300">
-            <div className="flex items-center gap-1 text-white text-sm font-semibold">
+            <div className="flex items-center gap-1 text-white text-sm font-semibold drop-shadow-md">
               <TrendingUp className="w-4 h-4" />+{donationImpact.toFixed(1)}% of
               goal
             </div>
@@ -40,22 +40,22 @@ export default function CampaignInfoHeader({
         )}
       </div>
       <div className="flex-1">
-        <p className="text-white/80 text-lg leading-6 mb-1">
+        <p className="text-foreground/80 text-lg leading-6 mb-1">
           You are supporting{" "}
-          <span className="font-bold text-white">{campaign.title}</span>
+          <span className="font-bold text-foreground">{campaign.title}</span>
         </p>
-        <p className="text-white/80 text-base leading-6 mb-3">
+        <p className="text-foreground/80 text-base leading-6 mb-3">
           Your donation will benefit{" "}
           <span className="font-semibold">{campaign.creator.name}</span>
         </p>
         {/* Mini Progress Bar */}
-        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+        <div className="h-2 bg-surface-sunken rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-primary-500 to-soft-purple-500 transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
-        <p className="text-xs text-white/50 mt-1">
+        <p className="text-xs text-text-secondary mt-1">
           {formatAmount(campaign.amountRaised)} /{" "}
           {formatAmount(campaign.targetAmount)} USD raised
         </p>
@@ -78,7 +78,7 @@ export function SecurityBadge() {
         <h4 className="text-base sm:text-lg font-semibold mb-1">
           FundBrave protects your donation
         </h4>
-        <p className="text-white/60 text-sm leading-6">
+        <p className="text-text-secondary text-sm leading-6">
           Your donation is safest with cryptocurrency and will get to the
           beneficiary when due.{" "}
           <span className="font-medium text-soft-purple-400 hover:text-soft-purple-300 cursor-pointer transition-colors">

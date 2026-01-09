@@ -22,16 +22,16 @@ function Calendar({
         month: "flex flex-col gap-4",
         month_caption: "flex justify-center pt-1 relative items-center w-full",
         caption_label: cn(
-          "text-sm font-medium text-white",
+          "text-sm font-medium text-foreground",
           props.captionLayout === "dropdown" && "hidden"
         ),
         nav: "flex items-center gap-1",
         button_previous: cn(
-          "absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 flex items-center justify-center text-white hover:bg-purple-900/50 rounded-md transition-colors",
+          "absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 flex items-center justify-center text-foreground hover:bg-purple-900/50 rounded-md transition-colors",
           props.captionLayout === "dropdown" && "left-0" // Adjust nav position if needed, optional but safe
         ),
         button_next: cn(
-          "absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 flex items-center justify-center text-white hover:bg-purple-900/50 rounded-md transition-colors",
+          "absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 flex items-center justify-center text-foreground hover:bg-purple-900/50 rounded-md transition-colors",
           props.captionLayout === "dropdown" && "right-0"
         ),
         month_grid: "w-full border-collapse",
@@ -40,28 +40,28 @@ function Calendar({
         week: "flex w-full mt-2",
         day: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
         day_button: cn(
-          "h-9 w-9 p-0 font-normal text-white hover:bg-purple-900/50 rounded-md transition-colors",
-          "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-neutral-dark-500"
+          "h-9 w-9 p-0 font-normal text-foreground hover:bg-purple-900/50 rounded-md transition-colors",
+          "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-background"
         ),
         selected: "bg-purple-600 text-white hover:bg-purple-600 hover:text-white focus:bg-purple-600 focus:text-white rounded-md",
         today: "bg-purple-900/30 text-purple-300 rounded-md",
-        outside: "text-neutral-dark-200 opacity-50",
-        disabled: "text-neutral-dark-200 opacity-50 cursor-not-allowed",
+        outside: "text-text-tertiary opacity-50",
+        disabled: "text-text-tertiary opacity-50 cursor-not-allowed",
         hidden: "invisible",
         // Dropdown styles for month/year selection
         dropdowns: "flex items-center justify-center gap-2",
         dropdown: "relative",
         dropdown_root: "relative inline-block",
         months_dropdown: cn(
-          "appearance-none bg-neutral-dark-400 border border-purple-900/50 rounded-lg px-3 py-1.5",
-          "text-white text-sm font-medium cursor-pointer",
+          "appearance-none bg-surface-sunken border border-purple-900/50 rounded-lg px-3 py-1.5",
+          "text-foreground text-sm font-medium cursor-pointer",
           "hover:border-purple-500/70 hover:bg-purple-900/20",
           "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent",
           "transition-all duration-200"
         ),
         years_dropdown: cn(
-          "appearance-none bg-[#1a1225] border border-purple-900/50 rounded-lg px-3 py-1.5",
-          "text-white text-sm font-medium cursor-pointer",
+          "appearance-none bg-surface-sunken border border-purple-900/50 rounded-lg px-3 py-1.5",
+          "text-foreground text-sm font-medium cursor-pointer",
           "hover:border-purple-500/70 hover:bg-purple-900/20",
           "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent",
           "transition-all duration-200"

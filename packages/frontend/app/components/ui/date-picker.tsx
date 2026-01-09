@@ -83,7 +83,7 @@ export function DatePicker({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={cn(
-          "w-full h-[60px] bg-neutral-dark-400 rounded-xl px-6 py-4 flex items-center gap-3 border border-transparent",
+          "w-full h-[60px] bg-surface-sunken rounded-xl px-6 py-4 flex items-center gap-3 border border-transparent",
           "focus:border-purple-500 focus:outline-none transition-colors text-left",
           disabled && "opacity-50 cursor-not-allowed",
           isOpen && "border-purple-500"
@@ -93,7 +93,7 @@ export function DatePicker({
         <span
           className={cn(
             "flex-1 text-base font-medium tracking-wide",
-            value ? "text-white" : "text-muted-foreground"
+            value ? "text-foreground" : "text-muted-foreground"
           )}
         >
           {value ? format(value, "MMMM d, yyyy") : placeholder}
@@ -102,7 +102,7 @@ export function DatePicker({
 
       {/* Dropdown Calendar */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 z-50 bg-neutral-dark-400 border border-purple-900/50 rounded-xl shadow-2xl shadow-purple-900/20 animate-in fade-in-0 zoom-in-95">
+        <div className="absolute top-full left-0 mt-2 z-50 bg-surface-sunken border border-purple-900/50 rounded-xl shadow-2xl shadow-purple-900/20 animate-in fade-in-0 zoom-in-95">
           <Calendar
             mode="single"
             selected={value}

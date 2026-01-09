@@ -90,7 +90,7 @@ export default function AuthHero({ variant }: AuthHeroProps) {
         </motion.h2>
 
         <motion.p
-          className="text-lg text-gray-200 leading-relaxed"
+          className="text-lg text-text-secondary leading-relaxed"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{

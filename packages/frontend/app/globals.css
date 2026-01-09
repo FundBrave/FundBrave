@@ -100,6 +100,25 @@
   --sidebar-ring: oklch(0.708 0 0);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+
+  /* Surface colors for light mode */
+  --surface-elevated: oklch(0.98 0 0);
+  --surface-sunken: oklch(0.96 0.01 275);
+  --surface-overlay: rgba(0, 0, 0, 0.05);
+
+  /* Text hierarchy */
+  --text-primary: oklch(0.15 0.03 280);
+  --text-secondary: oklch(0.45 0.02 280);
+  --text-tertiary: oklch(0.6 0.01 280);
+
+  /* Borders */
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-emphasis: rgba(69, 12, 240, 0.2);
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 /* Tailwind v4 CSS-first design system tokens */
@@ -308,6 +327,25 @@
   --radius-card: var(--radius-lg);
   --radius-input: var(--radius);
 
+  /* Semantic surface colors */
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-overlay: var(--surface-overlay);
+
+  /* Semantic text colors */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  /* Semantic border colors */
+  --color-border-default: var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-emphasis: var(--border-emphasis);
+
+  /* Semantic shadows */
+  --shadow-card: var(--shadow-card);
+  --shadow-elevated: var(--shadow-elevated);
+
   /* Font families */
   --font-family-gilgan: "Gilgan", sans-serif;
   --font-family-montserrat: "Montserrat", sans-serif;
@@ -458,6 +496,24 @@
     background-color: var(--color-brand-dark);
   }
 
+  /* Onboarding aside gradient - light purple to white (light mode) */
+  .onboarding-aside-gradient {
+    background: linear-gradient(
+      to bottom,
+      var(--purple-200) 0%,
+      #ffffff 100%
+    );
+  }
+
+  /* Dark mode: purple-900 to brand dark */
+  .dark .onboarding-aside-gradient {
+    background: linear-gradient(
+      to bottom,
+      var(--purple-900) 0%,
+      var(--color-brand-dark) 100%
+    );
+  }
+
   /* Custom scrollbar utility class */
   .custom-scrollbar {
     scrollbar-width: thin;
@@ -554,6 +610,29 @@
       var(--soft-purple-500) 100%
     );
   }
+
+  /* Hide scrollbar for horizontal scroll containers (mobile filters) */
+  .scrollbar-hidden {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+
+  /* Text on media/overlay backgrounds - always white regardless of theme */
+  .text-on-media {
+    color: white !important;
+  }
+
+  .text-on-overlay {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .text-on-media-secondary {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
 }
 
 .dark {
@@ -580,9 +659,24 @@
   --accent-foreground: #ffffff;
   --destructive: #ff0000;
   --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.1); /* Primary Blue 700  it was 3f0bda*/ 
+  --border: rgba(255, 255, 255, 0.1); /* Primary Blue 700  it was 3f0bda*/
   --input: rgba(255, 255, 255, 0.1); /* Primary Blue 700 it was 3f0bda */
   --ring: #a98ff8; /* Primary Blue 200 */
+
+  --surface-elevated: var(--neutral-dark-400);
+  --surface-sunken: var(--neutral-dark-500);
+  --surface-overlay: rgba(255, 255, 255, 0.05);
+
+  --text-primary: oklch(1 0 0);
+  --text-secondary: oklch(0.7 0 0);
+  --text-tertiary: oklch(0.5 0 0);
+
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-emphasis: rgba(135, 98, 250, 0.3);
+
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -832,4 +926,71 @@ a,
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Campaign Card Animations */
+@keyframes campaign-progress-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes campaign-skeleton-wave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Progress bar shimmer effect */
+.campaign-progress-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.campaign-progress-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: campaign-progress-shimmer 2s ease-in-out infinite;
+}
+
+/* YouTube-style skeleton wave effect */
+.campaign-skeleton {
+  position: relative;
+  overflow: hidden;
+}
+
+.campaign-skeleton::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: campaign-skeleton-wave 1.5s ease-in-out infinite;
+  z-index: 10;
+  pointer-events: none;
 }

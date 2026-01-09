@@ -20,22 +20,22 @@ export default function DonationCustomInput({
           error
             ? "border-red-500/60 bg-red-500/5"
             : customAmount
-            ? "border-soft-purple-500 bg-white/5"
-            : "border-white/10 focus-within:border-white/30"
+            ? "border-soft-purple-500 bg-surface-overlay"
+            : "border-border-default focus-within:border-border-subtle"
         )}
       >
-        <span className="text-base lg:text-lg font-extrabold text-white absolute left-4 sm:left-6 lg:left-8">
+        <span className="text-base lg:text-lg font-extrabold text-foreground absolute left-4 sm:left-6 lg:left-8">
           USD
         </span>
         <input
           type="number"
           value={customAmount}
           onChange={onCustomAmountChange}
-          className="w-full bg-transparent text-right text-[24px] sm:text-[32px] lg:text-[40px] font-bold text-white focus:outline-none pr-12 sm:pr-16 lg:pr-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="w-full bg-transparent text-right text-[24px] sm:text-[32px] lg:text-[40px] font-bold text-foreground focus:outline-none pr-12 sm:pr-16 lg:pr-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           placeholder="Enter amount"
           aria-label="Custom donation amount in USD"
         />
-        <span className="text-[24px] sm:text-[32px] lg:text-[40px] font-bold text-white/50 absolute right-4 sm:right-6 lg:right-8">
+        <span className="text-[24px] sm:text-[32px] lg:text-[40px] font-bold text-text-tertiary absolute right-4 sm:right-6 lg:right-8">
           .00
         </span>
       </div>

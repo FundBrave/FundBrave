@@ -12,6 +12,7 @@ import {
   type Message,
   type SharedFile,
 } from "@/app/components/messenger";
+import { BackHeader } from "@/app/components/common/BackHeader";
 
 // Mock data for chats
 const mockChats: Chat[] = [
@@ -307,9 +308,11 @@ export default function MessengerPage() {
   const selectedChat = mockChats.find((c) => c.id === selectedChatId);
 
   return (
-    <div className="flex h-screen w-full flex-col bg-neutral-dark-500 md:flex-row">
+    <div className="flex h-screen flex-col bg-background">
+      <BackHeader title="Messages" fallbackHref="/" />
+      <div className="flex flex-1 w-full flex-col overflow-hidden md:flex-row">
       {/* Mobile Chat Selector */}
-      <div className="border-b border-white/10 p-4 md:hidden">
+      <div className="border-b border-border-default p-4 md:hidden">
         <MobileChatToggle
           onClick={() => setIsMobileDrawerOpen(true)}
           selectedChatName={
@@ -387,6 +390,7 @@ export default function MessengerPage() {
           />
         </div>
       </aside>
+      </div>
     </div>
   );
 }

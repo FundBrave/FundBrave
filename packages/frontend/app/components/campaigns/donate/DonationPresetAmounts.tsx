@@ -23,7 +23,7 @@ export default function DonationPresetAmounts({
             "h-[60px] sm:h-[70px] lg:h-[78px] px-4 lg:px-6 rounded-[20px] border font-semibold text-base lg:text-lg transition-all duration-200 relative overflow-hidden group",
             selectedPreset === val
               ? "border-soft-purple-500 bg-gradient-to-r from-primary-500/20 to-soft-purple-500/20 scale-[1.02]"
-              : "border-white/10 hover:border-white/30 hover:bg-white/5"
+              : "border-border-default hover:border-border-subtle hover:bg-surface-overlay"
           )}
         >
           {/* Selected indicator */}

@@ -62,7 +62,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
       {/* Upload Section */}
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <p className="text-white text-lg font-medium tracking-wide">
+          <p className="text-foreground text-lg font-medium tracking-wide">
             Upload image
           </p>
           <p className="text-muted-foreground text-base">
@@ -79,7 +79,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         <button
           onClick={() => fileInputRef.current?.click()}
           type="button"
-          className="px-10 py-4 bg-primary/10 border border-primary-500 rounded-[20px] text-white font-semibold text-base tracking-wide backdrop-blur-md shadow-[0px_8px_30px_0px_rgba(29,5,82,0.35)] hover:bg-primary/15 transition-colors flex items-center gap-2 justify-center"
+          className="px-10 py-4 bg-primary/10 border border-primary-500 rounded-[20px] text-foreground font-semibold text-base tracking-wide backdrop-blur-md shadow-[0px_8px_30px_0px_rgba(29,5,82,0.35)] hover:bg-primary/15 transition-colors flex items-center gap-2 justify-center"
         >
           <UploadIcon className="w-5 h-5" />
           Upload

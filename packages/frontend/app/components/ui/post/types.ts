@@ -10,9 +10,9 @@ export const postCardVariants = cva(
   {
     variants: {
       variant: {
-        default: "p-4 border-b border-border-subtle hover:bg-white/[0.02]",
-        liked: "p-4 border-b border-border-subtle hover:bg-white/[0.02]",
-        community: "rounded-2xl border border-border-subtle bg-neutral-dark-500/50 p-4",
+        default: "p-4 border-b border-border-subtle hover:bg-surface-overlay/20",
+        liked: "p-4 border-b border-border-subtle hover:bg-surface-overlay/20",
+        community: "rounded-2xl border border-border-subtle bg-background/50 p-4",
       },
     },
     defaultVariants: {

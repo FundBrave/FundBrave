@@ -248,7 +248,7 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 1.3, duration: 0.4 }}
         >
-          <span className="text-gray-300">Don't have an account? </span>
+          <span className="text-text-secondary">Don't have an account? </span>
           <motion.div className="inline-block" whileHover={{ scale: 1.05 }}>
             <button
               onClick={onToggle}

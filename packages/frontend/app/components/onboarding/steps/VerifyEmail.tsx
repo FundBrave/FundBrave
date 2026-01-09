@@ -41,7 +41,7 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+      <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
         Verify your email
       </h2>
       <p className="text-muted-foreground mb-8 text-sm md:text-base">
@@ -61,7 +61,7 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
             value={digit}
             onChange={(e) => handleInputChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
-            className="w-12 h-12 md:w-16 md:h-16 text-2xl md:text-3xl text-center bg-neutral-dark-400 rounded-lg text-white border border-border focus:border-purple-500 outline-none transition"
+            className="w-12 h-12 md:w-16 md:h-16 text-2xl md:text-3xl text-center bg-surface-elevated rounded-lg text-foreground border border-border-default focus:border-purple-500 outline-none transition"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 + i * 0.05 }}

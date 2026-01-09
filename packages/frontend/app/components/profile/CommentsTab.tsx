@@ -60,7 +60,7 @@ function CommentIcon({ className }: { className?: string }) {
  */
 export function CommentCard({ comment }: CommentCardProps) {
   return (
-    <div className="bg-neutral-dark-400/30 rounded-xl p-4 border-subtle">
+    <div className="bg-surface-sunken/30 rounded-xl p-4 border-subtle">
       <div className="flex gap-3">
         <img
           src={comment.campaignImage}
@@ -70,18 +70,18 @@ export function CommentCard({ comment }: CommentCardProps) {
         <div className="flex-1 min-w-0">
           <Link
             href={`/campaigns/${comment.campaignId}`}
-            className="text-white/60 text-sm hover:text-primary transition-colors line-clamp-1"
+            className="text-text-secondary text-sm hover:text-primary transition-colors line-clamp-1"
           >
             Commented on: {comment.campaignTitle}
           </Link>
-          <p className="text-white mt-2">{comment.content}</p>
-          <div className="flex items-center gap-4 mt-3 text-white/40 text-sm">
+          <p className="text-foreground mt-2">{comment.content}</p>
+          <div className="flex items-center gap-4 mt-3 text-text-tertiary text-sm">
             <span>{formatRelativeTime(comment.commentedAt)}</span>
-            <button className="flex items-center gap-1 hover:text-white/60 transition-colors">
+            <button className="flex items-center gap-1 hover:text-text-secondary transition-colors">
               <HeartIcon className="w-3.5 h-3.5" />
               {comment.likesCount}
             </button>
-            <button className="flex items-center gap-1 hover:text-white/60 transition-colors">
+            <button className="flex items-center gap-1 hover:text-text-secondary transition-colors">
               <CommentIcon className="w-3.5 h-3.5" />
               {comment.repliesCount} replies
             </button>
@@ -113,7 +113,7 @@ interface CommentsTabProps {
 export default function CommentsTab({ comments }: CommentsTabProps) {
   if (comments.length === 0) {
     return (
-      <div className="text-center py-12 text-white/50">
+      <div className="text-center py-12 text-text-secondary">
         <p>No comments yet</p>
       </div>
     );

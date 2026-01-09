@@ -153,7 +153,7 @@ const SocialProfile: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <h2 className="text-2xl font-semibold text-white tracking-wide">
+        <h2 className="text-2xl font-semibold text-foreground tracking-wide">
           Social Profiles
         </h2>
         <p className="text-muted-foreground text-lg">
@@ -173,15 +173,15 @@ const SocialProfile: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
           >
             <label
               htmlFor={field.id}
-              className="text-white text-lg font-medium tracking-wide"
+              className="text-foreground text-lg font-medium tracking-wide"
             >
               {field.label}
             </label>
             <div
-              className={`h-[60px] bg-neutral-dark-400 rounded-xl px-6 py-4 flex items-center gap-3 border ${
+              className={`h-[60px] bg-surface-elevated rounded-xl px-6 py-4 flex items-center gap-3 border ${
                 errors[field.id] && touchedFields.has(field.id)
                   ? "border-red-500"
-                  : "border-transparent"
+                  : "border-border-default"
               } focus-within:border-purple-500 transition-colors`}
             >
               <span className="text-muted-foreground">{field.icon}</span>
@@ -193,7 +193,7 @@ const SocialProfile: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
                 onChange={handleInputChange}
                 onBlur={() => handleBlur(field.id)}
                 placeholder={field.placeholder}
-                className="flex-1 bg-transparent text-white text-base outline-none placeholder:text-neutral-dark-200 font-medium tracking-wide"
+                className="flex-1 bg-transparent text-foreground text-base outline-none placeholder:text-text-tertiary font-medium tracking-wide"
               />
             </div>
             {errors[field.id] && touchedFields.has(field.id) && (

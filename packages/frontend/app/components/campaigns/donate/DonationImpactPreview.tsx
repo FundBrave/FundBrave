@@ -21,21 +21,21 @@ export default function DonationImpactPreview({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-r from-primary-500/10 to-soft-purple-500/10 border border-white/10 rounded-2xl p-5"
+      className="bg-gradient-to-r from-primary-500/10 to-soft-purple-500/10 border border-border-default rounded-2xl p-5"
     >
-      <p className="text-white/70 text-sm mb-4 font-medium">
+      <p className="text-text-secondary text-sm mb-4 font-medium">
         Your donation impact:
       </p>
       <div className="flex items-center gap-4">
         {/* Current Progress */}
         <div className="flex-1">
-          <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+          <div className="h-3 bg-surface-overlay rounded-full overflow-hidden">
             <div
-              className="h-full bg-white/30 rounded-full"
+              className="h-full bg-border-subtle rounded-full"
               style={{ width: `${currentProgress}%` }}
             />
           </div>
-          <p className="text-xs text-white/40 mt-2">
+          <p className="text-xs text-text-tertiary mt-2">
             Current: {currentProgress.toFixed(1)}%
           </p>
         </div>
@@ -45,7 +45,7 @@ export default function DonationImpactPreview({
 
         {/* New Progress (Animated) */}
         <div className="flex-1">
-          <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+          <div className="h-3 bg-surface-overlay rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-primary-500 to-soft-purple-500 rounded-full"
               initial={{ width: `${currentProgress}%` }}

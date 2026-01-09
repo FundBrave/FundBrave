@@ -230,7 +230,7 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
 
           {/* Modal */}
           <motion.div
-            className="relative w-full max-w-lg bg-[#09011a] rounded-2xl p-6 max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-lg bg-background rounded-2xl p-6 max-h-[90vh] overflow-y-auto"
             initial={{ opacity: 0, scale: 0.9, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 50 }}
@@ -239,7 +239,7 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-5 right-5 w-6 h-6 flex items-center justify-center text-white hover:text-gray-300 transition-colors"
+              className="absolute top-5 right-5 w-6 h-6 flex items-center justify-center text-foreground hover:text-text-secondary transition-colors"
               aria-label="Close modal"
               title="Close modal"
             >
@@ -262,10 +262,10 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
               {/* Community Section */}
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <h2 className="text-lg font-medium text-white leading-6 tracking-[0.48px]">
+                  <h2 className="text-lg font-medium text-foreground leading-6 tracking-[0.48px]">
                     {resolvedCampaignTitle}
                   </h2>
-                  <p className="text-sm text-white/80 leading-5 tracking-[0.3072px]">
+                  <p className="text-sm text-text-secondary leading-5 tracking-[0.3072px]">
                     {text ??
                       "Share this campaign based on the community missions and values"}
                   </p>
@@ -284,7 +284,7 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
                           className={`absolute inset-0 rounded-full ${category.color} group-hover:scale-110 transition-transform`}
                         />
                       </div>
-                      <span className="text-white text-sm font-medium leading-5">
+                      <span className="text-foreground text-sm font-medium leading-5">
                         {category.name}
                       </span>
                     </motion.button>
@@ -295,10 +295,10 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
               {/* Social Sharing Section */}
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <h2 className="text-lg font-medium text-white leading-6 tracking-[0.48px]">
+                  <h2 className="text-lg font-medium text-foreground leading-6 tracking-[0.48px]">
                     Reach more donors by sharing
                   </h2>
-                  <p className="text-sm text-white/80 leading-5">
+                  <p className="text-sm text-text-secondary leading-5">
                     We've written tailored messages and auto-generated posters
                     based on the fundraiser story for you to share
                   </p>
@@ -320,7 +320,7 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
                           {platform.icon}
                         </div>
                       </div>
-                      <span className="text-white text-sm font-medium leading-5">
+                      <span className="text-foreground text-sm font-medium leading-5">
                         {platform.name}
                       </span>
                     </motion.button>
@@ -332,7 +332,7 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
               <div className="border border-border-subtle rounded-xl p-4 flex items-center gap-2">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <svg
-                    className="w-5 h-5 text-white/80 flex-shrink-0"
+                    className="w-5 h-5 text-text-secondary flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -344,13 +344,13 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
                       d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                     />
                   </svg>
-                  <span className="text-white/80 text-sm leading-5 truncate flex-1">
+                  <span className="text-text-secondary text-sm leading-5 truncate flex-1">
                     {resolvedCampaignUrl}
                   </span>
                 </div>
                 <motion.button
                   onClick={handleCopyLink}
-                  className="text-[#048eff] text-sm font-semibold leading-5 flex-shrink-0 hover:text-[#0369d3] transition-colors"
+                  className="text-primary-400 text-sm font-semibold leading-5 flex-shrink-0 hover:text-primary-500 transition-colors"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

@@ -72,7 +72,7 @@ interface ChatHeaderProps {
  */
 function ChatHeader({ user, isSharedFilesVisible = true, onToggleSharedFiles }: ChatHeaderProps) {
   return (
-    <div className="flex items-center gap-3 border-b border-white/10 bg-[#1a1a1a] px-4 py-3 md:px-6">
+    <div className="flex items-center gap-3 border-b border-border-default bg-surface-elevated px-4 py-3 md:px-6">
       {/* Avatar */}
       <div className="relative flex-shrink-0">
         <Avatar
@@ -83,7 +83,7 @@ function ChatHeader({ user, isSharedFilesVisible = true, onToggleSharedFiles }: 
         />
         {user.isOnline && (
           <span
-            className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#1a1a1a] bg-green-500"
+            className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-surface-elevated bg-green-500"
             aria-label="Online"
           />
         )}
@@ -91,13 +91,13 @@ function ChatHeader({ user, isSharedFilesVisible = true, onToggleSharedFiles }: 
 
       {/* User info */}
       <div className="min-w-0 flex-1">
-        <h2 className="truncate text-sm font-semibold text-white">
+        <h2 className="truncate text-sm font-semibold text-foreground">
           @{user.username}
         </h2>
         <p
           className={cn(
             "text-xs",
-            user.isOnline ? "text-green-400" : "text-neutral-dark-200"
+            user.isOnline ? "text-green-400" : "text-text-tertiary"
           )}
         >
           {user.isOnline ? "Online" : "Offline"}
@@ -110,13 +110,13 @@ function ChatHeader({ user, isSharedFilesVisible = true, onToggleSharedFiles }: 
           variant="ghost"
           size="icon"
           onClick={onToggleSharedFiles}
-          className="h-9 w-9 rounded-full hover:bg-white/10"
+          className="h-9 w-9 rounded-full hover:bg-surface-overlay"
           aria-label={isSharedFilesVisible ? "Hide shared files" : "Show shared files"}
         >
           {isSharedFilesVisible ? (
-            <PanelRightClose className="h-5 w-5 text-neutral-dark-100" />
+            <PanelRightClose className="h-5 w-5 text-text-secondary" />
           ) : (
-            <PanelRightOpen className="h-5 w-5 text-neutral-dark-100" />
+            <PanelRightOpen className="h-5 w-5 text-text-secondary" />
           )}
         </Button>
       </div>
@@ -156,13 +156,13 @@ function MessageInput({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex items-center gap-3 border-t border-white/10 bg-[#1a1a1a] px-4 py-3 md:px-6"
+      className="flex items-center gap-3 border-t border-border-default bg-surface-elevated px-4 py-3 md:px-6"
     >
       {/* Emoji button */}
       <button
         type="button"
         onClick={onEmojiClick}
-        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-neutral-dark-100 transition-colors hover:bg-white/5 hover:text-white"
+        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-overlay hover:text-foreground"
         aria-label="Add emoji"
       >
         <Smile className="h-5 w-5" />
@@ -176,13 +176,13 @@ function MessageInput({
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Enter your message here..."
-          className="w-full rounded-full border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-sm text-white placeholder:text-neutral-dark-200 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+          className="w-full rounded-full border border-border-default bg-surface-overlay py-3 pl-4 pr-12 text-sm text-foreground placeholder:text-text-tertiary focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
         />
         {/* Attachment button inside input */}
         <button
           type="button"
           onClick={onAttachmentClick}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-dark-200 transition-colors hover:text-white"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors hover:text-foreground"
           aria-label="Add attachment"
         >
           <Paperclip className="h-5 w-5" />
@@ -197,7 +197,7 @@ function MessageInput({
           "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all",
           message.trim()
             ? "bg-[linear-gradient(90deg,var(--color-primary)_0%,var(--color-purple-500)_50%,var(--color-soft-purple-500)_100%)] text-white shadow-[0_8px_30px_0_rgba(97,36,243,0.35)] hover:brightness-110"
-            : "bg-white/10 text-neutral-dark-300 cursor-not-allowed"
+            : "bg-surface-overlay text-text-tertiary cursor-not-allowed"
         )}
         aria-label="Send message"
       >
@@ -234,7 +234,7 @@ export function ChatArea({
   const messageGroups = groupMessagesByDate(messages);
 
   return (
-    <div className="flex h-full flex-col bg-[#0f0f0f]">
+    <div className="flex h-full flex-col bg-background">
       {/* Chat Header */}
       <ChatHeader
         user={chatUser}

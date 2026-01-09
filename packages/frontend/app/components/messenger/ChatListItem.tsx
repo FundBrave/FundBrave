@@ -34,8 +34,8 @@ export function ChatListItem({
       aria-selected={isSelected}
       aria-current={isSelected ? "true" : undefined}
       className={cn(
-        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/5",
-        isSelected && "bg-white/10"
+        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-overlay",
+        isSelected && "bg-surface-overlay"
       )}
     >
       {/* Avatar with online indicator */}
@@ -49,7 +49,7 @@ export function ChatListItem({
         {/* Online indicator - green dot */}
         {!chat.isGroup && chat.user.isOnline && (
           <span
-            className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-neutral-dark-500 bg-green-500"
+            className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-green-500"
             aria-label="Online"
           />
         )}
@@ -58,16 +58,16 @@ export function ChatListItem({
       {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-1">
-          <h3 className="truncate text-sm font-medium text-white">
+          <h3 className="truncate text-sm font-medium text-foreground">
             {displayName}
           </h3>
           {displayUsername && (
-            <span className="truncate text-xs text-neutral-dark-100">
+            <span className="truncate text-xs text-text-secondary">
               {displayUsername}
             </span>
           )}
         </div>
-        <p className="mt-0.5 truncate text-xs text-neutral-dark-100">
+        <p className="mt-0.5 truncate text-xs text-text-secondary">
           {chat.lastMessage}
         </p>
       </div>
@@ -75,7 +75,7 @@ export function ChatListItem({
       {/* Unread indicator */}
       {chat.unreadCount && chat.unreadCount > 0 && (
         <span
-          className="flex h-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full bg-purple-500 px-1.5 text-[10px] font-semibold text-white"
+          className="flex h-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full bg-purple-500 px-1.5 text-[10px] font-semibold text-foreground"
           aria-label={`${chat.unreadCount} unread messages`}
         >
           {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
