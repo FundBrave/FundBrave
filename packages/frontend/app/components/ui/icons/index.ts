@@ -59,6 +59,7 @@ export {
   Settings,
   Clock,
   Star,
+  Info,
 } from './ui';
 
 // Form Icons (mail, lock, user, upload)
@@ -110,3 +111,4 @@ export {
   WhatsAppIcon,
   EmailIcon,
 } from './SocialIcons';
+export { AlertCircle } from './ui';

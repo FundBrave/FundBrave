@@ -20,6 +20,13 @@ export default function Navbar() {
     theme === "dark" ? "/FundBrave_light_logo.png" : "/FundBrave_dark_logo.png";
   return (
     <nav className="border-b border-border dark:bg-background shadow-sm">
+      {/* Skip to main content link for keyboard navigation */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
+      >
+        Skip to main content
+      </a>
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/" className="flex items-center">

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { X } from "@/app/components/ui/icons";
 import { RemoveScroll } from "react-remove-scroll";
 import {
@@ -14,6 +14,7 @@ import {
   createCampaignReminderEvent,
   openCalendar,
 } from "@/lib/utils/calendar";
+import { trapFocus } from "@/app/lib/accessibility";
 
 interface AddReminderModalProps {
   isOpen: boolean;
@@ -75,6 +76,32 @@ export default function AddReminderModal({
   campaignDescription,
   onReminderSet,
 }: AddReminderModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Trap focus when modal is open
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      const cleanup = trapFocus(modalRef.current);
+      // Focus the close button when modal opens
+      const closeButton = modalRef.current.querySelector('button[aria-label="Close"]') as HTMLElement;
+      closeButton?.focus();
+
+      return cleanup;
+    }
+  }, [isOpen]);
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleProviderSelect = (providerId: string) => {
@@ -106,7 +133,13 @@ export default function AddReminderModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <RemoveScroll>
-        <div className="bg-brand-dark rounded-[20px] w-full max-w-[717px] min-h-[auto] sm:min-h-[540px] relative overflow-hidden">
+        <div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reminder-modal-title"
+          className="bg-brand-dark rounded-[20px] w-full max-w-[717px] min-h-[auto] sm:min-h-[540px] relative overflow-hidden"
+        >
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -122,7 +155,10 @@ export default function AddReminderModal({
             <div className="w-full sm:w-[404px] max-w-full">
               {/* Header */}
               <div className="text-center mb-6 sm:mb-7">
-                <h2 className="font-['Poppins'] font-medium text-[18px] sm:text-[20px] text-foreground leading-[28px] sm:leading-[30px] tracking-[0.48px] mb-1.5">
+                <h2
+                  id="reminder-modal-title"
+                  className="font-['Poppins'] font-medium text-[18px] sm:text-[20px] text-foreground leading-[28px] sm:leading-[30px] tracking-[0.48px] mb-1.5"
+                >
                   Add a reminder
                 </h2>
                 <p className="font-['Roboto'] font-normal text-[14px] sm:text-[16px] text-foreground/80 leading-[22px] sm:leading-[24px] tracking-[0.3072px] max-w-[352px] mx-auto">
