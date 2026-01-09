@@ -29,15 +29,15 @@ export function HomeLayout({
   return (
     <div
       className={cn(
-        "min-h-[calc(100vh-80px)]",
+        "relative min-h-[calc(100vh-80px)] w-full flex",
         className
       )}
     >
-      {/* Left Sidebar - Fixed, 280px, desktop only (≥1024px) */}
+      {/* Left Sidebar - Sticky, 280px, desktop only (≥1024px) */}
       {leftSidebar && (
         <aside
           className={cn(
-            "hidden lg:fixed lg:left-0 lg:top-20 lg:block w-[280px]",
+            "hidden lg:block lg:sticky lg:top-20 w-[280px] shrink-0",
             "h-[calc(100vh-80px)] overflow-y-auto scrollbar-hidden",
             "border-r border-[var(--border-subtle)] p-6 bg-background"
           )}
@@ -46,23 +46,22 @@ export function HomeLayout({
         </aside>
       )}
 
-      {/* Main Content - Centered with margins for fixed sidebars */}
+      {/* Main Content - Flexible center column */}
       <main
         className={cn(
-          "min-w-0",
+          "flex-1 min-w-0",
           "md:px-6 md:py-6 md:pt-24 px-2 py-2 pt-12",
-          "lg:ml-[296px] md:mr-[356px]",
-          "max-w-full mx-auto"
+          "overflow-x-hidden"
         )}
       >
         {children}
       </main>
 
-      {/* Right Sidebar - Fixed, 340px, tablet+ (≥768px) */}
+      {/* Right Sidebar - Sticky, 340px, tablet+ (≥768px) */}
       {rightSidebar && (
         <aside
           className={cn(
-            "hidden md:fixed md:right-0 md:top-20 md:block w-[340px]",
+            "hidden md:block md:sticky md:top-20 w-[340px] shrink-0",
             "h-[calc(100vh-80px)] overflow-y-auto scrollbar-hidden",
             "border-l border-[var(--border-subtle)] p-6 bg-background"
           )}

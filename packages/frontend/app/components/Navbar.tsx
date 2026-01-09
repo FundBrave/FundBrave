@@ -27,7 +27,7 @@ export default function Navbar() {
       >
         Skip to main content
       </a>
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="max-w-[1400px] mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
             <Image
@@ -88,7 +88,7 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white dark:bg-background border-t border-border">
-          <div className="container mx-auto px-4 py-3 space-y-4">
+          <div className="max-w-[1400px] mx-auto px-4 py-3 space-y-4">
             <Link
               href="#"
               className="block py-2 text-primary-900 dark:text-white hover:text-primary transition-colors"
