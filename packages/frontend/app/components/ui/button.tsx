@@ -120,13 +120,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         ref={ref}
         disabled={disabled || loading}
+        aria-busy={loading}
+        aria-live="polite"
         data-variant={variant}
         data-size={size}
         {...props}
       >
         {loading ? (
           <>
-            <Spinner size="sm" color="white" />
+            <Spinner size="sm" color="white" aria-hidden="true" />
             <span>{loadingText}</span>
           </>
         ) : (

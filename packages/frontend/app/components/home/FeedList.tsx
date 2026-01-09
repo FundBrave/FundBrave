@@ -134,7 +134,7 @@ export function FeedList({ filter = "recent", className }: FeedListProps) {
   }
 
   return (
-    <div className={cn("flex flex-col gap-4", className)}>
+    <div className={cn("flex flex-col gap-4")}>
       {/* Posts List */}
       {sortedPosts.map((post, index) => (
         <motion.div

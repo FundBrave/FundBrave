@@ -172,9 +172,17 @@ export default function Navbar({ className }: NavbarProps) {
         className
       )}
     >
+      {/* Skip to main content link - for keyboard navigation */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
+      >
+        Skip to main content
+      </a>
+
       <div className="w-full px-4 lg:px-10">
         {/* Desktop Navigation - Height: 80px as per Figma */}
-        <div className="hidden lg:flex h-20 items-center justify-between max-w-7xl mx-auto">
+        <div className="hidden lg:flex h-20 items-center justify-between max-w-full mx-auto">
           {/* Logo - 146px x 44px */}
           <Link href="/" className="shrink-0">
             <div className="h-11 w-[146px] relative overflow-hidden">
@@ -205,8 +213,9 @@ export default function Navbar({ className }: NavbarProps) {
               !isSearchExpanded && "cursor-pointer hover:bg-surface-elevated justify-center",
               isSearchExpanded && "px-3 gap-2"
             )}
+            role="search"
           >
-            <Search size={20} className="text-text-secondary shrink-0" />
+            <Search size={20} className="text-text-secondary shrink-0" aria-hidden="true" />
             <AnimatePresence>
               {isSearchExpanded && (
                 <motion.div
@@ -216,9 +225,13 @@ export default function Navbar({ className }: NavbarProps) {
                   transition={{ duration: DURATION.fast, ease: EASE.snappy }}
                   className="flex items-center flex-1 min-w-0"
                 >
+                  <label htmlFor="desktop-search" className="sr-only">
+                    Search campaigns
+                  </label>
                   <input
+                    id="desktop-search"
                     ref={searchInputRef}
-                    type="text"
+                    type="search"
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -426,7 +439,7 @@ export default function Navbar({ className }: NavbarProps) {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="flex lg:hidden h-16 items-center justify-between">
+        <div className="flex w-full lg:hidden h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="shrink-0">
             <div className="h-8 w-[100px] relative overflow-hidden">
@@ -497,10 +510,14 @@ export default function Navbar({ className }: NavbarProps) {
           <div className="fixed top-16 left-0 right-0 bg-background border-t border-border-default z-[60] lg:hidden max-h-[calc(100vh-64px)] overflow-y-auto">
             {/* Mobile Search */}
             <div className="p-4 border-b border-border-default">
-              <div className="bg-surface-sunken flex items-center gap-2 h-12 px-4 rounded-xl">
-                <Search size={20} className="text-text-secondary shrink-0" />
+              <div className="bg-surface-sunken flex items-center gap-2 h-12 px-4 rounded-xl" role="search">
+                <Search size={20} className="text-text-secondary shrink-0" aria-hidden="true" />
+                <label htmlFor="mobile-search" className="sr-only">
+                  Search campaigns
+                </label>
                 <input
-                  type="text"
+                  id="mobile-search"
+                  type="search"
                   placeholder="Type to Search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}

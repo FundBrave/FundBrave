@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "./components/theme";
 import { PostsProvider } from "./provider/PostsContext";
+import { ToastProvider } from "./components/ui/Toast";
 
 
 
@@ -19,9 +20,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="custom-scrollbar">
         <ThemeProvider defaultTheme="dark" storageKey="fundbrave-theme">
-          <PostsProvider>
-            {children}
-          </PostsProvider>
+          <ToastProvider>
+            <PostsProvider>
+              {children}
+            </PostsProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
