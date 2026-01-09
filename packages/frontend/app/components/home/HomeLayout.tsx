@@ -50,9 +50,9 @@ export function HomeLayout({
       <main
         className={cn(
           "min-w-0",
-          "px-6 py-6 pt-24",
+          "md:px-6 md:py-6 md:pt-24 px-2 py-2 pt-12",
           "lg:ml-[296px] md:mr-[356px]",
-          "max-w-xl mx-auto"
+          "max-w-full mx-auto"
         )}
       >
         {children}

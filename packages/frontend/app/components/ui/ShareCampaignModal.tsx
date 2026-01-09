@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { trapFocus } from "@/app/lib/accessibility";
 
 interface ShareCategory {
   label: string;
@@ -155,6 +156,7 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
   onShare,
 }) => {
   const [copiedLink, setCopiedLink] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const resolvedCampaignUrl = url ?? campaignUrl;
   const resolvedCampaignTitle = title ?? campaignTitle;
@@ -166,6 +168,30 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
   }));
 
   const categoryList = customCategories ?? defaultCommunityCategories;
+
+  // Trap focus when modal is open
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      const cleanup = trapFocus(modalRef.current);
+      // Focus the close button when modal opens
+      const closeButton = modalRef.current.querySelector('button[aria-label="Close modal"]') as HTMLElement;
+      closeButton?.focus();
+
+      return cleanup;
+    }
+  }, [isOpen]);
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
 
   const handleCopyLink = async () => {
     try {
@@ -230,6 +256,10 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
 
           {/* Modal */}
           <motion.div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="share-modal-title"
             className="relative w-full max-w-lg bg-background rounded-2xl p-6 max-h-[90vh] overflow-y-auto"
             initial={{ opacity: 0, scale: 0.9, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -262,7 +292,7 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
               {/* Community Section */}
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <h2 className="text-lg font-medium text-foreground leading-6 tracking-[0.48px]">
+                  <h2 id="share-modal-title" className="text-lg font-medium text-foreground leading-6 tracking-[0.48px]">
                     {resolvedCampaignTitle}
                   </h2>
                   <p className="text-sm text-text-secondary leading-5 tracking-[0.3072px]">

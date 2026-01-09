@@ -277,7 +277,7 @@ export default function CampaignCard({
   return (
     <article
       ref={cardRef}
-      aria-label={`Campaign: ${title}`}
+      aria-labelledby={`campaign-title-${id}`}
       className={cn(
         "bg-background rounded-xl overflow-hidden w-full border border-border-default group will-change-transform",
         className
@@ -304,7 +304,10 @@ export default function CampaignCard({
 
       {/* Content */}
       <div className="flex flex-col gap-3 items-start p-4 sm:p-5">
-        <h3 className="text-foreground text-[20px] font-semibold leading-[30px] tracking-[0.48px] font-['Poppins']">
+        <h3
+          id={`campaign-title-${id}`}
+          className="text-foreground text-[20px] font-semibold leading-[30px] tracking-[0.48px] font-['Poppins']"
+        >
           {title}
         </h3>
 

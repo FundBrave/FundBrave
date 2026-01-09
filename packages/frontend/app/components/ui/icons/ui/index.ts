@@ -24,4 +24,6 @@ export {
   Settings,
   Clock,
   Star,
+  AlertCircle,
+  Info,
 } from './UIIcons';
