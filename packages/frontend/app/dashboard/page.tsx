@@ -9,6 +9,7 @@ import {
   Leaderboard,
   WithdrawModal,
 } from "@/app/components/earnings";
+import { BackHeader } from "@/app/components/common/BackHeader";
 import {
   mockUserProfile,
   mockEarningsStats,
@@ -73,7 +74,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-dark-500">
+    <div className="min-h-screen bg-background">
+      <BackHeader title="Dashboard" fallbackHref="/" />
       <div className="flex w-full max-w-[1400px] mx-auto px-4 py-6 gap-6">
         {/* Left Sidebar - Profile */}
         <aside className="hidden lg:block w-[280px] shrink-0">
@@ -87,7 +89,7 @@ export default function DashboardPage() {
         {/* Main Content Area - Stats + Tables + Leaderboard */}
         <main className="flex-1 min-w-0 flex flex-col gap-6">
           {/* Stats Cards Row - Spans full width above tables and leaderboard */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-6 border-b border-white/10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-6 border-b border-border-default">
             <StatsCard
               title="Total Amount"
               value={mockEarningsStats.totalAmount}
@@ -129,7 +131,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Leaderboard Column */}
-            <aside className="w-full lg:w-[280px] shrink-0 lg:pl-6 lg:border-l lg:border-white/10">
+            <aside className="w-full lg:w-[280px] shrink-0 lg:pl-6 lg:border-l lg:border-border-default">
               <Leaderboard
                 entries={mockLeaderboard}
                 currentUserRank={200}

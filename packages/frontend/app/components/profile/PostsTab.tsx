@@ -37,7 +37,7 @@ export default function PostsTab({ posts: externalPosts }: PostsTabProps) {
 
   if (posts.length === 0) {
     return (
-      <div className="text-center py-12 text-white/50">
+      <div className="text-center py-12 text-text-secondary">
         <p className="mb-2">No posts yet</p>
         <p className="text-sm">Create your first post using the button below!</p>
       </div>

@@ -30,7 +30,7 @@ const stepIcons: IconComponent[] = [
 ];
 
 const connectorGradientActive =
-  "linear-gradient(180deg, #8B5CF6 0%, #4C1D95 100%)";
+  "linear-gradient(180deg, var(--color-primary-500) 0%, var(--color-primary-900) 100%)";
 const connectorGradientIdle =
   "linear-gradient(180deg, rgba(107, 107, 107, 0.55) 0%, rgba(33, 20, 54, 0.55) 100%)";
 
@@ -44,7 +44,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
   return (
     <div
       className={cn(
-        "flex w-12 flex-col items-center rounded-full bg-gradient-to-b from-[#1A093D] via-[#0F0427] to-[#040016] px-2 py-6",
+        "flex w-12 flex-col items-center rounded-full bg-gradient-to-b from-primary-900/80 via-primary-950/90 to-background px-2 py-6",
         "shadow-[0_0_30px_rgba(76,29,149,0.35)]",
         className
       )}
@@ -56,17 +56,17 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
           <React.Fragment key={Icon.displayName ?? index}>
             <div
               className={cn(
-                "relative flex size-12 items-center justify-center rounded-full border border-[#6B6B6B]/45 bg-[#0C0328] transition-all duration-300",
+                "relative flex size-12 items-center justify-center rounded-full border border-border-subtle bg-surface-sunken transition-all duration-300",
                 "before:absolute before:inset-[-6px] before:rounded-full before:opacity-0 before:transition-opacity before:duration-300",
                 isActive &&
-                  "border-transparent bg-gradient-to-b from-[#9F7AEA] via-[#7C3AED] to-[#5B21B6] text-white shadow-[0_0_18px_rgba(139,92,246,0.45)]",
-                isActive && "before:bg-[#7C3AED]/35 before:opacity-100"
+                  "border-transparent bg-gradient-to-b from-purple-400 via-primary to-primary-700 text-white shadow-[0_0_18px_rgba(139,92,246,0.45)]",
+                isActive && "before:bg-primary/35 before:opacity-100"
               )}
             >
               <Icon
                 strokeWidth={isActive ? 1.8 : 1.6}
                 className={cn(
-                  "size-5 text-[#6B6B6B] transition-colors duration-300",
+                  "size-5 text-text-tertiary transition-colors duration-300",
                   (isActive || isCompleted) && "text-white"
                 )}
               />

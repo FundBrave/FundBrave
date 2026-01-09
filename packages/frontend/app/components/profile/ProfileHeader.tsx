@@ -42,7 +42,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
         <div className="flex flex-col gap-1.5 max-w-[795px]">
           {/* Name and Country Flag */}
           <div className="flex items-center gap-2">
-            <h1 className="text-white text-xl font-semibold leading-[30px] tracking-wide font-['Poppins']">
+            <h1 className="text-foreground text-xl font-semibold leading-[30px] tracking-wide font-['Poppins']">
               {user.name}
             </h1>
             <span className="text-lg" title={user.country}>
@@ -51,7 +51,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           </div>
 
           {/* Username */}
-          <p className="text-white/60 text-sm leading-[21px] tracking-wide">
+          <p className="text-text-secondary text-sm leading-[21px] tracking-wide">
             @{user.username}
           </p>
 
@@ -67,7 +67,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           </div>
 
           {/* Bio */}
-          <p className="text-white/80 text-base leading-6 tracking-wide mt-2">
+          <p className="text-text-secondary text-base leading-6 tracking-wide mt-2">
             {user.bio}
           </p>
         </div>
@@ -79,7 +79,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
               href={user.socialLinks.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-6 h-6 text-white hover:text-primary transition-colors"
+              className="w-6 h-6 text-foreground hover:text-primary transition-colors"
               aria-label="LinkedIn"
             >
               <LinkedInIcon className="w-full h-full" />
@@ -90,7 +90,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
               href={user.socialLinks.instagram}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-6 h-6 text-white hover:text-primary transition-colors"
+              className="w-6 h-6 text-foreground hover:text-primary transition-colors"
               aria-label="Instagram"
             >
               <InstagramIcon className="w-full h-full" />
@@ -101,7 +101,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
               href={user.socialLinks.twitter}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-6 h-6 text-white hover:text-primary transition-colors"
+              className="w-6 h-6 text-foreground hover:text-primary transition-colors"
               aria-label="Twitter/X"
             >
               <XIcon className="w-full h-full" />
@@ -112,7 +112,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
               href={user.socialLinks.facebook}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-6 h-6 text-white hover:text-primary transition-colors"
+              className="w-6 h-6 text-foreground hover:text-primary transition-colors"
               aria-label="Facebook"
             >
               <FacebookIcon className="w-full h-full" />
@@ -125,15 +125,15 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
       <div className="flex items-center justify-between">
         <div className="flex gap-4 text-base">
           <p className="font-bold">
-            <span className="text-white tracking-wide">{user.followers}</span>{" "}
-            <span className="text-white/60 font-normal">Followers</span>
+            <span className="text-foreground tracking-wide">{user.followers}</span>{" "}
+            <span className="text-text-secondary font-normal">Followers</span>
           </p>
           <p className="font-bold">
-            <span className="text-white tracking-wide">{user.following}</span>{" "}
-            <span className="text-white/60 font-normal">Following</span>
+            <span className="text-foreground tracking-wide">{user.following}</span>{" "}
+            <span className="text-text-secondary font-normal">Following</span>
           </p>
         </div>
-        <p className="text-white font-bold text-base">
+        <p className="text-foreground font-bold text-base">
           Member since {user.memberSince}
         </p>
       </div>

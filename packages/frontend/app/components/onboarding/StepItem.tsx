@@ -14,9 +14,23 @@ interface StepItemProps {
   index: number;
 }
 
+// Checkmark animation - clean scale + fade, no rotation
+const checkmarkVariants = {
+  initial: { scale: 0, opacity: 0 },
+  animate: { scale: 1, opacity: 1 },
+  exit: { scale: 0, opacity: 0 },
+};
+
+const checkmarkTransition = {
+  type: "spring" as const,
+  stiffness: 400,
+  damping: 15,
+};
+
 /**
  * Step item component for desktop sidebar
  * Shows icon, title, subtitle, and visual state (inactive/active/completed)
+ * Active state features a breathing glow effect instead of scale pulse
  */
 export const StepItem = ({ Icon, title, subtitle, status }: StepItemProps) => {
   const isCompleted = status === "completed";
@@ -26,24 +40,30 @@ export const StepItem = ({ Icon, title, subtitle, status }: StepItemProps) => {
 
   return (
     <div className="flex items-center gap-4 rounded-lg transition-all duration-300">
-      {/* Animated circle with icon - pulses when active */}
+      {/* Animated circle with icon - breathing glow when active */}
       <motion.div
         className="relative w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
         animate={{
           backgroundColor: isCompleted
-            ? "#8B5CF6"
+            ? "var(--color-primary)"
             : isActive
-            ? "#8B5CF6"
-            : "#1e293b",
+            ? "var(--color-primary)"
+            : "var(--color-surface-sunken)",
           borderWidth: isInactive || isNext ? 2 : 0,
-          borderColor: isInactive || isNext ? "#475569" : "transparent",
-          scale: isActive ? [1, 1.1, 1] : 1,
+          borderColor: isInactive || isNext ? "var(--color-border-subtle)" : "transparent",
+          // Breathing glow effect for active state
+          boxShadow: isActive
+            ? [
+                "0 0 0 0 rgba(139, 92, 246, 0)",
+                "0 0 20px 8px rgba(139, 92, 246, 0.4)",
+                "0 0 0 0 rgba(139, 92, 246, 0)",
+              ]
+            : "0 0 0 0 rgba(139, 92, 246, 0)",
         }}
         transition={{
-          duration: isActive ? 2 : 0.3,
-          scale: {
+          duration: 0.3,
+          boxShadow: {
             repeat: isActive ? Infinity : 0,
-            repeatType: "reverse",
             duration: 2,
             ease: "easeInOut",
           },
@@ -54,24 +74,26 @@ export const StepItem = ({ Icon, title, subtitle, status }: StepItemProps) => {
           {isCompleted ? (
             <motion.div
               key="check"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-              transition={{ duration: 0.3 }}
+              variants={checkmarkVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={checkmarkTransition}
             >
               <Check className="w-6 h-6 text-white" />
             </motion.div>
           ) : (
             <motion.div
               key="icon"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
             >
               <Icon
                 useGradient={isNext}
                 className={`w-5 h-5 ${
-                  isActive ? "text-white" : "text-gray-400"
+                  isActive ? "text-white" : "text-text-tertiary"
                 }`}
               />
             </motion.div>
@@ -82,7 +104,7 @@ export const StepItem = ({ Icon, title, subtitle, status }: StepItemProps) => {
       {/* Step text content */}
       <motion.div
         animate={{
-          color: isActive || isCompleted ? "#ffffff" : "#9ca3af",
+          color: isActive || isCompleted ? "var(--color-foreground)" : "var(--color-text-tertiary)",
         }}
         transition={{ duration: 0.3 }}
       >
@@ -96,6 +118,7 @@ export const StepItem = ({ Icon, title, subtitle, status }: StepItemProps) => {
 /**
  * Mobile step item component (circle only)
  * Compact version for mobile progress header
+ * Features breathing glow effect on active state
  */
 export const MobileStepItem = ({
   Icon,
@@ -111,19 +134,25 @@ export const MobileStepItem = ({
       className="relative w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
       animate={{
         backgroundColor: isCompleted
-          ? "#8B5CF6"
+          ? "var(--color-primary)"
           : isActive
-          ? "#8B5CF6"
-          : "#1e293b",
+          ? "var(--color-primary)"
+          : "var(--color-surface-sunken)",
         borderWidth: isInactive || isNext ? 2 : 0,
-        borderColor: isInactive || isNext ? "#475569" : "transparent",
-        scale: isActive ? [1, 1.15, 1] : 1,
+        borderColor: isInactive || isNext ? "var(--color-border-subtle)" : "transparent",
+        // Breathing glow effect for active state
+        boxShadow: isActive
+          ? [
+              "0 0 0 0 rgba(139, 92, 246, 0)",
+              "0 0 16px 6px rgba(139, 92, 246, 0.4)",
+              "0 0 0 0 rgba(139, 92, 246, 0)",
+            ]
+          : "0 0 0 0 rgba(139, 92, 246, 0)",
       }}
       transition={{
-        duration: isActive ? 2 : 0.3,
-        scale: {
+        duration: 0.3,
+        boxShadow: {
           repeat: isActive ? Infinity : 0,
-          repeatType: "reverse",
           duration: 2,
           ease: "easeInOut",
         },
@@ -133,23 +162,25 @@ export const MobileStepItem = ({
         {isCompleted ? (
           <motion.div
             key="check"
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: 180 }}
-            transition={{ duration: 0.3 }}
+            variants={checkmarkVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={checkmarkTransition}
           >
             <Check className="w-4 h-4 text-white" />
           </motion.div>
         ) : (
           <motion.div
             key="icon"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
             <Icon
               useGradient={isNext}
-              className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400"}`}
+              className={`w-4 h-4 ${isActive ? "text-white" : "text-text-tertiary"}`}
             />
           </motion.div>
         )}

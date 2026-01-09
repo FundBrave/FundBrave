@@ -129,7 +129,7 @@ export function PostCard(props: PostCardProps) {
                 <span
                   onClick={() => onAuthorClick?.(post.author.id ?? post.author.username)}
                   className={cn(
-                    "text-white font-bold",
+                    "text-foreground font-bold",
                     onAuthorClick && "hover:underline cursor-pointer"
                   )}
                 >
@@ -144,15 +144,15 @@ export function PostCard(props: PostCardProps) {
                     <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81s-1.27 2.52-.81 3.91c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.9.81 3.91s2.52 1.27 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.67-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.04 4.3l-3.71-3.71 1.41-1.41 2.3 2.3 5.3-5.3 1.41 1.41-6.71 6.71z" />
                   </svg>
                 )}
-                <span className="text-white/50">@{post.author.username}</span>
-                <span className="text-white/50">·</span>
-                <span className="text-white/50">
+                <span className="text-text-secondary">@{post.author.username}</span>
+                <span className="text-text-secondary">·</span>
+                <span className="text-text-secondary">
                   {post.timestamp || new Date(post.createdAt).toLocaleDateString()}
                 </span>
               </div>
               <button
                 onClick={() => onMenuClick?.(post.id, "menu")}
-                className="p-2 -mt-1 -mr-2 rounded-full hover:bg-primary/10 text-white/50 hover:text-primary transition-colors"
+                className="p-2 -mt-1 -mr-2 rounded-full hover:bg-primary/10 text-text-secondary hover:text-primary transition-colors"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M3 12c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm9 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />

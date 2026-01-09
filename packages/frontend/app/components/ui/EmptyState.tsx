@@ -34,13 +34,13 @@ export function EmptyState({
         className
       )}
     >
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-dark-400">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-sunken">
         {icon}
       </div>
       {title && (
-        <h3 className="mb-2 text-lg font-semibold text-white">{title}</h3>
+        <h3 className="mb-2 text-lg font-semibold text-foreground">{title}</h3>
       )}
-      <p className="max-w-sm text-sm text-neutral-dark-200">{message}</p>
+      <p className="max-w-sm text-sm text-text-tertiary">{message}</p>
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

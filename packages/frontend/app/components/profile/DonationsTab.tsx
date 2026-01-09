@@ -17,7 +17,7 @@ interface DonationCardProps {
  */
 export function DonationCard({ donation }: DonationCardProps) {
   return (
-    <div className="bg-neutral-dark-400/30 rounded-xl p-4 border-subtle">
+    <div className="bg-surface-sunken/30 rounded-xl p-4 border-subtle">
       <div className="flex gap-4">
         <img
           src={donation.campaignImage}
@@ -27,7 +27,7 @@ export function DonationCard({ donation }: DonationCardProps) {
         <div className="flex-1 min-w-0">
           <Link
             href={`/campaigns/${donation.campaignId}`}
-            className="text-white font-semibold hover:text-primary transition-colors line-clamp-2"
+            className="text-foreground font-semibold hover:text-primary transition-colors line-clamp-2"
           >
             {donation.campaignTitle}
           </Link>
@@ -36,12 +36,12 @@ export function DonationCard({ donation }: DonationCardProps) {
               {formatCurrency(donation.amount, donation.currency)}
             </span>
             {donation.cryptoType && (
-              <span className="text-white/40 text-sm">
+              <span className="text-text-tertiary text-sm">
                 {donation.cryptoAmount} {donation.cryptoType}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-2 text-white/50 text-xs">
+          <div className="flex items-center gap-2 mt-2 text-text-secondary text-xs">
             <span>{formatRelativeTime(donation.donatedAt)}</span>
             {donation.isAnonymous && (
               <>
@@ -53,7 +53,7 @@ export function DonationCard({ donation }: DonationCardProps) {
         </div>
       </div>
       {donation.message && (
-        <p className="text-white/60 text-sm mt-3 pt-3 border-t border-border-subtle italic">
+        <p className="text-text-secondary text-sm mt-3 pt-3 border-t border-border-subtle italic">
           &quot;{donation.message}&quot;
         </p>
       )}
@@ -83,7 +83,7 @@ interface DonationsTabProps {
 export default function DonationsTab({ donations }: DonationsTabProps) {
   if (donations.length === 0) {
     return (
-      <div className="text-center py-12 text-white/50">
+      <div className="text-center py-12 text-text-secondary">
         <p>No donations yet</p>
       </div>
     );

@@ -125,9 +125,9 @@ const AudienceDropdown: React.FC<AudienceDropdownProps> = ({
           aria-label="Select audience"
           className={cn(
             "absolute top-full mt-2 left-0 z-50",
-            "bg-neutral-dark-400 rounded-xl",
+            "bg-surface-sunken rounded-xl",
             "shadow-lg shadow-black/40",
-            "border border-white/10",
+            "border border-border-default",
             "py-2 min-w-[180px] sm:min-w-[200px]",
             "overflow-hidden"
           )}
@@ -145,14 +145,14 @@ const AudienceDropdown: React.FC<AudienceDropdownProps> = ({
                   "w-full px-4 py-2.5",
                   "flex items-center justify-between gap-3",
                   "text-left text-sm",
-                  "hover:bg-white/5 transition-colors duration-150",
-                  isSelected ? "text-purple-400" : "text-white/80"
+                  "hover:bg-surface-overlay transition-colors duration-150",
+                  isSelected ? "text-purple-400" : "text-text-secondary"
                 )}
               >
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <span className="font-medium truncate">{option.label}</span>
                   {option.description && (
-                    <span className="text-xs text-white/40 truncate">
+                    <span className="text-xs text-text-tertiary truncate">
                       {option.description}
                     </span>
                   )}

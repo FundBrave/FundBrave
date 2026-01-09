@@ -68,19 +68,19 @@ export function StatsCard({
   return (
     <div
       className={cn(
-        "bg-[#1a1625]/80 border border-white/10 rounded-xl p-5 flex flex-col gap-2",
+        "bg-surface-elevated/80 border border-border-default rounded-xl p-5 flex flex-col gap-2",
         className
       )}
     >
       {/* Title */}
-      <span className="text-sm text-white/60 font-medium">{title}</span>
+      <span className="text-sm text-text-secondary font-medium">{title}</span>
 
       {/* Value and Change Row */}
       <div className="flex items-center gap-3 flex-wrap">
         {/* Animated Value */}
         <span
           ref={valueRef}
-          className="text-[28px] lg:text-[32px] font-bold text-white leading-tight"
+          className="text-[28px] lg:text-[32px] font-bold text-foreground leading-tight"
         >
           {prefix}
           {formatNumber(displayValue)}
@@ -107,7 +107,7 @@ export function StatsCard({
       </div>
 
       {/* Comparison Text */}
-      <span className="text-xs text-white/50">{comparisonText}</span>
+      <span className="text-xs text-text-secondary">{comparisonText}</span>
     </div>
   );
 }

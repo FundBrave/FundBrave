@@ -47,7 +47,7 @@ interface CommunityFeedProps {
 function EmptyFeedState() {
   return (
     <EmptyState
-      icon={<MessageSquare className="h-8 w-8 text-neutral-dark-200" />}
+      icon={<MessageSquare className="h-8 w-8 text-text-tertiary" />}
       title="No posts yet"
       message="Be the first to share something with this community. Start a conversation or share an update."
       className="py-16"
@@ -93,7 +93,7 @@ export function CommunityFeed({
           {/* Community Info */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-white">{community.name}</h1>
+              <h1 className="text-lg font-bold text-foreground">{community.name}</h1>
               <Button
                 variant={isJoined ? "secondary" : "tertiary"}
                 size="sm"
@@ -103,7 +103,7 @@ export function CommunityFeed({
                 {isJoined ? "Joined" : "Join"}
               </Button>
             </div>
-            <p className="text-sm text-neutral-dark-100">
+            <p className="text-sm text-text-secondary">
               {formatNumber(community.memberCount, { useLocale: true })} members,{" "}
               {formatNumber(community.onlineCount, { useLocale: true })} online
             </p>
@@ -119,7 +119,7 @@ export function CommunityFeed({
           <>
             {/* Date Separator */}
             <div className="mb-6 flex justify-center">
-              <span className="rounded-full bg-neutral-dark-400 px-4 py-1.5 text-sm text-neutral-dark-100">
+              <span className="rounded-full bg-surface-sunken px-4 py-1.5 text-sm text-text-secondary">
                 Today
               </span>
             </div>

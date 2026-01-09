@@ -13,12 +13,12 @@ export default function CampaignStory({ story }: CampaignStoryProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-xl font-bold text-white font-[family-name:var(--font-family-gilgan)]">
+      <h3 className="text-xl font-bold text-foreground font-[family-name:var(--font-family-gilgan)]">
         Story
       </h3>
-      <div 
+      <div
         className={cn(
-          "text-white/80 whitespace-pre-line leading-relaxed text-base font-[family-name:var(--font-family-montserrat)]",
+          "text-foreground/80 whitespace-pre-line leading-relaxed text-base font-[family-name:var(--font-family-montserrat)]",
           !isExpanded && shouldTruncate && "line-clamp-6"
         )}
       >
@@ -27,7 +27,7 @@ export default function CampaignStory({ story }: CampaignStoryProps) {
       {shouldTruncate && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-white font-semibold text-sm hover:underline self-start font-[family-name:var(--font-family-gilgan)]"
+          className="text-foreground font-semibold text-sm hover:underline self-start font-[family-name:var(--font-family-gilgan)]"
         >
           {isExpanded ? "See less" : "See more"}
         </button>

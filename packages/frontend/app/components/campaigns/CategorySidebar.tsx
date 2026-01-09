@@ -130,7 +130,7 @@ export default function CategorySidebar({
 
   return (
     <aside
-      className={`h-full overflow-y-auto scrollbar-auto-hide flex-shrink-0 transition-all duration-300 border-r border-white/10 hidden md:block ${
+      className={`h-full overflow-y-auto scrollbar-auto-hide flex-shrink-0 transition-all duration-300 border-r border-border-default hidden md:block ${
         isCollapsed ? "md:w-[60px]" : "md:w-[200px] lg:w-[240px]"
       }`}
     >
@@ -138,24 +138,24 @@ export default function CategorySidebar({
         {/* Header with title and collapse toggle */}
         {!isCollapsed ? (
           <div className="flex items-center justify-between px-1">
-            <h2 className="font-semibold text-lg text-white tracking-[0.36px] font-[family-name:var(--font-family-gilgan)]">
+            <h2 className="font-semibold text-lg text-foreground tracking-[0.36px] font-[family-name:var(--font-family-gilgan)]">
               Browse Categories
             </h2>
             <button
               onClick={onToggleCollapse}
-              className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-surface-overlay transition-colors"
               aria-label="Collapse sidebar"
             >
-              <ChevronLeft ref={chevronLeftRef} size={18} className="text-white/60" />
+              <ChevronLeft ref={chevronLeftRef} size={18} className="text-text-secondary" />
             </button>
           </div>
         ) : (
           <button
             onClick={onToggleCollapse}
-            className="flex items-center justify-center p-2 rounded-lg hover:bg-white/5 transition-colors mx-auto"
+            className="flex items-center justify-center p-2 rounded-lg hover:bg-surface-overlay transition-colors mx-auto"
             aria-label="Expand sidebar"
           >
-            <ChevronRight ref={chevronRightRef} size={18} className="text-white/60" />
+            <ChevronRight ref={chevronRightRef} size={18} className="text-text-secondary" />
           </button>
         )}
 
@@ -172,13 +172,13 @@ export default function CategorySidebar({
                 } ${
                   isActive
                     ? ""
-                    : "hover:bg-white/5"
+                    : "hover:bg-surface-overlay"
                 }`}
               >
                 {/* Category Icon */}
                 <span
                   className={`flex-shrink-0 transition-colors ${
-                    isActive ? "text-primary-500" : "text-white/70"
+                    isActive ? "text-primary-500" : "text-text-secondary"
                   }`}
                 >
                   {category.icon}
@@ -188,7 +188,7 @@ export default function CategorySidebar({
                 {!isCollapsed && (
                   <span
                     className={`text-sm leading-5 tracking-[0.28px] whitespace-nowrap transition-colors ${
-                      isActive ? "text-white font-medium" : "text-white/70"
+                      isActive ? "text-foreground font-medium" : "text-text-secondary"
                     }`}
                   >
                     {category.name}

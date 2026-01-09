@@ -25,13 +25,13 @@ export function PostContent({ content, truncateAt = 0, className }: PostContentP
 
   return (
     <div className={cn("mt-0.5", className)}>
-      <p className="text-white whitespace-pre-wrap leading-normal">
+      <p className="text-foreground whitespace-pre-wrap leading-normal">
         {displayContent}
       </p>
       {shouldTruncate && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-white hover:underline text-sm mt-1"
+          className="text-foreground hover:underline text-sm mt-1"
         >
           {isExpanded ? "Show less" : "See more"}
         </button>

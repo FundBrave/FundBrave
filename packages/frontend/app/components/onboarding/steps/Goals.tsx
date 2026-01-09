@@ -102,10 +102,10 @@ const Goals: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <h2 className="text-2xl font-semibold text-white tracking-wide">
+        <h2 className="text-2xl font-semibold text-foreground tracking-wide">
           What do you hope to achieve?
         </h2>
-        <p className="text-[#b5b5b5] text-lg">
+        <p className="text-text-secondary text-lg">
           Select all that apply to personalize your experience
         </p>
       </motion.div>
@@ -120,8 +120,8 @@ const Goals: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
               onClick={() => toggleGoal(goal.id)}
               className={`relative flex flex-col gap-3 p-5 rounded-2xl text-left transition-all ${
                 isSelected
-                  ? "bg-gradient-to-br from-purple-800/50 to-purple-900/40 border border-purple-400/30"
-                  : "bg-gradient-to-br from-[#1a1525] to-[#13101d] border border-white/10 hover:border-purple-400/25"
+                  ? "bg-gradient-to-br from-purple-100 to-purple-50 border border-purple-300 dark:from-purple-800/50 dark:to-purple-900/40 dark:border-purple-400/30"
+                  : "bg-surface-elevated border border-border-default hover:border-purple-400/25 dark:bg-gradient-to-br dark:from-[#1a1525] dark:to-[#13101d]"
               }`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -142,17 +142,17 @@ const Goals: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
               <div
                 className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                   isSelected
-                    ? "bg-purple-500/25 text-purple-300"
-                    : "bg-purple-900/20 text-purple-400"
+                    ? "bg-purple-500/25 text-purple-600 dark:text-purple-300"
+                    : "bg-purple-100 text-purple-500 dark:bg-purple-900/20 dark:text-purple-400"
                 }`}
               >
                 {goal.icon}
               </div>
               <div className="flex flex-col gap-1">
-                <h3 className="text-white font-semibold text-lg">
+                <h3 className="text-foreground font-semibold text-lg">
                   {goal.title}
                 </h3>
-                <p className="text-[#a8a8a8] text-sm leading-relaxed">
+                <p className="text-text-secondary text-sm leading-relaxed">
                   {goal.description}
                 </p>
               </div>
@@ -174,7 +174,7 @@ const Goals: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
 
       {/* Selected count */}
       <motion.p
-        className="text-[#b5b5b5] text-center mb-6"
+        className="text-text-secondary text-center mb-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}

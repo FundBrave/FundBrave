@@ -74,7 +74,7 @@ export function PostHeader({
               <span
                 onClick={onAuthorClick}
                 className={cn(
-                  "text-white font-bold",
+                  "text-foreground font-bold",
                   onAuthorClick && "hover:underline cursor-pointer"
                 )}
               >
@@ -95,7 +95,7 @@ export function PostHeader({
 
             {/* Role/Organization (community posts) */}
             {showRole && (author.role || author.organization) && (
-              <p className="text-sm text-neutral-dark-100">
+              <p className="text-sm text-text-secondary">
                 {author.role}
                 {author.role && author.organization && " "}
                 {author.organization}
@@ -104,7 +104,7 @@ export function PostHeader({
 
             {/* Username and timestamp row (for non-role layout) */}
             {!showRole && (
-              <div className="flex items-center gap-1 text-white/50 text-sm">
+              <div className="flex items-center gap-1 text-text-secondary text-sm">
                 <span>@{author.username}</span>
                 <span>·</span>
                 <span>{displayTimestamp}</span>
@@ -113,7 +113,7 @@ export function PostHeader({
 
             {/* Timestamp row (for role layout) */}
             {showRole && (
-              <p className="text-sm text-neutral-dark-200">
+              <p className="text-sm text-text-tertiary">
                 Posted ~ {displayTimestamp}
               </p>
             )}
@@ -122,7 +122,7 @@ export function PostHeader({
           {/* Three dots menu */}
           <button
             onClick={onMenuClick}
-            className="p-2 -mt-1 -mr-2 rounded-full hover:bg-primary/10 text-white/50 hover:text-primary transition-colors"
+            className="p-2 -mt-1 -mr-2 rounded-full hover:bg-primary/10 text-text-secondary hover:text-primary transition-colors"
             aria-label="Post options"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

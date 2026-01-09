@@ -57,7 +57,7 @@ export function Avatar({
         aria-label={alt}
       >
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary-500 to-soft-purple-500 p-[2px]">
-          <div className="relative h-full w-full overflow-hidden rounded-full bg-neutral-dark-500">
+          <div className="relative h-full w-full overflow-hidden rounded-full bg-background">
             {src && !imageError ? (
               <Image
                 src={src}
@@ -69,7 +69,7 @@ export function Avatar({
             ) : null}
             <div
               className={cn(
-                "absolute inset-0 flex items-center justify-center font-semibold text-white",
+                "absolute inset-0 flex items-center justify-center font-semibold text-foreground",
                 text,
                 src && !imageError ? "opacity-0" : "opacity-100"
               )}
@@ -85,7 +85,7 @@ export function Avatar({
   return (
     <div
       className={cn(
-        "relative flex-shrink-0 overflow-hidden rounded-full bg-neutral-dark-400",
+        "relative flex-shrink-0 overflow-hidden rounded-full bg-surface-sunken",
         container,
         className
       )}
@@ -103,7 +103,7 @@ export function Avatar({
       ) : null}
       <div
         className={cn(
-          "absolute inset-0 flex items-center justify-center font-semibold text-white",
+          "absolute inset-0 flex items-center justify-center font-semibold text-foreground",
           text,
           src && !imageError ? "opacity-0" : "opacity-100"
         )}

@@ -48,7 +48,7 @@ export function CommunityInfoPanel({
   ];
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border-subtle bg-neutral-dark-500/50">
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface-elevated">
       {/* Cover Image - Optional */}
       {community.coverImage && (
         <div className="relative h-32 w-full">
@@ -63,7 +63,7 @@ export function CommunityInfoPanel({
             }}
           />
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-dark-500/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         </div>
       )}
 
@@ -71,12 +71,12 @@ export function CommunityInfoPanel({
       <div className="scrollbar-auto-hide flex-1 overflow-y-auto p-5">
         {/* Name & Creator */}
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-white">{community.name}</h2>
-          <p className="text-sm text-neutral-dark-100">
+          <h2 className="text-xl font-bold text-foreground">{community.name}</h2>
+          <p className="text-sm text-text-secondary">
             Created by{" "}
             <span className="text-primary-400">{community.creatorUsername}</span>
           </p>
-          <p className="text-sm text-neutral-dark-100">
+          <p className="text-sm text-text-secondary">
             {formatNumber(community.memberCount, { useLocale: true })} members,{" "}
             {formatNumber(community.onlineCount, { useLocale: true })} online
           </p>
@@ -85,7 +85,7 @@ export function CommunityInfoPanel({
         {/* Info Section */}
         <div className="mb-6">
           <h3 className="mb-2 text-sm font-semibold text-primary-400">Info</h3>
-          <p className="text-sm leading-relaxed text-neutral-dark-100">
+          <p className="text-sm leading-relaxed text-text-secondary">
             {community.description}
           </p>
           {community.inviteLink && (
@@ -93,12 +93,12 @@ export function CommunityInfoPanel({
               href={community.inviteLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 block text-sm text-neutral-dark-100 hover:text-white hover:underline"
+              className="mt-2 block text-sm text-text-secondary hover:text-foreground hover:underline"
             >
               {community.inviteLink}
             </a>
           )}
-          <p className="mt-1 text-xs text-neutral-dark-200">Invite link</p>
+          <p className="mt-1 text-xs text-text-tertiary">Invite link</p>
         </div>
 
         {/* Notifications Toggle */}
@@ -132,17 +132,17 @@ export function CommunityInfoPanel({
             <MediaGrid media={community.media} onMediaClick={onMediaClick} />
           )}
           {activeTab === "members" && (
-            <div className="py-8 text-center text-sm text-neutral-dark-200">
+            <div className="py-8 text-center text-sm text-text-tertiary">
               Members list coming soon
             </div>
           )}
           {activeTab === "files" && (
-            <div className="py-8 text-center text-sm text-neutral-dark-200">
+            <div className="py-8 text-center text-sm text-text-tertiary">
               Files list coming soon
             </div>
           )}
           {activeTab === "links" && (
-            <div className="py-8 text-center text-sm text-neutral-dark-200">
+            <div className="py-8 text-center text-sm text-text-tertiary">
               Links list coming soon
             </div>
           )}
@@ -160,7 +160,7 @@ interface MediaGridProps {
 function MediaGrid({ media, onMediaClick }: MediaGridProps) {
   if (media.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-neutral-dark-200">
+      <div className="py-8 text-center text-sm text-text-tertiary">
         No media shared yet
       </div>
     );

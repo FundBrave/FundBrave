@@ -41,7 +41,7 @@ function EmptyChatState({ filterTab }: { filterTab: ChatFilterTab }) {
 
   return (
     <EmptyState
-      icon={<MessageSquare className="h-6 w-6 text-neutral-dark-200" />}
+      icon={<MessageSquare className="h-6 w-6 text-text-tertiary" />}
       message={getMessage()}
     />
   );
@@ -74,7 +74,7 @@ export function MobileChatDrawer({
       {/* Drawer */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 transform bg-neutral-dark-500 transition-transform duration-300 ease-in-out md:hidden",
+          "fixed inset-y-0 left-0 z-50 w-72 transform bg-background transition-transform duration-300 ease-in-out md:hidden",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
         role="dialog"
@@ -82,13 +82,13 @@ export function MobileChatDrawer({
         aria-label="Chat selection"
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-            <span className="font-semibold text-white">Chats</span>
+          <div className="flex items-center justify-between border-b border-border-default px-4 py-3">
+            <span className="font-semibold text-foreground">Chats</span>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="h-8 w-8 rounded-full"
+              className="h-11 w-11 rounded-full"
               aria-label="Close chat drawer"
             >
               <X className="h-5 w-5" />
@@ -114,11 +114,11 @@ export function MobileChatToggle({ onClick, selectedChatName }: MobileToggleProp
     <Button
       variant="outline"
       onClick={onClick}
-      className="flex items-center gap-2 rounded-lg border-white/10 bg-neutral-dark-500/50 px-3 py-2 text-left md:hidden"
+      className="flex items-center gap-2 rounded-lg border-border-default bg-surface-elevated px-3 py-2 text-left md:hidden"
       aria-label="Open chat selection"
     >
-      <Menu className="h-5 w-5 text-neutral-dark-100" />
-      <span className="truncate text-sm font-medium text-white">
+      <Menu className="h-5 w-5 text-text-secondary" />
+      <span className="truncate text-sm font-medium text-foreground">
         {selectedChatName || "Select Chat"}
       </span>
     </Button>
@@ -158,28 +158,28 @@ export function ChatSidebar({
   };
 
   return (
-    <div className="flex h-full w-full flex-col border-r border-white/10 bg-[#1a1a1a]">
+    <div className="flex h-full w-full flex-col border-r border-border-default bg-surface-elevated">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-4">
-        <h2 className="font-display text-xl font-bold text-white">Chats</h2>
+        <h2 className="font-display text-xl font-bold text-foreground">Chats</h2>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full hover:bg-white/5"
+            className="h-11 w-11 rounded-full hover:bg-surface-overlay"
             aria-label="Search chats"
             onClick={() => setIsSearchOpen(!isSearchOpen)}
           >
-            <Search className="h-5 w-5 text-neutral-dark-100" />
+            <Search className="h-5 w-5 text-text-secondary" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full hover:bg-white/5"
+            className="h-11 w-11 rounded-full hover:bg-surface-overlay"
             aria-label="New chat"
             onClick={onNewChat}
           >
-            <Plus className="h-5 w-5 text-neutral-dark-100" />
+            <Plus className="h-5 w-5 text-text-secondary" />
           </Button>
         </div>
       </div>
@@ -188,13 +188,13 @@ export function ChatSidebar({
       {isSearchOpen && (
         <div className="px-4 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-dark-200" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
             <input
               type="text"
               placeholder="Search chats..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full border border-white/10 bg-white/5 py-2 pl-10 pr-4 text-sm text-white placeholder:text-neutral-dark-200 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="w-full rounded-full border border-border-default bg-surface-overlay py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-text-tertiary focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
             />
           </div>
         </div>

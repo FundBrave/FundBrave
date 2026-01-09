@@ -139,7 +139,7 @@ export default function ProfilePage() {
         <div className="max-w-4xl mx-auto">
           {/* Cover Photo Section */}
           <div className="relative h-[200px] sm:h-[250px] lg:h-[300px]">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-900/50 via-purple-900/30 to-neutral-dark-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-900/50 via-purple-900/30 to-background"></div>
           </div>
 
           {/* Profile Content */}
@@ -147,7 +147,7 @@ export default function ProfilePage() {
             {/* Avatar and Actions Row */}
             <div className="px-6 flex justify-between items-end">
               {/* Avatar */}
-              <div className="relative w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] rounded-full border-4 border-neutral-dark-500 overflow-hidden bg-neutral-dark-400">
+              <div className="relative w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] rounded-full border-4 border-background overflow-hidden bg-surface-sunken">
                 <Image
                   src={user.avatar}
                   alt={user.name}
@@ -158,7 +158,7 @@ export default function ProfilePage() {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pb-2">
-                <button className="p-2.5 rounded-full border border-border-subtle hover:bg-white/5 transition-colors">
+                <button className="p-2.5 rounded-full border border-border-subtle hover:bg-surface-overlay transition-colors">
                   <MessageIcon className="w-5 h-5 text-white" />
                 </button>
                 <Link href="/settings/profile">

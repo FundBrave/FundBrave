@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { ChevronDown } from "@/app/components/ui/icons";
-import { CampaignCard, CategorySidebar } from "../components/campaigns";
+import { CampaignCard, CategorySidebar, MobileCategoryFilter } from "../components/campaigns";
+import { Navbar } from "@/app/components/common";
 
 // Sort options for filtering campaigns
 type SortOption = "oldest" | "newest" | "most-funded" | "least-funded";
@@ -158,9 +159,11 @@ export default function CampaignsPage() {
   };
 
   return (
-    <div className="h-screen bg-neutral-dark-500 overflow-hidden">
-      {/* Main Content Area - Fixed height, no scroll */}
-      <div className="flex gap-4 md:gap-6 lg:gap-8 h-full px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-background pt-20">
+        {/* Main Content Area */}
+        <div className="flex gap-4 md:gap-6 lg:gap-8 h-[calc(100vh-80px)] px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
         {/* Category Sidebar - Hidden on mobile, visible on md+ */}
         <CategorySidebar
           selectedCategory={selectedCategory}
@@ -171,6 +174,12 @@ export default function CampaignsPage() {
 
         {/* Campaigns Grid Section - Scrollable independently */}
         <div className="flex-1 flex flex-col h-full overflow-hidden">
+          {/* Mobile Category Filter - Only visible on mobile */}
+          <MobileCategoryFilter
+            selectedCategory={selectedCategory}
+            onCategorySelect={handleCategorySelect}
+          />
+
           {/* Sort Dropdown */}
           <div className="flex justify-end mb-5">
             <div className="relative">
@@ -192,17 +201,17 @@ export default function CampaignsPage() {
 
               {/* Sort Dropdown Menu */}
               {isSortDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-36 bg-neutral-dark-400 rounded-lg shadow-lg border border-white/10 z-10">
+                <div className="absolute right-0 mt-2 w-36 bg-surface-elevated rounded-lg shadow-lg border border-border-default z-10">
                   {(
                     ["oldest", "newest", "most-funded", "least-funded"] as const
                   ).map((option) => (
                     <button
                       key={option}
                       onClick={() => handleSortChange(option)}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-overlay transition-colors first:rounded-t-lg last:rounded-b-lg ${
                         sortBy === option
                           ? "text-purple-400 font-medium"
-                          : "text-white/70"
+                          : "text-text-secondary"
                       }`}
                     >
                       {getSortDisplayText(option)}
@@ -232,5 +241,6 @@ export default function CampaignsPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

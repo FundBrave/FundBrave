@@ -81,7 +81,7 @@ export default function CampaignStatsCard({
             </defs>
           </svg>
           <div className="absolute flex items-center justify-center inset-0">
-            <span className="text-2xl sm:text-3xl font-bold text-white font-[family-name:var(--font-family-gilgan)]">
+            <span className="text-2xl sm:text-3xl font-bold text-foreground font-[family-name:var(--font-family-gilgan)]">
               {percentage}%
             </span>
           </div>
@@ -89,19 +89,19 @@ export default function CampaignStatsCard({
 
         {/* Stats Text */}
         <div className="text-center space-y-1">
-          <h3 className="text-xl sm:text-2xl font-black text-white font-[family-name:var(--font-family-gilgan)] tracking-wider">
+          <h3 className="text-xl sm:text-2xl font-black text-foreground font-[family-name:var(--font-family-gilgan)] tracking-wider">
             {amountRaised.toLocaleString()} USD
           </h3>
-          <div className="text-sm text-white/60 font-medium">
+          <div className="text-sm text-text-secondary font-medium">
             <p className="mb-1">
               Raised of{" "}
-              <span className="font-bold text-white">
+              <span className="font-bold text-foreground">
                 {targetAmount.toLocaleString()} USD
               </span>{" "}
               target by
             </p>
             <p>
-              <span className="font-bold text-white">
+              <span className="font-bold text-foreground">
                 {supportersCount.toLocaleString()}
               </span>{" "}
               supporters
@@ -134,10 +134,10 @@ export default function CampaignStatsCard({
 
       {/* Reminder Section */}
       <div className="flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-6 border-t border-border-subtle">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/5 flex items-center justify-center mb-1 sm:mb-2">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-overlay flex items-center justify-center mb-1 sm:mb-2">
           <CalendarIcon className="text-purple-400" size={18} />
         </div>
-        <p className="text-white/60 text-sm">Can&apos;t donate right now?</p>
+        <p className="text-text-secondary text-sm">Can&apos;t donate right now?</p>
         <button className="text-purple-400 text-sm hover:text-purple-300 underline underline-offset-2 transition-colors">
           Set up a reminder
         </button>

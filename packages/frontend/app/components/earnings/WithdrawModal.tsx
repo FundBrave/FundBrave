@@ -116,25 +116,25 @@ export function WithdrawModal({
         ref={modalRef}
         className={cn(
           "relative z-10 w-full max-w-md",
-          "bg-neutral-dark-400 border border-white/10 rounded-2xl",
+          "bg-surface-elevated border border-border-default rounded-2xl",
           "shadow-2xl animate-in fade-in zoom-in-95 duration-200"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-default">
           <h2
             id="withdraw-modal-title"
-            className="text-xl font-semibold text-white"
+            className="text-xl font-semibold text-foreground"
           >
             Confirm Withdrawal
           </h2>
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+            className="p-2 rounded-lg hover:bg-surface-overlay transition-colors"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5 text-white/60" />
+            <X className="w-5 h-5 text-text-secondary" />
           </button>
         </div>
 
@@ -148,20 +148,20 @@ export function WithdrawModal({
           </div>
 
           {/* Message */}
-          <p className="text-center text-white/80 mb-2">
+          <p className="text-center text-text-secondary mb-2">
             You are about to withdraw
           </p>
-          <p className="text-center text-2xl font-bold text-white mb-4">
+          <p className="text-center text-2xl font-bold text-foreground mb-4">
             {formattedAmount} {currency}
           </p>
-          <p className="text-center text-sm text-white/50">
+          <p className="text-center text-sm text-text-secondary">
             This action will initiate a withdrawal request. Processing may take
             1-3 business days.
           </p>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 px-6 py-4 border-t border-white/10">
+        <div className="flex items-center gap-3 px-6 py-4 border-t border-border-default">
           <Button
             variant="outline"
             onClick={onClose}

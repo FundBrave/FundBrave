@@ -66,10 +66,10 @@ function MessageAttachments({
             key={attachment.id}
             className={cn(
               "flex items-center gap-2 rounded-lg px-3 py-2",
-              isSent ? "bg-white/10" : "bg-white/5"
+              isSent ? "bg-surface-elevated" : "bg-surface-overlay"
             )}
           >
-            <span className="text-sm text-white">
+            <span className="text-sm text-foreground">
               {attachment.name || "Attachment"}
             </span>
           </div>
@@ -109,8 +109,8 @@ export function MessageBubble({
             isSent
               ? // Sent messages: purple/green gradient
                 "bg-gradient-to-r from-purple-500 to-primary-500 text-white"
-              : // Received messages: dark gray
-                "bg-[#2a2a2a] text-white"
+              : // Received messages: surface color for light mode support
+                "bg-surface-sunken text-foreground"
           )}
         >
           <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -130,7 +130,7 @@ export function MessageBubble({
         {showTimestamp && (
           <span
             className={cn(
-              "block text-[10px] text-neutral-dark-200",
+              "block text-[10px] text-text-tertiary",
               isSent ? "text-right pr-1" : "text-left pl-1"
             )}
           >
@@ -153,7 +153,7 @@ export interface DateSeparatorProps {
 export function DateSeparator({ date }: DateSeparatorProps) {
   return (
     <div className="flex items-center justify-center py-4">
-      <span className="rounded-full bg-white/5 px-4 py-1 text-xs text-neutral-dark-200">
+      <span className="rounded-full bg-surface-overlay px-4 py-1 text-xs text-text-tertiary">
         {date}
       </span>
     </div>

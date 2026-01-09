@@ -293,7 +293,7 @@ export default function SignUpPage({ onToggle }: SignUpPageProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.4 }}
         >
-          <span className="text-gray-300">Already have an account? </span>
+          <span className="text-text-secondary">Already have an account? </span>
           <motion.div className="inline-block" whileHover={{ scale: 1.05 }}>
             <button
               onClick={onToggle}

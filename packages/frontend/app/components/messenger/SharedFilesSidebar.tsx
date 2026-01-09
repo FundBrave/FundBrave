@@ -67,11 +67,11 @@ function FileThumbnail({
     return (
       <button
         onClick={onClick}
-        className="flex aspect-square w-full flex-col items-center justify-center rounded-xl bg-white/5 transition-colors hover:bg-white/10"
+        className="flex aspect-square w-full flex-col items-center justify-center rounded-xl bg-surface-overlay transition-colors hover:bg-surface-sunken"
         aria-label={`Play audio: ${file.name}`}
       >
         <Music className="mb-2 h-8 w-8 text-purple-400" />
-        <span className="max-w-full truncate px-2 text-xs text-neutral-dark-100">
+        <span className="max-w-full truncate px-2 text-xs text-text-secondary">
           {file.name}
         </span>
       </button>
@@ -82,11 +82,11 @@ function FileThumbnail({
   return (
     <button
       onClick={onClick}
-      className="flex aspect-square w-full flex-col items-center justify-center rounded-xl bg-white/5 transition-colors hover:bg-white/10"
+      className="flex aspect-square w-full flex-col items-center justify-center rounded-xl bg-surface-overlay transition-colors hover:bg-surface-sunken"
       aria-label={`Open document: ${file.name}`}
     >
       <FileText className="mb-2 h-8 w-8 text-green-400" />
-      <span className="max-w-full truncate px-2 text-xs text-neutral-dark-100">
+      <span className="max-w-full truncate px-2 text-xs text-text-secondary">
         {file.name}
       </span>
     </button>
@@ -106,7 +106,7 @@ function EmptyFilesState({ type }: { type: SharedFilesTab }) {
 
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
-      <p className="text-sm text-neutral-dark-200">{messages[type]}</p>
+      <p className="text-sm text-text-tertiary">{messages[type]}</p>
     </div>
   );
 }
@@ -163,34 +163,34 @@ export function SharedFilesSidebar({
   ];
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border-subtle bg-[#1a1a1a]">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface-elevated">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border-subtle p-3">
-        <h2 className="font-display text-lg font-bold text-white">
+        <h2 className="font-display text-lg font-bold text-foreground">
           Shared Files
         </h2>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-full hover:bg-white/5"
+          className="h-8 w-8 rounded-full hover:bg-surface-overlay"
           aria-label="Search files"
           onClick={() => setIsSearchOpen(!isSearchOpen)}
         >
-          <Search className="h-5 w-5 text-neutral-dark-100" />
+          <Search className="h-5 w-5 text-text-secondary" />
         </Button>
       </div>
 
       {/* Search input (collapsible) */}
       {isSearchOpen && (
-        <div className="border-b border-white/10 px-5 py-3">
+        <div className="border-b border-border-default px-5 py-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-dark-200" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
             <input
               type="text"
               placeholder="Search files..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full border border-white/10 bg-white/5 py-2 pl-10 pr-4 text-sm text-white placeholder:text-neutral-dark-200 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="w-full rounded-full border border-border-default bg-surface-overlay py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-text-tertiary focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
             />
           </div>
         </div>
@@ -198,7 +198,7 @@ export function SharedFilesSidebar({
 
       {/* Filter Tabs - Using Button component */}
       <div
-        className="flex flex-wrap gap-2 border-b border-white/10 px-5 py-3"
+        className="flex flex-wrap gap-2 border-b border-border-default px-5 py-3"
         role="tablist"
         aria-label="Filter files by type"
       >
@@ -241,7 +241,7 @@ export function SharedFilesSidebar({
 
       {/* See More Link */}
       {filteredFiles.length > 6 && (
-        <div className="border-t border-white/10 px-5 py-3">
+        <div className="border-t border-border-default px-5 py-3">
           <button
             onClick={onSeeMore}
             className="flex w-full items-center justify-center gap-1 text-sm text-purple-400 transition-colors hover:text-purple-300"

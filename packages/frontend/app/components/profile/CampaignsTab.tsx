@@ -59,7 +59,7 @@ interface CampaignsTabProps {
 export default function CampaignsTab({ campaigns }: CampaignsTabProps) {
   if (campaigns.length === 0) {
     return (
-      <div className="text-center py-12 text-white/50">
+      <div className="text-center py-12 text-text-secondary">
         <p>No campaigns yet</p>
       </div>
     );

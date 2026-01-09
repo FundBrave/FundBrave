@@ -8,6 +8,7 @@ import CampaignStory from "@/app/components/campaigns/view/CampaignStory";
 import CampaignComments from "@/app/components/campaigns/view/CampaignComments";
 import CampaignUpdates from "@/app/components/campaigns/view/CampaignUpdates";
 import { CampaignActionBar } from "@/app/components/campaigns";
+import { BackHeader } from "@/app/components/common/BackHeader";
 import { ArrowLeft } from "@/app/components/ui/icons";
 import Link from "next/link";
 import Image from "next/image";
@@ -19,7 +20,7 @@ export default function CampaignViewPage() {
 
   if (!campaign) {
     return (
-      <div className="min-h-screen bg-neutral-dark-500 flex items-center justify-center text-white">
+      <div className="min-h-screen bg-background flex items-center justify-center text-foreground">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Campaign Not Found</h1>
           <Link
@@ -44,7 +45,8 @@ export default function CampaignViewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-dark-500 text-white font-[family-name:var(--font-family-montserrat)]">
+    <div className="min-h-screen bg-background text-foreground font-[family-name:var(--font-family-montserrat)]">
+      <BackHeader title="Campaign" fallbackHref="/campaigns" />
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
           {/* Left Column - Main Content */}
@@ -58,12 +60,12 @@ export default function CampaignViewPage() {
 
             {/* Creator Section */}
             <div className="flex flex-col gap-3 sm:gap-4">
-              <h3 className="text-base sm:text-lg font-bold text-white font-[family-name:var(--font-family-gilgan)]">
+              <h3 className="text-base sm:text-lg font-bold text-foreground font-[family-name:var(--font-family-gilgan)]">
                 Campaign Creator
               </h3>
               <div className="flex items-center gap-3 sm:gap-4">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-primary-500 to-soft-purple-500 p-[2px]">
-                  <div className="w-full h-full rounded-full overflow-hidden border-2 border-neutral-dark-500 relative">
+                  <div className="w-full h-full rounded-full overflow-hidden border-2 border-background relative">
                     <Image
                       src={campaign.creator.avatarUrl}
                       alt={campaign.creator.name}
@@ -74,14 +76,14 @@ export default function CampaignViewPage() {
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-white text-base">
+                    <span className="font-bold text-foreground text-base">
                       {campaign.creator.name}
                     </span>
                     <button className="text-xs font-bold text-primary-400 hover:text-primary-300 uppercase tracking-wide">
                       Follow
                     </button>
                   </div>
-                  <span className="text-white/40 text-sm">
+                  <span className="text-text-tertiary text-sm">
                     {campaign.creator.handle}
                   </span>
                 </div>
@@ -92,7 +94,7 @@ export default function CampaignViewPage() {
             <CampaignStory story={campaign.story} />
 
             {/* Action Buttons (Left Column) - Using CampaignActionBar */}
-            <div className="pt-2 pb-6 sm:pb-8 border-b border-white/5">
+            <div className="pt-2 pb-6 sm:pb-8 border-b border-border-subtle">
               <CampaignActionBar
                 campaign={campaignData}
                 variant="buttons"

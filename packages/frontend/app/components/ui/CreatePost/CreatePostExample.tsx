@@ -91,27 +91,27 @@ const ExampleUsage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="text-center">
-        <h1 className="text-white text-2xl font-bold mb-8">
+        <h1 className="text-foreground text-2xl font-bold mb-8">
           CreatePostPopup Component Example
         </h1>
 
         <button
           onClick={openPostCreator}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-6 py-3 rounded-lg transition-colors"
+          className="bg-purple-600 hover:bg-purple-700 text-foreground font-medium px-6 py-3 rounded-lg transition-colors"
         >
           Create Post
         </button>
 
         <button
           onClick={() => setIsShareOpen(true)}
-          className="ml-4 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors"
+          className="ml-4 bg-blue-600 hover:bg-blue-700 text-foreground font-medium px-6 py-3 rounded-lg transition-colors"
         >
           Open Share Modal
         </button>
 
-        <div className="mt-8 text-gray-400 text-sm max-w-md">
+        <div className="mt-8 text-text-secondary text-sm max-w-md">
           <p>
             Click the button above to open the refactored CreatePostPopup
             component. The component now features improved code organization,

@@ -70,8 +70,8 @@ export default function ProfileTabs({
             className={cn(
               "font-medium text-base leading-6 tracking-wide transition-colors px-2",
               activeTab === tab.id
-                ? "text-white"
-                : "text-white/60 hover:text-white/80"
+                ? "text-foreground"
+                : "text-text-secondary hover:text-foreground/80"
             )}
           >
             {tab.label}
@@ -82,7 +82,7 @@ export default function ProfileTabs({
       {/* Tab Indicator Line */}
       <div className="relative h-px w-full">
         {/* Background Line */}
-        <div className="absolute inset-0 bg-white/10" />
+        <div className="absolute inset-0 bg-border-default" />
 
         {/* Active Indicator - dynamically positioned based on active tab button */}
         <div

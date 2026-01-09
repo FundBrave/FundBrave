@@ -11,6 +11,7 @@ import {
   Community,
   CommunityDetails,
 } from "@/app/components/community";
+import { BackHeader } from "@/app/components/common/BackHeader";
 
 // Mock data for communities with Unsplash images
 const mockCommunities: Community[] = [
@@ -182,8 +183,9 @@ export default function CommunityPage() {
   );
 
   return (
-    <>
-      <div className="flex h-screen w-full flex-col bg-neutral-dark-500 md:flex-row">
+    <div className="flex h-screen flex-col bg-background">
+      <BackHeader title="Community" fallbackHref="/" />
+      <div className="flex flex-1 w-full flex-col overflow-hidden md:flex-row">
       {/* Mobile Community Selector */}
       <div className="border-b border-border-subtle p-4 md:hidden">
         <MobileCommunityToggle
@@ -249,6 +251,6 @@ export default function CommunityPage() {
         />
       </aside>
       </div>
-    </>
+    </div>
   );
 }

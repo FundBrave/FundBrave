@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { getCampaignById } from "@/app/campaigns/data";
 import SuccessCard from "@/app/components/ui/SuccessCard";
+import { BackHeader } from "@/app/components/common/BackHeader";
 
 // Import donation components
 import {
@@ -56,14 +57,20 @@ export default function DonatePage() {
   // Handle campaign not found
   if (!campaign) {
     return (
-      <div className="min-h-screen bg-[#09011a] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-background flex items-center justify-center text-foreground">
         <div>Campaign not found</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#09011a] text-white flex items-center justify-center py-20 px-4">
+    <div className="min-h-screen bg-background text-foreground">
+      <BackHeader
+        title="Donate"
+        subtitle={campaign.title}
+        fallbackHref={`/campaigns/${id}`}
+      />
+      <div className="flex items-center justify-center py-10 px-4">
       {/* Success Overlay with SuccessCard */}
       {state.donationSuccess && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -90,7 +97,7 @@ export default function DonatePage() {
         </div>
       )}
 
-      <div className="w-full max-w-[851px] bg-[#09011a] border-border-subtle border">
+      <div className="w-full max-w-[851px] bg-background border-border-subtle border">
         <div className="p-6 md:p-10 space-y-10">
           {/* Campaign Info Header */}
           <CampaignInfoHeader
@@ -112,7 +119,7 @@ export default function DonatePage() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold">Enter your donation</h3>
-              <span className="text-xs text-white/40">
+              <span className="text-xs text-text-tertiary">
                 Press 1-5 or 0 for quick select
               </span>
             </div>
@@ -187,6 +194,7 @@ export default function DonatePage() {
           {/* Security Badge */}
           <SecurityBadge />
         </div>
+      </div>
       </div>
     </div>
   );

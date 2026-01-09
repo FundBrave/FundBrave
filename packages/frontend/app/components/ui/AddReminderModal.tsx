@@ -112,7 +112,7 @@ export default function AddReminderModal({
             onClick={onClose}
             aria-label="Close"
             type="button"
-            className="absolute top-4 right-4 sm:top-[37px] sm:right-[51px] w-6 h-6 text-white hover:text-gray-300 transition-colors z-10"
+            className="absolute top-4 right-4 sm:top-[37px] sm:right-[51px] w-6 h-6 text-foreground hover:text-text-secondary transition-colors z-10"
           >
             <X size={24} />
           </button>
@@ -122,10 +122,10 @@ export default function AddReminderModal({
             <div className="w-full sm:w-[404px] max-w-full">
               {/* Header */}
               <div className="text-center mb-6 sm:mb-7">
-                <h2 className="font-['Poppins'] font-medium text-[18px] sm:text-[20px] text-white leading-[28px] sm:leading-[30px] tracking-[0.48px] mb-1.5">
+                <h2 className="font-['Poppins'] font-medium text-[18px] sm:text-[20px] text-foreground leading-[28px] sm:leading-[30px] tracking-[0.48px] mb-1.5">
                   Add a reminder
                 </h2>
-                <p className="font-['Roboto'] font-normal text-[14px] sm:text-[16px] text-white/80 leading-[22px] sm:leading-[24px] tracking-[0.3072px] max-w-[352px] mx-auto">
+                <p className="font-['Roboto'] font-normal text-[14px] sm:text-[16px] text-foreground/80 leading-[22px] sm:leading-[24px] tracking-[0.3072px] max-w-[352px] mx-auto">
                   We&apos;ll remind you on{" "}
                   <span className="text-primary-400 font-medium">
                     {formattedReminderDate}
@@ -142,12 +142,12 @@ export default function AddReminderModal({
                     <button
                       key={provider.id}
                       onClick={() => handleProviderSelect(provider.id)}
-                      className="w-full h-12 sm:h-14 px-3 sm:px-[9px] py-3 sm:py-[18px] border border-border-subtle rounded-[16px] sm:rounded-[20px] flex items-center gap-2 sm:gap-[9px] hover:bg-white/5 hover:border-primary-500/50 transition-colors group"
+                      className="w-full h-12 sm:h-14 px-3 sm:px-[9px] py-3 sm:py-[18px] border border-border-subtle rounded-[16px] sm:rounded-[20px] flex items-center gap-2 sm:gap-[9px] hover:bg-surface-overlay hover:border-primary-500/50 transition-colors group"
                     >
-                      <div className="w-[28px] sm:w-[34px] h-[28px] sm:h-[34px] flex items-center justify-center text-white">
+                      <div className="w-[28px] sm:w-[34px] h-[28px] sm:h-[34px] flex items-center justify-center text-foreground">
                         <IconComponent />
                       </div>
-                      <span className="font-['Roboto'] font-semibold text-[16px] sm:text-[18px] text-white leading-[22px] sm:leading-[24px] tracking-[0.3456px] flex-1 text-center">
+                      <span className="font-['Roboto'] font-semibold text-[16px] sm:text-[18px] text-foreground leading-[22px] sm:leading-[24px] tracking-[0.3456px] flex-1 text-center">
                         {provider.name}
                       </span>
                       {/* Spacer div to center the text */}
@@ -159,7 +159,7 @@ export default function AddReminderModal({
 
               {/* Campaign Info */}
               <div className="mt-6 pt-6 border-t border-border-subtle">
-                <p className="text-white/50 text-sm text-center truncate">
+                <p className="text-text-secondary text-sm text-center truncate">
                   Campaign: {campaignTitle}
                 </p>
               </div>

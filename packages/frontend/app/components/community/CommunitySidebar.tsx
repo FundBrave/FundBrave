@@ -43,7 +43,7 @@ function EmptyCommunityState({
 
   return (
     <EmptyState
-      icon={<Users className="h-6 w-6 text-neutral-dark-200" />}
+      icon={<Users className="h-6 w-6 text-text-tertiary" />}
       message={getMessage()}
     />
   );
@@ -72,7 +72,7 @@ export function MobileDrawer({ isOpen, onClose, children }: MobileDrawerProps) {
       {/* Drawer */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 transform bg-neutral-dark-500 transition-transform duration-300 ease-in-out md:hidden",
+          "fixed inset-y-0 left-0 z-50 w-72 transform bg-background transition-transform duration-300 ease-in-out md:hidden",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
         role="dialog"
@@ -81,12 +81,12 @@ export function MobileDrawer({ isOpen, onClose, children }: MobileDrawerProps) {
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
-            <span className="font-semibold text-white">Communities</span>
+            <span className="font-semibold text-foreground">Communities</span>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="h-8 w-8 rounded-full"
+              className="h-11 w-11 rounded-full"
               aria-label="Close community drawer"
             >
               <X className="h-5 w-5" />
@@ -115,11 +115,11 @@ export function MobileCommunityToggle({
     <Button
       variant="outline"
       onClick={onClick}
-      className="flex items-center gap-2 rounded-lg border-border-subtle bg-neutral-dark-500/50 px-3 py-2 text-left md:hidden"
+      className="flex items-center gap-2 rounded-lg border-border-subtle bg-surface-elevated px-3 py-2 text-left md:hidden"
       aria-label="Open community selection"
     >
-      <Menu className="h-5 w-5 text-neutral-dark-100" />
-      <span className="truncate text-sm font-medium text-white">
+      <Menu className="h-5 w-5 text-text-secondary" />
+      <span className="truncate text-sm font-medium text-foreground">
         {selectedCommunityName || "Select Community"}
       </span>
     </Button>
@@ -163,14 +163,14 @@ export function CommunitySidebar({
     <>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-4">
-        <h2 className="font-display text-xl font-bold text-white">
+        <h2 className="font-display text-xl font-bold text-foreground">
           Communities
         </h2>
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full"
+            className="h-11 w-11 rounded-full"
             aria-label="Search communities"
           >
             <Search className="h-5 w-5" />
@@ -178,7 +178,7 @@ export function CommunitySidebar({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full"
+            className="h-11 w-11 rounded-full"
             aria-label="Create community"
             onClick={onCreateCommunity}
           >
@@ -258,8 +258,8 @@ function CommunityListItem({
       aria-selected={isSelected}
       aria-current={isSelected ? "true" : undefined}
       className={cn(
-        "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-white/5",
-        isSelected && "bg-white/10"
+        "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-overlay",
+        isSelected && "bg-surface-overlay"
       )}
     >
       {/* Avatar */}
@@ -273,12 +273,12 @@ function CommunityListItem({
       {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between">
-          <h3 className="truncate font-medium text-white">{community.name}</h3>
-          <span className="ml-2 flex-shrink-0 text-xs text-neutral-dark-100">
+          <h3 className="truncate font-medium text-foreground">{community.name}</h3>
+          <span className="ml-2 flex-shrink-0 text-xs text-text-secondary">
             {community.timestamp}
           </span>
         </div>
-        <p className="mt-0.5 line-clamp-2 text-sm text-neutral-dark-100">
+        <p className="mt-0.5 line-clamp-2 text-sm text-text-secondary">
           {community.lastMessage}
         </p>
       </div>

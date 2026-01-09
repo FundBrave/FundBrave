@@ -74,7 +74,7 @@ const CharacterCount: React.FC<CharacterCountProps> = ({ current, max, min }) =>
       className={cn(
         "text-xs transition-colors",
         isOverLimit ? "text-destructive" :
-        isBelowMin ? "text-yellow-500" : "text-white/40"
+        isBelowMin ? "text-yellow-500" : "text-text-tertiary"
       )}
     >
       {current}/{max}
@@ -108,7 +108,7 @@ const MediaActions: React.FC<MediaActionsProps> = ({
           ariaLabel={label}
           type="button"
           onClick={onClick}
-          className="hover:bg-white/10 transition-colors p-2"
+          className="hover:bg-surface-overlay transition-colors p-2"
         >
           <Icon size={18} className="sm:w-5 sm:h-5" />
         </IconButton>
@@ -179,7 +179,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="font-['Poppins'] font-medium text-[14px] sm:text-[16px] lg:text-[18px] text-white tracking-[0.72px] leading-[28px] sm:leading-[32px] lg:leading-[36px]">
+      <label className="font-['Poppins'] font-medium text-[14px] sm:text-[16px] lg:text-[18px] text-foreground tracking-[0.72px] leading-[28px] sm:leading-[32px] lg:leading-[36px]">
         {label}
       </label>
       <div ref={containerRef} className="relative">
@@ -191,17 +191,17 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           required={required}
           disabled={disabled}
           className={cn(
-            "w-full bg-neutral-dark-400 rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
+            "w-full bg-surface-sunken rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
             "pl-4 sm:pl-6 lg:pl-8 pr-10 sm:pr-12 lg:pr-14 py-4 sm:py-5 lg:py-5",
             "min-h-[56px] sm:min-h-[60px] lg:min-h-[64px]",
             "font-['Poppins'] font-medium text-[14px] sm:text-[15px] lg:text-[16px]",
             "tracking-[0.64px] leading-normal",
-            "text-white appearance-none cursor-pointer outline-none",
+            "text-foreground appearance-none cursor-pointer outline-none",
             "focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50",
             "transition-all duration-200",
             error && "ring-2 ring-destructive/50",
             disabled && "opacity-50 cursor-not-allowed",
-            "[&>option]:bg-neutral-dark-400 [&>option]:text-white [&>option]:py-2"
+            "[&>option]:bg-surface-sunken [&>option]:text-foreground [&>option]:py-2"
           )}
         >
           <option value="">{placeholder}</option>
@@ -213,7 +213,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         </select>
         <ChevronDown
           size={16}
-          className="absolute right-4 sm:right-6 lg:right-8 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none"
+          className="absolute right-4 sm:right-6 lg:right-8 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
         />
       </div>
       <FieldError error={error} />
@@ -294,7 +294,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <label className="font-['Poppins'] font-medium text-[14px] sm:text-[16px] lg:text-[18px] text-white tracking-[0.72px] leading-[28px] sm:leading-[32px] lg:leading-[36px]">
+        <label className="font-['Poppins'] font-medium text-[14px] sm:text-[16px] lg:text-[18px] text-foreground tracking-[0.72px] leading-[28px] sm:leading-[32px] lg:leading-[36px]">
           {label}
         </label>
         {showCharacterCount && maxLength && (
@@ -313,12 +313,12 @@ export const InputField: React.FC<InputFieldProps> = ({
           required={required}
           maxLength={maxLength}
           className={cn(
-            "w-full bg-neutral-dark-400 rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
+            "w-full bg-surface-sunken rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
             "px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-[18px]",
             "h-12 sm:h-13 lg:h-14",
             "font-['Poppins'] font-medium text-[14px] sm:text-[15px] lg:text-[16px]",
             "tracking-[0.64px] leading-[28px] sm:leading-[32px] lg:leading-[36px]",
-            "text-white placeholder:text-white/60 outline-none",
+            "text-foreground placeholder:text-text-secondary outline-none",
             "focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50",
             "transition-all duration-200",
             error && "ring-2 ring-destructive/50"
@@ -398,7 +398,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <label className="font-['Poppins'] font-medium text-[14px] sm:text-[16px] lg:text-[18px] text-white tracking-[0.72px] leading-[28px] sm:leading-[32px] lg:leading-[36px]">
+        <label className="font-['Poppins'] font-medium text-[14px] sm:text-[16px] lg:text-[18px] text-foreground tracking-[0.72px] leading-[28px] sm:leading-[32px] lg:leading-[36px]">
           {label}
         </label>
         {showCharacterCount && maxLength && (
@@ -408,7 +408,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
       <div
         ref={containerRef}
         className={cn(
-          "bg-neutral-dark-400 rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
+          "bg-surface-sunken rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
           "p-4 sm:p-6 lg:p-8 flex flex-col justify-between",
           "focus-within:ring-2 focus-within:ring-purple-500 focus-within:ring-opacity-50",
           "transition-all duration-200",
@@ -426,9 +426,9 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
           required={required}
           maxLength={maxLength}
           className={cn(
-            "bg-transparent text-white/60 font-['Poppins'] font-medium",
+            "bg-transparent text-foreground font-['Poppins'] font-medium",
             "text-[14px] sm:text-[15px] lg:text-[16px] tracking-[0.64px]",
-            "placeholder:text-white/60 resize-none flex-1 outline-none",
+            "placeholder:text-text-secondary resize-none flex-1 outline-none",
             "leading-[28px] sm:leading-[32px] lg:leading-[36px]"
           )}
         />
