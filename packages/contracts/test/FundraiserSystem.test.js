@@ -9,10 +9,6 @@ const dai = (val) => ethers.parseEther(val);
 const eth = (val) => ethers.parseEther(val);
 const ZERO_ADDRESS = ethers.ZeroAddress; 
 
-// Dummy WorldID Params
-const NULL_ROOT = 0;
-const NULL_HASH = 123456;
-const NULL_PROOF = [0,0,0,0,0,0,0,0];
 
 async function deploySystemFixture() {
     const [owner, creator, creator2, donor, donor2, staker, beneficiary, beneficiary2, platformWallet, remoteUser] = await ethers.getSigners();
@@ -34,9 +30,6 @@ async function deploySystemFixture() {
     const aavePool = await MockAavePool.deploy(await usdcToken.getAddress(), await aUsdcToken.getAddress());
 
     // 3. Deploy Infra Mocks
-    const MockWorldID = await ethers.getContractFactory("MockWorldID");
-    const worldId = await MockWorldID.deploy();
-
     const MockLZEndpoint = await ethers.getContractFactory("MockLZEndpoint");
     const lzEndpoint = await MockLZEndpoint.deploy(1); 
 
@@ -68,10 +61,7 @@ async function deploySystemFixture() {
         await aavePool.getAddress(),
         await aUsdcToken.getAddress(),
         ZERO_ADDRESS,
-        0,
-        await worldId.getAddress(),
-        "app_id", 
-        "action_id"
+        0
     );
 
     // 7. Deploy ReceiptOFT
@@ -104,33 +94,30 @@ async function deploySystemFixture() {
     await aUsdcToken.mint(await aavePool.getAddress(), usdc("1000000"));
     await usdcToken.mint(await bridge.getAddress(), usdc("1000000"));
 
-    return { 
-        factory, bridge, lzEndpoint, swapAdapter, 
-        usdcToken, daiToken, wethToken, aavePool, aUsdcToken, worldId, receiptOFT,
-        owner, creator, creator2, donor, donor2, staker, beneficiary, beneficiary2, platformWallet, remoteUser 
+    return {
+        factory, bridge, lzEndpoint, swapAdapter,
+        usdcToken, daiToken, wethToken, aavePool, aUsdcToken, receiptOFT,
+        owner, creator, creator2, donor, donor2, staker, beneficiary, beneficiary2, platformWallet, remoteUser
     };
 }
 
-async function createFundraiser(factory, creator, beneficiary, nullifierHash = NULL_HASH) {
+async function createFundraiser(factory, creator, beneficiary) {
     const tx = await factory.connect(creator).createFundraiser(
-        "Save the Forests", 
-        ["image.png"], 
-        ["Environment"], 
-        "Description", 
+        "Save the Forests",
+        ["image.png"],
+        ["Environment"],
+        "Description",
         "Brazil",
-        beneficiary.address, 
-        usdc("10000"), 
-        30,
-        NULL_ROOT,
-        nullifierHash,
-        NULL_PROOF
+        beneficiary.address,
+        usdc("10000"),
+        30
     );
     const receipt = await tx.wait();
 
     const factoryInterface = factory.interface;
-    
+
     let fundraiserAddr, poolAddr;
-    
+
     for (const log of receipt.logs) {
         try {
             const parsed = factoryInterface.parseLog(log);
@@ -143,8 +130,8 @@ async function createFundraiser(factory, creator, beneficiary, nullifierHash = N
         } catch (e) {}
     }
 
-    return { 
-        fundraiser: await ethers.getContractAt("Fundraiser", fundraiserAddr), 
+    return {
+        fundraiser: await ethers.getContractAt("Fundraiser", fundraiserAddr),
         stakingPool: await ethers.getContractAt("StakingPool", poolAddr)
     };
 }
@@ -179,28 +166,14 @@ describe("FundBrave Comprehensive System Tests", () => {
     });
 
     describe("Fundraiser Creation", () => {
-        it("should create fundraiser with World ID verification", async () => {
+        it("should create fundraiser successfully", async () => {
             const { factory, creator, beneficiary } = await loadFixture(deploySystemFixture);
-            
+
             const { fundraiser } = await createFundraiser(factory, creator, beneficiary);
-            
+
             expect(await fundraiser.owner()).to.equal(creator.address);
             expect(await fundraiser.beneficiary()).to.equal(beneficiary.address);
             expect(await fundraiser.goal()).to.equal(usdc("10000"));
-        });
-
-        it("should prevent duplicate World ID usage", async () => {
-            const { factory, creator, beneficiary } = await loadFixture(deploySystemFixture);
-
-            await createFundraiser(factory, creator, beneficiary, NULL_HASH);
-
-            await expect(
-                factory.connect(creator).createFundraiser(
-                    "Duplicate", ["img.png"], ["Environment"], "Desc", "Brazil",
-                    beneficiary.address, usdc("10000"), 30,
-                    NULL_ROOT, NULL_HASH, NULL_PROOF
-                )
-            ).to.be.revertedWithCustomError(factory, "WorldIDAlreadyUsed");
         });
 
         it("should validate fundraiser parameters", async () => {
@@ -213,8 +186,7 @@ describe("FundBrave Comprehensive System Tests", () => {
             await expect(
                 factory.connect(creator).createFundraiser(
                     "Test", ["img.png"], ["Environment"], "Desc", "Brazil",
-                    beneficiary.address, usdc("50"), 30,
-                    NULL_ROOT, 111111, NULL_PROOF
+                    beneficiary.address, usdc("50"), 30
                 )
             ).to.be.reverted;
 
@@ -222,8 +194,7 @@ describe("FundBrave Comprehensive System Tests", () => {
             await expect(
                 factory.connect(creator).createFundraiser(
                     "Test", ["img.png"], ["Environment"], "Desc", "Brazil",
-                    beneficiary.address, usdc("10000"), 1,
-                    NULL_ROOT, 222222, NULL_PROOF
+                    beneficiary.address, usdc("10000"), 1
                 )
             ).to.be.reverted;
 
@@ -231,8 +202,7 @@ describe("FundBrave Comprehensive System Tests", () => {
             await expect(
                 factory.connect(creator).createFundraiser(
                     "Test", ["img.png"], ["InvalidCategory"], "Desc", "Brazil",
-                    beneficiary.address, usdc("10000"), 30,
-                    NULL_ROOT, 333333, NULL_PROOF
+                    beneficiary.address, usdc("10000"), 30
                 )
             ).to.be.reverted;
         });
@@ -247,11 +217,11 @@ describe("FundBrave Comprehensive System Tests", () => {
         });
 
         it("should track total fundraisers created", async () => {
-            const { factory, creator, beneficiary } = await loadFixture(deploySystemFixture);
-            
-            await createFundraiser(factory, creator, beneficiary, 11111);
-            await createFundraiser(factory, creator, beneficiary, 22222);
-            
+            const { factory, creator, creator2, beneficiary, beneficiary2 } = await loadFixture(deploySystemFixture);
+
+            await createFundraiser(factory, creator, beneficiary);
+            await createFundraiser(factory, creator2, beneficiary2);
+
             const [totalCreated, activeCount] = await factory.getPlatformStats();
             expect(totalCreated).to.equal(2);
             expect(activeCount).to.equal(2);
@@ -261,17 +231,17 @@ describe("FundBrave Comprehensive System Tests", () => {
     describe("Verified Creator Role", () => {
         it("should allow admin to verify creators", async () => {
             const { factory, owner, creator } = await loadFixture(deploySystemFixture);
-            
+
             await factory.connect(owner).verifyCreator(creator.address);
-            
+
             expect(await factory.verifiedCreators(creator.address)).to.be.true;
         });
 
-        it("should allow verified creators to bypass World ID", async () => {
+        it("should allow verified creators to use createVerifiedFundraiser", async () => {
             const { factory, owner, creator, beneficiary } = await loadFixture(deploySystemFixture);
-            
+
             await factory.connect(owner).verifyCreator(creator.address);
-            
+
             const tx = await factory.connect(creator).createVerifiedFundraiser(
                 "Verified Campaign",
                 ["image.png"],
@@ -282,16 +252,16 @@ describe("FundBrave Comprehensive System Tests", () => {
                 usdc("50000"),
                 60
             );
-            
+
             await expect(tx).to.emit(factory, "FundraiserCreated");
         });
 
         it("should allow admin to unverify creators", async () => {
             const { factory, owner, creator } = await loadFixture(deploySystemFixture);
-            
+
             await factory.connect(owner).verifyCreator(creator.address);
             await factory.connect(owner).unverifyCreator(creator.address);
-            
+
             expect(await factory.verifiedCreators(creator.address)).to.be.false;
         });
     });
@@ -664,9 +634,6 @@ describe("FundBrave Comprehensive System Tests", () => {
             const wethToken = await ethers.getContractFactory("contracts/test/DeFiMocks.sol:MockWETH");
             const weth = await wethToken.deploy();
 
-            const MockWorldID = await ethers.getContractFactory("MockWorldID");
-            const worldId = await MockWorldID.deploy();
-
             const MockLZEndpoint = await ethers.getContractFactory("MockLZEndpoint");
             const lzEndpoint = await MockLZEndpoint.deploy(1);
 
@@ -700,10 +667,7 @@ describe("FundBrave Comprehensive System Tests", () => {
                 ZERO_ADDRESS,
                 ZERO_ADDRESS,
                 await mockMorphoVault.getAddress(),
-                1,
-                await worldId.getAddress(),
-                "app_id",
-                "action_id"
+                1
             );
 
             const ReceiptOFT = await ethers.getContractFactory("ReceiptOFT");
@@ -718,10 +682,7 @@ describe("FundBrave Comprehensive System Tests", () => {
                 "USA",
                 beneficiary.address,
                 usdc("10000"),
-                30,
-                NULL_ROOT,
-                111111,
-                NULL_PROOF
+                30
             );
 
             await expect(tx).to.emit(morphoFactory, "StakingPoolCreated");
@@ -850,55 +811,55 @@ describe("FundBrave Comprehensive System Tests", () => {
 
         it("should allow admin to pause and unpause", async () => {
             const { factory, owner, creator, beneficiary } = await loadFixture(deploySystemFixture);
-            
+
             await factory.connect(owner).pause();
-            
+
             await expect(
-                createFundraiser(factory, creator, beneficiary, 999999)
+                createFundraiser(factory, creator, beneficiary)
             ).to.be.revertedWithCustomError(factory, "EnforcedPause");
-            
+
             await factory.connect(owner).unpause();
-            
-            await expect(createFundraiser(factory, creator, beneficiary, 888888)).to.not.be.reverted;
+
+            await expect(createFundraiser(factory, creator, beneficiary)).to.not.be.reverted;
         });
     });
 
     describe("Query Functions", () => {
         it("should return fundraisers with pagination", async () => {
-            const { factory, creator, beneficiary } = await loadFixture(deploySystemFixture);
-            
-            await createFundraiser(factory, creator, beneficiary, 11);
-            await createFundraiser(factory, creator, beneficiary, 22);
-            await createFundraiser(factory, creator, beneficiary, 33);
-            
+            const { factory, creator, creator2, beneficiary, beneficiary2, donor } = await loadFixture(deploySystemFixture);
+
+            await createFundraiser(factory, creator, beneficiary);
+            await createFundraiser(factory, creator2, beneficiary2);
+            await createFundraiser(factory, donor, beneficiary);
+
             const fundraisers = await factory.fundraisers(2, 0);
             expect(fundraisers.length).to.equal(2);
         });
 
         it("should return fundraisers by owner", async () => {
             const { factory, creator, creator2, beneficiary, beneficiary2 } = await loadFixture(deploySystemFixture);
-            
-            await createFundraiser(factory, creator, beneficiary, 111);
-            await createFundraiser(factory, creator2, beneficiary2, 222);
-            
+
+            await createFundraiser(factory, creator, beneficiary);
+            await createFundraiser(factory, creator2, beneficiary2);
+
             const creatorFundraisers = await factory.fundraisersByOwner(creator.address);
             expect(creatorFundraisers.length).to.equal(1);
         });
 
         it("should search fundraisers by category", async () => {
             const { factory, creator, beneficiary } = await loadFixture(deploySystemFixture);
-            
-            await createFundraiser(factory, creator, beneficiary, 444);
-            
+
+            await createFundraiser(factory, creator, beneficiary);
+
             const results = await factory.searchFundraisersByCategory("Environment");
             expect(results.length).to.be.gte(1);
         });
 
         it("should search fundraisers by region", async () => {
             const { factory, creator, beneficiary } = await loadFixture(deploySystemFixture);
-            
-            await createFundraiser(factory, creator, beneficiary, 555);
-            
+
+            await createFundraiser(factory, creator, beneficiary);
+
             const results = await factory.searchFundraisersByRegion("Brazil");
             expect(results.length).to.equal(1);
         });

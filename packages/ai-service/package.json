@@ -1,0 +1,27 @@
+{
+  "name": "@fundbrave/ai-service",
+  "version": "0.1.0",
+  "description": "AI microservice for FundBrave platform",
+  "private": true,
+  "scripts": {
+    "dev": "uvicorn app.main:app --reload --port 8001",
+    "start": "uvicorn app.main:app --port 8001",
+    "test": "pytest",
+    "test:cov": "pytest --cov=app --cov-report=html",
+    "download-models": "python scripts/download_models.py",
+    "test-models": "python scripts/test_models.py --mock",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up",
+    "docker:up:gpu": "docker-compose --profile gpu up",
+    "docker:down": "docker-compose down"
+  },
+  "keywords": [
+    "ai",
+    "ml",
+    "fastapi",
+    "deepfake-detection",
+    "conversational-ai"
+  ],
+  "author": "FundBrave Team",
+  "license": "MIT"
+}

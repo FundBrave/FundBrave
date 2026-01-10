@@ -15,7 +15,6 @@ import {
 
 export enum VerificationBadge {
   NONE = 'NONE',
-  WORLD_ID = 'WORLD_ID',
   VERIFIED_CREATOR = 'VERIFIED_CREATOR',
   OFFICIAL = 'OFFICIAL',
   GOLD = 'GOLD',
@@ -95,9 +94,6 @@ export class User {
 
   @Field({ nullable: true })
   website?: string;
-
-  @Field()
-  worldIdVerified: boolean;
 
   @Field()
   isVerifiedCreator: boolean;
@@ -412,11 +408,6 @@ export class UserFilterInput {
   @IsOptional()
   @IsBoolean()
   isVerifiedCreator?: boolean;
-
-  @Field({ nullable: true })
-  @IsOptional()
-  @IsBoolean()
-  worldIdVerified?: boolean;
 
   @Field({ nullable: true })
   @IsOptional()
