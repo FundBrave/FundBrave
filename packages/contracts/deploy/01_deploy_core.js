@@ -12,10 +12,9 @@ const networkConfig = {
     lzEndpoint: "0x1a44076050125825900e5895B754588209F5E5B3", // LZ V2 Endpoint
     stakingPoolType: 0, // Aave V3
     aavePool: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
-    aUsdc: "0x625E7708f30cA75bfd92586e17077590C60eb4cD", 
+    aUsdc: "0x625E7708f30cA75bfd92586e17077590C60eb4cD",
     swapAdapterType: "1inch",
     oneInchRouter: "0x1111111254fb6c44bAC0bED2854e76F90643097d",
-    worldId: "0x...WORLD_ID_ROUTER...", // Check Worldcoin docs for Polygon address
   },
 
   // ==========================================
@@ -32,7 +31,6 @@ const networkConfig = {
     aUsdc: "0x...MOOLA_MUSDC_...",
     swapAdapterType: "uniswap", // Use Uniswap/Ubeswap on Celo
     oneInchRouter: ethers.constants.AddressZero,
-    worldId: ethers.constants.AddressZero, 
   },
 
   // ==========================================
@@ -43,13 +41,12 @@ const networkConfig = {
     name: "base",
     usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // Base native USDC
     weth: "0x4200000000000000000000000000000000000006", // WETH on Base
-    lzEndpoint: "0x1a44076050125825900e5895B754588209F5E5B3", 
+    lzEndpoint: "0x1a44076050125825900e5895B754588209F5E5B3",
     stakingPoolType: 0, // Aave V3 on Base
     aavePool: "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5",
     aUsdc: "0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB",
     swapAdapterType: "1inch", // 1inch is on Base
     oneInchRouter: "0x1111111254fb6c44bAC0bED2854e76F90643097d",
-    worldId: "0x...WORLD_ID_...", 
   },
 
   // ==========================================
@@ -63,7 +60,7 @@ const networkConfig = {
     lzEndpoint: "0x...ZIRCUIT_LZ...", // LayerZero might be on testnet only
     stakingPoolType: 0, // Likely a fork or standard Aave if available
     aavePool: "0x...ZIRCUIT_LENDING_...",
-    swapAdapterType: "uniswap", 
+    swapAdapterType: "uniswap",
   },
 
   // ==========================================
@@ -74,7 +71,7 @@ const networkConfig = {
     name: "rootstock",
     usdc: "0x...RSK_USDC...", // rUSDT/USDC
     weth: "0x...RSK_WRBTC...", // Wrapped RBTC
-    lzEndpoint: "0x...RSK_LZ...", 
+    lzEndpoint: "0x...RSK_LZ...",
     stakingPoolType: 0, // Sovryn or Tropykus (Aave forks)
     aavePool: "0x...TROPYKUS_POOL...",
     swapAdapterType: "uniswap", // Sovryn Swap
@@ -139,8 +136,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         fundraiserImpl.address, stakingPoolImpl.address, swapAdapterAddress, config.usdc, config.weth,
         platformWallet || deployer, config.aavePool || ethers.constants.AddressZero,
         config.aUsdc || ethers.constants.AddressZero, config.morphoVault || ethers.constants.AddressZero,
-        config.stakingPoolType, config.worldId || ethers.constants.AddressZero,
-        "app_staging_id", "create_fundraiser"
+        config.stakingPoolType
     ],
     log: true
   });

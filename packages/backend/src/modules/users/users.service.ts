@@ -668,10 +668,6 @@ export class UsersService {
       where.isVerifiedCreator = filter.isVerifiedCreator;
     }
 
-    if (filter.worldIdVerified !== undefined) {
-      where.worldIdVerified = filter.worldIdVerified;
-    }
-
     if (filter.searchQuery) {
       where.OR = [
         { username: { contains: filter.searchQuery, mode: 'insensitive' } },
@@ -724,7 +720,6 @@ export class UsersService {
       bannerUrl: user.bannerUrl ?? undefined,
       location: user.location ?? undefined,
       website: user.website ?? undefined,
-      worldIdVerified: user.worldIdVerified,
       isVerifiedCreator: user.isVerifiedCreator,
       verificationBadge: user.verificationBadge as VerificationBadge ?? undefined,
       stats,

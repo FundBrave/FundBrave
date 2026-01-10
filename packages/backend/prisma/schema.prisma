@@ -36,8 +36,6 @@ model User {
   website     String?
 
   // Verification & Reputation
-  worldIdVerified   Boolean            @default(false)
-  worldIdNullifier  String?            @unique
   isVerifiedCreator Boolean            @default(false)
   verificationBadge VerificationBadge?
   reputationScore   Int                @default(0)
@@ -118,7 +116,6 @@ model User {
 
 enum VerificationBadge {
   NONE
-  WORLD_ID
   VERIFIED_CREATOR
   OFFICIAL
   GOLD // For high-reputation users
