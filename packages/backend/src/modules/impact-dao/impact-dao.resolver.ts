@@ -21,8 +21,8 @@ import {
   ImpactDAOYieldHarvestedPayload,
   PaginatedYieldHarvests,
 } from './dto';
-// import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
-// import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 // PubSub instance for subscriptions
 const pubSub = new PubSub();
@@ -55,23 +55,18 @@ export class ImpactDAOResolver {
 
   /**
    * Get the current user's Impact DAO stake
+   * Protected: Requires authentication
    */
   @Query(() => ImpactDAOStake, {
     name: 'myImpactDAOStake',
     nullable: true,
     description: 'Get the current user\'s Impact DAO stake',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyImpactDAOStake(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<ImpactDAOStake | null> {
-    // TODO: Get user from context once auth is implemented
-    // const userId = context.req.user.id;
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return null;
-    }
-    return this.impactDAOService.getUserStake(userId);
+    return this.impactDAOService.getUserStake(user.id);
   }
 
   /**
@@ -104,62 +99,48 @@ export class ImpactDAOResolver {
 
   /**
    * Get pending yield for current user
+   * Protected: Requires authentication
    */
   @Query(() => PendingYield, {
     name: 'myPendingDAOYield',
     description: 'Get pending yield breakdown for current user',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyPendingDAOYield(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<PendingYield> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return {
-        totalYield: '0',
-        daoShare: '0',
-        stakerShare: '0',
-        platformShare: '0',
-      };
-    }
-    return this.impactDAOService.getPendingYield(userId);
+    return this.impactDAOService.getPendingYield(user.id);
   }
 
   /**
    * Get pending FBT rewards for current user
+   * Protected: Requires authentication
    */
   @Query(() => String, {
     name: 'myDAOFBTRewards',
     description: 'Get pending FBT rewards for current user',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyDAOFBTRewards(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<string> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return '0';
-    }
-    return this.impactDAOService.getPendingFBTRewards(userId);
+    return this.impactDAOService.getPendingFBTRewards(user.id);
   }
 
   /**
    * Get current user's custom yield split
+   * Protected: Requires authentication
    */
   @Query(() => YieldSplit, {
     name: 'myDAOYieldSplit',
     nullable: true,
     description: 'Get current user\'s custom yield split configuration',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyDAOYieldSplit(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<YieldSplit | null> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return null;
-    }
-    return this.impactDAOService.getUserYieldSplit(userId);
+    return this.impactDAOService.getUserYieldSplit(user.id);
   }
 
   /**
@@ -182,13 +163,15 @@ export class ImpactDAOResolver {
   /**
    * Record a stake event (for tracking purposes)
    * The actual staking happens on-chain via the frontend
+   * Protected: Requires authentication
    */
   @Mutation(() => Boolean, {
     name: 'recordImpactDAOStake',
     description: 'Record a stake transaction hash for tracking',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async recordImpactDAOStake(
+    @CurrentUser() user: { id: string },
     @Args('input') input: ImpactDAORecordStakeInput,
   ): Promise<boolean> {
     // This mutation is primarily for frontend to notify backend

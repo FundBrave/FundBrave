@@ -14,7 +14,7 @@ import { Spinner } from "./Spinner";
 
 const buttonVariants = cva(
   // Base styles
-  "inline-flex items-center justify-center gap-2 select-none whitespace-nowrap rounded-[20px] font-alt font-semibold tracking-[0.04em] text-base leading-6 transition-all duration-[var(--duration-fast)] ease-[var(--ease-snappy)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
+  "inline-flex items-center justify-center gap-2 select-none whitespace-nowrap rounded-[20px] font-alt font-semibold tracking-[0.04em] text-base leading-6 transition-all duration-[var(--duration-fast)] ease-[var(--ease-snappy)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
   {
     variants: {
       variant: {

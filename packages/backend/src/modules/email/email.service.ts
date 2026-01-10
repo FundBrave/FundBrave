@@ -100,8 +100,12 @@ export class EmailService {
   /**
    * Send password reset email
    */
-  async sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
-    const { subject, html } = passwordResetEmailTemplate({ token });
+  async sendPasswordResetEmail(
+    email: string,
+    token: string,
+    username?: string,
+  ): Promise<boolean> {
+    const { subject, html } = passwordResetEmailTemplate({ token, username });
     return this.sendEmail({ to: email, subject, html });
   }
 

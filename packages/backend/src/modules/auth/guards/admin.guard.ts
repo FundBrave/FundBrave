@@ -8,6 +8,24 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 /**
+ * Utility function to extract the request object from either REST or GraphQL context
+ * @param context - The execution context from NestJS
+ * @returns The HTTP request object
+ */
+function getRequestFromContext(context: ExecutionContext): any {
+  const contextType = context.getType<string>();
+
+  // Handle GraphQL context
+  if (contextType === 'graphql') {
+    const ctx = GqlExecutionContext.create(context);
+    return ctx.getContext().req;
+  }
+
+  // Handle REST/HTTP context
+  return context.switchToHttp().getRequest();
+}
+
+/**
  * Parse admin wallet addresses from environment variable
  * Expects comma-separated addresses in ADMIN_WALLET_ADDRESSES
  */
@@ -32,17 +50,21 @@ function isAdminWallet(walletAddress: string | undefined | null): boolean {
 
 /**
  * Guard to check if user has admin privileges
+ * Works with both REST and GraphQL endpoints.
+ *
  * Admin is determined by:
  * 1. Wallet address in ADMIN_WALLET_ADDRESSES environment variable
  * 2. verificationBadge === 'OFFICIAL' in database
+ *
+ * IMPORTANT: Must be used AFTER JwtAuthGuard to ensure user is authenticated
+ * Example: @UseGuards(JwtAuthGuard, AdminGuard)
  */
 @Injectable()
 export class AdminGuard implements CanActivate {
   constructor(private readonly prisma: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const ctx = GqlExecutionContext.create(context);
-    const request = ctx.getContext().req;
+    const request = getRequestFromContext(context);
     const user = request.user;
 
     if (!user) {
@@ -70,17 +92,21 @@ export class AdminGuard implements CanActivate {
 
 /**
  * Guard to check if user is a moderator
+ * Works with both REST and GraphQL endpoints.
+ *
  * Moderator is determined by:
  * 1. Being an admin, OR
  * 2. Having VERIFIED_CREATOR badge
+ *
+ * IMPORTANT: Must be used AFTER JwtAuthGuard to ensure user is authenticated
+ * Example: @UseGuards(JwtAuthGuard, ModeratorGuard)
  */
 @Injectable()
 export class ModeratorGuard implements CanActivate {
   constructor(private readonly prisma: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const ctx = GqlExecutionContext.create(context);
-    const request = ctx.getContext().req;
+    const request = getRequestFromContext(context);
     const user = request.user;
 
     if (!user) {

@@ -20,7 +20,8 @@ import {
   VestedTokensClaimedPayload,
   FBTBurnedPayload,
 } from './dto';
-// import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 // PubSub instance for subscriptions
 const pubSub = new PubSub();
@@ -43,22 +44,19 @@ export class FBTVestingResolver {
 
   /**
    * Get current user's vesting schedules
+   * Protected: Requires authentication
    */
   @Query(() => PaginatedVestingSchedules, {
     name: 'myVestingSchedules',
     description: 'Get current user\'s vesting schedules',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyVestingSchedules(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
   ): Promise<PaginatedVestingSchedules> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return { items: [], total: 0, hasMore: false };
-    }
-    return this.fbtVestingService.getUserVestingSchedules(userId, limit, offset);
+    return this.fbtVestingService.getUserVestingSchedules(user.id, limit, offset);
   }
 
   /**
@@ -91,64 +89,47 @@ export class FBTVestingResolver {
 
   /**
    * Get total claimable vested FBT for current user
+   * Protected: Requires authentication
    */
   @Query(() => String, {
     name: 'myClaimableVestedFBT',
     description: 'Get total claimable vested FBT',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyClaimableVestedFBT(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<string> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return '0';
-    }
-    return this.fbtVestingService.getClaimableAmount(userId);
+    return this.fbtVestingService.getClaimableAmount(user.id);
   }
 
   /**
    * Get total vested (not yet claimed) for current user
+   * Protected: Requires authentication
    */
   @Query(() => String, {
     name: 'myTotalVested',
     description: 'Get total vested FBT not yet claimed',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyTotalVested(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<string> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return '0';
-    }
-    return this.fbtVestingService.getTotalVested(userId);
+    return this.fbtVestingService.getTotalVested(user.id);
   }
 
   /**
    * Get vesting summary for current user
+   * Protected: Requires authentication
    */
   @Query(() => VestingSummary, {
     name: 'myVestingSummary',
     description: 'Get vesting summary for current user',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyVestingSummary(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<VestingSummary> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return {
-        totalVested: '0',
-        totalReleased: '0',
-        totalClaimable: '0',
-        totalPending: '0',
-        scheduleCount: 0,
-        activeScheduleCount: 0,
-        completedScheduleCount: 0,
-      };
-    }
-    return this.fbtVestingService.getVestingSummary(userId);
+    return this.fbtVestingService.getVestingSummary(user.id);
   }
 
   /**

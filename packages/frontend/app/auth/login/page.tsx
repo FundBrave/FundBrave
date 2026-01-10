@@ -10,11 +10,12 @@ import { useRouter } from "next/navigation";
 // Import reusable components
 import AuthLogo from "../../components/auth/AuthLogo";
 import AuthHeader from "../../components/auth/AuthHeader";
-import SocialLoginButtons from "../../components/auth/SocialLoginButtons";
 import AuthDivider from "../../components/auth/AuthDivider";
 import ServerError from "../../components/auth/ServerError";
 import FormInput from "../../components/auth/FormInput";
 import { Button } from "../../components/ui/button";
+import { authApi } from "../../../lib/api/auth";
+import SocialLoginButtons from "../../components/auth/SocialLoginButtons";
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 interface LoginPageProps {
@@ -35,10 +36,6 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
-  const [isOAuthLoading, setIsOAuthLoading] = useState({
-    google: false,
-    twitter: false,
-  });
 
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +52,32 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
         ...prev,
         [name]: "",
       }));
+    }
+  };
+
+  // Validate single field on blur
+  const handleFieldBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    try {
+      // Validate just this field
+      const fieldSchema = loginSchema.shape[name as keyof typeof loginSchema.shape];
+      if (fieldSchema) {
+        fieldSchema.parse(value);
+        // Clear error if validation passes
+        setErrors((prev) => ({
+          ...prev,
+          [name]: "",
+        }));
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        // Set error for this field only
+        setErrors((prev) => ({
+          ...prev,
+          [name]: error.issues[0]?.message || "Invalid value",
+        }));
+      }
     }
   };
 
@@ -78,6 +101,11 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    window.location.href = `${API_URL}/auth/google`;
+  };
+
   // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,47 +118,56 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
 
     setIsSubmitting(true);
 
-    // Store email in localStorage for onboarding (extracted from username if it's an email)
-    if (typeof window !== "undefined") {
-      const isEmail = formData.username.includes("@");
-      const existingData = localStorage.getItem("onboarding_data");
-      
-      // Check if user needs onboarding (no existing data means first time)
-      if (!existingData) {
-        const onboardingData = {
-          email: isEmail ? formData.username : "",
-          profile: {
-            fullName: "",
-            email: isEmail ? formData.username : "",
-            birthdate: "",
-            bio: "",
-            avatar: "",
-          },
-          social: { twitter: "", instagram: "", linkedin: "", github: "" },
-          goals: [],
-          isComplete: false,
-        };
-        localStorage.setItem("onboarding_data", JSON.stringify(onboardingData));
+    try {
+      // Call login API
+      const response = await authApi.login({
+        username: formData.username,
+        password: formData.password,
+      });
+
+      // Store auth data
+      authApi.storeAuthData(response);
+
+      // Store email in localStorage for onboarding (extracted from username if it's an email)
+      if (typeof window !== "undefined") {
+        const isEmail = formData.username.includes("@");
+        const existingData = localStorage.getItem("onboarding_data");
+
+        // Check if user needs onboarding (no existing data means first time)
+        if (!existingData) {
+          const onboardingData = {
+            email: isEmail ? formData.username : response.user.email || "",
+            profile: {
+              fullName: response.user.username || "",
+              email: response.user.email || (isEmail ? formData.username : ""),
+              birthdate: "",
+              bio: "",
+              avatar: "",
+            },
+            social: { twitter: "", instagram: "", linkedin: "", github: "" },
+            goals: [],
+            isComplete: false,
+          };
+          localStorage.setItem("onboarding_data", JSON.stringify(onboardingData));
+        }
       }
+
+      // Redirect to onboarding
+      router.push("/onboarding");
+    } catch (error) {
+      if (error instanceof Error) {
+        setServerError(error.message);
+      } else {
+        setServerError("Login failed. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Redirect to onboarding
-    setIsSubmitting(false);
-    router.push("/onboarding");
   };
 
-  // Google OAuth handler
-  const handleGoogleLogin = async () => {
-    setIsOAuthLoading({ ...isOAuthLoading, google: true });
-    setServerError("Google sign in is disabled in this build.");
-    setIsOAuthLoading({ ...isOAuthLoading, google: false });
-  };
-
-  // Twitter OAuth handler
-  const handleXLogin = async () => {
-    setIsOAuthLoading({ ...isOAuthLoading, twitter: true });
-    setServerError("Twitter sign in is disabled in this build.");
-    setIsOAuthLoading({ ...isOAuthLoading, twitter: false });
+  // Handle wallet authentication errors
+  const handleWalletError = (error: string) => {
+    setServerError(error);
   };
 
   return (
@@ -150,12 +187,11 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
 
         <SocialLoginButtons
           onGoogleLogin={handleGoogleLogin}
-          onXLogin={handleXLogin}
-          isGoogleLoading={isOAuthLoading.google}
-          isXLoading={isOAuthLoading.twitter}
+          handleWalletError={handleWalletError}
+          //isGoogleLoading={isOAuthLoading.google}
         />
 
-        <AuthDivider text="Or Login with" />
+        <AuthDivider text="Or Login with Email" />
 
         <ServerError error={serverError} />
 
@@ -179,8 +215,10 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
             placeholder="@johndoe or email@example.com"
             value={formData.username}
             onChange={handleInputChange}
+            onBlur={handleFieldBlur}
             error={errors.username}
             delay={0.9}
+            autoComplete="username"
           />
 
           <FormInput
@@ -191,8 +229,10 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
             placeholder="Enter your password"
             value={formData.password}
             onChange={handleInputChange}
+            onBlur={handleFieldBlur}
             error={errors.password}
             delay={1.0}
+            autoComplete="current-password"
           />
 
           {/* Checkbox and Forgot Password */}
@@ -203,15 +243,17 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
             transition={{ delay: 1.1, duration: 0.4 }}
           >
             <motion.label
-              className="flex items-center gap-2 flex-2"
+              htmlFor="keepLoggedIn"
+              className="flex items-center gap-2 flex-2 cursor-pointer"
+              style={{ minHeight: '44px', minWidth: '44px' }}
               whileHover={{ scale: 1.05 }}
             >
               <input
                 type="checkbox"
+                id="keepLoggedIn"
                 name="keepLoggedIn"
                 checked={formData.keepLoggedIn}
                 onChange={handleInputChange}
-                placeholder="/"
                 className="custom-checkbox"
               />
               <span className="text-foreground">Keep me logged in</span>
@@ -229,9 +271,7 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
           <Button
             type="submit"
             loading={isSubmitting}
-            disabled={
-              isSubmitting || isOAuthLoading.google || isOAuthLoading.twitter
-            }
+            disabled={isSubmitting}
             loadingText="Logging in..."
             variant="primary"
             size="md"

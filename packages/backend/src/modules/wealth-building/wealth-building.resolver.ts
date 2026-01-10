@@ -22,7 +22,8 @@ import {
   EndowmentYieldHarvestedPayload,
   StockPurchasedPayload,
 } from './dto';
-// import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 // PubSub instance for subscriptions
 const pubSub = new PubSub();
@@ -56,46 +57,34 @@ export class WealthBuildingResolver {
 
   /**
    * Get current user's wealth building donations
+   * Protected: Requires authentication
    */
   @Query(() => PaginatedWealthBuildingDonations, {
     name: 'myWealthBuildingDonations',
     description: 'Get current user\'s wealth building donations',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyWealthBuildingDonations(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
   ): Promise<PaginatedWealthBuildingDonations> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return { items: [], total: 0, hasMore: false };
-    }
-    return this.wealthBuildingService.getUserDonations(userId, limit, offset);
+    return this.wealthBuildingService.getUserDonations(user.id, limit, offset);
   }
 
   /**
    * Get current user's stock portfolio
+   * Protected: Requires authentication
    */
   @Query(() => StockPortfolio, {
     name: 'myStockPortfolio',
     description: 'Get current user\'s stock portfolio from donations',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyStockPortfolio(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<StockPortfolio> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return {
-        holdings: [],
-        totalValueUSD: '0',
-        totalInvestedUSD: '0',
-        totalGainLossPercent: '0',
-        holdingsCount: 0,
-      };
-    }
-    return this.wealthBuildingService.getUserStockPortfolio(userId);
+    return this.wealthBuildingService.getUserStockPortfolio(user.id);
   }
 
   /**
@@ -132,20 +121,17 @@ export class WealthBuildingResolver {
 
   /**
    * Get pending yield for current user's endowments
+   * Protected: Requires authentication
    */
   @Query(() => [PendingEndowmentYield], {
     name: 'myPendingEndowmentYield',
     description: 'Get pending yield for all user\'s endowments',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyPendingEndowmentYield(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<PendingEndowmentYield[]> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return [];
-    }
-    return this.wealthBuildingService.getUserPendingEndowmentYields(userId);
+    return this.wealthBuildingService.getUserPendingEndowmentYields(user.id);
   }
 
   /**
