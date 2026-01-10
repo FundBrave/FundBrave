@@ -24,8 +24,11 @@ model User {
   twitterId     String?
 
   // Managed Wallet (Encrypted for Web2 users)
+  // Uses AES-256-GCM with PBKDF2 key derivation (CWE-326 fix)
   encryptedPrivateKey String?
   encryptionIv        String?
+  encryptionAuthTag   String?  // GCM authentication tag for tampering detection
+  encryptionSalt      String?  // PBKDF2 salt for key derivation
 
   // Profile
   displayName String?
@@ -107,8 +110,14 @@ model User {
   notificationSetting NotificationSetting?
   deviceTokens        DeviceToken[]
   nonce               String?              @default(uuid())
+  oauthHandoffs       OAuthHandoff[]
+
+  // Password Reset
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
 
   @@index([walletAddress])
+  @@index([passwordResetToken])
   @@index([username])
   @@index([email])
   @@map("users")
@@ -133,9 +142,57 @@ model Session {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
 
+  // Session invalidation tracking (CWE-384 fix)
+  invalidatedAt       DateTime?
+  invalidationReason  String?
+
   @@index([userId])
   @@index([token])
+  @@index([isActive])
   @@map("sessions")
+}
+
+// OAuth handoff for one-time code exchange (CWE-598 fix)
+model OAuthHandoff {
+  id          String   @id @default(uuid())
+  code        String   @unique // One-time cryptographically secure code
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Encrypted tokens (stored temporarily)
+  accessToken   String
+  refreshToken  String
+
+  // User info for frontend
+  email       String?
+  username    String?
+  displayName String?
+
+  // Security
+  expiresAt   DateTime  // 5 minute expiry
+  usedAt      DateTime? // Track if code was used
+  ipAddress   String?   // IP that initiated OAuth
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([code])
+  @@index([expiresAt])
+  @@map("oauth_handoffs")
+}
+
+// OAuth state storage for CSRF protection (CWE-352 fix)
+model OAuthState {
+  id        String   @id @default(uuid())
+  state     String   @unique // Cryptographically secure state token
+  expiresAt DateTime // 10 minute expiry
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([state])
+  @@index([expiresAt])
+  @@map("oauth_states")
 }
 
 // ==================== SOCIAL GRAPH ====================

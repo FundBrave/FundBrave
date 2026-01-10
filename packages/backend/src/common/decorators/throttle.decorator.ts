@@ -44,3 +44,9 @@ export const WriteRateLimit = () => Throttle({ default: { limit: 20, ttl: 60000 
  * Sensitive operation rate limit: 3 requests per minute
  */
 export const SensitiveRateLimit = () => Throttle({ default: { limit: 3, ttl: 60000 } });
+
+/**
+ * Password reset rate limit: 3 requests per 15 minutes per email
+ * More restrictive to prevent enumeration attacks and abuse
+ */
+export const PasswordResetRateLimit = () => Throttle({ default: { limit: 3, ttl: 900000 } });

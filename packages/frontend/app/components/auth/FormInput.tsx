@@ -13,6 +13,7 @@ interface FormInputProps {
   placeholder: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   error?: string;
   delay?: number;
   icon?: React.ReactNode;
@@ -37,6 +38,7 @@ export default function FormInput({
   placeholder,
   value,
   onChange,
+  onBlur,
   error,
   delay = 0.9,
   icon,
@@ -97,7 +99,7 @@ export default function FormInput({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: delay + 0.1, duration: 0.3 }}
 
-          className="absolute left-3 top-1/3 transform -translate-y-1/2 text-muted-foreground"
+          className="absolute left-3 py-3 text-muted-foreground"
           aria-hidden="true"
 
         >
@@ -109,9 +111,12 @@ export default function FormInput({
           name={name}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           placeholder={placeholder}
           inputMode={inputMode}
           autoComplete={autoComplete}
+          aria-describedby={error ? `${id}-error` : undefined}
+          aria-invalid={error ? 'true' : 'false'}
           className={`w-full rounded-lg bg-surface-sunken py-3 pl-12 pr-4 text-foreground placeholder-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 ${
             error
               ? 'border border-destructive focus:ring-destructive'
@@ -123,6 +128,8 @@ export default function FormInput({
       <AnimatePresence>
         {error && (
           <motion.p
+            id={`${id}-error`}
+            role="alert"
             className="mt-1 text-sm text-destructive"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}

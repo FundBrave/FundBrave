@@ -2,13 +2,13 @@
 import React from 'react';
 import { motion } from "motion/react";
 import { Spinner } from "@/app/components/ui/Spinner";
+import WalletLoginButton from "../../components/auth/WalletLoginButton";
 
 interface SocialLoginButtonsProps {
   onGoogleLogin: () => void;
-  onXLogin: () => void;
+  handleWalletError: any;
   delay?: number;
   isGoogleLoading?: boolean;
-  isXLoading?: boolean;
   className?: string;
 }
 
@@ -19,10 +19,9 @@ const buttonVariants = {
 
 export default function SocialLoginButtons({
   onGoogleLogin,
-  onXLogin,
   delay = 0.4,
   isGoogleLoading = false,
-  isXLoading = false,
+  handleWalletError,
 }: SocialLoginButtonsProps) {
   return (
     <motion.div
@@ -33,11 +32,11 @@ export default function SocialLoginButtons({
     >
       <motion.button
         onClick={onGoogleLogin}
-        disabled={isGoogleLoading || isXLoading}
-        className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border-subtle bg-transparent py-3 text-foreground transition-colors hover:bg-foreground/10 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={isGoogleLoading}
+        className="flex flex-1 items-center justify-center gap-2 rounded-lg border-[2px] shadow-[3px] border-border-subtle bg-transparent py-3 text-foreground transition-colors hover:bg-foreground/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         variants={buttonVariants}
-        whileHover={!isGoogleLoading && !isXLoading ? "hover" : undefined}
-        whileTap={!isGoogleLoading && !isXLoading ? "tap" : undefined}
+        whileHover={!isGoogleLoading ? "hover" : undefined}
+        whileTap={!isGoogleLoading ? "tap" : undefined}
       >
         {isGoogleLoading ? (
           <Spinner size="md" color="white" />
@@ -72,28 +71,15 @@ export default function SocialLoginButtons({
         {isGoogleLoading ? 'Signing in...' : 'Continue with Google'}
       </motion.button>
 
-      <motion.button
-        onClick={onXLogin}
-        disabled={isGoogleLoading || isXLoading}
-        className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border-subtle bg-transparent py-3 text-foreground transition-colors hover:bg-foreground/10 disabled:opacity-50 disabled:cursor-not-allowed"
+
+     <motion.div
+        className="flex flex-1 items-center justify-center gap-2 rounded-lg border-[2px] shadow-[3px] border-border-subtle bg-transparent py-3 text-foreground transition-colors hover:bg-foreground/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         variants={buttonVariants}
-        whileHover={!isGoogleLoading && !isXLoading ? "hover" : undefined}
-        whileTap={!isGoogleLoading && !isXLoading ? "tap" : undefined}
+        whileHover={!isGoogleLoading ? "hover" : undefined}
+        whileTap={!isGoogleLoading ? "tap" : undefined}
       >
-        {isXLoading ? (
-          <Spinner size="md" color="white" />
-        ) : (
-          <motion.svg
-            className="h-5 w-5"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            whileHover={{ scale: 1.2, transition: { duration: 0.2 } }}
-          >
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-          </motion.svg>
-        )}
-        {isXLoading ? 'Signing in...' : 'Continue with X'}
-      </motion.button>
+         <WalletLoginButton onError={handleWalletError} />
+      </motion.div>
     </motion.div>
   );
 }

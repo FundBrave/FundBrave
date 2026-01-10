@@ -3,6 +3,8 @@ import "./globals.css";
 import { ThemeProvider } from "./components/theme";
 import { PostsProvider } from "./provider/PostsContext";
 import { ToastProvider } from "./components/ui/Toast";
+import { WalletProvider } from "./provider/WalletProvider";
+import { AuthProvider } from "./provider/AuthProvider";
 
 
 
@@ -19,15 +21,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="custom-scrollbar overflow-x-hidden">
-        <ThemeProvider defaultTheme="light" storageKey="fundbrave-theme">
-          <ToastProvider>
-            <PostsProvider>
-              <div className="w-full mx-auto max-w-[1400px]">
-                {children}
-              </div>
-            </PostsProvider>
-          </ToastProvider>
-        </ThemeProvider>
+        <WalletProvider>
+          <AuthProvider>
+            <ThemeProvider defaultTheme="light" storageKey="fundbrave-theme">
+              <ToastProvider>
+                <PostsProvider>
+                  <div className="w-full mx-auto max-w-[1400px]">
+                    {children}
+                  </div>
+                </PostsProvider>
+              </ToastProvider>
+            </ThemeProvider>
+          </AuthProvider>
+        </WalletProvider>
       </body>
     </html>
   );

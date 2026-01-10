@@ -37,7 +37,7 @@ export default function AuthHero({ variant }: AuthHeroProps) {
         <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-3xl" />
       </motion.div>
 
-      <div className="relative w-96 h-96 flex items-center justify-center flex-shrink-0">
+      <div className="relative md:w-70 md:h-50 2xl:w-96 2xl:h-96 flex items-center justify-center flex-shrink-0">
         {/* a gradient color effect that starts from the center and radiates up and down top into the background */}
         {/* <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-3xl" /> */}
 

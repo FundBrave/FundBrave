@@ -20,7 +20,8 @@ import {
   FBTStakeUpdatedPayload,
   FeeReceivedPayload,
 } from './dto';
-// import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 // PubSub instance for subscriptions
 const pubSub = new PubSub();
@@ -54,21 +55,18 @@ export class TreasuryResolver {
 
   /**
    * Get current user's FBT stake in treasury
+   * Protected: Requires authentication
    */
   @Query(() => FBTStake, {
     name: 'myFBTStake',
     nullable: true,
     description: 'Get current user\'s FBT stake in treasury',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyFBTStake(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<FBTStake | null> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return null;
-    }
-    return this.treasuryService.getUserFBTStake(userId);
+    return this.treasuryService.getUserFBTStake(user.id);
   }
 
   /**
@@ -87,20 +85,17 @@ export class TreasuryResolver {
 
   /**
    * Get claimable USDC yield from FBT staking
+   * Protected: Requires authentication
    */
   @Query(() => String, {
     name: 'myClaimableTreasuryYield',
     description: 'Get claimable USDC yield from FBT staking',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyClaimableTreasuryYield(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<string> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return '0';
-    }
-    return this.treasuryService.getClaimableTreasuryYield(userId);
+    return this.treasuryService.getClaimableTreasuryYield(user.id);
   }
 
   /**
