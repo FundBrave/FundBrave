@@ -17,7 +17,7 @@ export default function AuthHero({ variant }: AuthHeroProps) {
 
   return (
     <motion.section
-      className="flex h-full w-full flex-col items-center justify-center gap-8 px-6 text-white relative"
+      className="flex h-full w-full flex-col items-center justify-center gap-8 px-6 text-foreground relative"
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: "easeOut" }}
@@ -76,7 +76,7 @@ export default function AuthHero({ variant }: AuthHeroProps) {
 
       <div className="text-center max-w-md space-y-4 relative z-10">
         <motion.h2
-          className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
+          className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
           initial={{ opacity: 0, y: 18, scale: 0.92 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{

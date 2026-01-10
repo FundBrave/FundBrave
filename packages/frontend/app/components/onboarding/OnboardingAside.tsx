@@ -52,11 +52,19 @@ export const OnboardingAside = () => {
           transition={{ duration: 0.4, ease: EASE_ORGANIC }}
         >
           <div className="w-10 h-10 rounded-lg relative">
+            {/* Light mode: gradient icon (visible on light bg) */}
+            <Image
+              src={"/Fundbrave_icon-gradient.png"}
+              alt="FundBrave logo"
+              fill
+              className="object-contain dark:hidden"
+            />
+            {/* Dark mode: light icon (visible on dark bg) */}
             <Image
               src={"/Fundbrave_icon_light.png"}
               alt="FundBrave logo"
               fill
-              className="object-contain"
+              className="object-contain hidden dark:block"
             />
           </div>
           <span className="text-2xl font-bold">FundBrave</span>

@@ -109,8 +109,8 @@ export function MessageBubble({
             isSent
               ? // Sent messages: purple/green gradient
                 "bg-gradient-to-r from-purple-500 to-primary-500 text-white"
-              : // Received messages: surface color for light mode support
-                "bg-surface-sunken text-foreground"
+              : // Received messages: visible contrast in both modes
+                "bg-gray-100 dark:bg-neutral-dark-400 text-foreground border border-border-subtle"
           )}
         >
           <p className="text-sm leading-relaxed whitespace-pre-wrap">

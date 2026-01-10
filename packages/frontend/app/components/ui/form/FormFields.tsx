@@ -110,7 +110,7 @@ const MediaActions: React.FC<MediaActionsProps> = ({
           onClick={onClick}
           className="hover:bg-surface-overlay transition-colors p-2"
         >
-          <Icon size={18} className="sm:w-5 sm:h-5" />
+          <Icon size={18} className="sm:w-5 sm:h-5 text-gray-600 dark:text-text-secondary" />
         </IconButton>
       ))}
     </div>
@@ -191,7 +191,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           required={required}
           disabled={disabled}
           className={cn(
-            "w-full bg-surface-sunken rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
+            "w-full bg-gray-100 dark:bg-neutral-dark-400 rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
             "pl-4 sm:pl-6 lg:pl-8 pr-10 sm:pr-12 lg:pr-14 py-4 sm:py-5 lg:py-5",
             "min-h-[56px] sm:min-h-[60px] lg:min-h-[64px]",
             "font-['Poppins'] font-medium text-[14px] sm:text-[15px] lg:text-[16px]",
@@ -201,7 +201,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
             "transition-all duration-200",
             error && "ring-2 ring-destructive/50",
             disabled && "opacity-50 cursor-not-allowed",
-            "[&>option]:bg-surface-sunken [&>option]:text-foreground [&>option]:py-2"
+            "[&>option]:bg-gray-100 dark:[&>option]:bg-neutral-dark-400 [&>option]:text-foreground [&>option]:py-2"
           )}
         >
           <option value="">{placeholder}</option>
@@ -313,7 +313,7 @@ export const InputField: React.FC<InputFieldProps> = ({
           required={required}
           maxLength={maxLength}
           className={cn(
-            "w-full bg-surface-sunken rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
+            "w-full bg-gray-100 dark:bg-neutral-dark-400 rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
             "px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-[18px]",
             "h-12 sm:h-13 lg:h-14",
             "font-['Poppins'] font-medium text-[14px] sm:text-[15px] lg:text-[16px]",
@@ -408,7 +408,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
       <div
         ref={containerRef}
         className={cn(
-          "bg-surface-sunken rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
+          "bg-gray-100 dark:bg-neutral-dark-400 rounded-[12px] sm:rounded-[16px] lg:rounded-[20px]",
           "p-4 sm:p-6 lg:p-8 flex flex-col justify-between",
           "focus-within:ring-2 focus-within:ring-purple-500 focus-within:ring-opacity-50",
           "transition-all duration-200",

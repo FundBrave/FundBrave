@@ -397,6 +397,7 @@
         color-mix(in srgb, var(--purple-900) 60%, var(--neutral-dark-800)) 100%
       );
   }
+  /* Auth gradient - dark mode default with glowing effect */
   .auth-gradient {
     background: radial-gradient(
         120% 120% at 0% 10%,
@@ -413,6 +414,26 @@
         var(--neutral-dark-900) 0%,
         color-mix(in srgb, var(--gradient-bg) 65%, var(--neutral-dark-900)) 55%,
         color-mix(in srgb, var(--gradient-bg) 80%, var(--neutral-dark-800)) 100%
+      );
+  }
+
+  /* Light mode auth gradient */
+  :root:not(.dark) .auth-gradient {
+    background: radial-gradient(
+        120% 120% at 0% 10%,
+        color-mix(in srgb, var(--primary-400) 25%, transparent) 0%,
+        transparent 65%
+      ),
+      radial-gradient(
+        85% 85% at 100% 100%,
+        color-mix(in srgb, var(--soft-purple-400) 20%, transparent) 0%,
+        transparent 80%
+      ),
+      linear-gradient(
+        135deg,
+        var(--purple-50) 0%,
+        color-mix(in srgb, var(--primary-100) 40%, white) 55%,
+        white 100%
       );
   }
   /* // gradient that start at the top center var(--primary-900) to bottom --color-brand-dark */
@@ -496,22 +517,24 @@
     background-color: var(--color-brand-dark);
   }
 
-  /* Onboarding aside gradient - light purple to white (light mode) */
+  /* Light mode - radial gradient from top center */
   .onboarding-aside-gradient {
-    background: linear-gradient(
-      to bottom,
-      var(--purple-200) 0%,
-      #ffffff 100%
-    );
+    background: radial-gradient(
+      ellipse 100% 60% at 50% 0%,
+      var(--primary-400) 0%,
+      transparent 70%
+    ),
+    #ffffff;
   }
 
-  /* Dark mode: purple-900 to brand dark */
+  /* Dark mode - radial gradient from top center with --primary-700 */
   .dark .onboarding-aside-gradient {
-    background: linear-gradient(
-      to bottom,
-      var(--purple-900) 0%,
-      var(--color-brand-dark) 100%
-    );
+    background: radial-gradient(
+      ellipse 100% 60% at 50% 0%,
+      var(--primary-700) 0%,
+      transparent 70%
+    ),
+    var(--color-brand-dark);
   }
 
   /* Custom scrollbar utility class */
