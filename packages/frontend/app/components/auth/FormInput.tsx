@@ -96,8 +96,10 @@ export default function FormInput({
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: delay + 0.1, duration: 0.3 }}
+
           className="absolute left-3 top-1/3 transform -translate-y-1/2 text-muted-foreground"
           aria-hidden="true"
+
         >
           {displayIcon}
         </motion.div>

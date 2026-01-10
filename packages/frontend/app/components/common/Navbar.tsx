@@ -390,7 +390,7 @@ export default function Navbar({ className }: NavbarProps) {
                   <div className="absolute right-0 top-full mt-2 w-48 bg-surface-elevated border border-border-default rounded-xl shadow-xl overflow-hidden z-50">
                     <div className="py-2">
                       <Link
-                        href="/profile"
+                        href="/profile/me"
                         className="block px-4 py-2 text-sm text-foreground/80 hover:bg-surface-overlay active:bg-surface-overlay hover:text-foreground transition-colors"
                         onClick={() => setUserDropdownOpen(false)}
                       >
@@ -583,7 +583,7 @@ export default function Navbar({ className }: NavbarProps) {
                 <span className="text-xs text-text-secondary">Settings</span>
               </Link>
               <Link
-                href="/messages"
+                href="/messenger"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated transition-colors"
               >
@@ -591,7 +591,7 @@ export default function Navbar({ className }: NavbarProps) {
                 <span className="text-xs text-text-secondary">Messages</span>
               </Link>
               <Link
-                href="/profile"
+                href="/profile/me"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated transition-colors"
               >

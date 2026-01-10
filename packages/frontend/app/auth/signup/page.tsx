@@ -241,7 +241,7 @@ export default function SignUpPage({ onToggle }: SignUpPageProps) {
                 onChange={handleInputChange}
                 className="custom-checkbox"
               />
-              <span className="text-white text-sm">
+              <span className="text-foreground text-sm">
                 I agree to terms and conditions
               </span>
             </motion.label>
@@ -258,15 +258,15 @@ export default function SignUpPage({ onToggle }: SignUpPageProps) {
                 onChange={handleInputChange}
                 className="custom-checkbox"
               />
-              <span className="text-white text-sm">
+              <span className="text-foreground text-sm">
                 I agree to receive email updates
               </span>
             </motion.label>
 
             <motion.div whileHover={{ scale: 1.02 }} className="text-right">
               <Link
-                href="/forgot-password"
-                className="text-purple-400 transition-colors hover:text-purple-300 text-sm"
+                href="/auth/forgot-password"
+                className="text-primary transition-colors hover:text-primary/80 text-sm"
               >
                 Forgot Password?
               </Link>
@@ -297,7 +297,7 @@ export default function SignUpPage({ onToggle }: SignUpPageProps) {
           <motion.div className="inline-block" whileHover={{ scale: 1.05 }}>
             <button
               onClick={onToggle}
-              className="text-purple-400 transition-colors br-none hover:text-purple-300"
+              className="text-primary transition-colors hover:text-primary/80"
             >
               {" "}
               Sign in

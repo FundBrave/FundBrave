@@ -34,7 +34,7 @@ export default function SocialLoginButtons({
       <motion.button
         onClick={onGoogleLogin}
         disabled={isGoogleLoading || isXLoading}
-        className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-transparent py-3 text-foreground transition-colors hover:bg-foreground/10 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border-subtle bg-transparent py-3 text-foreground transition-colors hover:bg-foreground/10 disabled:opacity-50 disabled:cursor-not-allowed"
         variants={buttonVariants}
         whileHover={!isGoogleLoading && !isXLoading ? "hover" : undefined}
         whileTap={!isGoogleLoading && !isXLoading ? "tap" : undefined}
@@ -75,7 +75,7 @@ export default function SocialLoginButtons({
       <motion.button
         onClick={onXLogin}
         disabled={isGoogleLoading || isXLoading}
-        className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-transparent py-3 text-foreground transition-colors hover:bg-foreground/10 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border-subtle bg-transparent py-3 text-foreground transition-colors hover:bg-foreground/10 disabled:opacity-50 disabled:cursor-not-allowed"
         variants={buttonVariants}
         whileHover={!isGoogleLoading && !isXLoading ? "hover" : undefined}
         whileTap={!isGoogleLoading && !isXLoading ? "tap" : undefined}

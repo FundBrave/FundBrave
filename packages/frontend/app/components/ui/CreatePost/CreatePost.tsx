@@ -314,7 +314,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
         {/* Modal */}
         <div
           className={cn(
-            "relative bg-brand-dark rounded-[20px] w-full",
+            "relative bg-white dark:bg-neutral-dark-600 rounded-[20px] w-full border border-border-default",
             "max-w-[360px] sm:max-w-[500px] md:max-w-[700px] lg:max-w-[900px]",
             "max-h-[90vh] overflow-hidden"
           )}

@@ -93,7 +93,11 @@ export const StepItem = ({ Icon, title, subtitle, status }: StepItemProps) => {
               <Icon
                 useGradient={isNext}
                 className={`w-5 h-5 ${
-                  isActive ? "text-white" : "text-text-tertiary"
+                  isActive
+                    ? "text-white"
+                    : isNext
+                      ? "text-primary"
+                      : "text-text-tertiary"
                 }`}
               />
             </motion.div>
@@ -180,7 +184,13 @@ export const MobileStepItem = ({
           >
             <Icon
               useGradient={isNext}
-              className={`w-4 h-4 ${isActive ? "text-white" : "text-text-tertiary"}`}
+              className={`w-4 h-4 ${
+                isActive
+                  ? "text-white"
+                  : isNext
+                    ? "text-primary"
+                    : "text-text-tertiary"
+              }`}
             />
           </motion.div>
         )}

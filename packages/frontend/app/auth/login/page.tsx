@@ -214,12 +214,12 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
                 placeholder="/"
                 className="custom-checkbox"
               />
-              <span className="text-white">Keep me logged in</span>
+              <span className="text-foreground">Keep me logged in</span>
             </motion.label>
             <motion.div whileHover={{ scale: 1.05 }}>
               <Link
-                href="/forgot-password"
-                className="text-purple-400 transition-colors hover:text-purple-300"
+                href="/auth/forgot-password"
+                className="text-primary transition-colors hover:text-primary/80"
               >
                 Forgot Password?
               </Link>
@@ -252,7 +252,7 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
           <motion.div className="inline-block" whileHover={{ scale: 1.05 }}>
             <button
               onClick={onToggle}
-              className="text-purple-400 transition-colors hover:text-purple-300"
+              className="text-primary transition-colors hover:text-primary/80"
             >
               Sign Up
             </button>
