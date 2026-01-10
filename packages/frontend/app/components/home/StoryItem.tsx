@@ -59,7 +59,7 @@ export function StoryItem({ story, onClick, isExpanded = true }: StoryItemProps)
       <button
         ref={containerRef}
         onClick={onClick}
-        className="relative w-[150px] h-[196px] rounded-xl overflow-hidden shrink-0 group"
+        className="relative w-[130px] sm:w-[150px] h-[196px] rounded-xl overflow-hidden shrink-0 group"
       >
         {/* Background Image */}
         <div className="absolute inset-0">

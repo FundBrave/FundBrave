@@ -180,7 +180,7 @@ export default function Navbar({ className }: NavbarProps) {
         Skip to main content
       </a>
 
-      <div className="w-full px-4 lg:px-10">
+      <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-10">
         {/* Desktop Navigation - Height: 80px as per Figma */}
         <div className="hidden lg:flex h-20 items-center justify-between max-w-full mx-auto">
           {/* Logo - 146px x 44px */}

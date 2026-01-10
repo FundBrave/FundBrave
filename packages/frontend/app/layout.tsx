@@ -18,11 +18,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="custom-scrollbar">
-        <ThemeProvider defaultTheme="dark" storageKey="fundbrave-theme">
+      <body className="custom-scrollbar overflow-x-hidden">
+        <ThemeProvider defaultTheme="light" storageKey="fundbrave-theme">
           <ToastProvider>
             <PostsProvider>
-              {children}
+              <div className="w-full mx-auto max-w-[1400px]">
+                {children}
+              </div>
             </PostsProvider>
           </ToastProvider>
         </ThemeProvider>
