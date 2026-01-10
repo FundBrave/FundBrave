@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import * as z from "zod";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
 
 // Import reusable components
@@ -162,7 +162,7 @@ export default function ForgotPasswordPage() {
               We've sent a password reset link to
             </motion.p>
             <motion.p
-              className="text-purple-400 font-medium"
+              className="text-primary font-medium"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.5 }}
@@ -204,7 +204,7 @@ export default function ForgotPasswordPage() {
             <motion.div whileHover={{ scale: 1.05 }}>
               <Link
                 href="/auth"
-                className="inline-flex items-center gap-2 text-purple-400 transition-colors hover:text-purple-300"
+                className="inline-flex items-center gap-2 text-primary transition-colors hover:text-primary/80"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to login
@@ -290,7 +290,7 @@ export default function ForgotPasswordPage() {
           <motion.div whileHover={{ scale: 1.05 }}>
             <Link
               href="/auth"
-              className="inline-flex items-center gap-2 text-purple-400 transition-colors hover:text-purple-300"
+              className="inline-flex items-center gap-2 text-primary transition-colors hover:text-primary/80"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to login

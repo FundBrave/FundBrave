@@ -209,22 +209,15 @@ export default function ProfileSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleAvatarUpload = () => {
-    // Placeholder for avatar upload functionality
-    console.log("Avatar upload triggered");
+    // TODO: Implement avatar upload - upload to storage, validate file size (max 2MB), save URL
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Placeholder for save functionality
+    // TODO: Replace with API call to persist profile settings
+    // TODO: Add URL validation for website field before saving
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsSaving(false);
-    console.log("Profile saved", {
-      displayName,
-      username,
-      bio,
-      website,
-      location,
-    });
   };
 
   const handleCancel = () => {

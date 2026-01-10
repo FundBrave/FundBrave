@@ -865,8 +865,8 @@ export default function CreateCampaignPage() {
         case 2:
           if (!formData.description.trim()) {
             newErrors.description = "Campaign description is required";
-          } else if (formData.description.length < 50) {
-            newErrors.description = "Description must be at least 50 characters";
+          } else if (formData.description.length < 100) {
+            newErrors.description = "Description must be at least 100 characters";
           }
           break;
 
@@ -879,8 +879,9 @@ export default function CreateCampaignPage() {
           }
           if (!formData.beneficiaryWallet.trim()) {
             newErrors.beneficiaryWallet = "Wallet address is required";
-          } else if (!formData.beneficiaryWallet.startsWith("0x")) {
-            newErrors.beneficiaryWallet = "Please enter a valid wallet address";
+          } else if (!/^0x[a-fA-F0-9]{40}$/.test(formData.beneficiaryWallet)) {
+            newErrors.beneficiaryWallet =
+              "Please enter a valid Ethereum wallet address (0x + 40 hex characters)";
           }
           if (!formData.acceptTerms) {
             newErrors.acceptTerms = "You must accept the terms to continue";
