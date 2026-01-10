@@ -4,10 +4,12 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/IAavePool.sol";
+import "./libraries/CircuitBreaker.sol";
 
 // Interface for our new Reward Token
 interface IFundBraveToken is IERC20 {
@@ -28,8 +30,9 @@ interface AutomationCompatibleInterface {
  * @title GlobalStakingPool
  * @notice Stakes USDC -> Earns Aave Yield + FBT Rewards (Liquidity Mining)
  */
-contract GlobalStakingPool is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable, AutomationCompatibleInterface {
+contract GlobalStakingPool is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable, UUPSUpgradeable, AutomationCompatibleInterface {
     using SafeERC20 for IERC20;
+    using CircuitBreaker for CircuitBreaker.BreakerConfig;
 
     // --- Core Contracts ---
     IAavePool public AAVE_POOL;
@@ -58,6 +61,9 @@ contract GlobalStakingPool is Initializable, OwnableUpgradeable, ReentrancyGuard
     // --- Automation State ---
     uint256 public lastHarvestTimestamp;
     uint256 public constant HARVEST_INTERVAL = 1 days;
+
+    // --- Circuit Breaker ---
+    CircuitBreaker.BreakerConfig private circuitBreaker;
 
     event Staked(address indexed staker, uint256 usdcAmount);
     event Unstaked(address indexed staker, uint256 usdcAmount);
@@ -96,6 +102,14 @@ contract GlobalStakingPool is Initializable, OwnableUpgradeable, ReentrancyGuard
 
         // Infinite approve Aave to spend our USDC
         USDC.approve(address(AAVE_POOL), type(uint256).max);
+
+        // Initialize circuit breaker with default limits
+        // Max single: 10M USDC, Max hourly: 50M USDC, Max daily: 200M USDC
+        circuitBreaker.initialize(
+            10_000_000 * 10 ** 6, // 10M USDC max single transaction
+            50_000_000 * 10 ** 6, // 50M USDC max hourly volume
+            200_000_000 * 10 ** 6 // 200M USDC max daily volume
+        );
     }
 
     // --- Liquidity Mining Modifier ---
@@ -124,14 +138,18 @@ contract GlobalStakingPool is Initializable, OwnableUpgradeable, ReentrancyGuard
 
     // --- Core Logic ---
 
-    function deposit(uint256 usdcAmount) 
-        external 
+    function deposit(uint256 usdcAmount)
+        external
         nonReentrant
         whenNotPaused
         updateReward(msg.sender)
     {
         require(usdcAmount > 0, "Amount must be > 0");
-        
+
+        // Check circuit breaker
+        require(!circuitBreaker.isTriggered(), "Circuit breaker triggered");
+        require(circuitBreaker.checkTransaction(usdcAmount), "Transaction blocked by circuit breaker");
+
         USDC.safeTransferFrom(msg.sender, address(this), usdcAmount);
         AAVE_POOL.supply(address(USDC), usdcAmount, address(this), 0);
         
@@ -237,4 +255,70 @@ contract GlobalStakingPool is Initializable, OwnableUpgradeable, ReentrancyGuard
 
     function pause() external onlyOwner { _pause(); }
     function unpause() external onlyOwner { _unpause(); }
+
+    // --- UUPS Upgrade Authorization ---
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    // --- Circuit Breaker Functions ---
+
+    /**
+     * @notice Reset the circuit breaker after investigation
+     * @dev Only owner can reset. Use with caution.
+     */
+    function resetCircuitBreaker() external onlyOwner {
+        circuitBreaker.reset();
+    }
+
+    /**
+     * @notice Update circuit breaker limits
+     * @param maxTransaction Maximum single transaction amount
+     * @param maxHourly Maximum hourly volume
+     * @param maxDaily Maximum daily volume
+     */
+    function updateCircuitBreakerLimits(
+        uint256 maxTransaction,
+        uint256 maxHourly,
+        uint256 maxDaily
+    ) external onlyOwner {
+        circuitBreaker.updateLimits(maxTransaction, maxHourly, maxDaily);
+    }
+
+    /**
+     * @notice Check if circuit breaker is triggered
+     * @return True if circuit breaker is triggered
+     */
+    function isCircuitBreakerTriggered() external view returns (bool) {
+        return circuitBreaker.isTriggered();
+    }
+
+    /**
+     * @notice Get remaining transaction capacity
+     * @return maxSingle Maximum single transaction allowed
+     * @return hourlyRemaining Remaining hourly capacity
+     * @return dailyRemaining Remaining daily capacity
+     */
+    function getCircuitBreakerStatus()
+        external
+        view
+        returns (
+            uint256 maxSingle,
+            uint256 hourlyRemaining,
+            uint256 dailyRemaining
+        )
+    {
+        return (
+            circuitBreaker.getMaxTransactionAmount(),
+            circuitBreaker.getRemainingHourlyCapacity(),
+            circuitBreaker.getRemainingDailyCapacity()
+        );
+    }
+
+    /**
+     * @dev Storage gap for future upgrades
+     * This reserves storage slots to allow adding new state variables in future upgrades
+     * without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

@@ -13,6 +13,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.claude/
 
 # Logs
 *.log
@@ -28,9 +29,17 @@ yarn-debug.log*
 # Temporary files
 *.tmp
 *.temp
+*.claude
+*Claude.md
+*DEPLOYMENT_GUIDE.md
+MIGRATION_PLAN.md
+REBUILD_SUMMARY.md
+TESTING_QUICKSTART.md
+*.mcp.json
+.cache/
 
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*

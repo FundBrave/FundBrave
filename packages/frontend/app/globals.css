@@ -1,0 +1,1053 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Light theme base (raw values) */
+:root {
+  /* FundBrave Light Theme */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  /* Our colors in oklch format */
+  --primary: oklch(0.45 0.24 275); /* #450cf0 - Brand Blue */
+  --purple: oklch(0.62 0.18 285); /* #8762fa - Brand Purple */
+  --soft-purple: oklch(0.72 0.22 295); /* #cd82ff - Brand Soft Purple */
+
+  /* Primary Blue Colors */
+  --primary-foreground: oklch(0.985 0 0);
+  --primary-50: #ece7fe;
+  --primary-100: #c5b4fa;
+  --primary-200: #a98ff8;
+  --primary-300: #825cf5;
+  --primary-400: #6a3df3;
+  --primary-500: #450cf0;
+  --primary-600: #3f0bda;
+  --primary-700: #3109aa;
+  --primary-800: #260784;
+  --primary-900: #1d0565;
+
+  /* Primary Purple Colors */
+  --purple-foreground: #ffffff;
+  --purple-50: #f3efff;
+  --purple-100: #dacefd;
+  --purple-200: #c8b7fd;
+  --purple-300: #ae94fb;
+  --purple-400: #9d7ffb;
+  --purple-500: #8762fa;
+  --purple-600: #7a59e1;
+  --purple-700: #6046b4;
+  --purple-800: #4b3689;
+  --purple-900: #3a2a6a;
+
+  /* Primary Soft Purple Colors */
+  --soft-purple-foreground: #09011a;
+  --soft-purple-50: #faf3ff;
+  --soft-purple-100: #f0d8ff;
+  --soft-purple-200: #e8c6ff;
+  --soft-purple-300: #deabff;
+  --soft-purple-400: #d79bff;
+  --soft-purple-500: #cd82ff;
+  --soft-purple-600: #bb76e8;
+  --soft-purple-700: #925cb5;
+  --soft-purple-800: #71488c;
+  --soft-purple-900: #56376b;
+
+  /* Neutral Dark Colors */
+  --neutral-dark-50: #8e98a8;
+  --neutral-dark-100: #b3b0b8;
+  --neutral-dark-200: #8e8a96;
+  --neutral-dark-300: #5a5566;
+  --neutral-dark-400: #3a3448;
+  --neutral-dark-500: #09011a;
+  --neutral-dark-600: #080118;
+  --neutral-dark-700: #060112;
+  --neutral-dark-800: #05010e;
+  --neutral-dark-900: #04000b;
+
+  /* Standard Border Color */
+  --border-subtle: rgba(255, 255, 255, 0.1);
+
+  /* Secondary Colors */
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+
+  /* Neutral Colors */
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.2);
+  --input: rgba(255, 255, 255, 0.2);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+
+  /* Surface colors for light mode */
+  --surface-elevated: oklch(0.98 0 0);
+  --surface-sunken: oklch(0.96 0.01 275);
+  --surface-overlay: rgba(0, 0, 0, 0.05);
+
+  /* Text hierarchy */
+  --text-primary: oklch(0.15 0.03 280);
+  --text-secondary: oklch(0.45 0.02 280);
+  --text-tertiary: oklch(0.6 0.01 280);
+
+  /* Borders */
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-emphasis: rgba(69, 12, 240, 0.2);
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Tailwind v4 CSS-first design system tokens */
+@theme {
+  /* Breakpoints (mobile-first) */
+  --breakpoint-xs: 360px; /* small phones */
+  --breakpoint-sm: 480px; /* phones */
+  --breakpoint-md: 768px; /* tablets */
+  --breakpoint-lg: 1024px; /* small laptops */
+  --breakpoint-xl: 1280px; /* desktops */
+  --breakpoint-2xl: 1536px; /* large desktops */
+  --breakpoint-3xl: 1920px; /* wide screens */
+
+  /* Typography */
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  --font-display: "Gilgan", var(--font-sans);
+  --font-alt: "Montserrat", var(--font-sans);
+
+  /* Font sizes (fluid ramps for headings) */
+  --text-xs: 0.75rem; /* 12 */
+  --text-sm: 0.875rem; /* 14 */
+  --text-base: 1rem; /* 16 */
+  --text-lg: 1.125rem; /* 18 */
+  --text-xl: 1.25rem; /* 20 */
+  --text-2xl: clamp(1.35rem, 1.1rem + 0.8vw, 1.75rem);
+  --text-3xl: clamp(1.75rem, 1.3rem + 1.2vw, 2.25rem);
+  --text-4xl: clamp(2.1rem, 1.5rem + 1.8vw, 3rem);
+  --text-5xl: clamp(2.6rem, 1.8rem + 2.6vw, 3.75rem);
+
+  /* Line heights */
+  --leading-tight: 1.15;
+  --leading-snug: 1.25;
+  --leading-normal: 1.5;
+
+  /* Spacing scale (selected core steps) */
+  --spacing-px: 1px;
+  --spacing-0: 0rem;
+  --spacing-0_5: 0.125rem; /* 2 */
+  --spacing-1: 0.25rem; /* 4 */
+  --spacing-1_5: 0.375rem; /* 6 */
+  --spacing-2: 0.5rem; /* 8 */
+  --spacing-2_5: 0.625rem; /* 10 */
+  --spacing-3: 0.75rem; /* 12 */
+  --spacing-3_5: 0.875rem; /* 14 */
+  --spacing-4: 1rem; /* 16 */
+  --spacing-5: 1.25rem; /* 20 */
+  --spacing-6: 1.5rem; /* 24 */
+  --spacing-8: 2rem; /* 32 */
+  --spacing-10: 2.5rem; /* 40 */
+  --spacing-12: 3rem; /* 48 */
+  --spacing-16: 4rem; /* 64 */
+  --spacing-20: 5rem; /* 80 */
+  --spacing-24: 6rem; /* 96 */
+  --spacing-32: 8rem; /* 128 */
+  --spacing-40: 10rem; /* 160 */
+  --spacing-48: 12rem; /* 192 */
+  --spacing-56: 14rem; /* 224 */
+  --spacing-64: 16rem; /* 256 */
+
+  /* Elevation / Shadows */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.12),
+    0 10px 10px -5px rgb(0 0 0 / 0.04);
+  --shadow-glow-primary: 0 0 0 3px rgb(69 12 240 / 0.35);
+
+  /* Transitions & easing */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-snappy: cubic-bezier(0.2, 0, 0, 1);
+  --ease-fluid: cubic-bezier(0.3, 0, 0, 1);
+  --duration-quick: 120ms;
+  --duration-fast: 180ms;
+  --duration-base: 240ms;
+  --duration-slow: 360ms;
+
+  /* Typography tokens from Figma */
+  --text-desktop-h1: 45px;
+  --text-desktop-h2: 36px;
+  --text-desktop-h3: 28px;
+  --text-desktop-h4: 22px;
+  --text-desktop-h5: 16px;
+  --text-desktop-label: 14px;
+  --text-desktop-small: 12px;
+  --text-mobile-label: 14px;
+  --text-mobile-small: 12px;
+  --text-mobile-very-small: 10px;
+
+  /* Border radius scale */
+  --radius-none: 0px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius: 8px; /* base */
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Container widths */
+  --width-xs: 440px;
+  --width-sm: 640px;
+  --width-md: 768px;
+  --width-lg: 1024px;
+  --width-xl: 1280px;
+  --width-2xl: 1400px; /* existing */
+
+  /* Z-index scale */
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-dropdown: 1000;
+  --z-modal: 1100;
+  --z-popover: 1200;
+  --z-toast: 1300;
+  --z-tooltip: 1400;
+
+  /* Color mappings (link existing raw vars to Tailwind tokens) */
+  /* Colors - CSS variables for dynamic theming */
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Primary color palette */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+
+  /* Purple color palette */
+  --color-purple: var(--purple);
+  --color-purple-foreground: var(--purple-foreground);
+  --color-purple-50: var(--purple-50);
+  --color-purple-100: var(--purple-100);
+  --color-purple-200: var(--purple-200);
+  --color-purple-300: var(--purple-300);
+  --color-purple-400: var(--purple-400);
+  --color-purple-500: var(--purple-500);
+  --color-purple-600: var(--purple-600);
+  --color-purple-700: var(--purple-700);
+  --color-purple-800: var(--purple-800);
+  --color-purple-900: var(--purple-900);
+
+  /* Soft purple color palette */
+  --color-soft-purple: var(--soft-purple);
+  --color-soft-purple-foreground: var(--soft-purple-foreground);
+  --color-soft-purple-50: var(--soft-purple-50);
+  --color-soft-purple-100: var(--soft-purple-100);
+  --color-soft-purple-200: var(--soft-purple-200);
+  --color-soft-purple-300: var(--soft-purple-300);
+  --color-soft-purple-400: var(--soft-purple-400);
+  --color-soft-purple-500: var(--soft-purple-500);
+  --color-soft-purple-600: var(--soft-purple-600);
+  --color-soft-purple-700: var(--soft-purple-700);
+  --color-soft-purple-800: var(--soft-purple-800);
+  --color-soft-purple-900: var(--soft-purple-900);
+
+  /* Neutral dark color palette */
+  --color-neutral-dark-50: var(--neutral-dark-50);
+  --color-neutral-dark-100: var(--neutral-dark-100);
+  --color-neutral-dark-200: var(--neutral-dark-200);
+  --color-neutral-dark-300: var(--neutral-dark-300);
+  --color-neutral-dark-400: var(--neutral-dark-400);
+  --color-neutral-dark-500: var(--neutral-dark-500);
+  --color-neutral-dark-600: var(--neutral-dark-600);
+  --color-neutral-dark-700: var(--neutral-dark-700);
+  --color-neutral-dark-800: var(--neutral-dark-800);
+  --color-neutral-dark-900: var(--neutral-dark-900);
+
+  /* Semantic colors */
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  /* Brand colors - direct values */
+  --color-brand-blue: #450cf0;
+  --color-brand-purple: #8762fa;
+  --color-brand-soft-purple: #cd82ff;
+  --color-brand-dark: #09011a;
+  --color-brand-white: #ffffff;
+
+  /* Component radii tokens (mapped) */
+  --radius-btn: var(--radius-sm);
+  --radius-card: var(--radius-lg);
+  --radius-input: var(--radius);
+
+  /* Semantic surface colors */
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-overlay: var(--surface-overlay);
+
+  /* Semantic text colors */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  /* Semantic border colors */
+  --color-border-default: var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-emphasis: var(--border-emphasis);
+
+  /* Semantic shadows */
+  --shadow-card: var(--shadow-card);
+  --shadow-elevated: var(--shadow-elevated);
+
+  /* Font families */
+  --font-family-gilgan: "Gilgan", sans-serif;
+  --font-family-montserrat: "Montserrat", sans-serif;
+
+  --gradient-bg: #09011a;
+}
+
+/* Container utility override */
+@layer utilities {
+  .container {
+    @apply mx-auto px-8;
+    max-width: var(--width-2xl);
+  }
+  /* Extra utilities leveraging design tokens */
+  .text-balance {
+    text-wrap: balance;
+  }
+  .focus-ring {
+    box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-ring);
+  }
+  .glass {
+    background: linear-gradient(
+      135deg,
+      rgb(255 255 255 / 0.12),
+      rgb(255 255 255 / 0.04)
+    );
+    backdrop-filter: blur(10px) saturate(160%);
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    border: 1px solid rgb(255 255 255 / 0.08);
+  }
+  .shadow-glow-primary {
+    box-shadow: var(--shadow-glow-primary);
+  }
+  .auth-page-shell {
+    background: radial-gradient(
+        120% 140% at 0% 0%,
+        color-mix(in srgb, var(--primary-500) 22%, transparent) 0%,
+        transparent 65%
+      ),
+      radial-gradient(
+        90% 90% at 100% 0%,
+        color-mix(in srgb, var(--soft-purple-500) 18%, transparent) 0%,
+        transparent 75%
+      ),
+      linear-gradient(
+        135deg,
+        var(--neutral-dark-900) 0%,
+        color-mix(in srgb, var(--primary-900) 70%, var(--neutral-dark-900)) 50%,
+        color-mix(in srgb, var(--purple-900) 60%, var(--neutral-dark-800)) 100%
+      );
+  }
+  .auth-gradient {
+    background: radial-gradient(
+        120% 120% at 0% 10%,
+        color-mix(in srgb, var(--gradient-bg) 45%, transparent) 0%,
+        transparent 65%
+      ),
+      radial-gradient(
+        85% 85% at 100% 100%,
+        color-mix(in srgb, var(--gradient-bg) 38%, transparent) 0%,
+        transparent 80%
+      ),
+      linear-gradient(
+        135deg,
+        var(--neutral-dark-900) 0%,
+        color-mix(in srgb, var(--gradient-bg) 65%, var(--neutral-dark-900)) 55%,
+        color-mix(in srgb, var(--gradient-bg) 80%, var(--neutral-dark-800)) 100%
+      );
+  }
+  /* // gradient that start at the top center var(--primary-900) to bottom --color-brand-dark */
+  /* .auth-aside-gradient {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-brand-dark) 70%, var(--color-brand-dark)) 0%,
+      color-mix(in srgb, var(--color-brand-dark) 85%, transparent) 100%
+    );
+  } */
+
+  .auth-panel {
+    position: relative;
+    background: linear-gradient(
+      150deg,
+      color-mix(in srgb, var(--primary-900) 70%, var(--neutral-dark-900)) 0%,
+      color-mix(in srgb, var(--neutral-dark-800) 85%, transparent) 100%
+    );
+    box-shadow: 0 28px 120px rgba(69, 12, 240, 0.22);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .auth-panel::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    pointer-events: none;
+    background: linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.045) 0%,
+      rgba(255, 255, 255, 0.02) 40%,
+      rgba(255, 255, 255, 0.01) 100%
+    );
+  }
+
+  .auth-bubble {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary-400) 60%, var(--soft-purple-400) 20%) 0%,
+      color-mix(in srgb, var(--soft-purple-400) 75%, var(--primary-300) 25%)
+        100%
+    );
+    color: var(--color-primary-foreground);
+    box-shadow: 0 12px 40px rgba(205, 130, 255, 0.2);
+  }
+
+  .text-brand-gradient {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--primary-200) 80%, var(--color-brand-white)) 0%,
+      color-mix(in srgb, var(--soft-purple-200) 85%, var(--color-brand-white))
+        50%,
+      color-mix(in srgb, var(--purple-200) 80%, var(--color-brand-white)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .border-brand-overlay {
+    border-color: color-mix(in srgb, var(--primary-500) 25%, transparent);
+  }
+
+  /* Custom checkbox styling for auth forms */
+  .custom-checkbox {
+    @apply h-4 w-4 rounded border-2 border-gray-400 bg-transparent text-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+    accent-color: var(--primary-500);
+  }
+
+  .custom-checkbox:checked {
+    background-color: var(--primary-500);
+    border-color: var(--primary-500);
+  }
+
+  /* Dive/Onboarding background - matches Figma design node-id=361-2977 */
+  .dive-bg {
+    background-color: #09011a;
+  }
+
+  /* Alternative utility with same color for semantic naming */
+  .onboarding-bg {
+    background-color: var(--color-brand-dark);
+  }
+
+  /* Onboarding aside gradient - light purple to white (light mode) */
+  .onboarding-aside-gradient {
+    background: linear-gradient(
+      to bottom,
+      var(--purple-200) 0%,
+      #ffffff 100%
+    );
+  }
+
+  /* Dark mode: purple-900 to brand dark */
+  .dark .onboarding-aside-gradient {
+    background: linear-gradient(
+      to bottom,
+      var(--purple-900) 0%,
+      var(--color-brand-dark) 100%
+    );
+  }
+
+  /* Custom scrollbar utility class */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(135, 98, 250, 0.5) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(135, 98, 250, 0.5);
+    border-radius: 9999px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(135, 98, 250, 0.8);
+  }
+
+  /* Auto-hide scrollbar - only visible on hover/scroll */
+  .scrollbar-auto-hide {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .scrollbar-auto-hide::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-auto-hide::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-auto-hide::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 9999px;
+    transition: background 0.2s ease;
+  }
+
+  .scrollbar-auto-hide:hover::-webkit-scrollbar-thumb {
+    background: rgba(135, 98, 250, 0.5);
+  }
+
+  .scrollbar-auto-hide:hover {
+    scrollbar-color: rgba(135, 98, 250, 0.5) transparent;
+  }
+
+  /* Brand gradient backgrounds for buttons and elements */
+  .bg-brand-gradient {
+    background: linear-gradient(
+      139deg,
+      var(--primary-500) 0%,
+      var(--soft-purple-500) 100%
+    );
+  }
+
+  .bg-brand-gradient-hover:hover {
+    background: linear-gradient(
+      139deg,
+      var(--primary-600) 0%,
+      var(--soft-purple-600) 100%
+    );
+  }
+
+  /* Progress bar gradient */
+  .bg-progress-gradient {
+    background: linear-gradient(
+      150deg,
+      var(--primary-500) 0%,
+      var(--soft-purple-500) 100%
+    );
+  }
+
+  /* Underline gradient for links */
+  .underline-brand-gradient {
+    background: linear-gradient(
+      172deg,
+      var(--primary-500) 0%,
+      var(--soft-purple-500) 100%
+    );
+  }
+
+  /* Profile tab indicator gradient */
+  .tab-indicator-gradient {
+    background: linear-gradient(
+      172deg,
+      var(--primary-500) 0%,
+      var(--soft-purple-500) 100%
+    );
+  }
+
+  /* Hide scrollbar for horizontal scroll containers (mobile filters) */
+  .scrollbar-hidden {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+
+  /* Text on media/overlay backgrounds - always white regardless of theme */
+  .text-on-media {
+    color: white !important;
+  }
+
+  .text-on-overlay {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .text-on-media-secondary {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+}
+
+.dark {
+  /* FundBrave Dark Theme */
+  --background: oklch(12.313% 0.05967 296.377); /* Neutral Dark #09011A; */
+  --foreground: oklch(100% 0.00011 271.152);
+  --card: oklch(25.365% 0.14598 279.884); /* Primary Blue 900 */
+  --card-foreground: oklch(100% 0.00011 271.152);
+  --popover: oklch(12.313% 0.05967 296.377);
+  --popover-foreground: oklch(100% 0.00011 271.152);
+
+  /* Primary Colors in Dark Mode */
+  --primary: #6a3df3; /* Primary Blue 400 */
+  --primary-foreground: #ffffff;
+
+  /* Secondary Colors in Dark Mode */
+  --secondary: #56376b; /* Primary Soft Purple 900 */
+  --secondary-foreground: #ffffff;
+
+  /* Neutral Colors in Dark Mode */
+  --muted: #260784; /* Primary Blue 800 */
+  --muted-foreground: #b5b5b5; /* Neutral White 700 */
+  --accent: #3f0bda; /* Primary Blue 600 */
+  --accent-foreground: #ffffff;
+  --destructive: #ff0000;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1); /* Primary Blue 700  it was 3f0bda*/
+  --input: rgba(255, 255, 255, 0.1); /* Primary Blue 700 it was 3f0bda */
+  --ring: #a98ff8; /* Primary Blue 200 */
+
+  --surface-elevated: var(--neutral-dark-400);
+  --surface-sunken: var(--neutral-dark-500);
+  --surface-overlay: rgba(255, 255, 255, 0.05);
+
+  --text-primary: oklch(1 0 0);
+  --text-secondary: oklch(0.7 0 0);
+  --text-tertiary: oklch(0.5 0 0);
+
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-emphasis: rgba(135, 98, 250, 0.3);
+
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  /* border-color: var(--border); */
+}
+
+body {
+  background-color: var(--background);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Add smooth transitions for theme changes */
+button,
+a,
+.transition-theme {
+  transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+@layer base {
+  @font-face {
+    font-family: "Gilgan";
+    src: url("/fonts/Gilgan.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Montserrat";
+    src: url("/fonts/Montserrat-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Montserrat";
+    src: url("/fonts/Montserrat-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Montserrat";
+    src: url("/fonts/Montserrat-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  /* Use Inter as fallback */
+  html {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  }
+
+  /* Typography defaults */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Gilgan", sans-serif;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+
+  @supports (scrollbar-width: thin) {
+    :root {
+      scrollbar-width: thin;
+      scrollbar-color: var(--muted) transparent;
+    }
+  }
+
+  /* Fix browser autofill background on dark theme */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  textarea:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--neutral-dark-400) inset !important;
+    -webkit-text-fill-color: white !important;
+    caret-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+}
+
+/* Focus states */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+/* Standard subtle border for dark backgrounds */
+.border-subtle {
+  border: 1px solid var(--border-subtle);
+}
+
+/* Common component styling */
+.fundbrave-card {
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background-color: white;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark .fundbrave-card {
+  background-color: var(--primary-900);
+}
+
+.fundbrave-button-primary {
+  background-color: var(--primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.fundbrave-button-primary:hover {
+  background-color: var(--primary-600);
+}
+
+.fundbrave-button-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+.fundbrave-button-secondary {
+  background-color: var(--purple);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.fundbrave-button-secondary:hover {
+  background-color: var(--purple-600);
+}
+
+.fundbrave-button-secondary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+.fundbrave-button-outline {
+  background-color: var(--soft-purple-50);
+  color: var(--primary-900);
+  border: 1px solid var(--soft-purple-100);
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.fundbrave-button-outline:hover {
+  background-color: var(--soft-purple-100);
+}
+
+.dark .fundbrave-button-outline {
+  background-color: var(--primary-800);
+  border-color: var(--primary-700);
+  color: white;
+}
+
+.dark .fundbrave-button-outline:hover {
+  background-color: var(--primary-700);
+}
+
+.fundbrave-button-outline:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Campaign Card Animations */
+@keyframes campaign-progress-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes campaign-skeleton-wave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Progress bar shimmer effect */
+.campaign-progress-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.campaign-progress-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: campaign-progress-shimmer 2s ease-in-out infinite;
+}
+
+/* YouTube-style skeleton wave effect */
+.campaign-skeleton {
+  position: relative;
+  overflow: hidden;
+}
+
+.campaign-skeleton::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: campaign-skeleton-wave 1.5s ease-in-out infinite;
+  z-index: 10;
+  pointer-events: none;
+}
+
+
+/* ============================================================================
+   ACCESSIBILITY UTILITIES
+   ============================================================================ */
+
+/* Screen reader only - visually hidden but accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.not-sr-only {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Enhanced focus styles for accessibility */
+.focus-visible-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Skip link styles */
+.skip-link {
+  @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-md focus:shadow-lg;
+}
+
+/* Touch target minimum size utility */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

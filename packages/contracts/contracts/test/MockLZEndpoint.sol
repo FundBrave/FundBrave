@@ -42,6 +42,7 @@ contract MockLZEndpoint is ILayerZeroEndpointV2 {
     uint32 public eid;
     address public delegate;
     uint256 private nonce;
+    bool public acceptMessage = true; // Default to accepting messages
 
     event PacketSent(
         uint32 indexed dstEid,
@@ -57,6 +58,36 @@ contract MockLZEndpoint is ILayerZeroEndpointV2 {
 
     function setDelegate(address _delegate) external {
         delegate = _delegate;
+    }
+
+    // Helper method for tests to control message acceptance
+    function setAcceptMessage(bool _accept) external {
+        acceptMessage = _accept;
+    }
+
+    // Helper method to simulate message delivery to a destination contract
+    function deliverMessage(
+        address _target,
+        uint32 _srcEid,
+        bytes calldata _payload
+    ) external payable {
+        require(acceptMessage, "Messages not being accepted");
+
+        // Create a unique GUID for this message
+        bytes32 guid = bytes32(uint256(keccak256(abi.encodePacked(_srcEid, nonce, block.timestamp))));
+        nonce++;
+
+        // Create the origin struct
+        Origin memory origin = Origin(_srcEid, bytes32(uint256(uint160(msg.sender))), 1);
+
+        // Call lzReceive on the target contract
+        ILayerZeroReceiver(_target).lzReceive{value: msg.value}(
+            origin,
+            guid,
+            _payload,
+            address(0), // executor
+            "" // extraData
+        );
     }
 
     // Implement the correct send function signature for LayerZero V2

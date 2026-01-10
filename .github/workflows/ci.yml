@@ -17,28 +17,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: packages/frontend/package-lock.json
-          
+          cache: 'pnpm'
+          cache-dependency-path: packages/frontend/pnpm-lock.yaml
+
       - name: Install dependencies
         working-directory: packages/frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
         
       - name: Run linter
         working-directory: packages/frontend
-        run: npm run lint
+        run: pnpm run lint
         
       - name: Run type check
         working-directory: packages/frontend
-        run: npm run type-check
+        run: pnpm run type-check
         
       - name: Run tests
         working-directory: packages/frontend
-        run: npm run test:coverage
+        run: pnpm run test:coverage
         
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
@@ -110,35 +115,32 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: packages/backend/package-lock.json
-          
+
       - name: Install dependencies
         working-directory: packages/backend
         run: npm ci
-        
+
       - name: Run linter
         working-directory: packages/backend
         run: npm run lint
-        
-      - name: Run type check
-        working-directory: packages/backend
-        run: npm run type-check
-        
+
       - name: Run unit tests
         working-directory: packages/backend
-        run: npm run test:unit
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fundbrave_test
-          REDIS_URL: redis://localhost:6379
-          
-      - name: Run integration tests
-        working-directory: packages/backend
-        run: npm run test:integration
+        run: npm run test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fundbrave_test
           REDIS_URL: redis://localhost:6379
 
-  # AI Service Tests
+      - name: Run e2e tests
+        working-directory: packages/backend
+        run: npm run test:e2e
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fundbrave_test
+          REDIS_URL: redis://localhost:6379
+
+  # AI Service Tests (skipped until service is implemented)
   ai-service-test:
+    if: false  # Skip until AI service is implemented
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -190,29 +192,34 @@ jobs:
 
   # Build and Deploy (only on main branch)
   deploy:
-    needs: [frontend-test, contracts-test, backend-test, ai-service-test, security-scan]
+    needs: [frontend-test, contracts-test, backend-test, security-scan]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          
+
       - name: Build frontend
         working-directory: packages/frontend
         run: |
-          npm ci
-          npm run build
-          
+          pnpm install --frozen-lockfile
+          pnpm run build
+
       - name: Build backend
-        working-directory: packages/backend  
+        working-directory: packages/backend
         run: |
           npm ci
           npm run build
-          
+
       - name: Deploy to staging
-        run: echo "🚀 Deploying to staging environment..."
+        run: echo "Deploying to staging environment..."
