@@ -204,7 +204,7 @@ export default function ForgotPasswordPage() {
             <motion.div whileHover={{ scale: 1.05 }}>
               <Link
                 href="/auth"
-                className="inline-flex items-center gap-2 text-purple-400 transition-colors hover:text-purple-300"
+                className="inline-flex items-center gap-2 text-primary transition-colors hover:text-primary/80"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to login
