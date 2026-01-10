@@ -507,6 +507,7 @@ function ImageUpload({ imagePreview, onFileSelect, onRemove, error }: ImageUploa
               accept="image/png,image/jpeg,image/webp"
               onChange={handleFileChange}
               className="hidden"
+              aria-label="Upload campaign image"
             />
           </label>
         )}

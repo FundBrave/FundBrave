@@ -45,19 +45,16 @@ export class UsersController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   @ApiQuery({ name: 'isVerifiedCreator', required: false, type: Boolean })
-  @ApiQuery({ name: 'worldIdVerified', required: false, type: Boolean })
   @ApiQuery({ name: 'searchQuery', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Returns paginated users' })
   async getUsers(
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
     @Query('isVerifiedCreator') isVerifiedCreator?: string,
-    @Query('worldIdVerified') worldIdVerified?: string,
     @Query('searchQuery') searchQuery?: string,
   ): Promise<PaginatedUsers> {
     const filter = {
       isVerifiedCreator: isVerifiedCreator !== undefined ? isVerifiedCreator === 'true' : undefined,
-      worldIdVerified: worldIdVerified !== undefined ? worldIdVerified === 'true' : undefined,
       searchQuery,
     };
 

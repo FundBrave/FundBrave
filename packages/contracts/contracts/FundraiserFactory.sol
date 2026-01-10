@@ -17,17 +17,6 @@ import { WealthBuildingDonation } from "./WealthBuildingDonation.sol";
 import { ImpactDAOPool } from "./ImpactDAOPool.sol";
 import { PlatformTreasury } from "./PlatformTreasury.sol";
 
-interface IWorldID {
-    function verifyProof(
-        uint256 root,
-        uint256 groupID,
-        uint256 signal,
-        uint256 nullifierHash,
-        uint256 externalNullifier,
-        uint256[8] calldata proof
-    ) external view;
-}
-
 /**
  * @title FundraiserFactory
  * @author FundBrave Team
@@ -48,7 +37,6 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
     error InvalidFundraiserId();
     error InvalidAmount();
     error ZeroAddress();
-    error WorldIDAlreadyUsed();
     error InvalidStakingPoolType();
     error AaveNotConfigured();
     error MorphoNotConfigured();
@@ -99,13 +87,6 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
     address public immutable A_USDC;
     address public immutable MORPHO_VAULT;
     uint8 public immutable stakingPoolType;
-
-    // ============ World ID Configuration ============
-
-    IWorldID public worldId;
-    uint256 public immutable appId;
-    uint256 public immutable actionId;
-    mapping(uint256 => bool) internal nullifierHashes;
 
     // ============ Limits & Stats ============
 
@@ -167,10 +148,7 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
         address _aavePool,
         address _aUsdc,
         address _morphoVault,
-        uint8 _stakingPoolType,
-        address _worldId,
-        string memory _appId,
-        string memory _actionId
+        uint8 _stakingPoolType
     ) {
         if (_fundraiserImplementation == address(0)) revert InvalidImplementation();
         if (_stakingPoolImplementation == address(0)) revert InvalidImplementation();
@@ -187,12 +165,6 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
         A_USDC = _aUsdc;
         MORPHO_VAULT = _morphoVault;
         stakingPoolType = _stakingPoolType;
-
-        worldId = IWorldID(_worldId);
-        // BN254 field prime modulus for World ID
-        uint256 SNARK_SCALAR_FIELD = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-        appId = uint256(keccak256(abi.encodePacked(_appId))) % SNARK_SCALAR_FIELD;
-        actionId = uint256(keccak256(abi.encodePacked(_actionId))) % SNARK_SCALAR_FIELD;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(ADMIN_ROLE, msg.sender);
@@ -273,7 +245,7 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
     // ============ Fundraiser Creation ============
 
     /**
-     * @notice Creates a new fundraiser with World ID verification
+     * @notice Creates a new fundraiser
      * @param name Name of the fundraiser
      * @param images Array of image URLs
      * @param categories Array of category strings
@@ -282,9 +254,6 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
      * @param beneficiary Address to receive funds
      * @param goal Funding goal in USDC (6 decimals)
      * @param durationInDays Duration of the campaign
-     * @param root World ID merkle root
-     * @param nullifierHash World ID nullifier hash
-     * @param proof World ID ZK proof
      * @return fundraiserAddress Address of the created fundraiser
      */
     function createFundraiser(
@@ -295,24 +264,8 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
         string memory region,
         address payable beneficiary,
         uint256 goal,
-        uint256 durationInDays,
-        uint256 root,
-        uint256 nullifierHash,
-        uint256[8] calldata proof
+        uint256 durationInDays
     ) external nonReentrant whenNotPaused returns (address fundraiserAddress) {
-        if (address(worldId) != address(0)) {
-            if (nullifierHashes[nullifierHash]) revert WorldIDAlreadyUsed();
-            worldId.verifyProof(
-                root,
-                1,
-                uint256(keccak256(abi.encodePacked(msg.sender))),
-                nullifierHash,
-                uint256(keccak256(abi.encodePacked(appId, actionId))),
-                proof
-            );
-            nullifierHashes[nullifierHash] = true;
-        }
-
         _validateFundraiserParams(name, images, categories, description, beneficiary, goal, durationInDays);
 
         fundraiserAddress = _createFundraiserInternal(
@@ -321,7 +274,7 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
     }
 
     /**
-     * @notice Creates a fundraiser for verified creators (no World ID required)
+     * @notice Creates a fundraiser for verified creators with minimal validation
      * @dev Only callable by addresses with VERIFIED_CREATOR_ROLE
      */
     function createVerifiedFundraiser(
