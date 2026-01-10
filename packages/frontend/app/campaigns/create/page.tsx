@@ -865,8 +865,8 @@ export default function CreateCampaignPage() {
         case 2:
           if (!formData.description.trim()) {
             newErrors.description = "Campaign description is required";
-          } else if (formData.description.length < 50) {
-            newErrors.description = "Description must be at least 50 characters";
+          } else if (formData.description.length < 100) {
+            newErrors.description = "Description must be at least 100 characters";
           }
           break;
 
