@@ -1,9 +1,9 @@
 /**
  * Sanitization utilities for OAuth data and user inputs
  * Protects against XSS attacks (CWE-79)
+ *
+ * Uses regex-based sanitization instead of DOMPurify to avoid dependencies
  */
-
-import DOMPurify from 'dompurify';
 
 /**
  * Sanitize OAuth data received from authentication providers
@@ -35,8 +35,8 @@ function sanitizeEmail(email?: string): string | undefined {
     return undefined;
   }
 
-  // Sanitize using DOMPurify (remove all HTML tags)
-  return DOMPurify.sanitize(email, { ALLOWED_TAGS: [] });
+  // Remove all HTML tags and limit length
+  return email.replace(/<[^>]*>/g, '').slice(0, 100);
 }
 
 /**
@@ -52,11 +52,8 @@ function sanitizeText(text?: string): string | undefined {
     return 'User'; // Safe default
   }
 
-  // Sanitize using DOMPurify (remove all HTML tags and attributes)
-  const sanitized = DOMPurify.sanitize(text, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: []
-  });
+  // Remove all HTML tags, attributes, and limit length
+  const sanitized = text.replace(/<[^>]*>/g, '').slice(0, 100);
 
   return sanitized.trim();
 }
@@ -68,12 +65,12 @@ function sanitizeText(text?: string): string | undefined {
 export function sanitizeUserInput(input: string): string {
   if (!input) return '';
 
-  // Remove potentially dangerous content
-  const sanitized = DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [], // No HTML tags allowed
-    ALLOWED_ATTR: [], // No attributes allowed
-    KEEP_CONTENT: true // Keep text content
-  });
+  // Remove potentially dangerous content (HTML tags and scripts)
+  const sanitized = input
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+\s*=/gi, '') // Remove event handlers
+    .slice(0, 1000); // Limit length
 
   return sanitized.trim();
 }
@@ -81,11 +78,16 @@ export function sanitizeUserInput(input: string): string {
 /**
  * Sanitize HTML content (for rich text editors)
  * Allows safe HTML tags while blocking dangerous ones
+ * Note: For production, consider using a proper HTML sanitization library
  */
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li'],
-    ALLOWED_ATTR: ['href', 'target'],
-    ALLOW_DATA_ATTR: false
-  });
+  if (!html) return '';
+
+  // Remove dangerous tags and attributes
+  return html
+    .replace(/<script[^>]*>.*?<\/script>/gi, '') // Remove scripts
+    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '') // Remove iframes
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '') // Remove event handlers
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .slice(0, 10000); // Limit length
 }

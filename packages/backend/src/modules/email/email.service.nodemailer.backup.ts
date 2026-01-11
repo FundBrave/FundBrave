@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Resend } from 'resend';
+import * as nodemailer from 'nodemailer';
 import {
   verificationEmailTemplate,
   passwordResetEmailTemplate,
@@ -9,7 +9,6 @@ import {
   donationReceivedEmailTemplate,
   goalReachedEmailTemplate,
   accountSuspendedEmailTemplate,
-  otpVerificationEmailTemplate,
 } from './templates';
 
 export interface SendEmailOptions {
@@ -20,63 +19,57 @@ export interface SendEmailOptions {
 }
 
 /**
- * Email Service using Resend
- *
- * Resend provides:
- * - 3,000 emails/month free tier
- * - Excellent deliverability
- * - Simple API with just an API key
- * - Built-in analytics and bounce handling
- *
- * Setup:
- * 1. Sign up at https://resend.com
- * 2. Get API key from dashboard
- * 3. Set RESEND_API_KEY in .env
- * 4. Set RESEND_FROM_EMAIL (must be verified domain or resend.dev subdomain)
+ * Service for sending emails via nodemailer
  */
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private resend: Resend | null = null;
+  private transporter: nodemailer.Transporter;
   private readonly fromAddress: string;
   private readonly isConfigured: boolean;
 
   constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    const host = this.configService.get<string>('SMTP_HOST');
+    const port = this.configService.get<number>('SMTP_PORT', 587);
+    const user = this.configService.get<string>('SMTP_USER');
+    const pass = this.configService.get<string>('SMTP_PASS');
     this.fromAddress = this.configService.get<string>(
-      'RESEND_FROM_EMAIL',
-      'FundBrave <onboarding@resend.dev>', // Free tier default
+      'SMTP_FROM',
+      'noreply@fundbrave.com',
     );
 
-    this.isConfigured = !!apiKey;
+    this.isConfigured = !!(host && user && pass);
 
     if (this.isConfigured) {
-      this.resend = new Resend(apiKey);
-      this.logger.log('✅ Resend email service configured');
-      this.logger.log(`📧 Sending emails from: ${this.fromAddress}`);
+      this.transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+      });
+
+      // Verify connection
+      this.transporter.verify().catch((error) => {
+        this.logger.error(`SMTP connection error: ${error}`);
+      });
     } else {
       this.logger.warn(
-        '⚠️  Email service not configured. Set RESEND_API_KEY environment variable.',
-      );
-      this.logger.warn(
-        '💡 Get your API key at https://resend.com/api-keys',
+        'Email service not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS environment variables.',
       );
     }
   }
 
   /**
-   * Send an email via Resend
+   * Send an email
    */
   async sendEmail(options: SendEmailOptions): Promise<boolean> {
-    if (!this.isConfigured || !this.resend) {
-      this.logger.warn(
-        `📧 Email not sent (not configured): ${options.subject} to ${options.to}`,
-      );
+    if (!this.isConfigured) {
+      this.logger.warn(`Email not sent (not configured): ${options.subject}`);
       return false;
     }
 
     try {
-      const { data, error } = await this.resend.emails.send({
+      const info = await this.transporter.sendMail({
         from: this.fromAddress,
         to: options.to,
         subject: options.subject,
@@ -84,46 +77,16 @@ export class EmailService {
         text: options.text,
       });
 
-      if (error) {
-        this.logger.error(`❌ Failed to send email to ${options.to}:`, error);
-        return false;
-      }
-
-      this.logger.log(`✅ Email sent: ${data?.id} to ${options.to}`);
+      this.logger.log(`Email sent: ${info.messageId} to ${options.to}`);
       return true;
     } catch (error) {
-      this.logger.error(
-        `❌ Failed to send email to ${options.to}: ${error.message}`,
-      );
+      this.logger.error(`Failed to send email to ${options.to}: ${error}`);
       return false;
     }
   }
 
   /**
-   * Send OTP verification email
-   * Used for 4-digit code email verification during signup
-   *
-   * @param email - Recipient email address
-   * @param otp - 4-digit OTP code (plain text, NOT hashed)
-   * @param username - Optional username for personalization
-   * @param expirationMinutes - OTP expiration time in minutes (default: 10)
-   */
-  async sendOtpEmail(
-    email: string,
-    otp: string,
-    username?: string,
-    expirationMinutes: number = 10,
-  ): Promise<boolean> {
-    const { subject, html } = otpVerificationEmailTemplate({
-      otp,
-      username,
-      expirationMinutes,
-    });
-    return this.sendEmail({ to: email, subject, html });
-  }
-
-  /**
-   * Send verification email (link-based)
+   * Send verification email
    */
   async sendVerificationEmail(
     email: string,
@@ -231,33 +194,5 @@ export class EmailService {
    */
   isEmailConfigured(): boolean {
     return this.isConfigured;
-  }
-
-  /**
-   * Send bulk emails (batch operation)
-   * Useful for newsletters, announcements, etc.
-   */
-  async sendBulkEmails(
-    emails: Array<{ to: string; subject: string; html: string; text?: string }>,
-  ): Promise<{ sent: number; failed: number }> {
-    if (!this.isConfigured || !this.resend) {
-      this.logger.warn('📧 Bulk emails not sent (service not configured)');
-      return { sent: 0, failed: emails.length };
-    }
-
-    let sent = 0;
-    let failed = 0;
-
-    for (const email of emails) {
-      const success = await this.sendEmail(email);
-      if (success) {
-        sent++;
-      } else {
-        failed++;
-      }
-    }
-
-    this.logger.log(`📧 Bulk emails: ${sent} sent, ${failed} failed`);
-    return { sent, failed };
   }
 }

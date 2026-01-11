@@ -295,7 +295,8 @@ describe('AuthService', () => {
         displayName: 'Google User',
       });
 
-      expect(result.googleId).toBe('google-123');
+      // Google OAuth users always have emailVerified: true
+      expect(result.emailVerified).toBe(true);
       expect(prismaService.user.update).toHaveBeenCalledWith({
         where: { id: existingUser.id },
         data: expect.objectContaining({

@@ -7,13 +7,23 @@ import { Menu, X } from "@/app/components/ui/icons";
 import { ThemeToggle } from "./theme";
 import { useTheme } from "./theme/theme-provider";
 import { Button } from "./ui/button";
+import { useAuth } from "@/app/provider/AuthProvider";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
+  const router = useRouter();
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/auth");
+  };
+
   const { theme } = useTheme();
 
   const logoSrc =
@@ -63,9 +73,15 @@ export default function Navbar() {
             </Link>
           </div>
           <ThemeToggle />
-          <Button variant="primary" size="sm">
-            Connect Wallet
-          </Button>
+          {isAuthenticated ? (
+            <Button variant="secondary" size="sm" onClick={handleLogout}>
+              Sign Out
+            </Button>
+          ) : (
+            <Button variant="primary" size="sm" onClick={() => router.push("/auth")}>
+              Sign In
+            </Button>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -111,9 +127,31 @@ export default function Navbar() {
               About
             </Link>
             <div className="pt-2">
-              <Button variant="primary" size="md" fullWidth>
-                Connect Wallet
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  variant="secondary"
+                  size="md"
+                  fullWidth
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                >
+                  Sign Out
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  size="md"
+                  fullWidth
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    router.push("/auth");
+                  }}
+                >
+                  Sign In
+                </Button>
+              )}
             </div>
           </div>
         </div>

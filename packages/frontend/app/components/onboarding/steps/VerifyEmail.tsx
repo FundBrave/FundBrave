@@ -1,20 +1,29 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { StepComponentProps } from "@/lib/onboarding-steps";
 import { useOnboardingData } from "@/app/provider/OnboardingDataContext";
 import { Button } from "@/app/components/ui/button";
+import { authApi } from "@/lib/api/auth";
 
 const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
   const { data } = useOnboardingData();
   const [codes, setCodes] = useState<string[]>(["", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>(Array(4).fill(null));
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
   const userEmail = data.email || "your email";
 
   const handleInputChange = (index: number, value: string) => {
     if (value.length > 1) return;
+
+    // Clear error when user types
+    if (error) setError("");
 
     const newCodes = [...codes];
     newCodes[index] = value;
@@ -34,6 +43,96 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
     }
   };
 
+  const handleVerifyOtp = async () => {
+    const otp = codes.join("");
+
+    // Validate OTP is complete
+    if (otp.length !== 4) {
+      setError("Please enter all 4 digits");
+      return;
+    }
+
+    // Validate email
+    if (!data.email) {
+      setError("Email not found. Please sign up again.");
+      return;
+    }
+
+    setIsVerifying(true);
+    setError("");
+
+    try {
+      const response = await authApi.verifyOtp(data.email, otp);
+
+      if (response.success) {
+        setSuccessMessage(response.message || "Email verified successfully!");
+        // Wait a moment to show success message, then continue
+        setTimeout(() => {
+          onNext();
+        }, 1500);
+      } else {
+        setError(response.message || "Invalid verification code. Please try again.");
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to verify code. Please try again.");
+      }
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (cooldownSeconds > 0) {
+      return;
+    }
+
+    if (!data.email) {
+      setError("Email not found. Please sign up again.");
+      return;
+    }
+
+    setIsResending(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const response = await authApi.resendOtp(data.email);
+
+      if (response.success) {
+        setSuccessMessage(response.message || "Verification code sent!");
+
+        // Set cooldown if provided
+        if (response.cooldownSeconds) {
+          setCooldownSeconds(response.cooldownSeconds);
+
+          // Countdown timer
+          const interval = setInterval(() => {
+            setCooldownSeconds((prev) => {
+              if (prev <= 1) {
+                clearInterval(interval);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        }
+      } else {
+        setError(response.message || "Failed to resend code. Please try again.");
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to resend code. Please try again.");
+      }
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   return (
     <motion.div
       className="text-center w-full px-4 h-full flex flex-col justify-center items-center"
@@ -49,7 +148,7 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
       </p>
 
       {/* Verification code inputs */}
-      <div className="flex justify-center gap-2 md:gap-3 mb-8">
+      <div className="flex justify-center gap-2 md:gap-3 mb-4">
         {codes.map((digit, i) => (
           <motion.input
             key={i}
@@ -57,11 +156,18 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
               inputRefs.current[i] = el;
             }}
             type="text"
+            inputMode="numeric"
             maxLength={1}
             value={digit}
             onChange={(e) => handleInputChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
-            className="w-12 h-12 md:w-16 md:h-16 text-2xl md:text-3xl text-center bg-surface-elevated rounded-lg text-foreground border border-border-default focus:border-purple-500 outline-none transition"
+            disabled={isVerifying}
+            className={`w-12 h-12 md:w-16 md:h-16 text-2xl md:text-3xl text-center bg-surface-elevated rounded-lg text-foreground border transition ${
+              error
+                ? 'border-destructive'
+                : 'border-border-default focus:border-purple-500'
+            } outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
+            aria-label={`Digit ${i + 1}`}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 + i * 0.05 }}
@@ -69,15 +175,58 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
         ))}
       </div>
 
+      {/* Error and Success Messages */}
+      <AnimatePresence mode="wait">
+        {error && (
+          <motion.p
+            role="alert"
+            className="text-sm text-destructive mb-4"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {error}
+          </motion.p>
+        )}
+        {successMessage && !error && (
+          <motion.p
+            role="status"
+            className="text-sm text-green-500 mb-4"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {successMessage}
+          </motion.p>
+        )}
+      </AnimatePresence>
+
       <p className="text-muted-foreground mb-6 text-sm md:text-base">
         Didn&apos;t get a code?{" "}
-        <button className="text-purple-400 hover:text-purple-300 transition-colors">
-          Click to resend
+        <button
+          onClick={handleResendOtp}
+          disabled={cooldownSeconds > 0 || isResending}
+          className="text-purple-400 hover:text-purple-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isResending
+            ? "Sending..."
+            : cooldownSeconds > 0
+            ? `Resend in ${cooldownSeconds}s`
+            : "Click to resend"}
         </button>
       </p>
 
-      <Button variant="primary" size="md" onClick={onNext} className="w-full max-w-xs mx-auto">
-        Continue
+      <Button
+        variant="primary"
+        size="md"
+        onClick={handleVerifyOtp}
+        loading={isVerifying}
+        disabled={isVerifying || codes.join("").length !== 4}
+        className="w-full max-w-xs mx-auto"
+      >
+        {isVerifying ? "Verifying..." : "Continue"}
       </Button>
     </motion.div>
   );

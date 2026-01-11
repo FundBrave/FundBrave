@@ -1,7 +1,53 @@
 import { baseTemplate } from './base.template';
 
 /**
- * Email verification template
+ * OTP verification email template
+ * Used for 4-digit code email verification during signup
+ */
+export function otpVerificationEmailTemplate(data: {
+  otp: string;
+  username?: string;
+  expirationMinutes?: number;
+}): { subject: string; html: string } {
+  const expiry = data.expirationMinutes || 10;
+
+  const content = `
+    <h1>Verify Your Email Address</h1>
+    ${data.username ? `<p>Hi ${data.username},</p>` : '<p>Hi there,</p>'}
+    <p>Thank you for signing up for FundBrave! Please use the following verification code to complete your registration:</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 12px; padding: 25px 40px; display: inline-block;">
+        <span class="code" style="font-size: 36px; letter-spacing: 8px; color: #ffffff; font-weight: bold;">${data.otp}</span>
+      </div>
+    </div>
+
+    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0; text-align: center;">
+      <p style="margin: 0; color: #4b5563; font-size: 14px;">
+        This code will expire in <strong>${expiry} minutes</strong>.
+      </p>
+    </div>
+
+    <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0; color: #92400e;">
+        <strong>Security tip:</strong> Never share this code with anyone.
+        FundBrave staff will never ask for your verification code.
+      </p>
+    </div>
+
+    <p style="color: #6b7280; font-size: 13px;">
+      If you didn't create an account on FundBrave, you can safely ignore this email.
+    </p>
+  `;
+
+  return {
+    subject: `${data.otp} is your FundBrave verification code`,
+    html: baseTemplate(content),
+  };
+}
+
+/**
+ * Email verification template (link-based)
  */
 export function verificationEmailTemplate(data: {
   token: string;

@@ -9,11 +9,5 @@ export const metadata = {
 export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="custom-scrollbar">
-        <SessionProvider>{children}</SessionProvider>
-      </body>
-    </html>
-  );
+  return <SessionProvider>{children}</SessionProvider>;
 }

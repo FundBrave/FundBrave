@@ -15,7 +15,7 @@ const config = getDefaultConfig({
   appName: 'FundBrave',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID',
   chains,
-  ssr: true, // Enable server-side rendering support
+  ssr: false, // Disable SSR to prevent indexedDB errors
 });
 
 // Create React Query client

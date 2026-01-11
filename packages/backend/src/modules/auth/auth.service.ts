@@ -18,6 +18,9 @@ import {
   ForgotPasswordResponse,
   ResetPasswordResponse,
   VerifyResetTokenResponse,
+  VerifyOtpResponse,
+  SendOtpResponse,
+  OTP_CONFIG,
 } from './dto';
 import {
   EncryptedWalletData,
@@ -408,6 +411,7 @@ export class AuthService implements OnModuleInit {
       email: handoff.email,
     });
 
+    // Google OAuth users always have verified emails (verified by Google)
     return {
       accessToken: handoff.accessToken,
       refreshToken: handoff.refreshToken,
@@ -416,6 +420,7 @@ export class AuthService implements OnModuleInit {
         email: handoff.email ?? undefined,
         username: handoff.username ?? undefined,
         displayName: handoff.displayName ?? undefined,
+        emailVerified: true, // OAuth users have verified emails
       },
     };
   }
@@ -594,6 +599,10 @@ export class AuthService implements OnModuleInit {
   /**
    * CWE-640 Fix: Find or create user from Google OAuth
    * SECURITY: Blocks automatic linking to existing password accounts
+   *
+   * Google OAuth users always have emailVerified: true because:
+   * 1. Google has already verified their email address
+   * 2. No OTP verification is required for OAuth users
    */
   async findOrCreateGoogleUser(data: GoogleUserData): Promise<{
     id: string;
@@ -601,6 +610,7 @@ export class AuthService implements OnModuleInit {
     email?: string | null;
     username?: string | null;
     displayName?: string | null;
+    emailVerified: boolean;
   }> {
     const { googleId, email, displayName, avatarUrl } = data;
 
@@ -610,17 +620,19 @@ export class AuthService implements OnModuleInit {
     });
 
     if (user) {
-      // Update user info if needed
-      if (displayName || avatarUrl) {
+      // Update user info if needed (including ensuring emailVerified is true)
+      const needsUpdate = displayName || avatarUrl || !user.emailVerified;
+      if (needsUpdate) {
         user = await this.prisma.user.update({
           where: { id: user.id },
           data: {
+            emailVerified: true, // Always ensure Google users have verified email
             ...(displayName && !user.displayName && { displayName }),
             ...(avatarUrl && !user.avatarUrl && { avatarUrl }),
           },
         });
       }
-      return user;
+      return { ...user, emailVerified: true };
     }
 
     // Try to find by email
@@ -658,7 +670,7 @@ export class AuthService implements OnModuleInit {
       });
 
       this.logger.log(`Linked Google account to existing user: ${user.id}`);
-      return user;
+      return { ...user, emailVerified: true };
     }
 
     // Create new user with managed wallet
@@ -670,7 +682,7 @@ export class AuthService implements OnModuleInit {
         walletAddress: wallet.address.toLowerCase(),
         googleId,
         email: email.toLowerCase(),
-        emailVerified: true,
+        emailVerified: true, // Google OAuth users have verified emails
         displayName,
         avatarUrl,
         encryptedPrivateKey: encryptedWallet.encryptedPrivateKey,
@@ -682,7 +694,7 @@ export class AuthService implements OnModuleInit {
     });
 
     this.logger.log(`Created new user from Google OAuth: ${user.id}`);
-    return user;
+    return { ...user, emailVerified: true };
   }
 
   /**
@@ -752,6 +764,42 @@ export class AuthService implements OnModuleInit {
     context?: RequestSecurityContext,
   ) {
     const siweMessage = new SiweMessage(message);
+
+    // Validate domain (prevent phishing attacks)
+    const expectedDomain = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001')
+      .replace(/^https?:\/\//, ''); // Remove protocol
+    if (siweMessage.domain !== expectedDomain.split(':')[0]) {
+      this.logSecurityEvent(SecurityEventType.LOGIN_FAILED, undefined, {
+        method: 'siwe',
+        reason: 'Domain mismatch',
+        expected: expectedDomain,
+        received: siweMessage.domain,
+      });
+      throw new UnauthorizedException('Invalid domain in SIWE message');
+    }
+
+    // Validate chain ID (ensure correct network)
+    const expectedChainId = parseInt(this.configService.get<string>('CHAIN_ID', '8453')); // Base mainnet
+    if (siweMessage.chainId !== expectedChainId) {
+      this.logSecurityEvent(SecurityEventType.LOGIN_FAILED, undefined, {
+        method: 'siwe',
+        reason: 'Chain ID mismatch',
+        expected: expectedChainId,
+        received: siweMessage.chainId,
+      });
+      throw new UnauthorizedException('Invalid chain ID in SIWE message');
+    }
+
+    // Validate nonce exists
+    if (!siweMessage.nonce) {
+      this.logSecurityEvent(SecurityEventType.LOGIN_FAILED, undefined, {
+        method: 'siwe',
+        reason: 'Missing nonce',
+      });
+      throw new UnauthorizedException('Nonce is required in SIWE message');
+    }
+
+    // Verify signature
     const fields = await siweMessage.verify({ signature });
 
     if (!fields.success) {
@@ -803,15 +851,41 @@ export class AuthService implements OnModuleInit {
   /**
    * Web2 email/password registration
    * CWE-326 Fix: Uses AES-256-GCM encryption for wallet private key
+   * CWE-384 Fix: Creates secure session after registration
    */
   async registerWithEmail(
     email: string,
     password: string,
     displayName: string,
     context?: RequestSecurityContext,
-  ) {
+  ): Promise<{
+    user: {
+      id: string;
+      walletAddress: string;
+      email: string;
+      username: string;
+      displayName: string;
+      emailVerified: boolean;
+    };
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    // Check if email already exists
+    const existingUser = await this.prisma.user.findFirst({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (existingUser) {
+      this.logSecurityEvent(SecurityEventType.LOGIN_FAILED, undefined, {
+        method: 'email_registration',
+        reason: 'Email already exists',
+        email: this.maskEmail(email),
+      });
+      throw new BadRequestException('An account with this email already exists');
+    }
+
     // Hash password
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(password, 14);
 
     // Generate managed wallet with secure encryption
     const wallet = ethers.Wallet.createRandom();
@@ -842,7 +916,122 @@ export class AuthService implements OnModuleInit {
       ipAddress: context?.ipAddress,
     });
 
-    return { user, ...tokens };
+    // Send OTP verification email (non-blocking - don't fail registration if email fails)
+    this.generateAndSendOtp(user.id).catch((error) => {
+      this.logger.error(`Failed to send OTP after registration for user ${user.id}:`, error);
+    });
+
+    return {
+      user: {
+        id: user.id,
+        walletAddress: user.walletAddress,
+        email: user.email!,
+        username: user.username!,
+        displayName: user.displayName!,
+        emailVerified: user.emailVerified,
+      },
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
+  }
+
+  /**
+   * Web2 email/password login
+   * CWE-384 Fix: Invalidates all existing sessions before creating new one
+   */
+  async loginWithEmail(
+    emailOrUsername: string,
+    password: string,
+    context?: RequestSecurityContext,
+  ): Promise<{
+    user: {
+      id: string;
+      walletAddress: string;
+      email?: string;
+      username?: string;
+      displayName?: string;
+      avatarUrl?: string;
+      emailVerified: boolean;
+    };
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const normalizedInput = emailOrUsername.toLowerCase().trim();
+
+    // Find user by email or username
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: normalizedInput },
+          { username: normalizedInput },
+        ],
+        isActive: true,
+        isSuspended: false,
+      },
+    });
+
+    // Generic error message to prevent user enumeration
+    if (!user) {
+      this.logSecurityEvent(SecurityEventType.LOGIN_FAILED, undefined, {
+        method: 'email_login',
+        reason: 'User not found',
+        identifier: this.maskEmail(normalizedInput),
+      });
+      // Add artificial delay to prevent timing attacks
+      await this.artificialDelay();
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Check if user has a password (might be OAuth-only or wallet-only user)
+    if (!user.passwordHash) {
+      this.logSecurityEvent(SecurityEventType.LOGIN_FAILED, user.id, {
+        method: 'email_login',
+        reason: 'No password set',
+      });
+      await this.artificialDelay();
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isPasswordValid) {
+      this.logSecurityEvent(SecurityEventType.LOGIN_FAILED, user.id, {
+        method: 'email_login',
+        reason: 'Invalid password',
+        ipAddress: context?.ipAddress,
+      });
+      await this.artificialDelay();
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // CWE-384 Fix: Invalidate all existing sessions
+    await this.invalidateAllUserSessions(user.id, SessionInvalidationReason.NEW_LOGIN);
+
+    // Generate new tokens
+    const tokens = await this.generateTokens(user.id, user.walletAddress);
+
+    // Create new session
+    await this.createSession(user.id, tokens.accessToken, tokens.refreshToken, context);
+
+    this.logSecurityEvent(SecurityEventType.LOGIN_SUCCESS, user.id, {
+      method: 'email_login',
+      ipAddress: context?.ipAddress,
+    });
+
+    return {
+      user: {
+        id: user.id,
+        walletAddress: user.walletAddress,
+        email: user.email ?? undefined,
+        username: user.username ?? undefined,
+        displayName: user.displayName ?? undefined,
+        avatarUrl: user.avatarUrl ?? undefined,
+        emailVerified: user.emailVerified,
+      },
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
   }
 
   // ==================== TOKEN MANAGEMENT ====================
@@ -1125,7 +1314,7 @@ export class AuthService implements OnModuleInit {
       }
 
       // Hash new password
-      const passwordHash = await bcrypt.hash(newPassword, 12);
+      const passwordHash = await bcrypt.hash(newPassword, 14);
 
       // Update password and invalidate all sessions in transaction
       await this.prisma.$transaction(async (tx) => {
@@ -1167,6 +1356,417 @@ export class AuthService implements OnModuleInit {
       this.logger.error(`Error in resetPassword: ${errorMessage}`);
       throw new BadRequestException('An error occurred while resetting your password. Please try again.');
     }
+  }
+
+  // ==================== OTP EMAIL VERIFICATION ====================
+
+  /**
+   * Generate a cryptographically secure 4-digit OTP
+   * Uses crypto.randomInt for secure random number generation
+   */
+  private generateOtp(): string {
+    // Generate random number between 0-9999, then pad to 4 digits
+    const randomNum = crypto.randomInt(0, 10000);
+    return randomNum.toString().padStart(OTP_CONFIG.otpLength, '0');
+  }
+
+  /**
+   * Hash OTP for secure storage (using bcrypt for timing attack resistance)
+   */
+  private async hashOtp(otp: string): Promise<string> {
+    return bcrypt.hash(otp, 10);
+  }
+
+  /**
+   * Verify OTP against stored hash
+   */
+  private async verifyOtpHash(otp: string, hashedOtp: string): Promise<boolean> {
+    return bcrypt.compare(otp, hashedOtp);
+  }
+
+  /**
+   * Generate and send OTP email after user registration
+   *
+   * @param userId - User ID to send OTP to
+   * @returns SendOtpResponse indicating success/failure
+   *
+   * Security measures:
+   * - OTP is hashed before storage (bcrypt)
+   * - 10-minute expiration
+   * - Rate limiting enforced at controller level
+   */
+  async generateAndSendOtp(userId: string): Promise<SendOtpResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        emailVerified: true,
+        displayName: true,
+        username: true,
+        otpLastAttemptAt: true,
+      },
+    });
+
+    if (!user) {
+      this.logger.warn(`OTP requested for non-existent user: ${userId}`);
+      return {
+        success: false,
+        message: 'User not found',
+      };
+    }
+
+    if (!user.email) {
+      return {
+        success: false,
+        message: 'No email address associated with this account',
+      };
+    }
+
+    if (user.emailVerified) {
+      return {
+        success: false,
+        message: 'Email is already verified',
+      };
+    }
+
+    // Check resend cooldown (60 seconds between requests)
+    if (user.otpLastAttemptAt) {
+      const timeSinceLastOtp = Date.now() - user.otpLastAttemptAt.getTime();
+      if (timeSinceLastOtp < OTP_CONFIG.resendCooldownMs) {
+        const cooldownRemaining = Math.ceil(
+          (OTP_CONFIG.resendCooldownMs - timeSinceLastOtp) / 1000,
+        );
+        this.logSecurityEvent(SecurityEventType.OTP_RATE_LIMITED, userId, {
+          email: this.maskEmail(user.email),
+          cooldownRemaining,
+        });
+        return {
+          success: false,
+          message: 'Please wait before requesting another verification code',
+          cooldownSeconds: cooldownRemaining,
+        };
+      }
+    }
+
+    // Generate new OTP
+    const otp = this.generateOtp();
+    const hashedOtp = await this.hashOtp(otp);
+    const expiresAt = new Date(Date.now() + OTP_CONFIG.expiryMs);
+
+    // Store hashed OTP and reset attempt counter
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        emailVerificationOtp: hashedOtp,
+        otpExpiresAt: expiresAt,
+        otpAttempts: 0,
+        otpLastAttemptAt: new Date(),
+      },
+    });
+
+    this.logSecurityEvent(SecurityEventType.OTP_GENERATED, userId, {
+      email: this.maskEmail(user.email),
+      expiresAt,
+    });
+
+    // Send OTP email
+    const emailSent = await this.emailService.sendOtpEmail(
+      user.email,
+      otp,
+      user.displayName || user.username || undefined,
+      OTP_CONFIG.expiryMs / (60 * 1000), // Convert to minutes
+    );
+
+    if (!emailSent) {
+      this.logger.error(`Failed to send OTP email to user: ${userId}`);
+      return {
+        success: false,
+        message: 'Failed to send verification email. Please try again.',
+      };
+    }
+
+    this.logSecurityEvent(SecurityEventType.OTP_SENT, userId, {
+      email: this.maskEmail(user.email),
+    });
+
+    this.logger.log(`OTP sent to user: ${userId}`);
+
+    return {
+      success: true,
+      message: 'Verification code sent to your email address',
+    };
+  }
+
+  /**
+   * Resend OTP verification email
+   *
+   * @param email - User email address
+   * @returns SendOtpResponse indicating success/failure
+   *
+   * Security measures:
+   * - Generic response to prevent email enumeration
+   * - Rate limiting enforced at controller level
+   * - Cooldown between resend requests
+   */
+  async resendOtp(email: string): Promise<SendOtpResponse> {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: normalizedEmail,
+        isActive: true,
+        isSuspended: false,
+      },
+      select: {
+        id: true,
+        email: true,
+        emailVerified: true,
+        displayName: true,
+        username: true,
+        otpLastAttemptAt: true,
+      },
+    });
+
+    // Generic response for security (prevent email enumeration)
+    if (!user) {
+      this.logger.warn(`OTP resend requested for non-existent email: ${this.maskEmail(normalizedEmail)}`);
+      await this.artificialDelay();
+      return {
+        success: true,
+        message: 'If an account with that email exists, a verification code has been sent.',
+      };
+    }
+
+    if (user.emailVerified) {
+      // Still return generic message
+      return {
+        success: true,
+        message: 'If an account with that email exists, a verification code has been sent.',
+      };
+    }
+
+    // Check resend cooldown
+    if (user.otpLastAttemptAt) {
+      const timeSinceLastOtp = Date.now() - user.otpLastAttemptAt.getTime();
+      if (timeSinceLastOtp < OTP_CONFIG.resendCooldownMs) {
+        const cooldownRemaining = Math.ceil(
+          (OTP_CONFIG.resendCooldownMs - timeSinceLastOtp) / 1000,
+        );
+        this.logSecurityEvent(SecurityEventType.OTP_RATE_LIMITED, user.id, {
+          email: this.maskEmail(normalizedEmail),
+          cooldownRemaining,
+        });
+        return {
+          success: false,
+          message: 'Please wait before requesting another verification code',
+          cooldownSeconds: cooldownRemaining,
+        };
+      }
+    }
+
+    // Generate new OTP
+    const otp = this.generateOtp();
+    const hashedOtp = await this.hashOtp(otp);
+    const expiresAt = new Date(Date.now() + OTP_CONFIG.expiryMs);
+
+    // Store hashed OTP and reset attempt counter
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationOtp: hashedOtp,
+        otpExpiresAt: expiresAt,
+        otpAttempts: 0,
+        otpLastAttemptAt: new Date(),
+      },
+    });
+
+    this.logSecurityEvent(SecurityEventType.OTP_GENERATED, user.id, {
+      email: this.maskEmail(normalizedEmail),
+      expiresAt,
+    });
+
+    // Send OTP email
+    const emailSent = await this.emailService.sendOtpEmail(
+      user.email!,
+      otp,
+      user.displayName || user.username || undefined,
+      OTP_CONFIG.expiryMs / (60 * 1000),
+    );
+
+    if (!emailSent) {
+      this.logger.error(`Failed to resend OTP email to: ${this.maskEmail(normalizedEmail)}`);
+    } else {
+      this.logSecurityEvent(SecurityEventType.OTP_SENT, user.id, {
+        email: this.maskEmail(normalizedEmail),
+      });
+    }
+
+    return {
+      success: true,
+      message: 'If an account with that email exists, a verification code has been sent.',
+    };
+  }
+
+  /**
+   * Verify OTP code and mark email as verified
+   *
+   * @param email - User email address
+   * @param otp - 4-digit OTP code to verify
+   * @returns VerifyOtpResponse indicating success/failure
+   *
+   * Security measures:
+   * - Maximum 3 attempts before lockout
+   * - OTP cleared after successful verification
+   * - Rate limiting enforced at controller level
+   * - Timing attack resistant via bcrypt comparison
+   */
+  async verifyOtp(email: string, otp: string): Promise<VerifyOtpResponse> {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: normalizedEmail,
+        isActive: true,
+        isSuspended: false,
+      },
+      select: {
+        id: true,
+        email: true,
+        emailVerified: true,
+        emailVerificationOtp: true,
+        otpExpiresAt: true,
+        otpAttempts: true,
+      },
+    });
+
+    // Generic error for security
+    if (!user) {
+      this.logger.warn(`OTP verification attempted for non-existent email: ${this.maskEmail(normalizedEmail)}`);
+      await this.artificialDelay();
+      return {
+        success: false,
+        message: 'Invalid email or verification code',
+      };
+    }
+
+    // Already verified
+    if (user.emailVerified) {
+      return {
+        success: true,
+        message: 'Email is already verified',
+        emailVerified: true,
+      };
+    }
+
+    // Check if OTP was ever set
+    if (!user.emailVerificationOtp || !user.otpExpiresAt) {
+      return {
+        success: false,
+        message: 'No verification code found. Please request a new one.',
+      };
+    }
+
+    // Check max attempts (lockout protection)
+    if (user.otpAttempts >= OTP_CONFIG.maxAttempts) {
+      this.logSecurityEvent(SecurityEventType.OTP_MAX_ATTEMPTS_EXCEEDED, user.id, {
+        email: this.maskEmail(normalizedEmail),
+        attempts: user.otpAttempts,
+      });
+
+      // Clear OTP to force new request
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerificationOtp: null,
+          otpExpiresAt: null,
+          otpAttempts: 0,
+        },
+      });
+
+      return {
+        success: false,
+        message: 'Maximum verification attempts exceeded. Please request a new code.',
+      };
+    }
+
+    // Check expiration
+    if (user.otpExpiresAt < new Date()) {
+      this.logSecurityEvent(SecurityEventType.OTP_EXPIRED, user.id, {
+        email: this.maskEmail(normalizedEmail),
+        expiredAt: user.otpExpiresAt,
+      });
+
+      // Clear expired OTP
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerificationOtp: null,
+          otpExpiresAt: null,
+          otpAttempts: 0,
+        },
+      });
+
+      return {
+        success: false,
+        message: 'Verification code has expired. Please request a new one.',
+      };
+    }
+
+    // Verify OTP (timing-attack resistant via bcrypt)
+    const isValidOtp = await this.verifyOtpHash(otp, user.emailVerificationOtp);
+
+    if (!isValidOtp) {
+      // Increment attempt counter
+      const newAttempts = user.otpAttempts + 1;
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { otpAttempts: newAttempts },
+      });
+
+      this.logSecurityEvent(SecurityEventType.OTP_INVALID, user.id, {
+        email: this.maskEmail(normalizedEmail),
+        attempts: newAttempts,
+        maxAttempts: OTP_CONFIG.maxAttempts,
+      });
+
+      const remainingAttempts = OTP_CONFIG.maxAttempts - newAttempts;
+
+      return {
+        success: false,
+        message: remainingAttempts > 0
+          ? `Invalid verification code. ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`
+          : 'Maximum verification attempts exceeded. Please request a new code.',
+      };
+    }
+
+    // OTP is valid - mark email as verified and clear OTP
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerificationOtp: null,
+        otpExpiresAt: null,
+        otpAttempts: 0,
+        otpLastAttemptAt: null,
+      },
+    });
+
+    this.logSecurityEvent(SecurityEventType.OTP_VERIFIED, user.id, {
+      email: this.maskEmail(normalizedEmail),
+    });
+
+    this.logSecurityEvent(SecurityEventType.EMAIL_VERIFIED, user.id, {
+      email: this.maskEmail(normalizedEmail),
+    });
+
+    this.logger.log(`Email verified for user: ${user.id}`);
+
+    return {
+      success: true,
+      message: 'Email verified successfully',
+      emailVerified: true,
+    };
   }
 
   // ==================== UTILITY METHODS ====================
