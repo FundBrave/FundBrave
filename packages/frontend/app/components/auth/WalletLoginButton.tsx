@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { useWalletAuth } from '@/lib/hooks/useWalletAuth';
 import { Spinner } from '@/app/components/ui/Spinner';
-import { Wallet } from 'lucide-react';
+import { Wallet, CheckCircle } from 'lucide-react';
 
 interface WalletLoginButtonProps {
   delay?: number;
@@ -21,19 +21,23 @@ const buttonVariants = {
 
 /**
  * Wallet Login Button Component
- * Handles wallet connection and SIWE authentication
+ * Handles wallet connection and SIWE authentication with user confirmation
+ * UX Flow: Connect Wallet → Show "Sign In with Wallet" button → User clicks → SIWE authentication
  */
 export default function WalletLoginButton({ delay = 0.4, onError }: WalletLoginButtonProps) {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const { authenticate, isAuthenticating, error, clearError } = useWalletAuth();
+  const [showSignInButton, setShowSignInButton] = useState(false);
 
-  // Auto-authenticate when wallet is connected
+  // Show sign-in button when wallet is connected (no auto-authentication)
   useEffect(() => {
     if (isConnected && address && !isAuthenticating) {
-      handleAuthenticate();
+      setShowSignInButton(true);
+    } else {
+      setShowSignInButton(false);
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, isAuthenticating]);
 
   // Pass error to parent component
   useEffect(() => {
@@ -45,12 +49,15 @@ export default function WalletLoginButton({ delay = 0.4, onError }: WalletLoginB
 
   const handleAuthenticate = async () => {
     try {
+      setShowSignInButton(false);
       await authenticate();
       // Redirect to onboarding after successful authentication
       router.push('/onboarding');
     } catch (err) {
       // Error is handled in the hook
       console.error('Authentication failed:', err);
+      // Show sign-in button again on error
+      setShowSignInButton(true);
     }
   };
 
@@ -78,11 +85,11 @@ export default function WalletLoginButton({ delay = 0.4, onError }: WalletLoginB
             >
               {(() => {
                 // Show authenticating state
-                if (connected && isAuthenticating) {
+                if (isAuthenticating) {
                   return (
                     <motion.button
                       disabled
-                      className="flex w-full items-center justify-center gap-2 rounded-lg border-border-subtle bg-transparent text-foreground"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-transparent px-6 py-3 text-foreground"
                       variants={buttonVariants}
                     >
                       <Spinner size="md" color="white" />
@@ -91,11 +98,30 @@ export default function WalletLoginButton({ delay = 0.4, onError }: WalletLoginB
                   );
                 }
 
-                // Show connect wallet button
+                // Show "Sign In with Wallet" button after wallet connection
+                if (connected && showSignInButton) {
+                  return (
+                    <motion.button
+                      onClick={handleAuthenticate}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-primary px-6 py-3 text-white transition-colors hover:bg-primary/90"
+                      variants={buttonVariants}
+                      whileHover="hover"
+                      whileTap="tap"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <CheckCircle className="h-5 w-5" />
+                      <span>Sign In with Wallet</span>
+                    </motion.button>
+                  );
+                }
+
+                // Show connect wallet button (default state)
                 return (
                   <motion.button
                     onClick={openConnectModal}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border-border-subtle bg-transparent text-foreground transition-colors hover:bg-foreground/10"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-transparent px-6 py-3 text-foreground transition-colors hover:bg-foreground/10"
                     variants={buttonVariants}
                     whileHover="hover"
                     whileTap="tap"

@@ -19,7 +19,12 @@ import type { Response, Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ConfigService } from '@nestjs/config';
-import { AuthRateLimit, PasswordResetRateLimit } from '../../common/decorators';
+import {
+  AuthRateLimit,
+  PasswordResetRateLimit,
+  OtpVerificationRateLimit,
+  OtpResendRateLimit,
+} from '../../common/decorators';
 import {
   ForgotPasswordDto,
   ResetPasswordDto,
@@ -29,6 +34,14 @@ import {
   VerifyResetTokenResponse,
   OAuthCodeExchangeDto,
   OAuthCodeExchangeResponseDto,
+  RegisterDto,
+  LoginDto,
+  AuthResponseDto,
+  VerifyOtpDto,
+  ResendOtpDto,
+  VerifyOtpResponse,
+  SendOtpResponse,
+  AUTH_REDIRECT_PATHS,
 } from './dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { TokenCookieConfig, RequestSecurityContext } from './types';
@@ -67,15 +80,28 @@ export class AuthController {
 
   /**
    * Get cookie configuration based on environment
+   *
+   * Security & Cross-Origin Cookie Configuration:
+   * - Development: sameSite='none' with secure=false works for localhost cross-origin
+   *   However, modern browsers prefer secure=true even in development
+   * - Production: sameSite='none' with secure=true for cross-domain cookies
+   *
+   * Note: For localhost:3000 -> localhost:3001, browsers treat different ports
+   * as different origins, requiring sameSite='none' to allow cookies
    */
   private getCookieConfig(): TokenCookieConfig {
     const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
     const cookieDomain = this.configService.get<string>('COOKIE_DOMAIN');
 
+    // For cross-origin cookies between localhost:3000 and localhost:3001
+    // we need sameSite='none' and secure=true (even in development)
+    // However, for local development without HTTPS, we use 'lax' with secure=false
+    // which works when credentials: 'include' is set on frontend
+
     return {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'strict' : 'lax',
+      secure: isProduction, // true in production for HTTPS, false in dev for HTTP
+      sameSite: isProduction ? 'none' : 'lax', // 'none' for production cross-domain, 'lax' for dev
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       ...(cookieDomain && { domain: cookieDomain }),
@@ -168,27 +194,108 @@ export class AuthController {
 
   /**
    * Register with email and password
+   * CWE-522 Fix: Tokens delivered via HttpOnly cookies
+   *
+   * Flow:
+   * 1. User registers with email/password
+   * 2. OTP is sent to their email for verification
+   * 3. User is redirected to onboarding page
+   * 4. User must verify OTP during onboarding before full access
    */
   @Post('register')
   @AuthRateLimit()
   @ApiOperation({ summary: 'Register new user with email/password' })
-  @ApiResponse({ status: 201, description: 'User registered successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid registration data' })
+  @ApiResponse({ status: 201, description: 'User registered successfully', type: AuthResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid registration data or email already exists' })
   async register(
-    @Body() body: { email: string; password: string; displayName: string },
+    @Body() registerDto: RegisterDto,
     @Request() req: ExpressRequest,
+    @Res({ passthrough: true }) res: Response,
     @Ip() ip: string,
-  ) {
-    if (!body.email || !body.password || !body.displayName) {
-      throw new BadRequestException('Email, password, and display name are required');
-    }
+  ): Promise<AuthResponseDto> {
     const context = this.getSecurityContext(req, ip);
-    return this.authService.registerWithEmail(
-      body.email,
-      body.password,
-      body.displayName,
+    const result = await this.authService.registerWithEmail(
+      registerDto.email,
+      registerDto.password,
+      registerDto.displayName,
       context,
     );
+
+    // CWE-522 Fix: Set tokens as HttpOnly cookies
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    // Email/password users need to verify OTP and complete onboarding
+    // OTP is automatically sent during registration
+    return {
+      success: true,
+      message: 'Registration successful. Please check your email for the verification code.',
+      user: {
+        id: result.user.id,
+        walletAddress: result.user.walletAddress,
+        email: result.user.email,
+        username: result.user.username,
+        displayName: result.user.displayName,
+        emailVerified: result.user.emailVerified,
+      },
+      redirectUrl: AUTH_REDIRECT_PATHS.ONBOARDING,
+      requiresOtpVerification: true,
+    };
+  }
+
+  /**
+   * Login with email/password
+   * CWE-522 Fix: Tokens delivered via HttpOnly cookies
+   * CWE-384 Fix: Invalidates existing sessions before creating new one
+   *
+   * Flow:
+   * - If email is verified: redirect to homepage
+   * - If email is not verified: redirect to onboarding with OTP verification required
+   */
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @AuthRateLimit()
+  @ApiOperation({ summary: 'Login with email/password' })
+  @ApiResponse({ status: 200, description: 'Login successful', type: AuthResponseDto })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async login(
+    @Body() loginDto: LoginDto,
+    @Request() req: ExpressRequest,
+    @Res({ passthrough: true }) res: Response,
+    @Ip() ip: string,
+  ): Promise<AuthResponseDto> {
+    const context = this.getSecurityContext(req, ip);
+    const result = await this.authService.loginWithEmail(
+      loginDto.emailOrUsername,
+      loginDto.password,
+      context,
+    );
+
+    // CWE-522 Fix: Set tokens as HttpOnly cookies
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    // Determine redirect based on email verification status
+    const requiresOtpVerification = !result.user.emailVerified;
+    const redirectUrl = requiresOtpVerification
+      ? AUTH_REDIRECT_PATHS.ONBOARDING
+      : AUTH_REDIRECT_PATHS.HOME;
+
+    return {
+      success: true,
+      message: result.user.emailVerified
+        ? 'Login successful'
+        : 'Login successful. Please verify your email to continue.',
+      user: {
+        id: result.user.id,
+        walletAddress: result.user.walletAddress,
+        email: result.user.email,
+        username: result.user.username,
+        displayName: result.user.displayName,
+        avatarUrl: result.user.avatarUrl,
+        emailVerified: result.user.emailVerified,
+      },
+      redirectUrl,
+      requiresOtpVerification,
+    };
   }
 
   // ==================== GOOGLE OAUTH (CWE-352, CWE-598, CWE-601 FIXES) ====================
@@ -310,6 +417,11 @@ export class AuthController {
    *
    * CWE-598 Fix: Frontend calls this endpoint to exchange the one-time code for tokens
    * CWE-522 Fix: Tokens returned via HttpOnly cookies
+   *
+   * Google OAuth users:
+   * - Email is automatically verified (verified by Google)
+   * - No OTP verification required
+   * - Redirect to homepage
    */
   @Post('oauth/exchange')
   @HttpCode(HttpStatus.OK)
@@ -327,12 +439,18 @@ export class AuthController {
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
 
     // Return user info (tokens are in cookies, not response body)
+    // OAuth users have verified emails and go directly to homepage
     return {
       success: true,
       message: 'Authentication successful',
-      email: result.user.email,
-      username: result.user.username,
-      displayName: result.user.displayName,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        username: result.user.username,
+        displayName: result.user.displayName,
+        emailVerified: result.user.emailVerified,
+      },
+      redirectUrl: AUTH_REDIRECT_PATHS.HOME,
     };
   }
 
@@ -487,5 +605,80 @@ export class AuthController {
       resetPasswordDto.token,
       resetPasswordDto.newPassword,
     );
+  }
+
+  // ==================== OTP EMAIL VERIFICATION ====================
+
+  /**
+   * Verify OTP code
+   * POST /auth/verify-otp
+   *
+   * Validates the 4-digit OTP code and marks the user's email as verified.
+   *
+   * Security:
+   * - Rate limited to 3 attempts per 10 minutes
+   * - Maximum 3 failed attempts before lockout (requires new OTP)
+   * - OTP expires after 10 minutes
+   * - Timing-attack resistant via bcrypt comparison
+   */
+  @Post('verify-otp')
+  @HttpCode(HttpStatus.OK)
+  @OtpVerificationRateLimit()
+  @ApiOperation({ summary: 'Verify email with 4-digit OTP code' })
+  @ApiResponse({ status: 200, description: 'Email verification result' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
+  async verifyOtp(
+    @Body() verifyOtpDto: VerifyOtpDto,
+  ): Promise<VerifyOtpResponse> {
+    return this.authService.verifyOtp(verifyOtpDto.email, verifyOtpDto.otp);
+  }
+
+  /**
+   * Resend OTP verification email
+   * POST /auth/resend-otp
+   *
+   * Generates a new OTP and sends it to the user's email.
+   * Returns generic response to prevent email enumeration.
+   *
+   * Security:
+   * - Rate limited to 3 requests per 10 minutes
+   * - 60-second cooldown between resend requests
+   * - Generic response to prevent email enumeration
+   */
+  @Post('resend-otp')
+  @HttpCode(HttpStatus.OK)
+  @OtpResendRateLimit()
+  @ApiOperation({ summary: 'Resend OTP verification email' })
+  @ApiResponse({ status: 200, description: 'OTP resend result' })
+  async resendOtp(
+    @Body() resendOtpDto: ResendOtpDto,
+  ): Promise<SendOtpResponse> {
+    return this.authService.resendOtp(resendOtpDto.email);
+  }
+
+  /**
+   * Request OTP verification (for authenticated users)
+   * POST /auth/request-otp
+   *
+   * Generates and sends a new OTP to the authenticated user's email.
+   * Use this when user is logged in but email is not yet verified.
+   *
+   * Security:
+   * - Requires authentication (JWT)
+   * - Rate limited to 3 requests per 10 minutes
+   * - 60-second cooldown between requests
+   */
+  @Post('request-otp')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @OtpResendRateLimit()
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Request OTP for authenticated user' })
+  @ApiResponse({ status: 200, description: 'OTP request result' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async requestOtp(
+    @Request() req: any,
+  ): Promise<SendOtpResponse> {
+    return this.authService.generateAndSendOtp(req.user.id);
   }
 }

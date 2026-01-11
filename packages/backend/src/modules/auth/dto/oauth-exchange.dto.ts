@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty, Length } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
  * DTO for OAuth code exchange endpoint
@@ -21,20 +21,41 @@ export class OAuthCodeExchangeDto {
 /**
  * Response DTO for OAuth code exchange
  * Tokens are returned via HttpOnly cookies, this contains user info only
+ *
+ * Google OAuth users:
+ * - Email is automatically verified (verified by Google)
+ * - No OTP verification required
+ * - Redirect to homepage
  */
 export class OAuthCodeExchangeResponseDto {
-  @ApiProperty({ description: 'User email address' })
-  email?: string;
-
-  @ApiProperty({ description: 'Username' })
-  username?: string;
-
-  @ApiProperty({ description: 'Display name' })
-  displayName?: string;
-
   @ApiProperty({ description: 'Exchange was successful' })
   success: boolean;
 
   @ApiProperty({ description: 'Response message' })
   message: string;
+
+  @ApiProperty({
+    description: 'User information',
+    type: 'object',
+    properties: {
+      id: { type: 'string' },
+      email: { type: 'string' },
+      username: { type: 'string' },
+      displayName: { type: 'string' },
+      emailVerified: { type: 'boolean' },
+    },
+  })
+  user: {
+    id: string;
+    email?: string;
+    username?: string;
+    displayName?: string;
+    emailVerified?: boolean;
+  };
+
+  @ApiPropertyOptional({
+    description: 'Redirect URL for frontend navigation after auth',
+    example: '/',
+  })
+  redirectUrl?: string;
 }

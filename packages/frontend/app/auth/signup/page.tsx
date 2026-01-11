@@ -115,6 +115,7 @@ export default function SignUpPage({ onToggle }: SignUpPageProps) {
 
   const handleGoogleLogin = async () => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    // OAuth routes are excluded from /api prefix to match Google Cloud Console callback URL
     window.location.href = `${API_URL}/auth/google`;
   };
 
@@ -158,7 +159,7 @@ export default function SignUpPage({ onToggle }: SignUpPageProps) {
       // Call register API
       const response = await authApi.register({
         email: formData.email,
-        username: formData.username,
+        displayName: formData.username,
         password: formData.password,
       });
 

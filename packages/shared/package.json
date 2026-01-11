@@ -1,0 +1,17 @@
+{
+  "name": "@fundbrave/shared",
+  "version": "1.0.0",
+  "description": "Shared types, constants, and utilities for FundBrave",
+  "main": "index.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "jest --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}

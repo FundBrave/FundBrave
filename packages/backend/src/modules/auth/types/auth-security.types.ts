@@ -23,6 +23,7 @@ export interface OAuthCodeExchangeResult {
     email?: string;
     username?: string;
     displayName?: string;
+    emailVerified?: boolean;
   };
 }
 
@@ -36,6 +37,7 @@ export interface CreateOAuthHandoffData {
   email?: string;
   username?: string;
   displayName?: string;
+  emailVerified?: boolean;
   ipAddress?: string;
   userAgent?: string;
 }
@@ -103,6 +105,15 @@ export enum SecurityEventType {
   LOGIN_FAILED = 'LOGIN_FAILED',
   WALLET_ENCRYPTED = 'WALLET_ENCRYPTED',
   WALLET_DECRYPTED = 'WALLET_DECRYPTED',
+  // OTP Email Verification Events
+  OTP_GENERATED = 'OTP_GENERATED',
+  OTP_SENT = 'OTP_SENT',
+  OTP_VERIFIED = 'OTP_VERIFIED',
+  OTP_INVALID = 'OTP_INVALID',
+  OTP_EXPIRED = 'OTP_EXPIRED',
+  OTP_RATE_LIMITED = 'OTP_RATE_LIMITED',
+  OTP_MAX_ATTEMPTS_EXCEEDED = 'OTP_MAX_ATTEMPTS_EXCEEDED',
+  EMAIL_VERIFIED = 'EMAIL_VERIFIED',
 }
 
 /**

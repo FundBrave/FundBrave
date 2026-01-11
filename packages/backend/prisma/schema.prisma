@@ -27,8 +27,8 @@ model User {
   // Uses AES-256-GCM with PBKDF2 key derivation (CWE-326 fix)
   encryptedPrivateKey String?
   encryptionIv        String?
-  encryptionAuthTag   String?  // GCM authentication tag for tampering detection
-  encryptionSalt      String?  // PBKDF2 salt for key derivation
+  encryptionAuthTag   String? // GCM authentication tag for tampering detection
+  encryptionSalt      String? // PBKDF2 salt for key derivation
 
   // Profile
   displayName String?
@@ -99,13 +99,13 @@ model User {
   fbtLocks    GlobalPoolLock[]
 
   // New Contract Relations
-  impactDAOStakes          ImpactDAOStake[]
-  wealthBuildingDonations  WealthBuildingDonation[]
-  donorStockPortfolios     DonorStockPortfolio[]
-  fbtStakes                FBTStake[]
-  fbtVestingSchedules      FBTVestingSchedule[]
-  daoProposals             DAOProposal[]            @relation("proposer")
-  daoVotes                 DAOVote[]
+  impactDAOStakes         ImpactDAOStake[]
+  wealthBuildingDonations WealthBuildingDonation[]
+  donorStockPortfolios    DonorStockPortfolio[]
+  fbtStakes               FBTStake[]
+  fbtVestingSchedules     FBTVestingSchedule[]
+  daoProposals            DAOProposal[]            @relation("proposer")
+  daoVotes                DAOVote[]
 
   notificationSetting NotificationSetting?
   deviceTokens        DeviceToken[]
@@ -115,6 +115,12 @@ model User {
   // Password Reset
   passwordResetToken   String?
   passwordResetExpires DateTime?
+
+  // Email OTP Verification
+  emailVerificationOtp String? // Hashed OTP code
+  otpExpiresAt         DateTime? // OTP expiration time
+  otpAttempts          Int       @default(0) // Failed attempts counter for rate limiting
+  otpLastAttemptAt     DateTime? // Last OTP attempt timestamp for rate limiting
 
   @@index([walletAddress])
   @@index([passwordResetToken])
@@ -143,8 +149,8 @@ model Session {
   createdAt    DateTime @default(now())
 
   // Session invalidation tracking (CWE-384 fix)
-  invalidatedAt       DateTime?
-  invalidationReason  String?
+  invalidatedAt      DateTime?
+  invalidationReason String?
 
   @@index([userId])
   @@index([token])
@@ -154,14 +160,14 @@ model Session {
 
 // OAuth handoff for one-time code exchange (CWE-598 fix)
 model OAuthHandoff {
-  id          String   @id @default(uuid())
-  code        String   @unique // One-time cryptographically secure code
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  code   String @unique // One-time cryptographically secure code
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Encrypted tokens (stored temporarily)
-  accessToken   String
-  refreshToken  String
+  accessToken  String
+  refreshToken String
 
   // User info for frontend
   email       String?
@@ -169,12 +175,12 @@ model OAuthHandoff {
   displayName String?
 
   // Security
-  expiresAt   DateTime  // 5 minute expiry
-  usedAt      DateTime? // Track if code was used
-  ipAddress   String?   // IP that initiated OAuth
-  userAgent   String?
+  expiresAt DateTime // 5 minute expiry
+  usedAt    DateTime? // Track if code was used
+  ipAddress String? // IP that initiated OAuth
+  userAgent String?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([code])
   @@index([expiresAt])
@@ -458,7 +464,7 @@ model Fundraiser {
 
   // Financials
   goalAmount   String @default("0") // Goal amount in USD (decimal string)
-  raisedAmount BigInt @default(0)   // Raised amount (wei)
+  raisedAmount BigInt @default(0) // Raised amount (wei)
   currency     String @default("USDC")
 
   // Endowment Tracking (for WealthBuildingDonation)
@@ -490,14 +496,14 @@ model Fundraiser {
   updatesCount Int @default(0)
 
   // Relations
-  donations              Donation[]
-  stakes                 Stake[]
-  posts                  Post[]
-  updates                FundraiserUpdate[]
-  milestones             Milestone[]
-  proposals              Proposal[]
-  votes                  Vote[]
-  globalVotes            GlobalPoolVote[]
+  donations               Donation[]
+  stakes                  Stake[]
+  posts                   Post[]
+  updates                 FundraiserUpdate[]
+  milestones              Milestone[]
+  proposals               Proposal[]
+  votes                   Vote[]
+  globalVotes             GlobalPoolVote[]
   wealthBuildingDonations WealthBuildingDonation[]
 
   @@index([creatorId])
@@ -526,7 +532,7 @@ model Milestone {
   fundraiser   Fundraiser @relation(fields: [fundraiserId], references: [id], onDelete: Cascade)
   title        String
   description  String?
-  targetAmount BigInt     // Target amount (wei)
+  targetAmount BigInt // Target amount (wei)
   isReached    Boolean    @default(false)
   reachedAt    DateTime?
   createdAt    DateTime   @default(now())
@@ -655,7 +661,7 @@ model Vote {
   voterId      String
   voter        User       @relation(fields: [voterId], references: [id])
   isUpvote     Boolean
-  votingPower  BigInt     // Amount of USDC donated (wei)
+  votingPower  BigInt // Amount of USDC donated (wei)
   createdAt    DateTime   @default(now())
 
   @@unique([proposalId, voterId])
@@ -680,7 +686,7 @@ model ImpactDAOStake {
   // Yield Split Configuration
   daoShare      Int @default(7900) // Basis points (79% default)
   stakerShare   Int @default(1900) // Basis points (19% default)
-  platformShare Int @default(200)  // Basis points (2% default, minimum)
+  platformShare Int @default(200) // Basis points (2% default, minimum)
 
   // Accumulated Yields
   pendingUSDCYield BigInt @default(0)
@@ -723,7 +729,7 @@ model ImpactDAOYieldHarvest {
   platformAmount BigInt // Amount to platform (wei)
 
   // Transaction
-  txHash      String   @unique
+  txHash      String @unique
   blockNumber Int?
   chainId     Int
 
@@ -744,9 +750,9 @@ model ImpactDAOPoolStats {
   stakersCount         Int    @default(0)
 
   // Reward Configuration
-  rewardRate        BigInt @default(0) // FBT per second (wei)
-  periodFinish      DateTime?
-  rewardsDuration   Int    @default(604800) // 7 days in seconds
+  rewardRate      BigInt    @default(0) // FBT per second (wei)
+  periodFinish    DateTime?
+  rewardsDuration Int       @default(604800) // 7 days in seconds
 
   // Last Update
   lastHarvestAt DateTime?
@@ -767,8 +773,8 @@ model WealthBuildingDonation {
   donorAddress String
 
   // Fundraiser
-  fundraiserId   String
-  fundraiser     Fundraiser @relation(fields: [fundraiserId], references: [id])
+  fundraiserId    String
+  fundraiser      Fundraiser @relation(fields: [fundraiserId], references: [id])
   beneficiaryAddr String
 
   // Donation Amounts
@@ -788,12 +794,12 @@ model WealthBuildingDonation {
   blockNumber Int?
 
   // Timestamps
-  createdAt        DateTime  @default(now())
-  lastHarvestAt    DateTime?
-  updatedAt        DateTime  @updatedAt
+  createdAt     DateTime  @default(now())
+  lastHarvestAt DateTime?
+  updatedAt     DateTime  @updatedAt
 
   // Relations
-  yieldHarvests WealthBuildingYieldHarvest[]
+  yieldHarvests  WealthBuildingYieldHarvest[]
   stockPortfolio DonorStockPortfolio[]
 
   @@index([donorId])
@@ -815,7 +821,7 @@ model WealthBuildingYieldHarvest {
   donorShare  BigInt // 70% to donor as stocks (wei)
 
   // Transaction
-  txHash      String   @unique
+  txHash      String @unique
   blockNumber Int?
   chainId     Int
 
@@ -864,13 +870,13 @@ model StockPurchase {
   donorAddress String
 
   // Transaction details
-  stockToken    String // Stock token address
-  stockSymbol   String
-  usdcAmount    BigInt // USDC used for purchase (wei)
-  stockAmount   BigInt // Stock tokens received (wei)
+  stockToken  String // Stock token address
+  stockSymbol String
+  usdcAmount  BigInt // USDC used for purchase (wei)
+  stockAmount BigInt // Stock tokens received (wei)
 
   // Blockchain
-  txHash      String   @unique
+  txHash      String @unique
   blockNumber Int?
   chainId     Int
 
@@ -892,7 +898,7 @@ model SupportedStock {
   decimals     Int    @default(18)
 
   // Backed Finance specific
-  isBackedToken Boolean @default(true)
+  isBackedToken   Boolean @default(true)
   underlyingAsset String? // e.g., "S&P 500" for bCSPX
 
   // Status
@@ -900,8 +906,8 @@ model SupportedStock {
   isDefault Boolean @default(false)
 
   // Price tracking
-  lastPrice    String?   // Last known price in USD
-  lastPriceAt  DateTime?
+  lastPrice   String? // Last known price in USD
+  lastPriceAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -922,13 +928,13 @@ model PlatformFee {
   amount BigInt // USDC amount (wei)
 
   // Transaction
-  txHash      String   @unique
+  txHash      String @unique
   blockNumber Int?
   chainId     Int
 
   // Staking Status
-  isStaked   Boolean   @default(false)
-  stakedAt   DateTime?
+  isStaked     Boolean   @default(false)
+  stakedAt     DateTime?
   stakedTxHash String?
 
   // Timestamp
@@ -986,12 +992,12 @@ model TreasuryStats {
   id String @id @default(uuid())
 
   // Fee Statistics
-  totalFeesCollected   BigInt @default(0)
-  totalFeesStaked      BigInt @default(0)
-  pendingFeesToStake   BigInt @default(0)
+  totalFeesCollected BigInt @default(0)
+  totalFeesStaked    BigInt @default(0)
+  pendingFeesToStake BigInt @default(0)
 
   // FBT Staking
-  totalFBTStaked       BigInt @default(0)
+  totalFBTStaked BigInt @default(0)
 
   // Yield Statistics
   totalYieldDistributed BigInt @default(0)
@@ -1002,12 +1008,12 @@ model TreasuryStats {
   endowmentLifetimeYield BigInt @default(0)
 
   // Configuration
-  minStakeThreshold    BigInt @default(1000000000) // 1000 USDC (wei)
+  minStakeThreshold BigInt @default(1000000000) // 1000 USDC (wei)
 
   // Timestamps
   lastFeeStakedAt      DateTime?
   lastYieldHarvestedAt DateTime?
-  updatedAt            DateTime @updatedAt
+  updatedAt            DateTime  @updatedAt
 
   @@map("treasury_stats")
 }
@@ -1023,16 +1029,16 @@ model FBTVestingSchedule {
   recipientAddress String
 
   // Schedule Details
-  totalAmount      BigInt // Total tokens to vest (wei)
-  releasedAmount   BigInt @default(0) // Already claimed (wei)
-  startTime        DateTime
-  duration         Int    // Duration in seconds
-  vestingType      VestingType
+  totalAmount    BigInt // Total tokens to vest (wei)
+  releasedAmount BigInt      @default(0) // Already claimed (wei)
+  startTime      DateTime
+  duration       Int // Duration in seconds
+  vestingType    VestingType
 
   // Calculated fields (denormalized for performance)
-  claimableAmount  BigInt  @default(0)
-  isFullyVested    Boolean @default(false)
-  isFullyClaimed   Boolean @default(false)
+  claimableAmount BigInt  @default(0)
+  isFullyVested   Boolean @default(false)
+  isFullyClaimed  Boolean @default(false)
 
   // Transaction (if created on-chain)
   txHash      String? @unique
@@ -1053,11 +1059,11 @@ model FBTVestingSchedule {
 }
 
 enum VestingType {
-  DONATION_REWARD    // 30 days
-  ENGAGEMENT_REWARD  // 7 days
-  TEAM_ALLOCATION    // Custom
-  INVESTOR           // Custom
-  ECOSYSTEM          // Custom
+  DONATION_REWARD // 30 days
+  ENGAGEMENT_REWARD // 7 days
+  TEAM_ALLOCATION // Custom
+  INVESTOR // Custom
+  ECOSYSTEM // Custom
 }
 
 model FBTVestingClaim {
@@ -1071,7 +1077,7 @@ model FBTVestingClaim {
   amount BigInt // Claimed amount (wei)
 
   // Transaction
-  txHash      String   @unique
+  txHash      String @unique
   blockNumber Int?
   chainId     Int
 
@@ -1093,7 +1099,7 @@ model FBTBurn {
   reason String? // e.g., "premium_feature", "governance_burn"
 
   // Transaction
-  txHash      String   @unique
+  txHash      String @unique
   blockNumber Int?
   chainId     Int
 
@@ -1111,7 +1117,7 @@ model DAOProposal {
 
   // Proposal Content
   title       String
-  description String   @db.Text
+  description String           @db.Text
   category    ProposalCategory
 
   // Proposer
@@ -1130,8 +1136,8 @@ model DAOProposal {
   votersCount       Int    @default(0)
 
   // Status
-  status         ProposalStatus @default(ACTIVE)
-  executedAt     DateTime?
+  status          ProposalStatus @default(ACTIVE)
+  executedAt      DateTime?
   executionTxHash String?
 
   // For yield distribution proposals
@@ -1151,10 +1157,10 @@ model DAOProposal {
 }
 
 enum ProposalCategory {
-  YIELD_DISTRIBUTION   // Allocate DAO yield to fundraisers
-  PARAMETER_CHANGE     // Change platform parameters
-  FEATURE_REQUEST      // Request new features
-  EMERGENCY            // Emergency actions
+  YIELD_DISTRIBUTION // Allocate DAO yield to fundraisers
+  PARAMETER_CHANGE // Change platform parameters
+  FEATURE_REQUEST // Request new features
+  EMERGENCY // Emergency actions
   OTHER
 }
 
@@ -1420,13 +1426,13 @@ model Trending {
 // ==================== BLOCKCHAIN SYNC ====================
 
 model BlockchainSync {
-  id              String   @id @default(uuid())
+  id              String     @id @default(uuid())
   chainId         Int
   chainName       String
   contractAddress String
-  contractName    String?  // e.g., "ImpactDAOPool", "WealthBuildingDonation"
-  lastBlock       Int      @default(0)
-  lastSyncAt      DateTime @default(now())
+  contractName    String? // e.g., "ImpactDAOPool", "WealthBuildingDonation"
+  lastBlock       Int        @default(0)
+  lastSyncAt      DateTime   @default(now())
   status          SyncStatus @default(SYNCING)
   error           String?
 
@@ -1443,7 +1449,7 @@ enum SyncStatus {
 }
 
 model BlockchainEvent {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Event Info
   eventName       String
@@ -1451,22 +1457,22 @@ model BlockchainEvent {
   contractName    String?
 
   // Transaction
-  txHash          String
-  blockNumber     Int
-  logIndex        Int
-  chainId         Int
+  txHash      String
+  blockNumber Int
+  logIndex    Int
+  chainId     Int
 
   // Event Data
-  args            Json     // Event arguments
+  args Json // Event arguments
 
   // Processing
-  processed       Boolean  @default(false)
-  processedAt     DateTime?
-  error           String?
+  processed   Boolean   @default(false)
+  processedAt DateTime?
+  error       String?
 
   // Timestamps
-  blockTimestamp  DateTime
-  indexedAt       DateTime @default(now())
+  blockTimestamp DateTime
+  indexedAt      DateTime @default(now())
 
   @@unique([txHash, logIndex, chainId])
   @@index([eventName])
@@ -1494,10 +1500,10 @@ model NotificationSetting {
   notifyOnStake    Boolean @default(true)
 
   // New notification controls
-  notifyOnYieldHarvest Boolean @default(true)
+  notifyOnYieldHarvest  Boolean @default(true)
   notifyOnStockPurchase Boolean @default(true)
-  notifyOnFBTVesting   Boolean @default(true)
-  notifyOnDAOProposal  Boolean @default(true)
+  notifyOnFBTVesting    Boolean @default(true)
+  notifyOnDAOProposal   Boolean @default(true)
 
   updatedAt DateTime @updatedAt
 
@@ -1598,10 +1604,10 @@ model GlobalPoolLock {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  amount      BigInt   // Locked amount (wei)
+  amount      BigInt // Locked amount (wei)
   unlockDate  DateTime
   multiplier  Float
-  votingPower BigInt   // Calculated voting power (wei)
+  votingPower BigInt // Calculated voting power (wei)
 
   createdAt DateTime @default(now())
 
@@ -1630,15 +1636,15 @@ model ContractRegistry {
   id String @id @default(uuid())
 
   chainId         Int
-  contractName    String  // e.g., "ImpactDAOPool", "WealthBuildingDonation"
+  contractName    String // e.g., "ImpactDAOPool", "WealthBuildingDonation"
   contractAddress String
   deploymentTx    String?
   deploymentBlock Int?
 
   // ABI version for upgrade tracking
-  version         String  @default("1.0.0")
+  version String @default("1.0.0")
 
-  isActive        Boolean @default(true)
+  isActive Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

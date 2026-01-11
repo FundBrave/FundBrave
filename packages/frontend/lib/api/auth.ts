@@ -6,7 +6,10 @@
  * - CWE-522: Tokens stored as HttpOnly cookies (not localStorage)
  * - All requests use credentials: 'include' to send cookies
  * - Only non-sensitive user data stored in localStorage
+ * - Automatic token refresh on 401 via API client interceptor
  */
+
+import { apiClient } from './client';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -32,11 +35,11 @@ interface AuthResponse {
 interface RegisterRequest {
   email: string;
   password: string;
-  username: string;
+  displayName: string;
 }
 
 interface LoginRequest {
-  username: string;
+  emailOrUsername: string;
   password: string;
 }
 
@@ -69,6 +72,27 @@ interface ResetPasswordResponse {
   message: string;
 }
 
+interface VerifyOtpRequest {
+  email: string;
+  otp: string;
+}
+
+interface VerifyOtpResponse {
+  success: boolean;
+  message: string;
+  emailVerified?: boolean;
+}
+
+interface ResendOtpRequest {
+  email: string;
+}
+
+interface ResendOtpResponse {
+  success: boolean;
+  message: string;
+  cooldownSeconds?: number;
+}
+
 class AuthApiClient {
   private baseUrl: string;
 
@@ -80,19 +104,10 @@ class AuthApiClient {
    * Fetch nonce for SIWE authentication
    */
   async getNonce(walletAddress: string): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/auth/nonce?address=${walletAddress}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Include cookies in request
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to get nonce: ${response.statusText}`);
-    }
-
-    const data: NonceResponse = await response.json();
+    const data = await apiClient.get<NonceResponse>(
+      `/api/auth/nonce?address=${walletAddress}`,
+      { skipRefresh: true } // Don't refresh on 401 for public endpoint
+    );
     return data.nonce;
   }
 
@@ -101,21 +116,12 @@ class AuthApiClient {
    * Tokens are set as HttpOnly cookies by the backend
    */
   async verifySiwe(message: string, signature: string): Promise<AuthResponse> {
-    const response = await fetch(`${this.baseUrl}/auth/siwe/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // CRITICAL: Include HttpOnly cookies
-      body: JSON.stringify({ message, signature } as SiweVerifyRequest),
-    });
+    const authData = await apiClient.post<AuthResponse>(
+      `/api/auth/siwe/verify`,
+      { message, signature } as SiweVerifyRequest,
+      { skipRefresh: true } // Don't refresh on 401 for login endpoint
+    );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to verify signature');
-    }
-
-    const authData = await response.json();
     // Store only non-sensitive user data
     this.storeAuthData(authData);
     return authData;
@@ -126,21 +132,12 @@ class AuthApiClient {
    * Tokens are set as HttpOnly cookies by the backend
    */
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await fetch(`${this.baseUrl}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // CRITICAL: Include HttpOnly cookies
-      body: JSON.stringify(data),
-    });
+    const authData = await apiClient.post<AuthResponse>(
+      `/api/auth/register`,
+      data,
+      { skipRefresh: true } // Don't refresh on 401 for registration endpoint
+    );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Registration failed');
-    }
-
-    const authData = await response.json();
     // Store only non-sensitive user data
     this.storeAuthData(authData);
     return authData;
@@ -151,21 +148,12 @@ class AuthApiClient {
    * Tokens are set as HttpOnly cookies by the backend
    */
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await fetch(`${this.baseUrl}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // CRITICAL: Include HttpOnly cookies
-      body: JSON.stringify(data),
-    });
+    const authData = await apiClient.post<AuthResponse>(
+      `/api/auth/login`,
+      data,
+      { skipRefresh: true } // Don't refresh on 401 for login endpoint
+    );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Login failed');
-    }
-
-    const authData = await response.json();
     // Store only non-sensitive user data
     this.storeAuthData(authData);
     return authData;
@@ -176,19 +164,12 @@ class AuthApiClient {
    * No need to pass refresh token - it's in the cookie
    */
   async refreshToken(): Promise<AuthResponse> {
-    const response = await fetch(`${this.baseUrl}/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // CRITICAL: Send refresh token cookie
-    });
+    const authData = await apiClient.post<AuthResponse>(
+      `/api/auth/refresh`,
+      undefined,
+      { skipRefresh: true } // Prevent infinite loop
+    );
 
-    if (!response.ok) {
-      throw new Error('Failed to refresh token');
-    }
-
-    const authData = await response.json();
     // Update user data if changed
     this.storeAuthData(authData);
     return authData;
@@ -200,10 +181,7 @@ class AuthApiClient {
   async logout(): Promise<void> {
     try {
       // Call backend to clear HttpOnly cookies
-      await fetch(`${this.baseUrl}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include', // Send cookies to be cleared
-      });
+      await apiClient.post(`/api/auth/logout`, undefined, { skipRefresh: true });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -219,62 +197,32 @@ class AuthApiClient {
    * Request password reset email
    */
   async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
-    const response = await fetch(`${this.baseUrl}/auth/forgot-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Include cookies
-      body: JSON.stringify({ email } as ForgotPasswordRequest),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to send reset email');
-    }
-
-    return response.json();
+    return apiClient.post<ForgotPasswordResponse>(
+      `/api/auth/forgot-password`,
+      { email } as ForgotPasswordRequest,
+      { skipRefresh: true } // Public endpoint
+    );
   }
 
   /**
    * Verify password reset token validity
    */
   async verifyResetToken(token: string): Promise<VerifyResetTokenResponse> {
-    const response = await fetch(`${this.baseUrl}/auth/verify-reset-token?token=${token}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Include cookies
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Invalid token');
-    }
-
-    return response.json();
+    return apiClient.get<VerifyResetTokenResponse>(
+      `/api/auth/verify-reset-token?token=${token}`,
+      { skipRefresh: true } // Public endpoint
+    );
   }
 
   /**
    * Reset password with token
    */
   async resetPassword(token: string, newPassword: string): Promise<ResetPasswordResponse> {
-    const response = await fetch(`${this.baseUrl}/auth/reset-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Include cookies
-      body: JSON.stringify({ token, newPassword } as ResetPasswordRequest),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to reset password');
-    }
-
-    return response.json();
+    return apiClient.post<ResetPasswordResponse>(
+      `/api/auth/reset-password`,
+      { token, newPassword } as ResetPasswordRequest,
+      { skipRefresh: true } // Public endpoint
+    );
   }
 
   /**
@@ -311,16 +259,11 @@ class AuthApiClient {
    */
   async checkAuth(): Promise<AuthResponse['user'] | null> {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/me`, {
-        method: 'GET',
-        credentials: 'include', // Send HttpOnly cookies
-      });
+      const data = await apiClient.get<{ user: AuthResponse['user'] }>(
+        `/api/auth/me`,
+        { skipRefresh: true } // Don't refresh during initial auth check
+      );
 
-      if (!response.ok) {
-        return null;
-      }
-
-      const data = await response.json();
       // Update stored user data
       this.storeAuthData({ user: data.user });
       return data.user;
@@ -328,6 +271,28 @@ class AuthApiClient {
       console.error('Auth check error:', error);
       return null;
     }
+  }
+
+  /**
+   * Verify OTP code
+   */
+  async verifyOtp(email: string, otp: string): Promise<VerifyOtpResponse> {
+    return apiClient.post<VerifyOtpResponse>(
+      `/api/auth/verify-otp`,
+      { email, otp } as VerifyOtpRequest,
+      { skipRefresh: true } // Don't refresh on 401 for OTP verification
+    );
+  }
+
+  /**
+   * Resend OTP code
+   */
+  async resendOtp(email: string): Promise<ResendOtpResponse> {
+    return apiClient.post<ResendOtpResponse>(
+      `/api/auth/resend-otp`,
+      { email } as ResendOtpRequest,
+      { skipRefresh: true } // Don't refresh on 401 for OTP resend
+    );
   }
 }
 
@@ -347,4 +312,8 @@ export type {
   VerifyResetTokenResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
+  VerifyOtpRequest,
+  VerifyOtpResponse,
+  ResendOtpRequest,
+  ResendOtpResponse,
 };

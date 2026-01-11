@@ -103,6 +103,7 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
 
   const handleGoogleLogin = async () => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    // OAuth routes are excluded from /api prefix to match Google Cloud Console callback URL
     window.location.href = `${API_URL}/auth/google`;
   };
 
@@ -121,39 +122,15 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
     try {
       // Call login API
       const response = await authApi.login({
-        username: formData.username,
+        emailOrUsername: formData.username,
         password: formData.password,
       });
 
       // Store auth data
       authApi.storeAuthData(response);
 
-      // Store email in localStorage for onboarding (extracted from username if it's an email)
-      if (typeof window !== "undefined") {
-        const isEmail = formData.username.includes("@");
-        const existingData = localStorage.getItem("onboarding_data");
-
-        // Check if user needs onboarding (no existing data means first time)
-        if (!existingData) {
-          const onboardingData = {
-            email: isEmail ? formData.username : response.user.email || "",
-            profile: {
-              fullName: response.user.username || "",
-              email: response.user.email || (isEmail ? formData.username : ""),
-              birthdate: "",
-              bio: "",
-              avatar: "",
-            },
-            social: { twitter: "", instagram: "", linkedin: "", github: "" },
-            goals: [],
-            isComplete: false,
-          };
-          localStorage.setItem("onboarding_data", JSON.stringify(onboardingData));
-        }
-      }
-
-      // Redirect to onboarding
-      router.push("/onboarding");
+      // Redirect to homepage
+      router.push("/");
     } catch (error) {
       if (error instanceof Error) {
         setServerError(error.message);

@@ -84,9 +84,10 @@ function validateEnvironment(logger: Logger): void {
 
 /**
  * Configure CORS with security in mind
+ * CWE-522 Fix: Properly configured to accept HttpOnly cookies from frontend
  */
 function configureCors(): {
-  origin: string | string[] | boolean;
+  origin: string | string[] | boolean | ((origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void);
   credentials: boolean;
   methods: string[];
   allowedHeaders: string[];
@@ -115,19 +116,47 @@ function configureCors(): {
       origin: origins,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-      exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+      exposedHeaders: ['X-Total-Count', 'X-Page-Count', 'Set-Cookie'],
       maxAge: 86400, // 24 hours
     };
   }
 
-  // In development, be more permissive but still secure
+  // In development, explicitly allow localhost:3001 for cookie support
+  const allowedDevelopmentOrigins = [
+    'http://localhost:3001',
+    'http://127.0.0.1:3001',
+  ];
+
+  if (frontendUrl && !allowedDevelopmentOrigins.includes(frontendUrl)) {
+    allowedDevelopmentOrigins.push(frontendUrl);
+  }
+
+  additionalOrigins.forEach(origin => {
+    if (!allowedDevelopmentOrigins.includes(origin)) {
+      allowedDevelopmentOrigins.push(origin);
+    }
+  });
+
   return {
-    origin: frontendUrl || true,
-    credentials: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      // Check if origin is in allowed list
+      if (allowedDevelopmentOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`), false);
+      }
+    },
+    credentials: true, // Critical: allows cookies to be sent cross-origin
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+    exposedHeaders: ['X-Total-Count', 'X-Page-Count', 'Set-Cookie'],
     maxAge: 86400,
   };
 }
@@ -234,6 +263,7 @@ async function bootstrap() {
   );
 
   // Set global prefix for API routes
+  // OAuth routes are excluded because Google OAuth callback URL must match exactly
   app.setGlobalPrefix('api', {
     exclude: ['health', 'auth/google', 'auth/google/callback'],
   });
@@ -285,25 +315,40 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
+  logger.log('='.repeat(80));
   logger.log(`Application is running on: http://localhost:${port}`);
   logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.log(`Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3001'}`);
+  logger.log('='.repeat(80));
 
   if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true') {
-    logger.log(`API Documentation available at: http://localhost:${port}/api/docs`);
+    logger.log(`API Documentation: http://localhost:${port}/api/docs`);
   }
 
   logger.log(`Health Check: http://localhost:${port}/health`);
+  logger.log(`Google OAuth: http://localhost:${port}/auth/google`);
+  logger.log('');
 
   // Log security status
   logger.log('Security features enabled:');
   logger.log('  - Helmet security headers');
-  logger.log('  - CORS protection');
+  logger.log('  - CORS protection with credentials support');
   logger.log('  - Cookie parser for HttpOnly tokens');
   logger.log('  - Input validation with whitelist');
   logger.log('  - AES-256-GCM wallet encryption');
   logger.log('  - CSRF state validation for OAuth');
   logger.log('  - One-time code exchange for OAuth');
   logger.log('  - Session fixation prevention');
+  logger.log('');
+
+  // Log CORS configuration
+  const corsOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+  const frontendUrl = process.env.FRONTEND_URL;
+  logger.log('CORS Configuration:');
+  logger.log(`  - Frontend URL: ${frontendUrl || 'http://localhost:3001'}`);
+  logger.log(`  - Additional Origins: ${corsOrigins.join(', ') || 'none'}`);
+  logger.log(`  - Credentials: enabled`);
+  logger.log('='.repeat(80));
 }
 
 bootstrap().catch((error) => {

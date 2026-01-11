@@ -29,7 +29,8 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Get tokens from cookies or headers
-  const accessToken = request.cookies.get('accessToken')?.value ||
+  // IMPORTANT: Backend sets 'access_token' cookie (with underscore), not 'accessToken'
+  const accessToken = request.cookies.get('access_token')?.value ||
                      request.headers.get('authorization')?.replace('Bearer ', '');
 
   const isAuthenticated = !!accessToken;
@@ -51,7 +52,7 @@ export function middleware(request: NextRequest) {
 
   if (isAuthRoute && isAuthenticated) {
     // Redirect authenticated users away from auth pages
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();
