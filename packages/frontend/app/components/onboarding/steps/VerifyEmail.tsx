@@ -7,6 +7,70 @@ import { useOnboardingData } from "@/app/provider/OnboardingDataContext";
 import { Button } from "@/app/components/ui/button";
 import { authApi } from "@/lib/api/auth";
 
+/**
+ * Maps technical backend/database errors to user-friendly messages
+ * @param error - The error object or message
+ * @returns User-friendly error message
+ */
+const mapErrorToUserMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    const errorMessage = error.message.toLowerCase();
+
+    // Database/Connection errors
+    if (
+      errorMessage.includes("database") ||
+      errorMessage.includes("connection") ||
+      errorMessage.includes("timeout") ||
+      errorMessage.includes("econnrefused") ||
+      errorMessage.includes("enotfound")
+    ) {
+      return "Service temporarily unavailable. Please try again in a moment.";
+    }
+
+    // Network errors
+    if (
+      errorMessage.includes("network") ||
+      errorMessage.includes("fetch") ||
+      errorMessage.includes("cors")
+    ) {
+      return "Network error. Please check your connection.";
+    }
+
+    // Rate limit errors - keep the backend message as it's already user-friendly
+    if (
+      errorMessage.includes("rate limit") ||
+      errorMessage.includes("too many") ||
+      errorMessage.includes("wait")
+    ) {
+      return error.message;
+    }
+
+    // Server errors (5xx)
+    if (
+      errorMessage.includes("500") ||
+      errorMessage.includes("502") ||
+      errorMessage.includes("503") ||
+      errorMessage.includes("504") ||
+      errorMessage.includes("internal server")
+    ) {
+      return "Service temporarily unavailable. Please try again in a moment.";
+    }
+
+    // Return the original message if it seems user-friendly (no technical jargon)
+    if (
+      !errorMessage.includes("prisma") &&
+      !errorMessage.includes("sql") &&
+      !errorMessage.includes("query") &&
+      !errorMessage.includes("stack")
+    ) {
+      return error.message;
+    }
+  }
+
+  // Generic fallback for unknown errors
+  return "Failed to resend code. Please try again.";
+};
+
 const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
   const { data } = useOnboardingData();
   const [codes, setCodes] = useState<string[]>(["", "", "", ""]);
@@ -16,6 +80,8 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 2;
 
   const userEmail = data.email || "your email";
 
@@ -66,21 +132,41 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
 
       if (response.success) {
         setSuccessMessage(response.message || "Email verified successfully!");
+        setRetryCount(0); // Reset retry count on success
         // Wait a moment to show success message, then continue
         setTimeout(() => {
-          onNext();
+          onNext?.();
         }, 1500);
       } else {
         setError(response.message || "Invalid verification code. Please try again.");
       }
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
+      // Map technical errors to user-friendly messages
+      const userFriendlyError = mapErrorToUserMessage(err);
+
+      // Check if this is a transient error that can be retried
+      const isTransientError =
+        err instanceof Error &&
+        (err.message.toLowerCase().includes("timeout") ||
+         err.message.toLowerCase().includes("network") ||
+         err.message.toLowerCase().includes("connection"));
+
+      if (isTransientError && retryCount < MAX_RETRIES) {
+        setRetryCount(retryCount + 1);
+        setError(`${userFriendlyError} Retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+
+        // Retry after a short delay
+        setTimeout(() => {
+          handleVerifyOtp();
+        }, 1500);
       } else {
-        setError("Failed to verify code. Please try again.");
+        setError(userFriendlyError);
+        setRetryCount(0); // Reset retry count after max retries
       }
     } finally {
-      setIsVerifying(false);
+      if (retryCount >= MAX_RETRIES || error) {
+        setIsVerifying(false);
+      }
     }
   };
 
@@ -123,11 +209,9 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
         setError(response.message || "Failed to resend code. Please try again.");
       }
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Failed to resend code. Please try again.");
-      }
+      // Map technical errors to user-friendly messages
+      const userFriendlyError = mapErrorToUserMessage(err);
+      setError(userFriendlyError);
     } finally {
       setIsResending(false);
     }

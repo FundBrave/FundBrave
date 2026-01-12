@@ -8,12 +8,16 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../prisma/prisma.service';
+import {
+  PrismaService,
+  getPrismaErrorMessage,
+} from '../../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { SiweMessage } from 'siwe';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { ethers } from 'ethers';
+import { Prisma } from '@prisma/client';
 import {
   ForgotPasswordResponse,
   ResetPasswordResponse,
@@ -1508,104 +1512,159 @@ export class AuthService implements OnModuleInit {
    * - Generic response to prevent email enumeration
    * - Rate limiting enforced at controller level
    * - Cooldown between resend requests
+   * - Retry logic for transient database connection failures
+   * - User-friendly error messages for database errors
    */
   async resendOtp(email: string): Promise<SendOtpResponse> {
     const normalizedEmail = email.toLowerCase().trim();
 
-    const user = await this.prisma.user.findFirst({
-      where: {
-        email: normalizedEmail,
-        isActive: true,
-        isSuspended: false,
-      },
-      select: {
-        id: true,
-        email: true,
-        emailVerified: true,
-        displayName: true,
-        username: true,
-        otpLastAttemptAt: true,
-      },
-    });
+    try {
+      // Use executeWithRetry for the initial user lookup to handle transient connection issues
+      const user = await this.prisma.executeWithRetry(
+        () =>
+          this.prisma.user.findFirst({
+            where: {
+              email: normalizedEmail,
+              isActive: true,
+              isSuspended: false,
+            },
+            select: {
+              id: true,
+              email: true,
+              emailVerified: true,
+              displayName: true,
+              username: true,
+              otpLastAttemptAt: true,
+            },
+          }),
+        3, // maxRetries
+        500, // retryDelayMs
+      );
 
-    // Generic response for security (prevent email enumeration)
-    if (!user) {
-      this.logger.warn(`OTP resend requested for non-existent email: ${this.maskEmail(normalizedEmail)}`);
-      await this.artificialDelay();
-      return {
-        success: true,
-        message: 'If an account with that email exists, a verification code has been sent.',
-      };
-    }
-
-    if (user.emailVerified) {
-      // Still return generic message
-      return {
-        success: true,
-        message: 'If an account with that email exists, a verification code has been sent.',
-      };
-    }
-
-    // Check resend cooldown
-    if (user.otpLastAttemptAt) {
-      const timeSinceLastOtp = Date.now() - user.otpLastAttemptAt.getTime();
-      if (timeSinceLastOtp < OTP_CONFIG.resendCooldownMs) {
-        const cooldownRemaining = Math.ceil(
-          (OTP_CONFIG.resendCooldownMs - timeSinceLastOtp) / 1000,
-        );
-        this.logSecurityEvent(SecurityEventType.OTP_RATE_LIMITED, user.id, {
-          email: this.maskEmail(normalizedEmail),
-          cooldownRemaining,
-        });
+      // Generic response for security (prevent email enumeration)
+      if (!user) {
+        this.logger.warn(`OTP resend requested for non-existent email: ${this.maskEmail(normalizedEmail)}`);
+        await this.artificialDelay();
         return {
-          success: false,
-          message: 'Please wait before requesting another verification code',
-          cooldownSeconds: cooldownRemaining,
+          success: true,
+          message: 'If an account with that email exists, a verification code has been sent.',
         };
       }
-    }
 
-    // Generate new OTP
-    const otp = this.generateOtp();
-    const hashedOtp = await this.hashOtp(otp);
-    const expiresAt = new Date(Date.now() + OTP_CONFIG.expiryMs);
+      if (user.emailVerified) {
+        // Still return generic message
+        return {
+          success: true,
+          message: 'If an account with that email exists, a verification code has been sent.',
+        };
+      }
 
-    // Store hashed OTP and reset attempt counter
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerificationOtp: hashedOtp,
-        otpExpiresAt: expiresAt,
-        otpAttempts: 0,
-        otpLastAttemptAt: new Date(),
-      },
-    });
+      // Check resend cooldown
+      if (user.otpLastAttemptAt) {
+        const timeSinceLastOtp = Date.now() - user.otpLastAttemptAt.getTime();
+        if (timeSinceLastOtp < OTP_CONFIG.resendCooldownMs) {
+          const cooldownRemaining = Math.ceil(
+            (OTP_CONFIG.resendCooldownMs - timeSinceLastOtp) / 1000,
+          );
+          this.logSecurityEvent(SecurityEventType.OTP_RATE_LIMITED, user.id, {
+            email: this.maskEmail(normalizedEmail),
+            cooldownRemaining,
+          });
+          return {
+            success: false,
+            message: 'Please wait before requesting another verification code',
+            cooldownSeconds: cooldownRemaining,
+          };
+        }
+      }
 
-    this.logSecurityEvent(SecurityEventType.OTP_GENERATED, user.id, {
-      email: this.maskEmail(normalizedEmail),
-      expiresAt,
-    });
+      // Generate new OTP
+      const otp = this.generateOtp();
+      const hashedOtp = await this.hashOtp(otp);
+      const expiresAt = new Date(Date.now() + OTP_CONFIG.expiryMs);
 
-    // Send OTP email
-    const emailSent = await this.emailService.sendOtpEmail(
-      user.email!,
-      otp,
-      user.displayName || user.username || undefined,
-      OTP_CONFIG.expiryMs / (60 * 1000),
-    );
+      // Store hashed OTP and reset attempt counter with retry logic
+      await this.prisma.executeWithRetry(
+        () =>
+          this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+              emailVerificationOtp: hashedOtp,
+              otpExpiresAt: expiresAt,
+              otpAttempts: 0,
+              otpLastAttemptAt: new Date(),
+            },
+          }),
+        3, // maxRetries
+        500, // retryDelayMs
+      );
 
-    if (!emailSent) {
-      this.logger.error(`Failed to resend OTP email to: ${this.maskEmail(normalizedEmail)}`);
-    } else {
-      this.logSecurityEvent(SecurityEventType.OTP_SENT, user.id, {
+      this.logSecurityEvent(SecurityEventType.OTP_GENERATED, user.id, {
         email: this.maskEmail(normalizedEmail),
+        expiresAt,
       });
-    }
 
-    return {
-      success: true,
-      message: 'If an account with that email exists, a verification code has been sent.',
-    };
+      // Send OTP email
+      const emailSent = await this.emailService.sendOtpEmail(
+        user.email!,
+        otp,
+        user.displayName || user.username || undefined,
+        OTP_CONFIG.expiryMs / (60 * 1000),
+      );
+
+      if (!emailSent) {
+        this.logger.error(`Failed to resend OTP email to: ${this.maskEmail(normalizedEmail)}`);
+      } else {
+        this.logSecurityEvent(SecurityEventType.OTP_SENT, user.id, {
+          email: this.maskEmail(normalizedEmail),
+        });
+      }
+
+      return {
+        success: true,
+        message: 'If an account with that email exists, a verification code has been sent.',
+      };
+    } catch (error) {
+      // Handle Prisma connection errors with user-friendly messages
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        this.logger.error(
+          `Database error in resendOtp [${error.code}]: ${error.message}`,
+          { email: this.maskEmail(normalizedEmail), code: error.code },
+        );
+
+        // Return user-friendly error message based on error code
+        return {
+          success: false,
+          message: getPrismaErrorMessage(error.code),
+        };
+      }
+
+      // Handle connection/pool errors
+      if (this.prisma.isConnectionError(error)) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(
+          `Database connection error in resendOtp: ${errorMessage}`,
+          { email: this.maskEmail(normalizedEmail) },
+        );
+
+        return {
+          success: false,
+          message: 'Unable to connect to the service. Please try again in a moment.',
+        };
+      }
+
+      // Handle unexpected errors
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(
+        `Unexpected error in resendOtp: ${errorMessage}`,
+        { email: this.maskEmail(normalizedEmail) },
+      );
+
+      return {
+        success: false,
+        message: 'An unexpected error occurred. Please try again later.',
+      };
+    }
   }
 
   /**
