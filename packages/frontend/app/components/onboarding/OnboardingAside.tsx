@@ -1,12 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
+import { useRouter } from "next/navigation";
 import { useOnboarding } from "@/app/provider/OnboardingContext";
 import { StepItem } from "./StepItem";
 import { ConnectingLine } from "./ConnectingLine";
 import Image from "next/image";
 import { EASE_ORGANIC } from "@/lib/constants/animation";
+import { authApi } from "@/lib/api/auth";
+import { LogOut } from "lucide-react";
 
 // Staggered reveal animation variants
 const stepsContainerVariants = {
@@ -30,6 +33,41 @@ const stepItemVariants = {
       ease: EASE_ORGANIC,
     },
   },
+};
+
+/**
+ * Sign Out Button Component
+ * Logs the user out and redirects to /auth
+ */
+const SignOutButton = () => {
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setIsLoggingOut(true);
+    try {
+      await authApi.logout();
+      router.push("/auth");
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+      // Still redirect even if logout fails
+      router.push("/auth");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleSignOut}
+      disabled={isLoggingOut}
+      className="min-h-11 px-2 -mx-2 rounded-lg flex items-center gap-2 transition-colors text-destructive hover:text-destructive/90 active:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label="Sign out of your account"
+    >
+      <LogOut className="w-4 h-4" aria-hidden="true" />
+      <span>{isLoggingOut ? "Signing out..." : "Sign out"}</span>
+    </button>
+  );
 };
 
 /**
@@ -103,9 +141,9 @@ export const OnboardingAside = () => {
         </motion.div>
       </div>
 
-      {/* Footer link - Mobile-first: min-h-11 for 44px touch target, active state for mobile */}
+      {/* Footer links - Mobile-first: min-h-11 for 44px touch target, active state for mobile */}
       <motion.div
-        className="text-muted-foreground text-sm"
+        className="text-muted-foreground text-sm space-y-3"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.4 }}
@@ -117,6 +155,8 @@ export const OnboardingAside = () => {
           <span>&larr;</span>
           <span>Back to home</span>
         </a>
+
+        <SignOutButton />
       </motion.div>
     </aside>
   );

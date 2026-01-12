@@ -1,12 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
+import { useRouter } from "next/navigation";
 import { useOnboarding } from "@/app/provider/OnboardingContext";
 import { MobileStepItem } from "./StepItem";
 import { ConnectingLineHorizontal } from "./ConnectingLine";
 import Image from "next/image";
 import { EASE_ORGANIC } from "@/lib/constants/animation";
+import { authApi } from "@/lib/api/auth";
+import { LogOut } from "lucide-react";
 
 // Staggered reveal animation variants for mobile
 const stepsContainerVariants = {
@@ -45,6 +48,40 @@ const textVariants = {
 };
 
 /**
+ * Sign Out Button Component for Mobile
+ * Logs the user out and redirects to /auth
+ */
+const MobileSignOutButton = () => {
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setIsLoggingOut(true);
+    try {
+      await authApi.logout();
+      router.push("/auth");
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+      // Still redirect even if logout fails
+      router.push("/auth");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleSignOut}
+      disabled={isLoggingOut}
+      className="p-2 rounded-lg transition-colors text-destructive hover:text-destructive/90 active:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label="Sign out of your account"
+    >
+      <LogOut className="w-5 h-5" aria-hidden="true" />
+    </button>
+  );
+};
+
+/**
  * Mobile header component with horizontal progress indicator
  * Shows current step and progress through all steps
  * Features staggered reveal animation on initial mount
@@ -58,24 +95,37 @@ export const MobileProgressHeader = ({ showLogo = false }: MobileProgressHeaderP
 
   return (
     <div className="md:hidden w-full bg-background/50 p-6 rounded-t-2xl isolate">
-      {/* Logo - conditionally rendered */}
-      {showLogo && (
+      {/* Header with logo and sign out */}
+      <div className="flex items-center justify-between mb-6">
+        {/* Logo - conditionally rendered */}
+        {showLogo && (
+          <motion.div
+            className="flex items-center gap-3 text-foreground"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: EASE_ORGANIC }}
+          >
+            <Image
+              src={"/Fundbrave_icon_light.png"}
+              alt="FundBrave logo"
+              width={40}
+              height={40}
+              className="object-contain"
+            />
+            <span className="text-xl font-bold">FundBrave</span>
+          </motion.div>
+        )}
+
+        {/* Sign Out Button */}
         <motion.div
-          className="flex items-center gap-3 text-foreground mb-6"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: EASE_ORGANIC }}
+          transition={{ duration: 0.4, ease: EASE_ORGANIC, delay: 0.1 }}
+          className={showLogo ? "" : "ml-auto"}
         >
-          <Image
-            src={"/Fundbrave_icon_light.png"}
-            alt="FundBrave logo"
-            width={40}
-            height={40}
-            className="object-contain"
-          />
-          <span className="text-xl font-bold">FundBrave</span>
+          <MobileSignOutButton />
         </motion.div>
-      )}
+      </div>
 
       {/* Horizontal step indicators - staggered reveal cascade */}
       <motion.div

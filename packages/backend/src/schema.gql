@@ -1830,7 +1830,6 @@ type User {
   verificationBadge: VerificationBadge
   walletAddress: String!
   website: String
-  worldIdVerified: Boolean!
 }
 
 type UserActivitySummary {
@@ -1854,7 +1853,6 @@ type UserDonationStats {
 input UserFilterInput {
   isVerifiedCreator: Boolean
   searchQuery: String
-  worldIdVerified: Boolean
 }
 
 type UserGlobalPoolVotes {
@@ -1906,7 +1904,6 @@ enum VerificationBadge {
   NONE
   OFFICIAL
   VERIFIED_CREATOR
-  WORLD_ID
 }
 
 type VestedTokensClaimedPayload {

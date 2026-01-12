@@ -26,7 +26,9 @@ import {
   DAOVoteCastPayload,
   DAOProposalStatusChangedPayload,
 } from './dto';
-// import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
+import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 // PubSub instance for subscriptions
 const pubSub = new PubSub();
@@ -109,22 +111,19 @@ export class DAOVotingResolver {
 
   /**
    * Get current user's votes
+   * Protected: Requires authentication
    */
   @Query(() => PaginatedDAOVotes, {
     name: 'myDAOVotes',
     description: 'Get current user\'s DAO votes',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyDAOVotes(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
   ): Promise<PaginatedDAOVotes> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return { items: [], total: 0, hasMore: false };
-    }
-    return this.daoVotingService.getUserVotes(userId, limit, offset);
+    return this.daoVotingService.getUserVotes(user.id, limit, offset);
   }
 
   /**
@@ -142,27 +141,17 @@ export class DAOVotingResolver {
 
   /**
    * Get current user's voting power
+   * Protected: Requires authentication
    */
   @Query(() => VotingPowerInfo, {
     name: 'myVotingPower',
     description: 'Get current user\'s voting power',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyVotingPower(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
   ): Promise<VotingPowerInfo> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      return {
-        walletBalance: '0',
-        stakedBalance: '0',
-        vestedBalance: '0',
-        totalVotingPower: '0',
-        lockedInVotes: '0',
-        availableVotingPower: '0',
-      };
-    }
-    return this.daoVotingService.getVotingPower(userId);
+    return this.daoVotingService.getVotingPower(user.id);
   }
 
   /**
@@ -180,22 +169,18 @@ export class DAOVotingResolver {
 
   /**
    * Create a new DAO proposal
+   * Protected: Requires authentication
    */
   @Mutation(() => DAOProposal, {
     name: 'createDAOProposal',
     description: 'Create a new DAO proposal',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async createDAOProposal(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
     @Args('input') input: CreateDAOProposalInput,
   ): Promise<DAOProposal> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      throw new Error('Authentication required');
-    }
-
-    const proposal = await this.daoVotingService.createProposal(userId, input);
+    const proposal = await this.daoVotingService.createProposal(user.id, input);
 
     // Publish subscription event
     publishDAOProposalCreated({ proposal });
@@ -205,22 +190,18 @@ export class DAOVotingResolver {
 
   /**
    * Vote on a proposal
+   * Protected: Requires authentication
    */
   @Mutation(() => DAOVote, {
     name: 'voteOnProposal',
     description: 'Vote on a DAO proposal',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async voteOnProposal(
-    @Context() context: any,
+    @CurrentUser() user: { id: string },
     @Args('input') input: VoteOnProposalInput,
   ): Promise<DAOVote> {
-    const userId = context.req?.user?.id;
-    if (!userId) {
-      throw new Error('Authentication required');
-    }
-
-    const vote = await this.daoVotingService.voteOnProposal(userId, input);
+    const vote = await this.daoVotingService.voteOnProposal(user.id, input);
 
     // Publish subscription event
     publishDAOVoteCast({
@@ -236,16 +217,16 @@ export class DAOVotingResolver {
 
   /**
    * Close a proposal and determine outcome
+   * Protected: Requires admin privileges
    */
   @Mutation(() => DAOProposal, {
     name: 'closeDAOProposal',
     description: 'Close a DAO proposal and determine outcome (admin only)',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async closeDAOProposal(
     @Args('proposalId') proposalId: string,
   ): Promise<DAOProposal> {
-    // TODO: Add admin check
     const proposal = await this.daoVotingService.closeProposal(proposalId);
 
     // Publish subscription event
@@ -261,17 +242,17 @@ export class DAOVotingResolver {
 
   /**
    * Execute a passed yield distribution proposal
+   * Protected: Requires admin privileges
    */
   @Mutation(() => DAOProposal, {
     name: 'executeYieldDistribution',
     description: 'Execute a passed yield distribution proposal (admin only)',
   })
-  // @UseGuards(GqlAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async executeYieldDistribution(
     @Args('proposalId') proposalId: string,
     @Args('executionTxHash') executionTxHash: string,
   ): Promise<DAOProposal> {
-    // TODO: Add admin check
     const proposal = await this.daoVotingService.executeYieldDistribution(
       proposalId,
       executionTxHash,

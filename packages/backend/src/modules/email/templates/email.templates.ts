@@ -1,7 +1,53 @@
 import { baseTemplate } from './base.template';
 
 /**
- * Email verification template
+ * OTP verification email template
+ * Used for 4-digit code email verification during signup
+ */
+export function otpVerificationEmailTemplate(data: {
+  otp: string;
+  username?: string;
+  expirationMinutes?: number;
+}): { subject: string; html: string } {
+  const expiry = data.expirationMinutes || 10;
+
+  const content = `
+    <h1>Verify Your Email Address</h1>
+    ${data.username ? `<p>Hi ${data.username},</p>` : '<p>Hi there,</p>'}
+    <p>Thank you for signing up for FundBrave! Please use the following verification code to complete your registration:</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 12px; padding: 25px 40px; display: inline-block;">
+        <span class="code" style="font-size: 36px; letter-spacing: 8px; color: #ffffff; font-weight: bold;">${data.otp}</span>
+      </div>
+    </div>
+
+    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0; text-align: center;">
+      <p style="margin: 0; color: #4b5563; font-size: 14px;">
+        This code will expire in <strong>${expiry} minutes</strong>.
+      </p>
+    </div>
+
+    <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0; color: #92400e;">
+        <strong>Security tip:</strong> Never share this code with anyone.
+        FundBrave staff will never ask for your verification code.
+      </p>
+    </div>
+
+    <p style="color: #6b7280; font-size: 13px;">
+      If you didn't create an account on FundBrave, you can safely ignore this email.
+    </p>
+  `;
+
+  return {
+    subject: `${data.otp} is your FundBrave verification code`,
+    html: baseTemplate(content),
+  };
+}
+
+/**
+ * Email verification template (link-based)
  */
 export function verificationEmailTemplate(data: {
   token: string;
@@ -32,24 +78,57 @@ export function verificationEmailTemplate(data: {
 
 /**
  * Password reset template
+ * Enhanced with security notices, clear CTAs, and professional branding
  */
 export function passwordResetEmailTemplate(data: {
   token: string;
+  username?: string;
 }): { subject: string; html: string } {
-  const resetUrl = `${process.env.FRONTEND_URL || 'https://fundbrave.com'}/reset-password?token=${data.token}`;
+  const resetUrl = `${process.env.FRONTEND_URL || 'https://fundbrave.com'}/auth/reset-password?token=${data.token}`;
+  const supportEmail = process.env.SUPPORT_EMAIL || 'support@fundbrave.com';
 
   const content = `
     <h1>Reset Your Password</h1>
-    <p>We received a request to reset your password. Click the button below to create a new password:</p>
-    <div style="text-align: center;">
-      <a href="${resetUrl}" class="button">Reset Password</a>
+    ${data.username ? `<p>Hi ${data.username},</p>` : '<p>Hi there,</p>'}
+    <p>We received a request to reset the password for your FundBrave account. Click the button below to create a new password:</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${resetUrl}" class="button" style="font-size: 16px; padding: 16px 32px;">Reset Password</a>
     </div>
+
     <p>Or copy and paste this link into your browser:</p>
     <div class="highlight">
-      <a href="${resetUrl}" style="word-break: break-all;">${resetUrl}</a>
+      <a href="${resetUrl}" style="word-break: break-all; color: #6366f1;">${resetUrl}</a>
     </div>
-    <p>This link will expire in 1 hour.</p>
-    <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
+
+    <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0; color: #92400e;">
+        <strong>Important:</strong> This link will expire in <strong>1 hour</strong>.
+        After that, you'll need to request a new password reset.
+      </p>
+    </div>
+
+    <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0 0 10px 0; color: #991b1b;"><strong>Security Notice</strong></p>
+      <ul style="margin: 0; padding-left: 20px; color: #991b1b;">
+        <li>If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</li>
+        <li>Never share this link with anyone. FundBrave staff will never ask for your password or this link.</li>
+        <li>If you suspect unauthorized access to your account, please contact our support team immediately.</li>
+      </ul>
+    </div>
+
+    <p style="margin-top: 30px;">
+      <strong>Need help?</strong> Contact our support team at
+      <a href="mailto:${supportEmail}" style="color: #6366f1;">${supportEmail}</a>
+    </p>
+
+    <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">
+      This password reset was requested on ${new Date().toLocaleString('en-US', {
+        dateStyle: 'full',
+        timeStyle: 'short'
+      })}.
+      If you didn't make this request, no action is needed.
+    </p>
   `;
 
   return {
