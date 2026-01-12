@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/app/components/ui/button";
 import { BackHeader } from "@/app/components/common/BackHeader";
-import SuccessCard from "@/app/components/ui/SuccessCard";
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,6 +16,22 @@ import {
   Clock,
   Eye,
 } from "@/app/components/ui/icons";
+import { useReducedMotion } from "@/app/hooks/useReducedMotion";
+
+// New enhanced components
+import { GoalAmountInput } from "./GoalAmountInput";
+import { DurationPicker } from "./DurationPicker";
+import { BeneficiarySection } from "./BeneficiarySection";
+import { ImageUploadEnhanced } from "./ImageUploadEnhanced";
+import { CampaignPreviewCard } from "./CampaignPreviewCard";
+import { SuccessModal } from "./SuccessModal";
+import { WalletAddressInput } from "@/app/components/ui/form/WalletAddressInput";
+import {
+  type Currency,
+  type BeneficiaryType,
+  CAMPAIGN_CATEGORIES,
+  validateStep as schemaValidateStep,
+} from "./schemas";
 
 // ============================================================================
 // Types
@@ -27,14 +42,24 @@ interface CampaignFormData {
   title: string;
   category: string;
   goalAmount: string;
+  currency: Currency;
   // Step 2: Story
   description: string;
   imageFile: File | null;
   imagePreview: string | null;
+  videoUrl: string;
   // Step 3: Details
   duration: string;
+  isCustomDuration: boolean;
+  customEndDate: Date | null;
+  beneficiaryType: BeneficiaryType;
   beneficiaryName: string;
+  beneficiaryRelationship: string;
+  organizationTaxId: string;
   beneficiaryWallet: string;
+  showDonorNames: boolean;
+  showDonationAmounts: boolean;
+  allowAnonymousDonations: boolean;
   // Metadata
   acceptTerms: boolean;
 }
@@ -61,37 +86,26 @@ const STEPS: StepConfig[] = [
   { id: 4, title: "Preview", description: "Review before publish", icon: Eye },
 ];
 
-const CATEGORIES = [
-  "Education",
-  "Medical",
-  "Emergency",
-  "Community",
-  "Environment",
-  "Technology",
-  "Creative",
-  "Sports",
-  "Animals",
-  "Other",
-];
-
-const DURATION_OPTIONS = [
-  { value: "7", label: "7 days" },
-  { value: "14", label: "14 days" },
-  { value: "30", label: "30 days" },
-  { value: "60", label: "60 days" },
-  { value: "90", label: "90 days" },
-];
-
 const INITIAL_FORM_DATA: CampaignFormData = {
   title: "",
   category: "",
   goalAmount: "",
+  currency: "USD",
   description: "",
   imageFile: null,
   imagePreview: null,
+  videoUrl: "",
   duration: "30",
+  isCustomDuration: false,
+  customEndDate: null,
+  beneficiaryType: "self",
   beneficiaryName: "",
+  beneficiaryRelationship: "",
+  organizationTaxId: "",
   beneficiaryWallet: "",
+  showDonorNames: true,
+  showDonationAmounts: true,
+  allowAnonymousDonations: true,
   acceptTerms: false,
 };
 
@@ -110,8 +124,19 @@ const stepTransition = {
   filter: { duration: 0.25 },
 };
 
+// Reduced motion variants
+const reducedMotionVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+const reducedMotionTransition = {
+  duration: 0,
+};
+
 // ============================================================================
-// Sub-components
+// Step Indicator Component (Enhanced with a11y)
 // ============================================================================
 
 interface StepIndicatorProps {
@@ -121,76 +146,109 @@ interface StepIndicatorProps {
 }
 
 function StepIndicator({ steps, currentStep, onStepClick }: StepIndicatorProps) {
+  const announcerRef = useRef<HTMLDivElement>(null);
+
+  // Announce step changes to screen readers
+  useEffect(() => {
+    if (announcerRef.current) {
+      const currentStepData = steps[currentStep - 1];
+      announcerRef.current.textContent = `Step ${currentStep} of ${steps.length}: ${currentStepData?.title}. ${currentStepData?.description}`;
+    }
+  }, [currentStep, steps]);
+
   return (
     <div className="w-full">
+      {/* Screen reader announcement */}
+      <div
+        ref={announcerRef}
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      />
+
       {/* Desktop horizontal stepper */}
-      <div className="hidden md:flex items-center justify-between mb-8">
-        {steps.map((step, index) => {
-          const isCompleted = currentStep > step.id;
-          const isCurrent = currentStep === step.id;
-          const isClickable = onStepClick && currentStep > step.id;
-          const StepIcon = step.icon;
+      <nav
+        aria-label="Campaign creation progress"
+        className="hidden md:block mb-8"
+      >
+        <ol
+          className="flex items-center justify-between"
+          role="list"
+        >
+          {steps.map((step, index) => {
+            const isCompleted = currentStep > step.id;
+            const isCurrent = currentStep === step.id;
+            const isClickable = onStepClick && currentStep > step.id;
+            const StepIcon = step.icon;
 
-          return (
-            <div key={step.id} className="flex items-center flex-1">
-              {/* Step circle */}
-              <button
-                onClick={() => isClickable && onStepClick(step.id)}
-                disabled={!isClickable}
-                className={cn(
-                  "relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
-                  "focus:outline-none focus:ring-2 focus:ring-primary-500/50",
-                  isCompleted && "bg-primary cursor-pointer hover:bg-primary-600",
-                  isCurrent && "bg-brand-gradient shadow-lg shadow-primary/30",
-                  !isCompleted && !isCurrent && "bg-surface-sunken border border-border-subtle",
-                  isClickable && "cursor-pointer"
-                )}
-              >
-                {isCompleted ? (
-                  <Check size={20} className="text-white" />
-                ) : (
-                  <StepIcon
-                    size={20}
-                    className={cn(
-                      isCurrent ? "text-white" : "text-text-tertiary"
-                    )}
-                  />
-                )}
-              </button>
-
-              {/* Step info */}
-              <div className="ml-3 hidden lg:block">
-                <p
+            return (
+              <li key={step.id} className="flex items-center flex-1">
+                {/* Step circle */}
+                <button
+                  onClick={() => isClickable && onStepClick(step.id)}
+                  disabled={!isClickable}
+                  aria-current={isCurrent ? "step" : undefined}
+                  aria-label={`${step.title}: ${step.description}${isCompleted ? " (completed)" : isCurrent ? " (current)" : ""}`}
                   className={cn(
-                    "text-sm font-medium",
-                    isCurrent ? "text-foreground" : "text-text-secondary"
+                    "relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
+                    "focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-background",
+                    isCompleted && "bg-primary cursor-pointer hover:bg-primary-600",
+                    isCurrent && "bg-brand-gradient shadow-lg shadow-primary/30",
+                    !isCompleted && !isCurrent && "bg-surface-sunken border border-border-subtle",
+                    isClickable && "cursor-pointer"
                   )}
                 >
-                  {step.title}
-                </p>
-                <p className="text-xs text-text-tertiary">{step.description}</p>
-              </div>
+                  {isCompleted ? (
+                    <Check size={20} className="text-white" aria-hidden="true" />
+                  ) : (
+                    <StepIcon
+                      size={20}
+                      className={cn(
+                        isCurrent ? "text-white" : "text-text-tertiary"
+                      )}
+                      aria-hidden="true"
+                    />
+                  )}
+                </button>
 
-              {/* Connector line */}
-              {index < steps.length - 1 && (
-                <div className="flex-1 mx-4 h-0.5 bg-surface-sunken relative overflow-hidden">
-                  <motion.div
-                    className="absolute inset-y-0 left-0 bg-primary"
-                    initial={{ width: "0%" }}
-                    animate={{
-                      width: isCompleted ? "100%" : "0%",
-                    }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  />
+                {/* Step info */}
+                <div className="ml-3 hidden lg:block">
+                  <p
+                    className={cn(
+                      "text-sm font-medium",
+                      isCurrent ? "text-foreground" : "text-text-secondary"
+                    )}
+                  >
+                    {step.title}
+                  </p>
+                  <p className="text-xs text-text-tertiary">{step.description}</p>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+
+                {/* Connector line */}
+                {index < steps.length - 1 && (
+                  <div
+                    className="flex-1 mx-4 h-0.5 bg-surface-sunken relative overflow-hidden"
+                    aria-hidden="true"
+                  >
+                    <motion.div
+                      className="absolute inset-y-0 left-0 bg-primary"
+                      initial={{ width: "0%" }}
+                      animate={{
+                        width: isCompleted ? "100%" : "0%",
+                      }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    />
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
       {/* Mobile progress bar */}
-      <div className="md:hidden mb-6">
+      <div className="md:hidden mb-6" role="group" aria-label="Campaign creation progress">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-foreground">
             Step {currentStep} of {steps.length}
@@ -199,7 +257,14 @@ function StepIndicator({ steps, currentStep, onStepClick }: StepIndicatorProps) 
             {steps[currentStep - 1]?.title}
           </span>
         </div>
-        <div className="h-2 bg-surface-sunken rounded-full overflow-hidden">
+        <div
+          className="h-2 bg-surface-sunken rounded-full overflow-hidden"
+          role="progressbar"
+          aria-valuenow={currentStep}
+          aria-valuemin={1}
+          aria-valuemax={steps.length}
+          aria-label={`Step ${currentStep} of ${steps.length}`}
+        >
           <motion.div
             className="h-full bg-brand-gradient rounded-full"
             initial={{ width: "0%" }}
@@ -212,6 +277,10 @@ function StepIndicator({ steps, currentStep, onStepClick }: StepIndicatorProps) 
   );
 }
 
+// ============================================================================
+// Input Field Components
+// ============================================================================
+
 interface InputFieldProps {
   label: string;
   value: string;
@@ -222,6 +291,7 @@ interface InputFieldProps {
   required?: boolean;
   maxLength?: number;
   helpText?: string;
+  id?: string;
 }
 
 function InputField({
@@ -234,13 +304,18 @@ function InputField({
   required,
   maxLength,
   helpText,
+  id,
 }: InputFieldProps) {
+  const inputId = id || label.toLowerCase().replace(/\s+/g, "-");
+  const errorId = `${inputId}-error`;
+  const helpId = `${inputId}-help`;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <label className="font-medium text-sm sm:text-base text-foreground">
+        <label htmlFor={inputId} className="font-medium text-sm sm:text-base text-foreground">
           {label}
-          {required && <span className="text-destructive ml-1">*</span>}
+          {required && <span className="text-destructive ml-1" aria-hidden="true">*</span>}
         </label>
         {maxLength && (
           <span
@@ -250,20 +325,25 @@ function InputField({
                 ? "text-destructive"
                 : "text-text-tertiary"
             )}
+            aria-live="polite"
           >
             {value.length}/{maxLength}
           </span>
         )}
       </div>
       <input
+        id={inputId}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={maxLength}
+        aria-invalid={Boolean(error)}
+        aria-describedby={`${helpText ? helpId : ""}${error ? ` ${errorId}` : ""}`}
+        aria-required={required}
         className={cn(
           "w-full bg-surface-sunken rounded-xl",
-          "px-4 py-3 sm:px-5 sm:py-4",
+          "px-4 py-3 sm:px-5 sm:py-4 min-h-[44px]",
           "text-sm sm:text-base text-foreground",
           "placeholder:text-text-tertiary",
           "outline-none transition-all duration-200",
@@ -273,11 +353,13 @@ function InputField({
         )}
       />
       {helpText && !error && (
-        <p className="text-xs text-text-tertiary">{helpText}</p>
+        <p id={helpId} className="text-xs text-text-tertiary">{helpText}</p>
       )}
       <AnimatePresence>
         {error && (
           <motion.p
+            id={errorId}
+            role="alert"
             className="text-sm text-destructive"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -295,10 +377,11 @@ interface SelectFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  options: { value: string; label: string }[] | string[];
+  options: readonly string[];
   placeholder?: string;
   error?: string;
   required?: boolean;
+  id?: string;
 }
 
 function SelectField({
@@ -309,20 +392,28 @@ function SelectField({
   placeholder = "Select an option",
   error,
   required,
+  id,
 }: SelectFieldProps) {
+  const selectId = id || label.toLowerCase().replace(/\s+/g, "-");
+  const errorId = `${selectId}-error`;
+
   return (
     <div className="flex flex-col gap-2">
-      <label className="font-medium text-sm sm:text-base text-foreground">
+      <label htmlFor={selectId} className="font-medium text-sm sm:text-base text-foreground">
         {label}
-        {required && <span className="text-destructive ml-1">*</span>}
+        {required && <span className="text-destructive ml-1" aria-hidden="true">*</span>}
       </label>
       <div className="relative">
         <select
+          id={selectId}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? errorId : undefined}
+          aria-required={required}
           className={cn(
             "w-full bg-surface-sunken rounded-xl appearance-none cursor-pointer",
-            "px-4 py-3 sm:px-5 sm:py-4 pr-10",
+            "px-4 py-3 sm:px-5 sm:py-4 pr-10 min-h-[44px]",
             "text-sm sm:text-base",
             value ? "text-foreground" : "text-text-tertiary",
             "outline-none transition-all duration-200",
@@ -333,24 +424,23 @@ function SelectField({
           )}
         >
           <option value="">{placeholder}</option>
-          {options.map((opt) => {
-            const optValue = typeof opt === "string" ? opt : opt.value;
-            const optLabel = typeof opt === "string" ? opt : opt.label;
-            return (
-              <option key={optValue} value={optValue}>
-                {optLabel}
-              </option>
-            );
-          })}
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
         </select>
         <ChevronRight
           size={16}
           className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-text-secondary pointer-events-none"
+          aria-hidden="true"
         />
       </div>
       <AnimatePresence>
         {error && (
           <motion.p
+            id={errorId}
+            role="alert"
             className="text-sm text-destructive"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -374,6 +464,7 @@ interface TextAreaFieldProps {
   maxLength?: number;
   minLength?: number;
   rows?: number;
+  id?: string;
 }
 
 function TextAreaField({
@@ -386,15 +477,18 @@ function TextAreaField({
   maxLength,
   minLength,
   rows = 6,
+  id,
 }: TextAreaFieldProps) {
   const isBelowMin = minLength && value.length > 0 && value.length < minLength;
+  const textareaId = id || label.toLowerCase().replace(/\s+/g, "-");
+  const errorId = `${textareaId}-error`;
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <label className="font-medium text-sm sm:text-base text-foreground">
+        <label htmlFor={textareaId} className="font-medium text-sm sm:text-base text-foreground">
           {label}
-          {required && <span className="text-destructive ml-1">*</span>}
+          {required && <span className="text-destructive ml-1" aria-hidden="true">*</span>}
         </label>
         {maxLength && (
           <span
@@ -406,17 +500,22 @@ function TextAreaField({
                 ? "text-yellow-500"
                 : "text-text-tertiary"
             )}
+            aria-live="polite"
           >
             {value.length}/{maxLength}
           </span>
         )}
       </div>
       <textarea
+        id={textareaId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={maxLength}
         rows={rows}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
+        aria-required={required}
         className={cn(
           "w-full bg-surface-sunken rounded-xl resize-none",
           "px-4 py-3 sm:px-5 sm:py-4",
@@ -436,85 +535,8 @@ function TextAreaField({
       <AnimatePresence>
         {error && (
           <motion.p
-            className="text-sm text-destructive"
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-          >
-            {error}
-          </motion.p>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-interface ImageUploadProps {
-  imagePreview: string | null;
-  onFileSelect: (file: File) => void;
-  onRemove: () => void;
-  error?: string;
-}
-
-function ImageUpload({ imagePreview, onFileSelect, onRemove, error }: ImageUploadProps) {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onFileSelect(file);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="font-medium text-sm sm:text-base text-foreground">
-        Campaign Image
-      </label>
-      <div
-        className={cn(
-          "relative w-full aspect-video rounded-xl overflow-hidden",
-          "bg-surface-sunken border-2 border-dashed",
-          "transition-all duration-200",
-          error ? "border-destructive" : "border-border-subtle hover:border-purple-500/50"
-        )}
-      >
-        {imagePreview ? (
-          <div className="relative w-full h-full group">
-            <img
-              src={imagePreview}
-              alt="Campaign preview"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <button
-                onClick={onRemove}
-                className="px-4 py-2 bg-destructive text-white rounded-lg font-medium hover:bg-destructive/90 transition-colors"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        ) : (
-          <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer p-6 text-center">
-            <Upload size={32} className="text-text-tertiary mb-3" />
-            <p className="text-sm text-foreground font-medium mb-1">
-              Click to upload an image
-            </p>
-            <p className="text-xs text-text-tertiary">
-              PNG, JPG or WebP (max 5MB)
-            </p>
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={handleFileChange}
-              className="hidden"
-              aria-label="Upload campaign image"
-            />
-          </label>
-        )}
-      </div>
-      <AnimatePresence>
-        {error && (
-          <motion.p
+            id={errorId}
+            role="alert"
             className="text-sm text-destructive"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -559,31 +581,26 @@ function BasicsStep({ formData, setFormData, errors }: StepProps) {
         required
         maxLength={80}
         helpText="A clear, compelling title helps people understand your cause"
+        id="campaign-title"
       />
 
       <SelectField
         label="Category"
         value={formData.category}
         onChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
-        options={CATEGORIES}
+        options={CAMPAIGN_CATEGORIES}
         placeholder="Select a category"
         error={errors.category}
         required
+        id="campaign-category"
       />
 
-      <InputField
-        label="Fundraising Goal (USD)"
+      <GoalAmountInput
         value={formData.goalAmount}
-        onChange={(value) => {
-          // Only allow numbers and decimals
-          const sanitized = value.replace(/[^0-9.]/g, "");
-          setFormData((prev) => ({ ...prev, goalAmount: sanitized }));
-        }}
-        placeholder="e.g., 10000"
+        currency={formData.currency}
+        onValueChange={(value) => setFormData((prev) => ({ ...prev, goalAmount: value }))}
+        onCurrencyChange={(currency) => setFormData((prev) => ({ ...prev, currency }))}
         error={errors.goalAmount}
-        required
-        type="text"
-        helpText="Set a realistic goal that covers your needs"
       />
     </div>
   );
@@ -624,8 +641,12 @@ function StoryStep({ formData, setFormData, errors }: StepProps) {
         </p>
       </div>
 
-      <ImageUpload
-        imagePreview={formData.imagePreview}
+      <ImageUploadEnhanced
+        image={
+          formData.imagePreview
+            ? { file: formData.imageFile, preview: formData.imagePreview }
+            : null
+        }
         onFileSelect={handleFileSelect}
         onRemove={handleRemoveImage}
         error={errors.image}
@@ -638,9 +659,20 @@ function StoryStep({ formData, setFormData, errors }: StepProps) {
         placeholder="Tell potential donors about your cause, why you're fundraising, and how their contributions will be used..."
         error={errors.description}
         required
-        maxLength={5000}
+        maxLength={10000}
         minLength={100}
         rows={8}
+        id="campaign-description"
+      />
+
+      <InputField
+        label="Video URL"
+        value={formData.videoUrl}
+        onChange={(value) => setFormData((prev) => ({ ...prev, videoUrl: value }))}
+        placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+        error={errors.videoUrl}
+        helpText="Add a YouTube or Vimeo video to help tell your story (optional)"
+        id="campaign-video"
       />
     </div>
   );
@@ -658,41 +690,75 @@ function DetailsStep({ formData, setFormData, errors }: StepProps) {
         </p>
       </div>
 
-      <SelectField
-        label="Campaign Duration"
+      <DurationPicker
         value={formData.duration}
-        onChange={(value) => setFormData((prev) => ({ ...prev, duration: value }))}
-        options={DURATION_OPTIONS}
+        isCustom={formData.isCustomDuration}
+        customEndDate={formData.customEndDate}
+        onValueChange={(value) => setFormData((prev) => ({ ...prev, duration: value }))}
+        onCustomChange={(isCustom) => setFormData((prev) => ({ ...prev, isCustomDuration: isCustom }))}
+        onEndDateChange={(date) => setFormData((prev) => ({ ...prev, customEndDate: date }))}
         error={errors.duration}
+      />
+
+      <div className="p-4 sm:p-6 bg-surface-sunken rounded-xl border border-border-subtle">
+        <BeneficiarySection
+          type={formData.beneficiaryType}
+          name={formData.beneficiaryName}
+          relationship={formData.beneficiaryRelationship}
+          taxId={formData.organizationTaxId}
+          onTypeChange={(type) => setFormData((prev) => ({ ...prev, beneficiaryType: type }))}
+          onNameChange={(name) => setFormData((prev) => ({ ...prev, beneficiaryName: name }))}
+          onRelationshipChange={(rel) => setFormData((prev) => ({ ...prev, beneficiaryRelationship: rel }))}
+          onTaxIdChange={(taxId) => setFormData((prev) => ({ ...prev, organizationTaxId: taxId }))}
+          errors={{
+            name: errors.beneficiaryName,
+            relationship: errors.beneficiaryRelationship,
+            taxId: errors.organizationTaxId,
+          }}
+        />
+      </div>
+
+      <WalletAddressInput
+        value={formData.beneficiaryWallet}
+        onChange={(value) => setFormData((prev) => ({ ...prev, beneficiaryWallet: value }))}
+        error={errors.beneficiaryWallet}
+        label="Receiving Wallet Address"
         required
       />
 
-      <div className="p-4 bg-surface-sunken rounded-xl border border-border-subtle">
-        <h3 className="font-medium text-foreground mb-3">Beneficiary Information</h3>
-        <div className="space-y-4">
-          <InputField
-            label="Beneficiary Name"
-            value={formData.beneficiaryName}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, beneficiaryName: value }))
-            }
-            placeholder="Name of person or organization receiving funds"
-            error={errors.beneficiaryName}
-            required
-          />
+      {/* Privacy toggles */}
+      <div className="p-4 bg-surface-sunken rounded-xl border border-border-subtle space-y-4">
+        <h3 className="font-medium text-foreground text-sm">Privacy Settings</h3>
 
-          <InputField
-            label="Wallet Address"
-            value={formData.beneficiaryWallet}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, beneficiaryWallet: value }))
-            }
-            placeholder="0x..."
-            error={errors.beneficiaryWallet}
-            required
-            helpText="The wallet address where funds will be sent"
+        <label className="flex items-center justify-between gap-3 cursor-pointer">
+          <span className="text-sm text-text-secondary">Show donor names publicly</span>
+          <input
+            type="checkbox"
+            checked={formData.showDonorNames}
+            onChange={(e) => setFormData((prev) => ({ ...prev, showDonorNames: e.target.checked }))}
+            className="w-5 h-5 rounded border-2 border-border-subtle bg-surface-sunken text-primary focus:ring-2 focus:ring-primary-500/50"
           />
-        </div>
+        </label>
+
+        <label className="flex items-center justify-between gap-3 cursor-pointer">
+          <span className="text-sm text-text-secondary">Show donation amounts publicly</span>
+          <input
+            type="checkbox"
+            checked={formData.showDonationAmounts}
+            onChange={(e) => setFormData((prev) => ({ ...prev, showDonationAmounts: e.target.checked }))}
+            className="w-5 h-5 rounded border-2 border-border-subtle bg-surface-sunken text-primary focus:ring-2 focus:ring-primary-500/50"
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 cursor-pointer">
+          <span className="text-sm text-text-secondary">Allow anonymous donations</span>
+          <input
+            type="checkbox"
+            checked={formData.allowAnonymousDonations}
+            onChange={(e) => setFormData((prev) => ({ ...prev, allowAnonymousDonations: e.target.checked }))}
+            className="w-5 h-5 rounded border-2 border-border-subtle bg-surface-sunken text-primary focus:ring-2 focus:ring-primary-500/50"
+          />
+        </label>
       </div>
 
       {/* Terms acceptance */}
@@ -703,6 +769,7 @@ function DetailsStep({ formData, setFormData, errors }: StepProps) {
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, acceptTerms: e.target.checked }))
           }
+          aria-describedby={errors.acceptTerms ? "terms-error" : undefined}
           className="mt-1 w-5 h-5 rounded border-2 border-border-subtle bg-surface-sunken text-primary focus:ring-2 focus:ring-primary-500/50"
         />
         <span className="text-sm text-text-secondary leading-relaxed">
@@ -721,6 +788,8 @@ function DetailsStep({ formData, setFormData, errors }: StepProps) {
       <AnimatePresence>
         {errors.acceptTerms && (
           <motion.p
+            id="terms-error"
+            role="alert"
             className="text-sm text-destructive"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -734,93 +803,29 @@ function DetailsStep({ formData, setFormData, errors }: StepProps) {
   );
 }
 
-function PreviewStep({ formData }: { formData: CampaignFormData }) {
-  const goalFormatted = useMemo(() => {
-    const amount = parseFloat(formData.goalAmount) || 0;
-    return amount.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-    });
-  }, [formData.goalAmount]);
-
+function PreviewStep({
+  formData,
+  onEdit,
+}: {
+  formData: CampaignFormData;
+  onEdit: (step: number) => void;
+}) {
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          Preview Your Campaign
-        </h2>
-        <p className="text-text-secondary">
-          Review your campaign before publishing. You can go back to edit any details.
-        </p>
-      </div>
-
-      {/* Preview card */}
-      <div className="bg-surface-sunken rounded-2xl overflow-hidden border border-border-subtle">
-        {/* Image */}
-        {formData.imagePreview ? (
-          <div className="aspect-video w-full">
-            <img
-              src={formData.imagePreview}
-              alt={formData.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ) : (
-          <div className="aspect-video w-full bg-neutral-dark-400 flex items-center justify-center">
-            <p className="text-text-tertiary">No image uploaded</p>
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="p-6 space-y-4">
-          {/* Category badge */}
-          {formData.category && (
-            <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">
-              {formData.category}
-            </span>
-          )}
-
-          {/* Title */}
-          <h3 className="text-xl font-bold text-foreground">
-            {formData.title || "Campaign Title"}
-          </h3>
-
-          {/* Goal */}
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-foreground">{goalFormatted}</span>
-            <span className="text-text-secondary">goal</span>
-          </div>
-
-          {/* Duration */}
-          <div className="flex items-center gap-2 text-sm text-text-secondary">
-            <Clock size={16} />
-            <span>{formData.duration} days campaign</span>
-          </div>
-
-          {/* Description preview */}
-          <div className="pt-4 border-t border-border-subtle">
-            <h4 className="font-medium text-foreground mb-2">About this campaign</h4>
-            <p className="text-text-secondary text-sm line-clamp-4">
-              {formData.description || "No description provided."}
-            </p>
-          </div>
-
-          {/* Beneficiary info */}
-          <div className="pt-4 border-t border-border-subtle">
-            <h4 className="font-medium text-foreground mb-2">Beneficiary</h4>
-            <p className="text-text-secondary text-sm">
-              {formData.beneficiaryName || "Not specified"}
-            </p>
-            {formData.beneficiaryWallet && (
-              <p className="text-text-tertiary text-xs font-mono mt-1 truncate">
-                {formData.beneficiaryWallet}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+    <CampaignPreviewCard
+      data={{
+        title: formData.title,
+        category: formData.category,
+        goalAmount: formData.goalAmount,
+        currency: formData.currency,
+        description: formData.description,
+        imagePreview: formData.imagePreview,
+        duration: formData.duration,
+        beneficiaryType: formData.beneficiaryType,
+        beneficiaryName: formData.beneficiaryName,
+        beneficiaryWallet: formData.beneficiaryWallet,
+      }}
+      onEdit={onEdit}
+    />
   );
 }
 
@@ -830,80 +835,42 @@ function PreviewStep({ formData }: { formData: CampaignFormData }) {
 
 export default function CreateCampaignPage() {
   const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CampaignFormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [createdCampaignId, setCreatedCampaignId] = useState<string | undefined>();
+
+  // Get animation variants based on motion preference
+  const animationVariants = prefersReducedMotion ? reducedMotionVariants : stepVariants;
+  const animationTransition = prefersReducedMotion ? reducedMotionTransition : stepTransition;
 
   // Validate current step
-  const validateStep = useCallback(
+  const validateStepForm = useCallback(
     (step: number): boolean => {
-      const newErrors: FormErrors = {};
+      const result = schemaValidateStep(step, formData);
 
-      switch (step) {
-        case 1:
-          if (!formData.title.trim()) {
-            newErrors.title = "Campaign title is required";
-          } else if (formData.title.length < 10) {
-            newErrors.title = "Title must be at least 10 characters";
-          }
-          if (!formData.category) {
-            newErrors.category = "Please select a category";
-          }
-          if (!formData.goalAmount) {
-            newErrors.goalAmount = "Goal amount is required";
-          } else {
-            const amount = parseFloat(formData.goalAmount);
-            if (isNaN(amount) || amount <= 0) {
-              newErrors.goalAmount = "Please enter a valid amount";
-            } else if (amount < 100) {
-              newErrors.goalAmount = "Minimum goal is $100";
-            }
-          }
-          break;
-
-        case 2:
-          if (!formData.description.trim()) {
-            newErrors.description = "Campaign description is required";
-          } else if (formData.description.length < 100) {
-            newErrors.description = "Description must be at least 100 characters";
-          }
-          break;
-
-        case 3:
-          if (!formData.duration) {
-            newErrors.duration = "Please select a campaign duration";
-          }
-          if (!formData.beneficiaryName.trim()) {
-            newErrors.beneficiaryName = "Beneficiary name is required";
-          }
-          if (!formData.beneficiaryWallet.trim()) {
-            newErrors.beneficiaryWallet = "Wallet address is required";
-          } else if (!/^0x[a-fA-F0-9]{40}$/.test(formData.beneficiaryWallet)) {
-            newErrors.beneficiaryWallet =
-              "Please enter a valid Ethereum wallet address (0x + 40 hex characters)";
-          }
-          if (!formData.acceptTerms) {
-            newErrors.acceptTerms = "You must accept the terms to continue";
-          }
-          break;
+      if (!result.success) {
+        setErrors(result.errors);
+        return false;
       }
 
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
+      setErrors({});
+      return true;
     },
     [formData]
   );
 
   // Handle next step
   const handleNext = useCallback(() => {
-    if (validateStep(currentStep)) {
+    if (validateStepForm(currentStep)) {
       if (currentStep < STEPS.length) {
         setCurrentStep((prev) => prev + 1);
       }
     }
-  }, [currentStep, validateStep]);
+  }, [currentStep, validateStepForm]);
 
   // Handle previous step
   const handleBack = useCallback(() => {
@@ -924,18 +891,41 @@ export default function CreateCampaignPage() {
     [currentStep]
   );
 
+  // Handle edit from preview
+  const handleEditFromPreview = useCallback((step: number) => {
+    setCurrentStep(step);
+    setErrors({});
+  }, []);
+
   // Handle form submission
   const handleSubmit = useCallback(async () => {
-    if (!validateStep(currentStep)) return;
-
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    setIsSubmitting(false);
-    setShowSuccess(true);
-  }, [currentStep, validateStep]);
+      // In real implementation, this would return the created campaign ID
+      setCreatedCampaignId("new-campaign-123");
+      setIsSubmitting(false);
+      setShowSuccess(true);
+    } catch (error) {
+      setIsSubmitting(false);
+      console.error("Failed to create campaign:", error);
+    }
+  }, []);
+
+  // Handle success modal actions
+  const handleViewCampaign = useCallback(() => {
+    router.push(`/campaigns/${createdCampaignId || ""}`);
+  }, [router, createdCampaignId]);
+
+  const handleCreateAnother = useCallback(() => {
+    setFormData(INITIAL_FORM_DATA);
+    setCurrentStep(1);
+    setShowSuccess(false);
+    setCreatedCampaignId(undefined);
+  }, []);
 
   // Render current step content
   const renderStepContent = () => {
@@ -949,7 +939,7 @@ export default function CreateCampaignPage() {
       case 3:
         return <DetailsStep {...stepProps} />;
       case 4:
-        return <PreviewStep formData={formData} />;
+        return <PreviewStep formData={formData} onEdit={handleEditFromPreview} />;
       default:
         return null;
     }
@@ -963,26 +953,17 @@ export default function CreateCampaignPage() {
         fallbackHref="/campaigns"
       />
 
-      {/* Success overlay */}
-      {showSuccess && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <SuccessCard
-              title="Campaign Created!"
-              message={`Your campaign "${formData.title}" has been successfully created and is now live. Share it with your network to start receiving donations!`}
-              buttonText="View Campaign"
-              onButtonClick={() => router.push("/campaigns")}
-              showAnimation={true}
-            />
-          </motion.div>
-        </div>
-      )}
+      {/* Success modal */}
+      <SuccessModal
+        isOpen={showSuccess}
+        campaignTitle={formData.title}
+        campaignId={createdCampaignId}
+        onViewCampaign={handleViewCampaign}
+        onCreateAnother={handleCreateAnother}
+        onClose={() => setShowSuccess(false)}
+      />
 
-      <div className="flex items-start justify-center py-6 sm:py-10 px-4">
+      <main className="flex items-start justify-center py-6 sm:py-10 px-4">
         <div className="w-full max-w-3xl">
           {/* Step indicator */}
           <StepIndicator
@@ -996,11 +977,11 @@ export default function CreateCampaignPage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
-                variants={stepVariants}
+                variants={animationVariants}
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                transition={stepTransition}
+                transition={animationTransition}
               >
                 {renderStepContent()}
               </motion.div>
@@ -1013,11 +994,11 @@ export default function CreateCampaignPage() {
                 onClick={handleBack}
                 disabled={currentStep === 1}
                 className={cn(
-                  "w-full sm:w-auto",
+                  "w-full sm:w-auto min-h-[44px]",
                   currentStep === 1 && "opacity-0 pointer-events-none"
                 )}
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={18} aria-hidden="true" />
                 Back
               </Button>
 
@@ -1025,10 +1006,10 @@ export default function CreateCampaignPage() {
                 <Button
                   variant="primary"
                   onClick={handleNext}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto min-h-[44px]"
                 >
                   Continue
-                  <ChevronRight size={18} />
+                  <ChevronRight size={18} aria-hidden="true" />
                 </Button>
               ) : (
                 <Button
@@ -1036,16 +1017,16 @@ export default function CreateCampaignPage() {
                   onClick={handleSubmit}
                   loading={isSubmitting}
                   loadingText="Publishing..."
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto min-h-[44px]"
                 >
                   Publish Campaign
-                  <Sparkles size={18} />
+                  <Sparkles size={18} aria-hidden="true" />
                 </Button>
               )}
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

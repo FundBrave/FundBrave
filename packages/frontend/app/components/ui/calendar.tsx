@@ -27,20 +27,20 @@ function Calendar({
         ),
         nav: "flex items-center gap-1",
         button_previous: cn(
-          "absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 flex items-center justify-center text-foreground hover:bg-purple-900/50 rounded-md transition-colors",
+          "absolute left-1 min-h-[44px] min-w-[44px] bg-transparent p-0 opacity-50 hover:opacity-100 active:opacity-100 active:scale-[0.98] flex items-center justify-center text-foreground hover:bg-purple-900/50 active:bg-purple-900/70 rounded-md transition-colors",
           props.captionLayout === "dropdown" && "left-0" // Adjust nav position if needed, optional but safe
         ),
         button_next: cn(
-          "absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 flex items-center justify-center text-foreground hover:bg-purple-900/50 rounded-md transition-colors",
+          "absolute right-1 min-h-[44px] min-w-[44px] bg-transparent p-0 opacity-50 hover:opacity-100 active:opacity-100 active:scale-[0.98] flex items-center justify-center text-foreground hover:bg-purple-900/50 active:bg-purple-900/70 rounded-md transition-colors",
           props.captionLayout === "dropdown" && "right-0"
         ),
         month_grid: "w-full border-collapse",
         weekdays: "flex",
-        weekday: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] text-center",
+        weekday: "text-muted-foreground rounded-md w-11 font-normal text-[0.8rem] text-center",
         week: "flex w-full mt-2",
-        day: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+        day: "size-11 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
         day_button: cn(
-          "h-9 w-9 p-0 font-normal text-foreground hover:bg-purple-900/50 rounded-md transition-colors",
+          "size-11 p-0 font-normal text-foreground hover:bg-purple-900/50 active:bg-purple-900/70 active:scale-[0.98] rounded-md transition-colors",
           "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-background"
         ),
         selected: "bg-purple-600 text-white hover:bg-purple-600 hover:text-white focus:bg-purple-600 focus:text-white rounded-md",

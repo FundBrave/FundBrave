@@ -53,7 +53,10 @@ export function PostHeader({
     <div className={cn("flex gap-3", className)}>
       {/* Avatar */}
       <div
-        onClick={onAuthorClick}
+        onClick={(e) => {
+          e.stopPropagation();
+          onAuthorClick?.();
+        }}
         className={cn(onAuthorClick && "cursor-pointer")}
       >
         <Avatar
@@ -72,7 +75,10 @@ export function PostHeader({
             {/* Name row with verified badge and follow button */}
             <div className="flex items-center gap-1 flex-wrap">
               <span
-                onClick={onAuthorClick}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAuthorClick?.();
+                }}
                 className={cn(
                   "text-foreground font-bold",
                   onAuthorClick && "hover:underline cursor-pointer"
@@ -85,7 +91,10 @@ export function PostHeader({
                 <Button
                   variant={isFollowing ? "ghost" : "tertiary"}
                   size="sm"
-                  onClick={onFollow}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFollow?.();
+                  }}
                   className="h-auto px-2 py-0.5 ml-1"
                 >
                   {isFollowing ? "Following" : "Follow"}
@@ -121,7 +130,10 @@ export function PostHeader({
 
           {/* Three dots menu */}
           <button
-            onClick={onMenuClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMenuClick?.();
+            }}
             className="p-2 -mt-1 -mr-2 rounded-full hover:bg-primary/10 text-text-secondary hover:text-primary transition-colors"
             aria-label="Post options"
           >

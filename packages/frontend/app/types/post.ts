@@ -3,9 +3,10 @@
  * Consolidates PostCard, LikeCard, and CommunityPost interfaces
  */
 
-import type { Post, Comment, PostAuthor as ContextPostAuthor, CommentAuthor } from "@/app/provider/PostsContext";
+import type { Post, PostAuthor as ContextPostAuthor } from "@/app/provider/PostsContext";
 import type { MockLike } from "@/lib/constants/mock-profile-activity";
 import type { CommunityPostData } from "@/app/types/community";
+import type { Comment, CommentAuthor } from "@/app/types/comment";
 
 // ============================================================================
 // Author Types
@@ -67,6 +68,15 @@ export interface UnifiedPostData {
   // Metadata
   likedAt?: string;
   timestamp?: string;
+
+  // Campaign awareness (Phase 4)
+  type?: "community" | "campaign_update" | "campaign_share";
+  campaignId?: string;
+  campaign?: {
+    id: string;
+    title: string;
+    suggestedAmount?: number;
+  };
 }
 
 // ============================================================================
@@ -90,6 +100,8 @@ export interface PostCardHandlers {
   onMenuClick?: (postId: string, action: string) => void;
   onAuthorClick?: (authorId: string) => void;
   onImageClick?: (postId: string, imageIndex: number) => void;
+  /** Callback when post content area is clicked (navigates to post detail) */
+  onPostClick?: (postId: string) => void;
 
   // Comment handlers (for embedded comment section)
   onAddComment?: (postId: string, content: string) => void;

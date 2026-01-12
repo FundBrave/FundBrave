@@ -18,6 +18,8 @@ interface OnboardingContextValue {
   nextStep: () => void;
   prevStep: () => void;
   isAnimatingLine: boolean;
+  /** Direction of navigation: 1 for forward, -1 for backward */
+  direction: 1 | -1;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(undefined);
@@ -33,6 +35,9 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
   // Track if we're animating the line - prevents premature icon animation
   const [isAnimatingLine, setIsAnimatingLine] = useState(false);
 
+  // Track navigation direction: 1 for forward, -1 for backward
+  const [direction, setDirection] = useState<1 | -1>(1);
+
   // Find the current step based on the URL pathname
   const currentPathSlug = pathname.split('/').pop() || ONBOARDING_STEPS[0].slug;
   const currentStepIndex = ONBOARDING_STEPS.findIndex(s => s.slug === currentPathSlug);
@@ -43,9 +48,11 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
   // Navigation function: Move to the next step
   const nextStep = useCallback(() => {
     if (safeCurrentIndex < ONBOARDING_STEPS.length - 1) {
+      // Set direction to forward
+      setDirection(1);
       // Start line animation
       setIsAnimatingLine(true);
-      
+
       // Wait for line to fully animate (600ms) before changing step
       setTimeout(() => {
         const nextStepSlug = ONBOARDING_STEPS[safeCurrentIndex + 1].slug;
@@ -58,6 +65,8 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
   // Navigation function: Move to the previous step
   const prevStep = useCallback(() => {
     if (safeCurrentIndex > 0) {
+      // Set direction to backward
+      setDirection(-1);
       const prevStepSlug = ONBOARDING_STEPS[safeCurrentIndex - 1].slug;
       router.push(`/onboarding/${prevStepSlug}`);
     }
@@ -71,7 +80,8 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
     nextStep,
     prevStep,
     isAnimatingLine,
-  }), [currentPathSlug, safeCurrentIndex, nextStep, prevStep, isAnimatingLine]);
+    direction,
+  }), [currentPathSlug, safeCurrentIndex, nextStep, prevStep, isAnimatingLine, direction]);
 
   return (
     <OnboardingContext.Provider value={value}>

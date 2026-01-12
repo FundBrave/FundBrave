@@ -2,7 +2,7 @@
 
 import { CommentInput } from "./CommentInput";
 import { CommentCard } from "./CommentCard";
-import type { Comment } from "@/app/provider/PostsContext";
+import type { Comment } from "@/app/types/comment";
 import { cn } from "@/lib/utils";
 
 interface CommentSectionProps {

@@ -145,7 +145,7 @@ const SocialProfile: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-[554px] px-4 overflow-y-auto">
+    <div className="flex flex-col w-full max-w-[554px] px-4 overflow-y-auto scrollbar-hidden">
       {/* Header */}
       <motion.div
         className="flex flex-col gap-1 mb-8"

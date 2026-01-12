@@ -1,369 +1,239 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import { Button } from "@/app/components/ui/button";
-import { Label } from "@/app/components/ui/label";
-import { Upload, User } from "@/app/components/ui/icons";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from "react";
+import { ProfileSettingsForm } from "./ProfileSettingsForm";
+import type { ProfileSettingsFormData } from "./schemas";
 
 /**
- * Form field component for consistent styling
+ * Mock API functions - replace with actual API calls
+ * These simulate the backend endpoints from PHASE2_UX_SPECS.md Section 2.5
  */
-function FormField({
-  label,
-  htmlFor,
-  children,
-  description,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-  description?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={htmlFor} className="text-sm font-medium text-foreground">
-        {label}
-      </Label>
-      {children}
-      {description && (
-        <p className="text-xs text-text-tertiary">{description}</p>
-      )}
-    </div>
-  );
+
+// Simulated current user data
+const mockUserProfile: Partial<ProfileSettingsFormData> = {
+  displayName: "",
+  username: "",
+  bio: "",
+  website: "",
+  location: "",
+  socialLinks: {
+    twitter: "",
+    instagram: "",
+    linkedin: "",
+    github: "",
+  },
+  isPublicProfile: true,
+  showDonationHistory: false,
+  showSupportedCampaigns: true,
+};
+
+// Simulated unavailable usernames
+const unavailableUsernames = new Set([
+  "admin",
+  "fundbrave",
+  "support",
+  "help",
+  "test",
+  "user",
+  "official",
+]);
+
+/**
+ * Simulates GET /api/users/me/profile
+ */
+async function fetchUserProfile(): Promise<Partial<ProfileSettingsFormData>> {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  return mockUserProfile;
 }
 
 /**
- * Text input component with consistent styling
+ * Simulates PATCH /api/users/me/profile
  */
-function TextInput({
-  id,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  disabled = false,
-}: {
-  id: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  type?: "text" | "email" | "url";
-  disabled?: boolean;
-}) {
-  return (
-    <input
-      id={id}
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      disabled={disabled}
-      className={cn(
-        "w-full bg-surface-sunken rounded-xl px-4 py-3",
-        "text-foreground placeholder:text-text-tertiary",
-        "border border-white/10 outline-none",
-        "focus:ring-2 focus:ring-primary/50 focus:border-primary/50",
-        "transition-all duration-200",
-        "disabled:opacity-50 disabled:cursor-not-allowed"
-      )}
-    />
-  );
+async function updateUserProfile(
+  data: ProfileSettingsFormData
+): Promise<void> {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  // Simulate validation error for specific usernames
+  if (unavailableUsernames.has(data.username.toLowerCase())) {
+    throw new Error("Username is not available");
+  }
+
+  // In real implementation, this would send data to the API
+  console.log("Profile updated:", data);
 }
 
 /**
- * Textarea component with consistent styling
+ * Simulates GET /api/users/check-username
  */
-function TextAreaInput({
-  id,
-  value,
-  onChange,
-  placeholder,
-  rows = 4,
-  maxLength,
-}: {
-  id: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  rows?: number;
-  maxLength?: number;
-}) {
-  return (
-    <div className="relative">
-      <textarea
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={rows}
-        maxLength={maxLength}
-        className={cn(
-          "w-full bg-surface-sunken rounded-xl px-4 py-3",
-          "text-foreground placeholder:text-text-tertiary",
-          "border border-white/10 outline-none resize-none",
-          "focus:ring-2 focus:ring-primary/50 focus:border-primary/50",
-          "transition-all duration-200"
-        )}
-      />
-      {maxLength && (
-        <span className="absolute bottom-3 right-3 text-xs text-text-tertiary">
-          {value.length}/{maxLength}
-        </span>
-      )}
-    </div>
-  );
+async function checkUsernameAvailability(username: string): Promise<boolean> {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  // Check against unavailable usernames
+  return !unavailableUsernames.has(username.toLowerCase());
 }
 
 /**
- * Avatar upload section component
+ * Simulates POST /api/users/me/avatar
  */
-function AvatarUpload({
-  avatarUrl,
-  onUpload,
-}: {
-  avatarUrl: string | null;
-  onUpload: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-6">
-      <div className="relative group">
-        <div
-          className={cn(
-            "w-24 h-24 rounded-full overflow-hidden",
-            "bg-surface-sunken border-2 border-white/10",
-            "flex items-center justify-center"
-          )}
-        >
-          {avatarUrl ? (
-            <Image
-              src={avatarUrl}
-              alt="Profile avatar"
-              width={96}
-              height={96}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <User size={40} className="text-text-tertiary" />
-          )}
-        </div>
-        {/* Hover overlay */}
-        <div
-          className={cn(
-            "absolute inset-0 rounded-full bg-black/50",
-            "flex items-center justify-center",
-            "opacity-0 group-hover:opacity-100 transition-opacity",
-            "cursor-pointer"
-          )}
-          onClick={onUpload}
-        >
-          <Upload size={24} className="text-white" />
-        </div>
-      </div>
-      <div className="flex flex-col gap-2">
-        <Button variant="outline" size="sm" onClick={onUpload}>
-          Upload photo
-        </Button>
-        <p className="text-xs text-text-tertiary">
-          JPG, PNG or GIF. Max size 2MB.
-        </p>
-      </div>
-    </div>
-  );
+async function uploadAvatar(file: File): Promise<string> {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  // In real implementation, this would upload to storage and return URL
+  // For now, create a local object URL
+  return URL.createObjectURL(file);
 }
 
 /**
- * Section divider with title
+ * Simulates DELETE /api/users/me/avatar
  */
-function SectionDivider({ title }: { title: string }) {
-  return (
-    <div className="flex items-center gap-4 py-2">
-      <h3 className="text-sm font-medium text-text-secondary whitespace-nowrap">
-        {title}
-      </h3>
-      <div className="flex-1 h-px bg-white/10" />
-    </div>
-  );
+async function removeAvatar(): Promise<void> {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  // In real implementation, this would delete from storage
 }
 
 /**
- * ProfileSettingsPage - Profile settings form
+ * ProfileSettingsPage - Profile settings page component
+ *
+ * Route: /settings/profile
  *
  * Features:
- * - Avatar upload
- * - Display name and username fields
- * - Bio/description with character limit
- * - Website and social links
- * - Location field
- * - Save/cancel actions
+ * - Avatar upload with preview and crop
+ * - Display name and username with validation
+ * - Bio with character counter
+ * - Website and location fields
+ * - Social links section
+ * - Visibility/privacy toggles
+ * - Save/cancel with optimistic UI
+ * - Success toast on save
+ *
+ * API Endpoints (from PHASE2_UX_SPECS.md):
+ * - GET /api/users/me/profile - Fetch current profile
+ * - PATCH /api/users/me/profile - Update profile
+ * - GET /api/users/check-username - Check username availability
+ * - POST /api/users/me/avatar - Upload avatar
+ * - DELETE /api/users/me/avatar - Remove avatar
  */
 export default function ProfileSettingsPage() {
-  // Form state
-  const [displayName, setDisplayName] = useState("");
-  const [username, setUsername] = useState("");
-  const [bio, setBio] = useState("");
-  const [website, setWebsite] = useState("");
-  const [location, setLocation] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [initialData, setInitialData] =
+    useState<Partial<ProfileSettingsFormData> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAvatarUpload = () => {
-    // TODO: Implement avatar upload - upload to storage, validate file size (max 2MB), save URL
+  // Fetch initial profile data
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const data = await fetchUserProfile();
+        setInitialData(data);
+      } catch {
+        setError("Failed to load profile data. Please refresh the page.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadProfile();
+  }, []);
+
+  // Handle form submission
+  const handleSubmit = async (data: ProfileSettingsFormData) => {
+    await updateUserProfile(data);
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    // TODO: Replace with API call to persist profile settings
-    // TODO: Add URL validation for website field before saving
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
+  // Handle successful save
+  const handleSuccess = () => {
+    // Could trigger a global toast notification here
+    console.log("Profile saved successfully!");
   };
 
-  const handleCancel = () => {
-    // Reset form to initial values
-    setDisplayName("");
-    setUsername("");
-    setBio("");
-    setWebsite("");
-    setLocation("");
-    setAvatarUrl(null);
-  };
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-8">
+        {/* Page Header Skeleton */}
+        <div className="flex flex-col gap-2">
+          <div className="h-8 w-48 bg-surface-sunken rounded-lg animate-pulse" />
+          <div className="h-5 w-72 bg-surface-sunken rounded-lg animate-pulse" />
+        </div>
+
+        {/* Form Skeleton */}
+        <div className="flex flex-col gap-8">
+          {/* Avatar Section Skeleton */}
+          <div className="p-6 rounded-2xl border border-white/10 bg-surface-sunken/30">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 rounded-full bg-surface-sunken animate-pulse" />
+              <div className="flex flex-col gap-3">
+                <div className="h-10 w-32 bg-surface-sunken rounded-xl animate-pulse" />
+                <div className="h-4 w-40 bg-surface-sunken rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+
+          {/* Basic Info Skeleton */}
+          <div className="p-6 rounded-2xl border border-white/10 bg-surface-sunken/30">
+            <div className="flex flex-col gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex flex-col gap-2">
+                  <div className="h-5 w-24 bg-surface-sunken rounded animate-pulse" />
+                  <div className="h-12 w-full bg-surface-sunken rounded-xl animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-2xl font-bold text-foreground">
+            Profile Settings
+          </h2>
+          <p className="text-text-secondary">
+            Manage your public profile information
+          </p>
+        </div>
+
+        <div
+          className="p-6 rounded-2xl border border-destructive/30 bg-destructive/5 text-destructive"
+          role="alert"
+        >
+          <p className="font-medium">Error loading profile</p>
+          <p className="text-sm mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
       {/* Page Header */}
-      <div className="flex flex-col gap-1">
+      <header className="flex flex-col gap-1">
         <h2 className="text-2xl font-bold text-foreground">Profile Settings</h2>
         <p className="text-text-secondary">
           Manage your public profile information
         </p>
-      </div>
+      </header>
 
-      {/* Form */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSave();
-        }}
-        className="flex flex-col gap-8"
-      >
-        {/* Avatar Section */}
-        <div className="p-6 rounded-2xl border border-white/10 bg-surface-sunken/30">
-          <SectionDivider title="Profile Photo" />
-          <div className="mt-4">
-            <AvatarUpload avatarUrl={avatarUrl} onUpload={handleAvatarUpload} />
-          </div>
-        </div>
-
-        {/* Basic Info Section */}
-        <div className="p-6 rounded-2xl border border-white/10 bg-surface-sunken/30">
-          <SectionDivider title="Basic Information" />
-          <div className="mt-4 flex flex-col gap-6">
-            <FormField
-              label="Display Name"
-              htmlFor="displayName"
-              description="This is how your name will appear on your profile"
-            >
-              <TextInput
-                id="displayName"
-                value={displayName}
-                onChange={setDisplayName}
-                placeholder="Enter your display name"
-              />
-            </FormField>
-
-            <FormField
-              label="Username"
-              htmlFor="username"
-              description="Your unique username for FundBrave"
-            >
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary">
-                  @
-                </span>
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="username"
-                  className={cn(
-                    "w-full bg-surface-sunken rounded-xl pl-8 pr-4 py-3",
-                    "text-foreground placeholder:text-text-tertiary",
-                    "border border-white/10 outline-none",
-                    "focus:ring-2 focus:ring-primary/50 focus:border-primary/50",
-                    "transition-all duration-200"
-                  )}
-                />
-              </div>
-            </FormField>
-
-            <FormField
-              label="Bio"
-              htmlFor="bio"
-              description="Write a short bio to introduce yourself"
-            >
-              <TextAreaInput
-                id="bio"
-                value={bio}
-                onChange={setBio}
-                placeholder="Tell us about yourself..."
-                rows={4}
-                maxLength={280}
-              />
-            </FormField>
-          </div>
-        </div>
-
-        {/* Additional Info Section */}
-        <div className="p-6 rounded-2xl border border-white/10 bg-surface-sunken/30">
-          <SectionDivider title="Additional Information" />
-          <div className="mt-4 flex flex-col gap-6">
-            <FormField
-              label="Website"
-              htmlFor="website"
-              description="Add a link to your personal website or portfolio"
-            >
-              <TextInput
-                id="website"
-                type="url"
-                value={website}
-                onChange={setWebsite}
-                placeholder="https://example.com"
-              />
-            </FormField>
-
-            <FormField
-              label="Location"
-              htmlFor="location"
-              description="Where are you based?"
-            >
-              <TextInput
-                id="location"
-                value={location}
-                onChange={setLocation}
-                placeholder="City, Country"
-              />
-            </FormField>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-4 pt-4 border-t border-white/10">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCancel}
-            disabled={isSaving}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={isSaving}>
-            Save Changes
-          </Button>
-        </div>
-      </form>
+      {/* Profile Settings Form */}
+      <ProfileSettingsForm
+        initialData={initialData ?? undefined}
+        onSubmit={handleSubmit}
+        onAvatarUpload={uploadAvatar}
+        onAvatarRemove={removeAvatar}
+        checkUsernameAvailability={checkUsernameAvailability}
+        onSuccess={handleSuccess}
+      />
     </div>
   );
 }

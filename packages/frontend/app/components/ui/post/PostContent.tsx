@@ -30,7 +30,10 @@ export function PostContent({ content, truncateAt = 0, className }: PostContentP
       </p>
       {shouldTruncate && (
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
           className="text-foreground hover:underline text-sm mt-1"
         >
           {isExpanded ? "Show less" : "See more"}

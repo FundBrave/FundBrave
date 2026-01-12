@@ -118,8 +118,8 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">User Not Found</h1>
-          <p className="text-white/60 mb-6">
+          <h1 className="text-2xl font-bold text-foreground mb-4">User Not Found</h1>
+          <p className="text-muted-foreground mb-6">
             The user @{username} doesn&apos;t exist.
           </p>
           <button

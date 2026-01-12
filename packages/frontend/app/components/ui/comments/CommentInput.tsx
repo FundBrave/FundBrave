@@ -105,7 +105,7 @@ export function CommentInput({
             {(isReply || onCancel) && (
               <button
                 onClick={handleCancel}
-                className="px-3 py-1.5 text-xs text-text-secondary hover:text-foreground transition-colors"
+                className="min-h-[44px] min-w-[44px] px-3 py-1.5 text-xs text-text-secondary hover:text-foreground active:text-foreground active:scale-[0.98] transition-colors"
               >
                 Cancel
               </button>
@@ -114,9 +114,9 @@ export function CommentInput({
               onClick={handleSubmit}
               disabled={!content.trim() || isSubmitting}
               className={cn(
-                "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
+                "flex items-center gap-1.5 min-h-[44px] min-w-[44px] px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
                 content.trim() && !isSubmitting
-                  ? "bg-primary text-white hover:bg-primary/90"
+                  ? "bg-primary text-white hover:bg-primary/90 active:bg-primary/80 active:scale-[0.98]"
                   : "bg-surface-overlay text-text-tertiary cursor-not-allowed"
               )}
             >

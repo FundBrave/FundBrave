@@ -1,9 +1,10 @@
 "use client";
 
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, Variants } from "motion/react";
 import { notFound } from "next/navigation";
 import { ONBOARDING_STEPS } from "@/lib/onboarding-steps";
 import { useOnboarding } from "@/app/provider/OnboardingContext";
+import { useReducedMotion } from "@/app/hooks/useReducedMotion";
 
 import { use } from "react";
 
@@ -13,27 +14,39 @@ interface OnboardingStepPageProps {
   }>;
 }
 
-// Page transition variants with blur effect
-// Faster exit, gentler entrance for smooth flow
-const pageVariants = {
-  initial: {
+/**
+ * Direction-aware page transition variants
+ * The `custom` prop receives direction: 1 (forward) or -1 (backward)
+ * This creates natural slide animations that match navigation direction
+ */
+const pageVariants: Variants = {
+  initial: (direction: number) => ({
     opacity: 0,
-    x: 60,
+    x: direction > 0 ? 60 : -60,
     scale: 0.98,
     filter: "blur(4px)",
-  },
+  }),
   animate: {
     opacity: 1,
     x: 0,
     scale: 1,
     filter: "blur(0px)",
   },
-  exit: {
+  exit: (direction: number) => ({
     opacity: 0,
-    x: -40,
+    x: direction > 0 ? -40 : 40,
     scale: 0.98,
     filter: "blur(4px)",
-  },
+  }),
+};
+
+/**
+ * Reduced motion variants - instant transitions for accessibility
+ */
+const reducedMotionVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
 };
 
 // Transition configuration - gentler entrance, faster exit
@@ -45,11 +58,17 @@ const pageTransition = {
   filter: { duration: 0.3 },
 };
 
+// Instant transition for reduced motion
+const reducedMotionTransition = {
+  duration: 0.15,
+};
+
 export default function OnboardingStepPage({
   params,
 }: OnboardingStepPageProps) {
   const { step: stepSlug } = use(params);
-  const { nextStep, prevStep } = useOnboarding();
+  const { nextStep, prevStep, direction } = useOnboarding();
+  const prefersReducedMotion = useReducedMotion();
 
   // Find the step details by slug
   const stepDetails = ONBOARDING_STEPS.find((s) => s.slug === stepSlug);
@@ -61,15 +80,22 @@ export default function OnboardingStepPage({
 
   const { Component } = stepDetails;
 
+  // Select variants and transition based on motion preference
+  const variants = prefersReducedMotion ? reducedMotionVariants : pageVariants;
+  const transition = prefersReducedMotion
+    ? reducedMotionTransition
+    : pageTransition;
+
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" custom={direction}>
       <motion.div
         key={stepSlug}
-        variants={pageVariants}
+        custom={direction}
+        variants={variants}
         initial="initial"
         animate="animate"
         exit="exit"
-        transition={pageTransition}
+        transition={transition}
         className="w-full h-full flex items-center justify-center"
         style={{
           transformOrigin: "top",

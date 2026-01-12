@@ -64,3 +64,49 @@ app/
 - `zod` - Schema validation
 - `next-auth` - Authentication
 - `canvas-confetti` - Celebration effects
+
+## Agent Workflow
+
+FundBrave uses a structured agent workflow for feature development:
+
+### Implementation Flow
+
+```
+1. PPR (Plan)
+   ↓
+2. Senior Frontend Engineer (Implement)
+   ↓
+3. PPR (Product Review)
+```
+
+### Agent Responsibilities
+
+| Agent | Role | Responsibilities |
+|-------|------|------------------|
+| **principal-product-architect (PPR)** | Plan + Review | Feature planning, UX specs, product reviews, design system health |
+| **senior-frontend-engineer** | Implement + Technical Review | Own implementation, architecture decisions, code quality |
+| **react-animation-architect** | Animation Implementation | GSAP/Motion animations, micro-interactions |
+| **figma-css-implementer** | Design-to-Code | Pixel-perfect CSS from Figma specs |
+| **api-integration** | Full-Stack Features | GraphQL queries, resolvers, type safety |
+| **mobile-first-enforcer** | Quality Gate | Final mobile audit (must score 9.0+) |
+
+### Workflow Rules
+
+1. **PPR initiates** feature work by reading PRODUCT_SPEC.md and creating implementation plan
+2. **Senior Frontend Engineer implements** the feature, making technical decisions
+3. **PPR reviews** completed work for product/UX alignment
+4. **Mobile-first-enforcer** runs final audit before merge
+
+### When to Use Each Agent
+
+- **New feature from spec** → PPR (plan) → Senior Frontend (implement) → PPR (review)
+- **Bug fix** → react-nextjs-debugger
+- **Animation work** → react-animation-architect
+- **Figma implementation** → figma-css-implementer
+- **API/GraphQL work** → api-integration
+- **Code review only** → senior-frontend-engineer
+- **Product/UX review** → principal-product-architect
+
+### Product Specification
+
+All features are documented in `packages/frontend/docs/PRODUCT_SPEC.md` (v2.1.0)

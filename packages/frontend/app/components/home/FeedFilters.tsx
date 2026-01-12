@@ -70,10 +70,10 @@ export function FeedFilters({
           ref={setButtonRef(option.value)}
           onClick={() => onChange(option.value)}
           className={cn(
-            "relative px-4 py-3 min-h-11 text-sm font-medium transition-colors",
+            "relative px-4 py-3 min-h-[44px] text-sm font-medium transition-colors active:scale-[0.98]",
             activeFilter === option.value
               ? "text-foreground"
-              : "text-text-tertiary hover:text-text-secondary"
+              : "text-text-tertiary hover:text-text-secondary active:text-text-secondary"
           )}
         >
           {option.label}
