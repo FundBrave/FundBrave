@@ -14,6 +14,8 @@ interface JwtPayload {
 /**
  * JWT Strategy for Passport
  * Validates JWT tokens and extracts user information
+ *
+ * CWE-522 Fix: Extracts JWT from HttpOnly cookies as well as Authorization header
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -21,10 +23,26 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private configService: ConfigService,
     private prisma: PrismaService,
   ) {
+    const jwtSecret = configService.get<string>('JWT_SECRET');
+
+    if (!jwtSecret) {
+      throw new Error(
+        'FATAL: JWT_SECRET environment variable is not set. ' +
+        'Application cannot start without a secure JWT secret. ' +
+        'Please set JWT_SECRET in your .env file.'
+      );
+    }
+
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(), // For API clients with Bearer token
+        (request) => {
+          // CWE-522 Fix: Extract JWT from HttpOnly cookie for browser clients
+          return request?.cookies?.access_token;
+        },
+      ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'your-secret-key',
+      secretOrKey: jwtSecret,
     });
   }
 

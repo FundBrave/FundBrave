@@ -17,7 +17,7 @@ const Page = () => {
   type AuthViewKey = "signup" | "login";
   type Direction = 1 | -1;
 
-  const [view, setView] = React.useState<AuthViewKey>("signup");
+  const [view, setView] = React.useState<AuthViewKey>("login");
   const [direction, setDirection] = React.useState<Direction>(1);
 
   // This function handles view changes and calculates the correct animation direction.
@@ -94,7 +94,7 @@ const Page = () => {
   return (
     <div className="flex h-dvh">
       <motion.aside
-        className="dive-bg hidden h-full w-1/2 py-10 lg:flex flex-col items-center auth-gradient justify-between overflow-hidden relative"
+        className=" hidden h-full w-1/2 py-10 lg:flex flex-col auth-gradient items-center justify-between overflow-hidden relative"
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
@@ -141,15 +141,16 @@ const Page = () => {
               whileTap={{ scale: 0.95 }}
               transition={dotTransition}
               aria-label={`Switch to ${key} view`}
+              aria-current={view === key ? 'true' : 'false'}
             />
           ))}
         </motion.div>
       </motion.aside>
 
-      <main className="flex h-full w-full flex-col items-center justify-center overflow-auto lg:w-1/2">
+      <main className="flex h-full w-full flex-col items-center justify-center overflow-hidden !overflow-y-hidden lg:w-1/2">
         <AnimatePresence initial={false} mode="wait">
           <motion.div
-            className="size-full overflow-x-hidden auth-gradient"
+            className="size-full overflow-x-hidden overflow-auto 2xl:overflow-hidden"
             key={view} // Ensures form re-animates on view change
             initial={{ y: 20, opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}

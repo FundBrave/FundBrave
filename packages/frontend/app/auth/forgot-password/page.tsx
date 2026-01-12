@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import * as z from "zod";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
 
 // Import reusable components
@@ -12,6 +12,7 @@ import AuthHeader from "../../components/auth/AuthHeader";
 import ServerError from "../../components/auth/ServerError";
 import FormInput from "../../components/auth/FormInput";
 import { Button } from "../../components/ui/button";
+import { authApi } from "../../../lib/api/auth";
 
 // Email validation schema
 const forgotPasswordSchema = z.object({
@@ -86,15 +87,14 @@ export default function ForgotPasswordPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call for password reset
-      // In production, this would call your backend API
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Call backend API to send password reset email
+      await authApi.forgotPassword(formData.email);
 
       // Show success state
       setIsSuccess(true);
-    } catch {
+    } catch (error) {
       setServerError(
-        "Failed to send reset link. Please try again later."
+        error instanceof Error ? error.message : "Failed to send reset link. Please try again later."
       );
     } finally {
       setIsSubmitting(false);
@@ -162,7 +162,7 @@ export default function ForgotPasswordPage() {
               We've sent a password reset link to
             </motion.p>
             <motion.p
-              className="text-purple-400 font-medium"
+              className="text-primary font-medium"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.5 }}

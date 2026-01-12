@@ -135,14 +135,22 @@ export const VALIDATION_LIMITS = {
   UPDATE_CONTENT_MAX: 5000,
 } as const;
 
-// Login form validation schema
+// Login form validation schema - accepts both username and email
 export const loginSchema = z.object({
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters long")
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores"
+    .min(1, "Username or email is required")
+    .refine(
+      (value) => {
+        // Check if it's a valid email
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        // Check if it's a valid username
+        const isUsername = /^[a-zA-Z0-9_]{3,}$/.test(value);
+        return isEmail || isUsername;
+      },
+      {
+        message: "Please enter a valid username or email address",
+      }
     ),
   password: z
     .string()

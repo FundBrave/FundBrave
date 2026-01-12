@@ -507,7 +507,6 @@ function ImageUpload({ imagePreview, onFileSelect, onRemove, error }: ImageUploa
               accept="image/png,image/jpeg,image/webp"
               onChange={handleFileChange}
               className="hidden"
-              aria-label="Upload campaign image"
             />
           </label>
         )}
@@ -880,8 +879,9 @@ export default function CreateCampaignPage() {
           }
           if (!formData.beneficiaryWallet.trim()) {
             newErrors.beneficiaryWallet = "Wallet address is required";
-          } else if (!formData.beneficiaryWallet.startsWith("0x")) {
-            newErrors.beneficiaryWallet = "Please enter a valid wallet address";
+          } else if (!/^0x[a-fA-F0-9]{40}$/.test(formData.beneficiaryWallet)) {
+            newErrors.beneficiaryWallet =
+              "Please enter a valid Ethereum wallet address (0x + 40 hex characters)";
           }
           if (!formData.acceptTerms) {
             newErrors.acceptTerms = "You must accept the terms to continue";
