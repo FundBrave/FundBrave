@@ -17,7 +17,7 @@ const Page = () => {
   type AuthViewKey = "signup" | "login";
   type Direction = 1 | -1;
 
-  const [view, setView] = React.useState<AuthViewKey>("signup");
+  const [view, setView] = React.useState<AuthViewKey>("login");
   const [direction, setDirection] = React.useState<Direction>(1);
 
   // This function handles view changes and calculates the correct animation direction.
