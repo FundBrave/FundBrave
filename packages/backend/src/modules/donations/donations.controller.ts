@@ -68,7 +68,13 @@ export class DonationsController {
       chainId: chainId ? parseInt(chainId) : undefined,
     };
 
-    return this.donationsService.getDonations(limit, offset, filter, sortBy, order);
+    return this.donationsService.getDonations(
+      limit,
+      offset,
+      filter,
+      sortBy,
+      order,
+    );
   }
 
   @Get('recent')
@@ -83,7 +89,11 @@ export class DonationsController {
 
   @Get('leaderboard')
   @ApiOperation({ summary: 'Get donation leaderboard' })
-  @ApiQuery({ name: 'period', required: false, enum: ['all', '7d', '30d', '90d'] })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['all', '7d', '30d', '90d'],
+  })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Returns donation leaderboard' })
   async getLeaderboard(
@@ -111,13 +121,20 @@ export class DonationsController {
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
   ): Promise<PaginatedDonations> {
-    return this.donationsService.getFundraiserDonations(fundraiserId, limit, offset);
+    return this.donationsService.getFundraiserDonations(
+      fundraiserId,
+      limit,
+      offset,
+    );
   }
 
   @Get('fundraiser/:fundraiserId/stats')
   @ApiOperation({ summary: 'Get donation stats for a fundraiser' })
   @ApiParam({ name: 'fundraiserId', type: String })
-  @ApiResponse({ status: 200, description: 'Returns fundraiser donation stats' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns fundraiser donation stats',
+  })
   async getFundraiserDonationStats(
     @Param('fundraiserId') fundraiserId: string,
   ): Promise<DonationStats> {
@@ -205,7 +222,9 @@ export class DonationsController {
   @ApiParam({ name: 'txHash', type: String })
   @ApiResponse({ status: 200, description: 'Returns donation details' })
   @ApiResponse({ status: 404, description: 'Donation not found' })
-  async getDonationByTxHash(@Param('txHash') txHash: string): Promise<Donation> {
+  async getDonationByTxHash(
+    @Param('txHash') txHash: string,
+  ): Promise<Donation> {
     return this.donationsService.getDonationByTxHash(txHash);
   }
 
@@ -231,6 +250,10 @@ export class DonationsController {
     @CurrentUser() user: { id: string; walletAddress: string },
     @Body() input: RecordDonationInput,
   ): Promise<Donation> {
-    return this.donationsService.recordDonation(user.id, user.walletAddress, input);
+    return this.donationsService.recordDonation(
+      user.id,
+      user.walletAddress,
+      input,
+    );
   }
 }

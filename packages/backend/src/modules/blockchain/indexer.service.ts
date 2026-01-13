@@ -66,7 +66,10 @@ export class BlockchainIndexerService implements OnModuleInit {
 
       this.logger.log('Blockchain indexer initialized successfully');
     } catch (error) {
-      this.logger.error(`Failed to initialize blockchain indexer: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to initialize blockchain indexer: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
@@ -75,20 +78,59 @@ export class BlockchainIndexerService implements OnModuleInit {
    */
   private async initializeProviders(): Promise<void> {
     const providerConfigs = [
-      { chainId: ChainId.ETHEREUM, rpc: process.env.ETHEREUM_RPC, name: 'Ethereum Mainnet' },
-      { chainId: ChainId.SEPOLIA, rpc: process.env.SEPOLIA_RPC, name: 'Sepolia Testnet' },
-      { chainId: ChainId.POLYGON, rpc: process.env.POLYGON_RPC, name: 'Polygon Mainnet' },
-      { chainId: ChainId.MUMBAI, rpc: process.env.MUMBAI_RPC, name: 'Mumbai Testnet' },
-      { chainId: ChainId.AVALANCHE, rpc: process.env.AVALANCHE_RPC, name: 'Avalanche Mainnet' },
-      { chainId: ChainId.FUJI, rpc: process.env.FUJI_RPC, name: 'Fuji Testnet' },
-      { chainId: ChainId.ARBITRUM, rpc: process.env.ARBITRUM_RPC, name: 'Arbitrum Mainnet' },
-      { chainId: ChainId.OPTIMISM, rpc: process.env.OPTIMISM_RPC, name: 'Optimism Mainnet' },
+      {
+        chainId: ChainId.ETHEREUM,
+        rpc: process.env.ETHEREUM_RPC,
+        name: 'Ethereum Mainnet',
+      },
+      {
+        chainId: ChainId.SEPOLIA,
+        rpc: process.env.SEPOLIA_RPC,
+        name: 'Sepolia Testnet',
+      },
+      {
+        chainId: ChainId.POLYGON,
+        rpc: process.env.POLYGON_RPC,
+        name: 'Polygon Mainnet',
+      },
+      {
+        chainId: ChainId.MUMBAI,
+        rpc: process.env.MUMBAI_RPC,
+        name: 'Mumbai Testnet',
+      },
+      {
+        chainId: ChainId.AVALANCHE,
+        rpc: process.env.AVALANCHE_RPC,
+        name: 'Avalanche Mainnet',
+      },
+      {
+        chainId: ChainId.FUJI,
+        rpc: process.env.FUJI_RPC,
+        name: 'Fuji Testnet',
+      },
+      {
+        chainId: ChainId.ARBITRUM,
+        rpc: process.env.ARBITRUM_RPC,
+        name: 'Arbitrum Mainnet',
+      },
+      {
+        chainId: ChainId.OPTIMISM,
+        rpc: process.env.OPTIMISM_RPC,
+        name: 'Optimism Mainnet',
+      },
     ];
 
     for (const { chainId, rpc, name } of providerConfigs) {
       // Skip if RPC URL is not configured or contains placeholder
-      if (!rpc || rpc.includes('<KEY>') || rpc.includes('<') || rpc.includes('>')) {
-        this.logger.warn(`Skipping ${name} - RPC URL not configured or contains placeholder`);
+      if (
+        !rpc ||
+        rpc.includes('<KEY>') ||
+        rpc.includes('<') ||
+        rpc.includes('>')
+      ) {
+        this.logger.warn(
+          `Skipping ${name} - RPC URL not configured or contains placeholder`,
+        );
         continue;
       }
 
@@ -121,37 +163,57 @@ export class BlockchainIndexerService implements OnModuleInit {
         contracts: [
           {
             name: ContractName.IMPACT_DAO_POOL,
-            address: this.getContractAddress(ContractName.IMPACT_DAO_POOL, chainId),
+            address: this.getContractAddress(
+              ContractName.IMPACT_DAO_POOL,
+              chainId,
+            ),
             events: Object.values(ImpactDAOPoolEvent),
             startBlock: parseInt(process.env.IMPACT_DAO_START_BLOCK || '0'),
           },
           {
             name: ContractName.WEALTH_BUILDING_DONATION,
-            address: this.getContractAddress(ContractName.WEALTH_BUILDING_DONATION, chainId),
+            address: this.getContractAddress(
+              ContractName.WEALTH_BUILDING_DONATION,
+              chainId,
+            ),
             events: Object.values(WealthBuildingDonationEvent),
-            startBlock: parseInt(process.env.WEALTH_BUILDING_START_BLOCK || '0'),
+            startBlock: parseInt(
+              process.env.WEALTH_BUILDING_START_BLOCK || '0',
+            ),
           },
           {
             name: ContractName.PLATFORM_TREASURY,
-            address: this.getContractAddress(ContractName.PLATFORM_TREASURY, chainId),
+            address: this.getContractAddress(
+              ContractName.PLATFORM_TREASURY,
+              chainId,
+            ),
             events: Object.values(PlatformTreasuryEvent),
             startBlock: parseInt(process.env.TREASURY_START_BLOCK || '0'),
           },
           {
             name: ContractName.FUND_BRAVE_TOKEN,
-            address: this.getContractAddress(ContractName.FUND_BRAVE_TOKEN, chainId),
+            address: this.getContractAddress(
+              ContractName.FUND_BRAVE_TOKEN,
+              chainId,
+            ),
             events: Object.values(FundBraveTokenEvent),
             startBlock: parseInt(process.env.FBT_START_BLOCK || '0'),
           },
           {
             name: ContractName.STAKING_POOL,
-            address: this.getContractAddress(ContractName.STAKING_POOL, chainId),
+            address: this.getContractAddress(
+              ContractName.STAKING_POOL,
+              chainId,
+            ),
             events: Object.values(StakingPoolEvent),
             startBlock: parseInt(process.env.STAKING_POOL_START_BLOCK || '0'),
           },
           {
             name: ContractName.FUNDRAISER_FACTORY,
-            address: this.getContractAddress(ContractName.FUNDRAISER_FACTORY, chainId),
+            address: this.getContractAddress(
+              ContractName.FUNDRAISER_FACTORY,
+              chainId,
+            ),
             events: ['FundraiserCreated', 'DonationReceived', 'FundsWithdrawn'],
             startBlock: parseInt(process.env.FACTORY_START_BLOCK || '0'),
           },
@@ -216,12 +278,19 @@ export class BlockchainIndexerService implements OnModuleInit {
     startBlock: number = 0,
   ): Promise<void> {
     // Skip if contract address is not configured (zero address)
-    if (!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000') {
-      this.logger.warn(`Skipping ${contractName} on chain ${chainId} - contract address not configured`);
+    if (
+      !contractAddress ||
+      contractAddress === '0x0000000000000000000000000000000000000000'
+    ) {
+      this.logger.warn(
+        `Skipping ${contractName} on chain ${chainId} - contract address not configured`,
+      );
       return;
     }
 
-    this.logger.log(`Indexing ${contractName} at ${contractAddress} on chain ${chainId}`);
+    this.logger.log(
+      `Indexing ${contractName} at ${contractAddress} on chain ${chainId}`,
+    );
 
     // Get last synced block from database
     const sync = await this.prisma.blockchainSync.findUnique({
@@ -312,7 +381,7 @@ export class BlockchainIndexerService implements OnModuleInit {
         currentBlock = batchEndBlock + 1;
 
         // Add small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         this.logger.error(
           `Failed to fetch logs for blocks ${currentBlock}-${batchEndBlock}: ${error.message}`,
@@ -336,7 +405,7 @@ export class BlockchainIndexerService implements OnModuleInit {
     this.logger.log(`Setting up real-time listeners for ${contractName}`);
 
     // Create contract instance with minimal ABI (just events)
-    const eventAbi = events.map(eventName => `event ${eventName}(...)`);
+    const eventAbi = events.map((eventName) => `event ${eventName}(...)`);
     const contract = new ethers.Contract(contractAddress, eventAbi, provider);
 
     // Listen for each event
@@ -406,7 +475,10 @@ export class BlockchainIndexerService implements OnModuleInit {
    * Get contract address for a given chain
    * Loads from environment variables
    */
-  private getContractAddress(contractName: ContractName, chainId: ChainId): string {
+  private getContractAddress(
+    contractName: ContractName,
+    chainId: ChainId,
+  ): string {
     const envKey = `${contractName.toUpperCase()}_ADDRESS_${chainId}`;
     return process.env[envKey] || `0x0000000000000000000000000000000000000000`;
   }

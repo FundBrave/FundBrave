@@ -1,4 +1,9 @@
-import { Process, Processor, OnQueueFailed, OnQueueCompleted } from '@nestjs/bull';
+import {
+  Process,
+  Processor,
+  OnQueueFailed,
+  OnQueueCompleted,
+} from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bull';
 import { QUEUE_NAMES, TrendingJobData } from '../queue.service';

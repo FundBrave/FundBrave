@@ -73,7 +73,8 @@ export class HealthController {
           return {
             redis: {
               status: 'up' as const,
-              message: 'Redis check placeholder - implement with actual Redis client',
+              message:
+                'Redis check placeholder - implement with actual Redis client',
             },
           };
         } catch (error) {

@@ -102,7 +102,9 @@ export class FundraisersController {
   @Get('categories')
   @ApiOperation({ summary: 'Get fundraiser categories with counts' })
   @ApiResponse({ status: 200, description: 'Returns categories with counts' })
-  async getCategoriesWithCounts(): Promise<{ category: string; count: number }[]> {
+  async getCategoriesWithCounts(): Promise<
+    { category: string; count: number }[]
+  > {
     return this.fundraisersService.getCategoriesWithCounts();
   }
 
@@ -138,7 +140,11 @@ export class FundraisersController {
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
   ): Promise<PaginatedFundraisers> {
-    return this.fundraisersService.getFundraisersByCreator(creatorId, limit, offset);
+    return this.fundraisersService.getFundraisersByCreator(
+      creatorId,
+      limit,
+      offset,
+    );
   }
 
   @Get('my')
@@ -153,7 +159,11 @@ export class FundraisersController {
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
   ): Promise<PaginatedFundraisers> {
-    return this.fundraisersService.getFundraisersByCreator(user.id, limit, offset);
+    return this.fundraisersService.getFundraisersByCreator(
+      user.id,
+      limit,
+      offset,
+    );
   }
 
   @Get(':id')
@@ -186,7 +196,8 @@ export class FundraisersController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createFundraiser(
     @CurrentUser() user: { id: string },
-    @Body() body: { input: CreateFundraiserInput; txHash: string; onChainId: number },
+    @Body()
+    body: { input: CreateFundraiserInput; txHash: string; onChainId: number },
   ): Promise<Fundraiser> {
     return this.fundraisersService.createFundraiser(
       user.id,
@@ -209,7 +220,11 @@ export class FundraisersController {
     @Param('id') fundraiserId: string,
     @Body() input: CreateFundraiserUpdateInput,
   ) {
-    return this.fundraisersService.addFundraiserUpdate(fundraiserId, user.id, input);
+    return this.fundraisersService.addFundraiserUpdate(
+      fundraiserId,
+      user.id,
+      input,
+    );
   }
 
   @Post(':id/milestones')
@@ -243,7 +258,11 @@ export class FundraisersController {
     @Param('id') fundraiserId: string,
     @Body() input: UpdateFundraiserInput,
   ): Promise<Fundraiser> {
-    return this.fundraisersService.updateFundraiser(fundraiserId, user.id, input);
+    return this.fundraisersService.updateFundraiser(
+      fundraiserId,
+      user.id,
+      input,
+    );
   }
 
   // ==================== Helper Methods ====================

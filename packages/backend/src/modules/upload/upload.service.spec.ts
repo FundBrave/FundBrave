@@ -2,7 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
 import { UploadService } from './upload.service';
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Mock AWS SDK
@@ -10,7 +15,9 @@ jest.mock('@aws-sdk/client-s3');
 jest.mock('@aws-sdk/s3-request-presigner');
 
 const MockS3Client = S3Client as jest.MockedClass<typeof S3Client>;
-const mockGetSignedUrl = getSignedUrl as jest.MockedFunction<typeof getSignedUrl>;
+const mockGetSignedUrl = getSignedUrl as jest.MockedFunction<
+  typeof getSignedUrl
+>;
 
 describe('UploadService', () => {
   let service: UploadService;
@@ -30,9 +37,12 @@ describe('UploadService', () => {
 
   beforeEach(async () => {
     mockS3Send = jest.fn().mockResolvedValue({});
-    MockS3Client.mockImplementation(() => ({
-      send: mockS3Send,
-    } as any));
+    MockS3Client.mockImplementation(
+      () =>
+        ({
+          send: mockS3Send,
+        }) as any,
+    );
 
     mockGetSignedUrl.mockResolvedValue('https://signed-url.example.com/file');
 
@@ -70,7 +80,9 @@ describe('UploadService', () => {
 
       const result = await service.uploadFile(mockFile, 'test-folder');
 
-      expect(result).toContain('https://test-bucket.s3.us-east-1.amazonaws.com/test-folder/');
+      expect(result).toContain(
+        'https://test-bucket.s3.us-east-1.amazonaws.com/test-folder/',
+      );
       expect(result).toContain('.png');
       expect(mockS3Send).toHaveBeenCalledWith(expect.any(PutObjectCommand));
     });
@@ -274,9 +286,9 @@ describe('UploadService', () => {
         path: '',
       };
 
-      await expect(service.uploadPostMedia(mockFile, 'user-123')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.uploadPostMedia(mockFile, 'user-123'),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should reject unsupported file types', async () => {
@@ -284,7 +296,8 @@ describe('UploadService', () => {
         fieldname: 'media',
         originalname: 'document.docx',
         encoding: '7bit',
-        mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        mimetype:
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         buffer: Buffer.from('fake-doc-data'),
         size: 1024 * 1024,
         stream: null as any,
@@ -293,9 +306,9 @@ describe('UploadService', () => {
         path: '',
       };
 
-      await expect(service.uploadPostMedia(mockFile, 'user-123')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.uploadPostMedia(mockFile, 'user-123'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -314,7 +327,11 @@ describe('UploadService', () => {
         path: '',
       };
 
-      const result = await service.uploadMessageMedia(mockFile, 'user-123', 'conv-456');
+      const result = await service.uploadMessageMedia(
+        mockFile,
+        'user-123',
+        'conv-456',
+      );
 
       expect(result).toContain('messages/conv-456/');
       expect(mockS3Send).toHaveBeenCalled();
@@ -323,7 +340,8 @@ describe('UploadService', () => {
 
   describe('deleteFile', () => {
     it('should delete a file from S3', async () => {
-      const fileUrl = 'https://test-bucket.s3.us-east-1.amazonaws.com/test-folder/file.png';
+      const fileUrl =
+        'https://test-bucket.s3.us-east-1.amazonaws.com/test-folder/file.png';
 
       await service.deleteFile(fileUrl);
 
@@ -332,7 +350,8 @@ describe('UploadService', () => {
 
     it('should handle deletion of non-existent file gracefully', async () => {
       mockS3Send.mockRejectedValueOnce(new Error('NoSuchKey'));
-      const fileUrl = 'https://test-bucket.s3.us-east-1.amazonaws.com/non-existent.png';
+      const fileUrl =
+        'https://test-bucket.s3.us-east-1.amazonaws.com/non-existent.png';
 
       // Should not throw
       await expect(service.deleteFile(fileUrl)).resolves.not.toThrow();

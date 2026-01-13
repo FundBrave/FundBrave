@@ -43,7 +43,12 @@ import {
   SendOtpResponse,
   AUTH_REDIRECT_PATHS,
 } from './dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TokenCookieConfig, RequestSecurityContext } from './types';
 
 /**
@@ -70,11 +75,14 @@ export class AuthController {
   /**
    * Extract request security context for logging and validation
    */
-  private getSecurityContext(req: ExpressRequest, ip?: string): RequestSecurityContext {
+  private getSecurityContext(
+    req: ExpressRequest,
+    ip?: string,
+  ): RequestSecurityContext {
     return {
       ipAddress: ip || req.ip || req.connection?.remoteAddress,
       userAgent: req.headers['user-agent'],
-      origin: req.headers['origin'] as string | undefined,
+      origin: req.headers['origin'],
     };
   }
 
@@ -90,7 +98,8 @@ export class AuthController {
    * as different origins, requiring sameSite='none' to allow cookies
    */
   private getCookieConfig(): TokenCookieConfig {
-    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
+    const isProduction =
+      this.configService.get<string>('NODE_ENV') === 'production';
     const cookieDomain = this.configService.get<string>('COOKIE_DOMAIN');
 
     // For cross-origin cookies between localhost:3000 and localhost:3001
@@ -187,7 +196,11 @@ export class AuthController {
       throw new BadRequestException('Message and signature are required');
     }
     const context = this.getSecurityContext(req, ip);
-    return this.authService.verifySiweAndLogin(body.message, body.signature, context);
+    return this.authService.verifySiweAndLogin(
+      body.message,
+      body.signature,
+      context,
+    );
   }
 
   // ==================== EMAIL/PASSWORD AUTHENTICATION ====================
@@ -205,8 +218,15 @@ export class AuthController {
   @Post('register')
   @AuthRateLimit()
   @ApiOperation({ summary: 'Register new user with email/password' })
-  @ApiResponse({ status: 201, description: 'User registered successfully', type: AuthResponseDto })
-  @ApiResponse({ status: 400, description: 'Invalid registration data or email already exists' })
+  @ApiResponse({
+    status: 201,
+    description: 'User registered successfully',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid registration data or email already exists',
+  })
   async register(
     @Body() registerDto: RegisterDto,
     @Request() req: ExpressRequest,
@@ -228,7 +248,8 @@ export class AuthController {
     // OTP is automatically sent during registration
     return {
       success: true,
-      message: 'Registration successful. Please check your email for the verification code.',
+      message:
+        'Registration successful. Please check your email for the verification code.',
       user: {
         id: result.user.id,
         walletAddress: result.user.walletAddress,
@@ -255,7 +276,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @AuthRateLimit()
   @ApiOperation({ summary: 'Login with email/password' })
-  @ApiResponse({ status: 200, description: 'Login successful', type: AuthResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful',
+    type: AuthResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() loginDto: LoginDto,
@@ -327,7 +352,9 @@ export class AuthController {
       'http://localhost:3000/auth/google/callback',
     );
 
-    const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    const googleAuthUrl = new URL(
+      'https://accounts.google.com/o/oauth2/v2/auth',
+    );
     googleAuthUrl.searchParams.set('client_id', googleClientId || '');
     googleAuthUrl.searchParams.set('redirect_uri', callbackUrl);
     googleAuthUrl.searchParams.set('response_type', 'code');
@@ -351,7 +378,10 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   @ApiOperation({ summary: 'Google OAuth callback handler' })
-  @ApiResponse({ status: 302, description: 'Redirects to frontend with auth code' })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects to frontend with auth code',
+  })
   async googleAuthCallback(
     @Request() req: any,
     @Res() res: Response,
@@ -367,7 +397,9 @@ export class AuthController {
       // CWE-352 Fix: Validate state parameter
       const stateValidation = await this.authService.validateOAuthState(state);
       if (!stateValidation.valid) {
-        this.logger.warn(`OAuth state validation failed: ${stateValidation.errorMessage}`);
+        this.logger.warn(
+          `OAuth state validation failed: ${stateValidation.errorMessage}`,
+        );
         return res.redirect(
           `${this.authService.getSafeRedirectUrl('/auth')}?error=csrf_failed&message=${encodeURIComponent('Authentication failed. Please try again.')}`,
         );
@@ -501,7 +533,8 @@ export class AuthController {
     @Headers('authorization') authorization: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const token = authorization?.replace('Bearer ', '') || req.cookies?.access_token;
+    const token =
+      authorization?.replace('Bearer ', '') || req.cookies?.access_token;
     await this.authService.logout(req.user.id, token);
 
     // Clear auth cookies
@@ -562,7 +595,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @PasswordResetRateLimit()
   @ApiOperation({ summary: 'Request password reset email' })
-  @ApiResponse({ status: 200, description: 'Password reset email sent (if account exists)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset email sent (if account exists)',
+  })
   async forgotPassword(
     @Body() forgotPasswordDto: ForgotPasswordDto,
   ): Promise<ForgotPasswordResponse> {
@@ -676,9 +712,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Request OTP for authenticated user' })
   @ApiResponse({ status: 200, description: 'OTP request result' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async requestOtp(
-    @Request() req: any,
-  ): Promise<SendOtpResponse> {
+  async requestOtp(@Request() req: any): Promise<SendOtpResponse> {
     return this.authService.generateAndSendOtp(req.user.id);
   }
 }

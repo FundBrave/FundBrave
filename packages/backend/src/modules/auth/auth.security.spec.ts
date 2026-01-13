@@ -142,7 +142,9 @@ describe('AuthService Security Tests', () => {
       const encrypted2 = await authService.encryptPrivateKey(privateKey);
 
       // Same plaintext should produce different ciphertext due to random IV/salt
-      expect(encrypted1.encryptedPrivateKey).not.toBe(encrypted2.encryptedPrivateKey);
+      expect(encrypted1.encryptedPrivateKey).not.toBe(
+        encrypted2.encryptedPrivateKey,
+      );
       expect(encrypted1.iv).not.toBe(encrypted2.iv);
       expect(encrypted1.salt).not.toBe(encrypted2.salt);
     });
@@ -171,7 +173,9 @@ describe('AuthService Security Tests', () => {
         ipAddress: '127.0.0.1',
       };
 
-      prismaService.oAuthState.findUnique = jest.fn().mockResolvedValue(mockState);
+      prismaService.oAuthState.findUnique = jest
+        .fn()
+        .mockResolvedValue(mockState);
       prismaService.oAuthState.delete = jest.fn().mockResolvedValue(mockState);
 
       const result = await authService.validateOAuthState('valid-state');
@@ -198,7 +202,9 @@ describe('AuthService Security Tests', () => {
         expiresAt: new Date(Date.now() - 1000), // Expired
       };
 
-      prismaService.oAuthState.findUnique = jest.fn().mockResolvedValue(mockState);
+      prismaService.oAuthState.findUnique = jest
+        .fn()
+        .mockResolvedValue(mockState);
       prismaService.oAuthState.delete = jest.fn().mockResolvedValue(mockState);
 
       const result = await authService.validateOAuthState('expired-state');
@@ -213,7 +219,9 @@ describe('AuthService Security Tests', () => {
   // ==========================================================================
   describe('CWE-384: Session Fixation Prevention', () => {
     it('should invalidate all user sessions on login', async () => {
-      prismaService.session.updateMany = jest.fn().mockResolvedValue({ count: 3 });
+      prismaService.session.updateMany = jest
+        .fn()
+        .mockResolvedValue({ count: 3 });
 
       const count = await authService.invalidateAllUserSessions(
         'user-id',
@@ -268,7 +276,9 @@ describe('AuthService Security Tests', () => {
         usedAt: null,
       };
 
-      prismaService.oAuthHandoff.findUnique = jest.fn().mockResolvedValue(mockHandoff);
+      prismaService.oAuthHandoff.findUnique = jest
+        .fn()
+        .mockResolvedValue(mockHandoff);
       prismaService.oAuthHandoff.update = jest.fn().mockResolvedValue({});
       prismaService.oAuthHandoff.delete = jest.fn().mockResolvedValue({});
 
@@ -288,7 +298,9 @@ describe('AuthService Security Tests', () => {
         expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       };
 
-      prismaService.oAuthHandoff.findUnique = jest.fn().mockResolvedValue(mockHandoff);
+      prismaService.oAuthHandoff.findUnique = jest
+        .fn()
+        .mockResolvedValue(mockHandoff);
       prismaService.oAuthHandoff.delete = jest.fn().mockResolvedValue({});
 
       await expect(
@@ -305,7 +317,9 @@ describe('AuthService Security Tests', () => {
         expiresAt: new Date(Date.now() - 1000), // Expired
       };
 
-      prismaService.oAuthHandoff.findUnique = jest.fn().mockResolvedValue(mockHandoff);
+      prismaService.oAuthHandoff.findUnique = jest
+        .fn()
+        .mockResolvedValue(mockHandoff);
       prismaService.oAuthHandoff.delete = jest.fn().mockResolvedValue({});
 
       await expect(
@@ -319,14 +333,18 @@ describe('AuthService Security Tests', () => {
   // ==========================================================================
   describe('CWE-601: Redirect URL Validation', () => {
     it('should accept valid redirect URL', () => {
-      const result = authService.validateRedirectUrl('http://localhost:3001/callback');
+      const result = authService.validateRedirectUrl(
+        'http://localhost:3001/callback',
+      );
 
       expect(result.valid).toBe(true);
       expect(result.sanitizedUrl).toBeDefined();
     });
 
     it('should reject URL with disallowed domain', () => {
-      const result = authService.validateRedirectUrl('https://evil.com/callback');
+      const result = authService.validateRedirectUrl(
+        'https://evil.com/callback',
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errorMessage).toBe('Redirect domain not allowed');

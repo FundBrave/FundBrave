@@ -173,12 +173,18 @@ export class DAOVotingService {
     // Calculate total voting power for percentage
     const proposal = await this.prisma.dAOProposal.findUnique({
       where: { id: proposalId },
-      select: { totalVotesFor: true, totalVotesAgainst: true, totalVotesAbstain: true },
+      select: {
+        totalVotesFor: true,
+        totalVotesAgainst: true,
+        totalVotesAbstain: true,
+      },
     });
 
     // Fields are now BigInt directly
     const totalVotingPower = proposal
-      ? proposal.totalVotesFor + proposal.totalVotesAgainst + proposal.totalVotesAbstain
+      ? proposal.totalVotesFor +
+        proposal.totalVotesAgainst +
+        proposal.totalVotesAbstain
       : BigInt(1);
 
     const items: DAOVote[] = votes.map((v) => ({
@@ -189,7 +195,7 @@ export class DAOVotingService {
       choice: this.mapPrismaVoteChoiceToDto(v.choice),
       votingPower: v.votingPower.toString(),
       votingPowerPercent: (
-        (Number((v.votingPower * BigInt(10000)) / totalVotingPower) / 100)
+        Number((v.votingPower * BigInt(10000)) / totalVotingPower) / 100
       ).toFixed(2),
       signature: v.signature ?? undefined,
       createdAt: v.createdAt,
@@ -263,15 +269,18 @@ export class DAOVotingService {
     const total = totalFor + totalAgainst + totalAbstain;
     const quorumRequired = proposal.quorumRequired;
 
-    const forPercent = total > BigInt(0)
-      ? (Number((totalFor * BigInt(10000)) / total) / 100).toFixed(2)
-      : '0.00';
-    const againstPercent = total > BigInt(0)
-      ? (Number((totalAgainst * BigInt(10000)) / total) / 100).toFixed(2)
-      : '0.00';
-    const abstainPercent = total > BigInt(0)
-      ? (Number((totalAbstain * BigInt(10000)) / total) / 100).toFixed(2)
-      : '0.00';
+    const forPercent =
+      total > BigInt(0)
+        ? (Number((totalFor * BigInt(10000)) / total) / 100).toFixed(2)
+        : '0.00';
+    const againstPercent =
+      total > BigInt(0)
+        ? (Number((totalAgainst * BigInt(10000)) / total) / 100).toFixed(2)
+        : '0.00';
+    const abstainPercent =
+      total > BigInt(0)
+        ? (Number((totalAbstain * BigInt(10000)) / total) / 100).toFixed(2)
+        : '0.00';
 
     const quorumReached = total >= quorumRequired;
     const isPassing = totalFor > totalAgainst;
@@ -407,9 +416,10 @@ export class DAOVotingService {
         totalParticipationRate += Number((votes * BigInt(100)) / quorum);
       }
     }
-    const avgParticipation = proposals.length > 0
-      ? (totalParticipationRate / proposals.length).toFixed(2)
-      : '0.00';
+    const avgParticipation =
+      proposals.length > 0
+        ? (totalParticipationRate / proposals.length).toFixed(2)
+        : '0.00';
 
     return {
       totalProposals,
@@ -495,7 +505,10 @@ export class DAOVotingService {
     // Check voting period
     const now = new Date();
     if (now > proposal.votingEndTime) {
-      throw new VotingPeriodEndedException(input.proposalId, proposal.votingEndTime);
+      throw new VotingPeriodEndedException(
+        input.proposalId,
+        proposal.votingEndTime,
+      );
     }
 
     // Check if already voted
@@ -647,7 +660,9 @@ export class DAOVotingService {
     }
 
     if (proposal.category !== 'YIELD_DISTRIBUTION') {
-      throw new Error('Only yield distribution proposals can be executed this way');
+      throw new Error(
+        'Only yield distribution proposals can be executed this way',
+      );
     }
 
     const updatedProposal = await this.prisma.dAOProposal.update({
@@ -664,7 +679,9 @@ export class DAOVotingService {
       },
     });
 
-    this.logger.log(`Executed proposal ${proposalId} with tx ${executionTxHash}`);
+    this.logger.log(
+      `Executed proposal ${proposalId} with tx ${executionTxHash}`,
+    );
 
     return this.mapPrismaProposalToDto(updatedProposal);
   }

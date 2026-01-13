@@ -58,9 +58,7 @@ export class EmailService {
       this.logger.warn(
         '⚠️  Email service not configured. Set RESEND_API_KEY environment variable.',
       );
-      this.logger.warn(
-        '💡 Get your API key at https://resend.com/api-keys',
-      );
+      this.logger.warn('💡 Get your API key at https://resend.com/api-keys');
     }
   }
 
@@ -165,7 +163,9 @@ export class EmailService {
       return false;
     }
 
-    const { subject, html } = notificationDigestEmailTemplate({ notifications });
+    const { subject, html } = notificationDigestEmailTemplate({
+      notifications,
+    });
     return this.sendEmail({ to: email, subject, html });
   }
 

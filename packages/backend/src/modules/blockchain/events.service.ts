@@ -28,7 +28,10 @@ import {
   VestingScheduleCreatedEventArgs,
   TokensBurnedEventArgs,
 } from '../../common/types';
-import { StakedEventArgs as StakingPoolStakedEventArgs, UnstakedEventArgs } from '../staking/dto';
+import {
+  StakedEventArgs as StakingPoolStakedEventArgs,
+  UnstakedEventArgs,
+} from '../staking/dto';
 import { FeeSourceType } from '../treasury/dto';
 
 /**
@@ -88,27 +91,63 @@ export class EventsService {
 
       switch (contractName) {
         case ContractName.IMPACT_DAO_POOL:
-          await this.processImpactDAOEvent(eventName, eventData, txHash, blockNumber, chainId);
+          await this.processImpactDAOEvent(
+            eventName,
+            eventData,
+            txHash,
+            blockNumber,
+            chainId,
+          );
           break;
 
         case ContractName.WEALTH_BUILDING_DONATION:
-          await this.processWealthBuildingEvent(eventName, eventData, txHash, blockNumber, chainId);
+          await this.processWealthBuildingEvent(
+            eventName,
+            eventData,
+            txHash,
+            blockNumber,
+            chainId,
+          );
           break;
 
         case ContractName.PLATFORM_TREASURY:
-          await this.processTreasuryEvent(eventName, eventData, txHash, blockNumber, chainId);
+          await this.processTreasuryEvent(
+            eventName,
+            eventData,
+            txHash,
+            blockNumber,
+            chainId,
+          );
           break;
 
         case ContractName.FUND_BRAVE_TOKEN:
-          await this.processFBTEvent(eventName, eventData, txHash, blockNumber, chainId);
+          await this.processFBTEvent(
+            eventName,
+            eventData,
+            txHash,
+            blockNumber,
+            chainId,
+          );
           break;
 
         case ContractName.STAKING_POOL:
-          await this.processStakingPoolEvent(eventName, eventData, txHash, blockNumber, chainId);
+          await this.processStakingPoolEvent(
+            eventName,
+            eventData,
+            txHash,
+            blockNumber,
+            chainId,
+          );
           break;
 
         case ContractName.FUNDRAISER_FACTORY:
-          await this.processFundraiserFactoryEvent(eventName, eventData, txHash, blockNumber, chainId);
+          await this.processFundraiserFactoryEvent(
+            eventName,
+            eventData,
+            txHash,
+            blockNumber,
+            chainId,
+          );
           break;
 
         default:
@@ -153,7 +192,12 @@ export class EventsService {
             platformShare: Number(parsedLog.args.platformShare),
           },
         };
-        await this.impactDAOService.processStakedEvent(stakedArgs, txHash, blockNumber, chainId);
+        await this.impactDAOService.processStakedEvent(
+          stakedArgs,
+          txHash,
+          blockNumber,
+          chainId,
+        );
         break;
 
       case ImpactDAOPoolEvent.UNSTAKED:
@@ -171,7 +215,12 @@ export class EventsService {
           totalStakerShare: parsedLog.args.stakerShare,
           platformShare: parsedLog.args.platformShare,
         };
-        await this.impactDAOService.processYieldHarvestedEvent(yieldArgs, txHash, blockNumber, chainId);
+        await this.impactDAOService.processYieldHarvestedEvent(
+          yieldArgs,
+          txHash,
+          blockNumber,
+          chainId,
+        );
         break;
 
       case ImpactDAOPoolEvent.YIELD_SPLIT_SET:
@@ -222,7 +271,12 @@ export class EventsService {
           endowmentAmount: parsedLog.args.endowmentAmount,
           platformFee: parsedLog.args.platformFee,
         };
-        await this.wealthBuildingService.processDonationMadeEvent(donationArgs, txHash, blockNumber, chainId);
+        await this.wealthBuildingService.processDonationMadeEvent(
+          donationArgs,
+          txHash,
+          blockNumber,
+          chainId,
+        );
         break;
 
       case WealthBuildingDonationEvent.YIELD_HARVESTED:
@@ -245,7 +299,12 @@ export class EventsService {
           usdcAmount: parsedLog.args.usdcAmount,
           stockAmount: parsedLog.args.stockAmount,
         };
-        await this.wealthBuildingService.processStockPurchasedEvent(stockArgs, txHash, blockNumber, chainId);
+        await this.wealthBuildingService.processStockPurchasedEvent(
+          stockArgs,
+          txHash,
+          blockNumber,
+          chainId,
+        );
         break;
 
       default:
@@ -273,12 +332,13 @@ export class EventsService {
       case PlatformTreasuryEvent.FEE_RECEIVED:
         // Map source string to FeeSourceType enum
         const sourceTypeMap: Record<string, FeeSourceType> = {
-          'STAKING_POOL': FeeSourceType.STAKING_POOL,
-          'IMPACT_DAO_POOL': FeeSourceType.IMPACT_DAO_POOL,
-          'WEALTH_BUILDING': FeeSourceType.WEALTH_BUILDING,
-          'FUNDRAISER': FeeSourceType.FUNDRAISER,
+          STAKING_POOL: FeeSourceType.STAKING_POOL,
+          IMPACT_DAO_POOL: FeeSourceType.IMPACT_DAO_POOL,
+          WEALTH_BUILDING: FeeSourceType.WEALTH_BUILDING,
+          FUNDRAISER: FeeSourceType.FUNDRAISER,
         };
-        const feeSourceType = sourceTypeMap[parsedLog.args.source] || FeeSourceType.OTHER;
+        const feeSourceType =
+          sourceTypeMap[parsedLog.args.source] || FeeSourceType.OTHER;
         await this.treasuryService.processFeeReceivedEvent(
           parsedLog.args.from,
           parsedLog.args.amount,
@@ -302,7 +362,12 @@ export class EventsService {
           staker: parsedLog.args.staker,
           amount: parsedLog.args.amount,
         };
-        await this.treasuryService.processFBTStakedEvent(fbtStakedArgs, txHash, blockNumber, chainId);
+        await this.treasuryService.processFBTStakedEvent(
+          fbtStakedArgs,
+          txHash,
+          blockNumber,
+          chainId,
+        );
         break;
 
       case PlatformTreasuryEvent.FBT_UNSTAKED:
@@ -351,7 +416,12 @@ export class EventsService {
           duration: parsedLog.args.duration,
           startTime: parsedLog.args.startTime,
         };
-        await this.fbtVestingService.processVestingScheduleCreatedEvent(vestingArgs, txHash, blockNumber, chainId);
+        await this.fbtVestingService.processVestingScheduleCreatedEvent(
+          vestingArgs,
+          txHash,
+          blockNumber,
+          chainId,
+        );
         break;
 
       case FundBraveTokenEvent.VESTED_TOKENS_CLAIMED:
@@ -369,7 +439,12 @@ export class EventsService {
           account: parsedLog.args.account,
           amount: parsedLog.args.amount,
         };
-        await this.fbtVestingService.processTokensBurnedEvent(burnArgs, txHash, blockNumber, chainId);
+        await this.fbtVestingService.processTokensBurnedEvent(
+          burnArgs,
+          txHash,
+          blockNumber,
+          chainId,
+        );
         break;
 
       default:
@@ -404,7 +479,9 @@ export class EventsService {
           poolAddress,
         };
         // Look up fundraiser by pool address or onChainId
-        const fundraiserIdFromEvent = parsedLog.args.fundraiserId ? String(parsedLog.args.fundraiserId) : undefined;
+        const fundraiserIdFromEvent = parsedLog.args.fundraiserId
+          ? String(parsedLog.args.fundraiserId)
+          : undefined;
         await this.stakingService.processStakedEvent(
           stakingStakedArgs,
           txHash,
@@ -499,7 +576,10 @@ export class EventsService {
    * Get contract address for a given chain
    * TODO: Load from contract registry or environment variables
    */
-  private getContractAddress(contractName: ContractName, chainId: number): string {
+  private getContractAddress(
+    contractName: ContractName,
+    chainId: number,
+  ): string {
     // This should be loaded from a contract registry or config
     // For now, return placeholder
     return `0x${contractName}_${chainId}`;

@@ -168,10 +168,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * Emit fundraiser goal reached event
    */
-  emitGoalReached(data: {
-    fundraiserId: string;
-    totalRaised: string;
-  }) {
+  emitGoalReached(data: { fundraiserId: string; totalRaised: string }) {
     this.server.to(`fundraiser:${data.fundraiserId}`).emit('goalReached', data);
   }
 
@@ -211,7 +208,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     stakerAmount: string;
     txHash: string;
   }) {
-    this.server.to(`fundraiser:${data.fundraiserId}`).emit('yieldHarvested', data);
+    this.server
+      .to(`fundraiser:${data.fundraiserId}`)
+      .emit('yieldHarvested', data);
   }
 
   // ==================== Event Emitters - Impact DAO ====================
@@ -259,7 +258,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     endowmentAmount: string;
     txHash: string;
   }) {
-    this.server.to(`fundraiser:${data.fundraiserId}`).emit('wealthBuildingDonation', data);
+    this.server
+      .to(`fundraiser:${data.fundraiserId}`)
+      .emit('wealthBuildingDonation', data);
     this.server.to('stats:global').emit('wealthBuildingActivity', data);
   }
 
@@ -294,10 +295,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * Emit fees staked event
    */
-  emitFeesStaked(data: {
-    amount: string;
-    txHash: string;
-  }) {
+  emitFeesStaked(data: { amount: string; txHash: string }) {
     this.server.to('treasury:global').emit('feesStaked', data);
   }
 
@@ -325,7 +323,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     vestingType: string;
     txHash: string;
   }) {
-    this.server.to(`user:${data.recipientAddress}`).emit('vestingScheduleCreated', data);
+    this.server
+      .to(`user:${data.recipientAddress}`)
+      .emit('vestingScheduleCreated', data);
   }
 
   /**
@@ -336,7 +336,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     amount: string;
     txHash: string;
   }) {
-    this.server.to(`user:${data.recipientAddress}`).emit('vestedTokensClaimed', data);
+    this.server
+      .to(`user:${data.recipientAddress}`)
+      .emit('vestedTokensClaimed', data);
   }
 
   // ==================== Event Emitters - DAO Voting ====================
@@ -384,14 +386,17 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * Emit user notification
    */
-  emitNotification(userId: string, notification: {
-    id: string;
-    type: string;
-    title: string;
-    message: string;
-    link?: string;
-    createdAt: Date;
-  }) {
+  emitNotification(
+    userId: string,
+    notification: {
+      id: string;
+      type: string;
+      title: string;
+      message: string;
+      link?: string;
+      createdAt: Date;
+    },
+  ) {
     this.server.to(`user:${userId}`).emit('notification', notification);
   }
 
@@ -471,7 +476,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       isTyping: true,
       timestamp: new Date(),
     });
-    return { event: 'typingStarted', data: { conversationId: data.conversationId } };
+    return {
+      event: 'typingStarted',
+      data: { conversationId: data.conversationId },
+    };
   }
 
   /**
@@ -490,7 +498,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       isTyping: false,
       timestamp: new Date(),
     });
-    return { event: 'typingStopped', data: { conversationId: data.conversationId } };
+    return {
+      event: 'typingStopped',
+      data: { conversationId: data.conversationId },
+    };
   }
 
   /**
@@ -501,8 +512,20 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     message: {
       id: string;
       conversationId: string;
-      sender: { id: string; walletAddress: string; username?: string; displayName?: string; avatarUrl?: string };
-      receiver: { id: string; walletAddress: string; username?: string; displayName?: string; avatarUrl?: string };
+      sender: {
+        id: string;
+        walletAddress: string;
+        username?: string;
+        displayName?: string;
+        avatarUrl?: string;
+      };
+      receiver: {
+        id: string;
+        walletAddress: string;
+        username?: string;
+        displayName?: string;
+        avatarUrl?: string;
+      };
       content: string;
       mediaUrl?: string;
       read: boolean;
@@ -522,11 +545,16 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       conversationId: data.conversationId,
       message: data.message,
       senderId: data.message.sender.id,
-      senderName: data.message.sender.displayName || data.message.sender.username || 'Unknown',
+      senderName:
+        data.message.sender.displayName ||
+        data.message.sender.username ||
+        'Unknown',
       preview: data.message.content.substring(0, 100),
     });
 
-    this.logger.log(`New message emitted in conversation ${data.conversationId}`);
+    this.logger.log(
+      `New message emitted in conversation ${data.conversationId}`,
+    );
   }
 
   /**
@@ -534,7 +562,13 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
    */
   emitTypingIndicator(data: {
     conversationId: string;
-    user: { id: string; walletAddress: string; username?: string; displayName?: string; avatarUrl?: string };
+    user: {
+      id: string;
+      walletAddress: string;
+      username?: string;
+      displayName?: string;
+      avatarUrl?: string;
+    };
     isTyping: boolean;
     timestamp: Date;
   }) {
@@ -577,12 +611,14 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     deliveredToUserId: string;
     deliveredAt: Date;
   }) {
-    this.server.to(`conversation:${data.conversationId}`).emit('messagesDelivered', {
-      conversationId: data.conversationId,
-      messageIds: data.messageIds,
-      deliveredToUserId: data.deliveredToUserId,
-      deliveredAt: data.deliveredAt,
-    });
+    this.server
+      .to(`conversation:${data.conversationId}`)
+      .emit('messagesDelivered', {
+        conversationId: data.conversationId,
+        messageIds: data.messageIds,
+        deliveredToUserId: data.deliveredToUserId,
+        deliveredAt: data.deliveredAt,
+      });
   }
 
   // ==================== Helper Methods ====================
@@ -621,8 +657,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * Get number of subscribers to a room
    */
   getRoomSubscribers(room: string): number {
-    return Array.from(this.connectedClients.values())
-      .filter(subscriptions => subscriptions.includes(room))
-      .length;
+    return Array.from(this.connectedClients.values()).filter((subscriptions) =>
+      subscriptions.includes(room),
+    ).length;
   }
 }

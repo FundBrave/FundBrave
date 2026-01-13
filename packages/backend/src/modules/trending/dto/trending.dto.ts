@@ -137,7 +137,9 @@ export class GetTrendingInput {
   @IsEnum(TrendingType)
   type: TrendingType;
 
-  @Field(() => TrendingPeriod, { defaultValue: TrendingPeriod.TWENTY_FOUR_HOURS })
+  @Field(() => TrendingPeriod, {
+    defaultValue: TrendingPeriod.TWENTY_FOUR_HOURS,
+  })
   @IsOptional()
   @IsEnum(TrendingPeriod)
   period?: TrendingPeriod;

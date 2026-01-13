@@ -26,7 +26,10 @@ import {
   DAOVoteCastPayload,
   DAOProposalStatusChangedPayload,
 } from './dto';
-import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import {
+  JwtAuthGuard,
+  OptionalJwtAuthGuard,
+} from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -115,7 +118,7 @@ export class DAOVotingResolver {
    */
   @Query(() => PaginatedDAOVotes, {
     name: 'myDAOVotes',
-    description: 'Get current user\'s DAO votes',
+    description: "Get current user's DAO votes",
   })
   @UseGuards(JwtAuthGuard)
   async getMyDAOVotes(
@@ -145,7 +148,7 @@ export class DAOVotingResolver {
    */
   @Query(() => VotingPowerInfo, {
     name: 'myVotingPower',
-    description: 'Get current user\'s voting power',
+    description: "Get current user's voting power",
   })
   @UseGuards(JwtAuthGuard)
   async getMyVotingPower(
@@ -309,7 +312,9 @@ export class DAOVotingResolver {
     description: 'Subscribe to proposal status changes',
     filter: (payload, variables) => {
       if (variables.proposalId) {
-        return payload.daoProposalStatusChanged.proposalId === variables.proposalId;
+        return (
+          payload.daoProposalStatusChanged.proposalId === variables.proposalId
+        );
       }
       return true;
     },
@@ -317,7 +322,9 @@ export class DAOVotingResolver {
   subscribeToDAOProposalStatusChanged(
     @Args('proposalId', { nullable: true }) proposalId?: string,
   ) {
-    return pubSub.asyncIterableIterator(DAO_VOTING_EVENTS.PROPOSAL_STATUS_CHANGED);
+    return pubSub.asyncIterableIterator(
+      DAO_VOTING_EVENTS.PROPOSAL_STATUS_CHANGED,
+    );
   }
 }
 

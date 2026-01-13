@@ -24,19 +24,26 @@ export class Message {
   @Field(() => ID)
   id: string;
 
-  @Field(() => ID, { description: 'The ID of the conversation this message belongs to' })
+  @Field(() => ID, {
+    description: 'The ID of the conversation this message belongs to',
+  })
   conversationId: string;
 
   @Field(() => UserMinimal, { description: 'The user who sent the message' })
   sender: UserMinimal;
 
-  @Field(() => UserMinimal, { description: 'The user who received the message' })
+  @Field(() => UserMinimal, {
+    description: 'The user who received the message',
+  })
   receiver: UserMinimal;
 
   @Field({ description: 'The text content of the message' })
   content: string;
 
-  @Field({ nullable: true, description: 'Optional media URL attached to the message' })
+  @Field({
+    nullable: true,
+    description: 'Optional media URL attached to the message',
+  })
   mediaUrl?: string;
 
   @Field({ description: 'Whether the message has been read by the recipient' })
@@ -48,7 +55,9 @@ export class Message {
   @Field({ description: 'Timestamp when the message was created' })
   createdAt: Date;
 
-  @Field(() => MessageDeliveryStatus, { description: 'Current delivery status of the message' })
+  @Field(() => MessageDeliveryStatus, {
+    description: 'Current delivery status of the message',
+  })
   deliveryStatus: MessageDeliveryStatus;
 }
 
@@ -66,10 +75,15 @@ export class ConversationParticipant {
   @Field({ description: 'Timestamp when the user joined the conversation' })
   joinedAt: Date;
 
-  @Field({ nullable: true, description: 'Timestamp when the user last read messages' })
+  @Field({
+    nullable: true,
+    description: 'Timestamp when the user last read messages',
+  })
   lastReadAt?: Date;
 
-  @Field(() => Int, { description: 'Count of unread messages for this participant' })
+  @Field(() => Int, {
+    description: 'Count of unread messages for this participant',
+  })
   unreadCount: number;
 }
 
@@ -81,13 +95,21 @@ export class Conversation {
   @Field(() => ID)
   id: string;
 
-  @Field(() => [ConversationParticipant], { description: 'Participants in this conversation' })
+  @Field(() => [ConversationParticipant], {
+    description: 'Participants in this conversation',
+  })
   participants: ConversationParticipant[];
 
-  @Field(() => Message, { nullable: true, description: 'The most recent message in the conversation' })
+  @Field(() => Message, {
+    nullable: true,
+    description: 'The most recent message in the conversation',
+  })
   lastMessage?: Message;
 
-  @Field({ nullable: true, description: 'Timestamp of the last message in the conversation' })
+  @Field({
+    nullable: true,
+    description: 'Timestamp of the last message in the conversation',
+  })
   lastMessageAt?: Date;
 
   @Field({ description: 'Timestamp when the conversation was created' })
@@ -96,7 +118,9 @@ export class Conversation {
   @Field({ description: 'Timestamp when the conversation was last updated' })
   updatedAt: Date;
 
-  @Field(() => Int, { description: 'Total number of unread messages for the current user' })
+  @Field(() => Int, {
+    description: 'Total number of unread messages for the current user',
+  })
   unreadCount: number;
 }
 
@@ -108,16 +132,26 @@ export class PaginatedMessages {
   @Field(() => [Message], { description: 'List of messages' })
   items: Message[];
 
-  @Field(() => Int, { description: 'Total number of messages in the conversation' })
+  @Field(() => Int, {
+    description: 'Total number of messages in the conversation',
+  })
   total: number;
 
   @Field({ description: 'Whether there are more messages to load' })
   hasMore: boolean;
 
-  @Field(() => ID, { nullable: true, description: 'ID of the oldest message in this batch (for cursor pagination)' })
+  @Field(() => ID, {
+    nullable: true,
+    description:
+      'ID of the oldest message in this batch (for cursor pagination)',
+  })
   oldestMessageId?: string;
 
-  @Field(() => ID, { nullable: true, description: 'ID of the newest message in this batch (for cursor pagination)' })
+  @Field(() => ID, {
+    nullable: true,
+    description:
+      'ID of the newest message in this batch (for cursor pagination)',
+  })
   newestMessageId?: string;
 }
 
@@ -144,10 +178,14 @@ export class UnreadMessagesSummary {
   @Field(() => Int, { description: 'Total number of unread messages' })
   totalUnread: number;
 
-  @Field(() => Int, { description: 'Number of conversations with unread messages' })
+  @Field(() => Int, {
+    description: 'Number of conversations with unread messages',
+  })
   conversationsWithUnread: number;
 
-  @Field(() => [ConversationUnreadCount], { description: 'Unread counts per conversation' })
+  @Field(() => [ConversationUnreadCount], {
+    description: 'Unread counts per conversation',
+  })
   byConversation: ConversationUnreadCount[];
 }
 
@@ -165,7 +203,10 @@ export class ConversationUnreadCount {
   @Field({ nullable: true, description: 'Preview of the last unread message' })
   lastMessagePreview?: string;
 
-  @Field(() => UserMinimal, { nullable: true, description: 'Sender of the last unread message' })
+  @Field(() => UserMinimal, {
+    nullable: true,
+    description: 'Sender of the last unread message',
+  })
   lastMessageSender?: UserMinimal;
 }
 

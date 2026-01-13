@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, Message as PrismaMessage, User as PrismaUser } from '@prisma/client';
+import {
+  Prisma,
+  Message as PrismaMessage,
+  User as PrismaUser,
+} from '@prisma/client';
 import {
   StartConversationInput,
   SendMessageInput,
@@ -98,10 +102,7 @@ export class MessagingService {
       data: {
         participants: {
           createMany: {
-            data: [
-              { userId: currentUserId },
-              { userId: participantId },
-            ],
+            data: [{ userId: currentUserId }, { userId: participantId }],
           },
         },
       },
@@ -352,10 +353,7 @@ export class MessagingService {
         data: {
           participants: {
             createMany: {
-              data: [
-                { userId: currentUserId },
-                { userId: receiverId },
-              ],
+              data: [{ userId: currentUserId }, { userId: receiverId }],
             },
           },
         },
@@ -458,7 +456,8 @@ export class MessagingService {
       items,
       total,
       hasMore: offset + limit < total,
-      oldestMessageId: items.length > 0 ? items[items.length - 1].id : undefined,
+      oldestMessageId:
+        items.length > 0 ? items[items.length - 1].id : undefined,
       newestMessageId: items.length > 0 ? items[0].id : undefined,
     };
   }
@@ -577,10 +576,13 @@ export class MessagingService {
     });
 
     // Group by conversation
-    const conversationMap = new Map<string, {
-      count: number;
-      lastMessage: typeof unreadMessages[0];
-    }>();
+    const conversationMap = new Map<
+      string,
+      {
+        count: number;
+        lastMessage: (typeof unreadMessages)[0];
+      }
+    >();
 
     for (const message of unreadMessages) {
       const existing = conversationMap.get(message.conversationId);
@@ -600,7 +602,9 @@ export class MessagingService {
       conversationId,
       unreadCount: data.count,
       lastMessagePreview: data.lastMessage.content.substring(0, 100),
-      lastMessageSender: this.mapToUserMinimal(data.lastMessage.sender as PrismaUser),
+      lastMessageSender: this.mapToUserMinimal(
+        data.lastMessage.sender as PrismaUser,
+      ),
     }));
 
     return {
@@ -631,10 +635,7 @@ export class MessagingService {
   /**
    * Find existing conversation between two users
    */
-  private async findExistingConversation(
-    userId1: string,
-    userId2: string,
-  ) {
+  private async findExistingConversation(userId1: string, userId2: string) {
     // Find conversations where both users are participants
     const conversations = await this.prisma.conversation.findMany({
       where: {
@@ -702,7 +703,8 @@ export class MessagingService {
       displayName: user.displayName ?? undefined,
       avatarUrl: user.avatarUrl ?? undefined,
       isVerifiedCreator: user.isVerifiedCreator,
-      verificationBadge: (user.verificationBadge as VerificationBadge) ?? undefined,
+      verificationBadge:
+        (user.verificationBadge as VerificationBadge) ?? undefined,
     };
   }
 

@@ -20,7 +20,10 @@ import {
   ReviewReportInput,
 } from './dto';
 import { NotificationsService } from '../notifications/notifications.service';
-import { InvalidInputException, UnauthorizedException } from '../../common/exceptions';
+import {
+  InvalidInputException,
+  UnauthorizedException,
+} from '../../common/exceptions';
 
 // Type for Prisma report with relations
 type ReportWithRelations = Prisma.ReportGetPayload<{
@@ -349,7 +352,8 @@ export class ModerationService {
     reporterId: string,
     input: CreateReportInput,
   ): Promise<ReportOperationResult> {
-    const { reportedId, reason, description, postId, entityId, entityType } = input;
+    const { reportedId, reason, description, postId, entityId, entityType } =
+      input;
 
     // Prevent self-reporting
     if (reporterId === reportedId) {
@@ -418,7 +422,14 @@ export class ModerationService {
     adminId: string,
     input: ReviewReportInput,
   ): Promise<ReportOperationResult> {
-    const { reportId, status, action, notes, suspensionReason, suspensionDays } = input;
+    const {
+      reportId,
+      status,
+      action,
+      notes,
+      suspensionReason,
+      suspensionDays,
+    } = input;
 
     const report = await this.prisma.report.findUnique({
       where: { id: reportId },

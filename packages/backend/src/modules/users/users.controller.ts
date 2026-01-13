@@ -10,6 +10,8 @@ import {
   UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,6 +20,7 @@ import {
   ApiQuery,
   ApiParam,
   ApiBearerAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import {
@@ -29,6 +32,8 @@ import {
   NotificationSettings,
   UpdateProfileInput,
   UpdateNotificationSettingsInput,
+  CompleteOnboardingDto,
+  OnboardingStatusDto,
 } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -54,7 +59,10 @@ export class UsersController {
     @Query('searchQuery') searchQuery?: string,
   ): Promise<PaginatedUsers> {
     const filter = {
-      isVerifiedCreator: isVerifiedCreator !== undefined ? isVerifiedCreator === 'true' : undefined,
+      isVerifiedCreator:
+        isVerifiedCreator !== undefined
+          ? isVerifiedCreator === 'true'
+          : undefined,
       searchQuery,
     };
 
@@ -87,7 +95,9 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user activity summary' })
   @ApiResponse({ status: 200, description: 'Returns activity summary' })
-  async getMyActivity(@CurrentUser() user: { id: string }): Promise<UserActivitySummary> {
+  async getMyActivity(
+    @CurrentUser() user: { id: string },
+  ): Promise<UserActivitySummary> {
     return this.usersService.getUserActivity(user.id);
   }
 
@@ -132,6 +142,46 @@ export class UsersController {
     return this.usersService.getNotificationSettings(user.id);
   }
 
+  // ==================== Onboarding Endpoints ====================
+
+  @Get('onboarding/status')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get onboarding status for current user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns onboarding completion status',
+    type: OnboardingStatusDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getOnboardingStatus(
+    @CurrentUser() user: { id: string },
+  ): Promise<OnboardingStatusDto> {
+    return this.usersService.getOnboardingStatus(user.id);
+  }
+
+  @Post('onboarding/complete')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Complete user onboarding' })
+  @ApiBody({ type: CompleteOnboardingDto })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Onboarding completed successfully, returns updated user profile',
+    type: User,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 409, description: 'Username already taken' })
+  async completeOnboarding(
+    @CurrentUser() user: { id: string },
+    @Body() input: CompleteOnboardingDto,
+  ): Promise<User> {
+    return this.usersService.completeOnboarding(user.id, input);
+  }
+
   @Get('username/:username/available')
   @ApiOperation({ summary: 'Check username availability' })
   @ApiParam({ name: 'username', type: String })
@@ -159,9 +209,7 @@ export class UsersController {
   @ApiParam({ name: 'username', type: String })
   @ApiResponse({ status: 200, description: 'Returns user profile' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async getUserByUsername(
-    @Param('username') username: string,
-  ): Promise<User> {
+  async getUserByUsername(@Param('username') username: string): Promise<User> {
     return this.usersService.getUserByUsername(username);
   }
 

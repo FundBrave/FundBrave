@@ -39,7 +39,11 @@ export class ModerationResolver {
     @Args('reportedId', { type: () => ID }) reportedId: string,
     @Args('entityId', { nullable: true }) entityId?: string,
   ): Promise<boolean> {
-    return this.moderationService.hasUserReported(user.id, reportedId, entityId);
+    return this.moderationService.hasUserReported(
+      user.id,
+      reportedId,
+      entityId,
+    );
   }
 
   // ==================== Admin/Moderator Queries ====================

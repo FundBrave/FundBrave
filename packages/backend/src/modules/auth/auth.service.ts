@@ -90,7 +90,9 @@ export class AuthService implements OnModuleInit {
    * Fails fast if encryption key is not properly configured
    */
   private async validateEncryptionKeyAtStartup(): Promise<void> {
-    const encryptionKey = this.configService.get<string>('WALLET_ENCRYPTION_KEY');
+    const encryptionKey = this.configService.get<string>(
+      'WALLET_ENCRYPTION_KEY',
+    );
 
     if (!encryptionKey) {
       this.logger.error('CRITICAL: WALLET_ENCRYPTION_KEY is not configured');
@@ -100,7 +102,9 @@ export class AuthService implements OnModuleInit {
     // Validate key format (should be 64 hex characters for 32 bytes)
     if (!/^[a-fA-F0-9]{64}$/.test(encryptionKey)) {
       this.logger.error('CRITICAL: WALLET_ENCRYPTION_KEY has invalid format');
-      throw new Error('WALLET_ENCRYPTION_KEY must be 64 hex characters (32 bytes)');
+      throw new Error(
+        'WALLET_ENCRYPTION_KEY must be 64 hex characters (32 bytes)',
+      );
     }
 
     // Check for weak/default keys
@@ -111,13 +115,21 @@ export class AuthService implements OnModuleInit {
     ];
 
     if (weakKeys.includes(encryptionKey.toLowerCase())) {
-      this.logger.error('CRITICAL: WALLET_ENCRYPTION_KEY appears to be a weak/default key');
-      throw new Error('WALLET_ENCRYPTION_KEY cannot be a weak or default value');
+      this.logger.error(
+        'CRITICAL: WALLET_ENCRYPTION_KEY appears to be a weak/default key',
+      );
+      throw new Error(
+        'WALLET_ENCRYPTION_KEY cannot be a weak or default value',
+      );
     }
 
-    this.logSecurityEvent(SecurityEventType.ENCRYPTION_KEY_VALIDATED, undefined, {
-      message: 'Encryption key validated successfully at startup',
-    });
+    this.logSecurityEvent(
+      SecurityEventType.ENCRYPTION_KEY_VALIDATED,
+      undefined,
+      {
+        message: 'Encryption key validated successfully at startup',
+      },
+    );
 
     this.logger.log('Wallet encryption key validated successfully');
   }
@@ -127,14 +139,17 @@ export class AuthService implements OnModuleInit {
    */
   private validateSecurityConfiguration(): void {
     const jwtSecret = this.configService.get<string>('JWT_SECRET');
-    const jwtRefreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    const jwtRefreshSecret =
+      this.configService.get<string>('JWT_REFRESH_SECRET');
 
     if (!jwtSecret || jwtSecret === 'your-secret-key') {
       this.logger.warn('WARNING: JWT_SECRET is not properly configured');
     }
 
     if (!jwtRefreshSecret || jwtRefreshSecret === 'refresh-secret-key') {
-      this.logger.warn('WARNING: JWT_REFRESH_SECRET is not properly configured');
+      this.logger.warn(
+        'WARNING: JWT_REFRESH_SECRET is not properly configured',
+      );
     }
 
     if (this.allowedRedirectDomains.length === 0) {
@@ -147,8 +162,14 @@ export class AuthService implements OnModuleInit {
    */
   private initializeAllowedDomains(): string[] {
     const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
-    const additionalDomains = this.configService.get<string>('ALLOWED_REDIRECT_DOMAINS', '');
+    const frontendUrl = this.configService.get<string>(
+      'FRONTEND_URL',
+      'http://localhost:3001',
+    );
+    const additionalDomains = this.configService.get<string>(
+      'ALLOWED_REDIRECT_DOMAINS',
+      '',
+    );
 
     const domains: string[] = [];
 
@@ -185,7 +206,9 @@ export class AuthService implements OnModuleInit {
    * CWE-352 Fix: Generate and store OAuth state for CSRF protection
    */
   async generateOAuthState(context?: RequestSecurityContext): Promise<string> {
-    const state = crypto.randomBytes(OAUTH_STATE_CONFIG.codeLength).toString('hex');
+    const state = crypto
+      .randomBytes(OAUTH_STATE_CONFIG.codeLength)
+      .toString('hex');
     const expiresAt = new Date(Date.now() + OAUTH_STATE_CONFIG.expiryMs);
 
     await this.prisma.oAuthState.create({
@@ -279,10 +302,14 @@ export class AuthService implements OnModuleInit {
 
       // Only allow http/https protocols
       if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-        this.logSecurityEvent(SecurityEventType.REDIRECT_URL_INVALID, undefined, {
-          reason: 'Invalid protocol',
-          protocol: parsedUrl.protocol,
-        });
+        this.logSecurityEvent(
+          SecurityEventType.REDIRECT_URL_INVALID,
+          undefined,
+          {
+            reason: 'Invalid protocol',
+            protocol: parsedUrl.protocol,
+          },
+        );
         return { valid: false, errorMessage: 'Invalid URL protocol' };
       }
 
@@ -293,11 +320,15 @@ export class AuthService implements OnModuleInit {
       });
 
       if (!isAllowed) {
-        this.logSecurityEvent(SecurityEventType.REDIRECT_URL_INVALID, undefined, {
-          reason: 'Domain not allowed',
-          hostname,
-          allowedDomains: this.allowedRedirectDomains,
-        });
+        this.logSecurityEvent(
+          SecurityEventType.REDIRECT_URL_INVALID,
+          undefined,
+          {
+            reason: 'Domain not allowed',
+            hostname,
+            allowedDomains: this.allowedRedirectDomains,
+          },
+        );
         return { valid: false, errorMessage: 'Redirect domain not allowed' };
       }
 
@@ -318,7 +349,10 @@ export class AuthService implements OnModuleInit {
    * Get safe redirect URL with fallback
    */
   getSafeRedirectUrl(path: string = '/auth/callback'): string {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
+    const frontendUrl = this.configService.get<string>(
+      'FRONTEND_URL',
+      'http://localhost:3001',
+    );
     const baseUrl = frontendUrl.replace(/\/$/, ''); // Remove trailing slash
     return `${baseUrl}${path}`;
   }
@@ -330,7 +364,9 @@ export class AuthService implements OnModuleInit {
    * Instead of passing tokens in URL, we pass a short-lived code that can be exchanged
    */
   async createOAuthHandoff(data: CreateOAuthHandoffData): Promise<string> {
-    const code = crypto.randomBytes(OAUTH_HANDOFF_CONFIG.codeLength).toString('hex');
+    const code = crypto
+      .randomBytes(OAUTH_HANDOFF_CONFIG.codeLength)
+      .toString('hex');
     const expiresAt = new Date(Date.now() + OAUTH_HANDOFF_CONFIG.expiryMs);
 
     await this.prisma.oAuthHandoff.create({
@@ -383,10 +419,14 @@ export class AuthService implements OnModuleInit {
 
     // Check if already used
     if (handoff.usedAt) {
-      this.logSecurityEvent(SecurityEventType.OAUTH_CODE_ALREADY_USED, handoff.userId, {
-        reason: 'Code already used',
-        originalUseTime: handoff.usedAt,
-      });
+      this.logSecurityEvent(
+        SecurityEventType.OAUTH_CODE_ALREADY_USED,
+        handoff.userId,
+        {
+          reason: 'Code already used',
+          originalUseTime: handoff.usedAt,
+        },
+      );
       // Delete the handoff for security
       await this.prisma.oAuthHandoff.delete({ where: { id: handoff.id } });
       throw new BadRequestException('Authorization code has already been used');
@@ -394,10 +434,14 @@ export class AuthService implements OnModuleInit {
 
     // Check expiration
     if (handoff.expiresAt < new Date()) {
-      this.logSecurityEvent(SecurityEventType.OAUTH_CODE_EXPIRED, handoff.userId, {
-        reason: 'Code expired',
-        expiresAt: handoff.expiresAt,
-      });
+      this.logSecurityEvent(
+        SecurityEventType.OAUTH_CODE_EXPIRED,
+        handoff.userId,
+        {
+          reason: 'Code expired',
+          expiresAt: handoff.expiresAt,
+        },
+      );
       await this.prisma.oAuthHandoff.delete({ where: { id: handoff.id } });
       throw new BadRequestException('Authorization code has expired');
     }
@@ -411,9 +455,13 @@ export class AuthService implements OnModuleInit {
     // Delete the handoff after successful exchange
     await this.prisma.oAuthHandoff.delete({ where: { id: handoff.id } });
 
-    this.logSecurityEvent(SecurityEventType.OAUTH_CODE_EXCHANGED, handoff.userId, {
-      email: handoff.email,
-    });
+    this.logSecurityEvent(
+      SecurityEventType.OAUTH_CODE_EXCHANGED,
+      handoff.userId,
+      {
+        email: handoff.email,
+      },
+    );
 
     // Google OAuth users always have verified emails (verified by Google)
     return {
@@ -474,7 +522,9 @@ export class AuthService implements OnModuleInit {
       sessionsInvalidated: result.count,
     });
 
-    this.logger.log(`Invalidated ${result.count} sessions for user ${userId}: ${reason}`);
+    this.logger.log(
+      `Invalidated ${result.count} sessions for user ${userId}: ${reason}`,
+    );
     return result.count;
   }
 
@@ -532,7 +582,7 @@ export class AuthService implements OnModuleInit {
       ENCRYPTION_CONFIG.algorithm,
       derivedKey,
       iv,
-    ) as crypto.CipherGCM;
+    );
 
     // Encrypt the private key
     let encrypted = cipher.update(privateKey, 'utf8', 'hex');
@@ -582,13 +632,17 @@ export class AuthService implements OnModuleInit {
       ENCRYPTION_CONFIG.algorithm,
       derivedKey,
       iv,
-    ) as crypto.DecipherGCM;
+    );
 
     // Set authentication tag for verification
     decipher.setAuthTag(authTag);
 
     // Decrypt
-    let decrypted = decipher.update(encryptedData.encryptedPrivateKey, 'hex', 'utf8');
+    let decrypted = decipher.update(
+      encryptedData.encryptedPrivateKey,
+      'hex',
+      'utf8',
+    );
     decrypted += decipher.final('utf8');
 
     this.logSecurityEvent(SecurityEventType.WALLET_DECRYPTED, undefined, {
@@ -658,7 +712,7 @@ export class AuthService implements OnModuleInit {
 
         throw new ForbiddenException(
           'An account with this email already exists. ' +
-          'Please sign in with your password and link your Google account from settings.',
+            'Please sign in with your password and link your Google account from settings.',
         );
       }
 
@@ -668,7 +722,8 @@ export class AuthService implements OnModuleInit {
         data: {
           googleId,
           emailVerified: true,
-          ...(displayName && !existingUserByEmail.displayName && { displayName }),
+          ...(displayName &&
+            !existingUserByEmail.displayName && { displayName }),
           ...(avatarUrl && !existingUserByEmail.avatarUrl && { avatarUrl }),
         },
       });
@@ -710,13 +765,21 @@ export class AuthService implements OnModuleInit {
     context?: RequestSecurityContext,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     // CWE-384 Fix: Invalidate all existing sessions
-    await this.invalidateAllUserSessions(user.id, SessionInvalidationReason.OAUTH_LOGIN);
+    await this.invalidateAllUserSessions(
+      user.id,
+      SessionInvalidationReason.OAUTH_LOGIN,
+    );
 
     // Generate new tokens
     const tokens = await this.generateTokens(user.id, user.walletAddress);
 
     // Create new session
-    await this.createSession(user.id, tokens.accessToken, tokens.refreshToken, context);
+    await this.createSession(
+      user.id,
+      tokens.accessToken,
+      tokens.refreshToken,
+      context,
+    );
 
     this.logSecurityEvent(SecurityEventType.LOGIN_SUCCESS, user.id, {
       method: 'google_oauth',
@@ -770,7 +833,8 @@ export class AuthService implements OnModuleInit {
     const siweMessage = new SiweMessage(message);
 
     // Validate domain (prevent phishing attacks)
-    const expectedDomain = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001')
+    const expectedDomain = this.configService
+      .get<string>('FRONTEND_URL', 'http://localhost:3001')
       .replace(/^https?:\/\//, ''); // Remove protocol
     if (siweMessage.domain !== expectedDomain.split(':')[0]) {
       this.logSecurityEvent(SecurityEventType.LOGIN_FAILED, undefined, {
@@ -783,7 +847,9 @@ export class AuthService implements OnModuleInit {
     }
 
     // Validate chain ID (ensure correct network)
-    const expectedChainId = parseInt(this.configService.get<string>('CHAIN_ID', '8453')); // Base mainnet
+    const expectedChainId = parseInt(
+      this.configService.get<string>('CHAIN_ID', '8453'),
+    ); // Base mainnet
     if (siweMessage.chainId !== expectedChainId) {
       this.logSecurityEvent(SecurityEventType.LOGIN_FAILED, undefined, {
         method: 'siwe',
@@ -831,13 +897,21 @@ export class AuthService implements OnModuleInit {
     }
 
     // CWE-384 Fix: Invalidate all existing sessions
-    await this.invalidateAllUserSessions(user.id, SessionInvalidationReason.NEW_LOGIN);
+    await this.invalidateAllUserSessions(
+      user.id,
+      SessionInvalidationReason.NEW_LOGIN,
+    );
 
     // Create JWT tokens
     const tokens = await this.generateTokens(user.id, walletAddress);
 
     // Create new session
-    await this.createSession(user.id, tokens.accessToken, tokens.refreshToken, context);
+    await this.createSession(
+      user.id,
+      tokens.accessToken,
+      tokens.refreshToken,
+      context,
+    );
 
     this.logSecurityEvent(SecurityEventType.LOGIN_SUCCESS, user.id, {
       method: 'siwe',
@@ -885,7 +959,9 @@ export class AuthService implements OnModuleInit {
         reason: 'Email already exists',
         email: this.maskEmail(email),
       });
-      throw new BadRequestException('An account with this email already exists');
+      throw new BadRequestException(
+        'An account with this email already exists',
+      );
     }
 
     // Hash password
@@ -913,7 +989,12 @@ export class AuthService implements OnModuleInit {
     const tokens = await this.generateTokens(user.id, user.walletAddress);
 
     // Create session
-    await this.createSession(user.id, tokens.accessToken, tokens.refreshToken, context);
+    await this.createSession(
+      user.id,
+      tokens.accessToken,
+      tokens.refreshToken,
+      context,
+    );
 
     this.logSecurityEvent(SecurityEventType.LOGIN_SUCCESS, user.id, {
       method: 'email_registration',
@@ -922,7 +1003,10 @@ export class AuthService implements OnModuleInit {
 
     // Send OTP verification email (non-blocking - don't fail registration if email fails)
     this.generateAndSendOtp(user.id).catch((error) => {
-      this.logger.error(`Failed to send OTP after registration for user ${user.id}:`, error);
+      this.logger.error(
+        `Failed to send OTP after registration for user ${user.id}:`,
+        error,
+      );
     });
 
     return {
@@ -965,10 +1049,7 @@ export class AuthService implements OnModuleInit {
     // Find user by email or username
     const user = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { email: normalizedInput },
-          { username: normalizedInput },
-        ],
+        OR: [{ email: normalizedInput }, { username: normalizedInput }],
         isActive: true,
         isSuspended: false,
       },
@@ -1010,13 +1091,21 @@ export class AuthService implements OnModuleInit {
     }
 
     // CWE-384 Fix: Invalidate all existing sessions
-    await this.invalidateAllUserSessions(user.id, SessionInvalidationReason.NEW_LOGIN);
+    await this.invalidateAllUserSessions(
+      user.id,
+      SessionInvalidationReason.NEW_LOGIN,
+    );
 
     // Generate new tokens
     const tokens = await this.generateTokens(user.id, user.walletAddress);
 
     // Create new session
-    await this.createSession(user.id, tokens.accessToken, tokens.refreshToken, context);
+    await this.createSession(
+      user.id,
+      tokens.accessToken,
+      tokens.refreshToken,
+      context,
+    );
 
     this.logSecurityEvent(SecurityEventType.LOGIN_SUCCESS, user.id, {
       method: 'email_login',
@@ -1059,7 +1148,10 @@ export class AuthService implements OnModuleInit {
       this.jwtService.signAsync(
         { sub: userId, walletAddress },
         {
-          secret: this.configService.get<string>('JWT_REFRESH_SECRET', 'refresh-secret-key'),
+          secret: this.configService.get<string>(
+            'JWT_REFRESH_SECRET',
+            'refresh-secret-key',
+          ),
           expiresIn: refreshTokenExpiresIn,
         },
       ),
@@ -1117,7 +1209,10 @@ export class AuthService implements OnModuleInit {
       }
 
       // Generate new tokens
-      const tokens = await this.generateTokens(payload.sub, payload.walletAddress);
+      const tokens = await this.generateTokens(
+        payload.sub,
+        payload.walletAddress,
+      );
 
       // Update session
       await this.prisma.session.update({
@@ -1180,7 +1275,9 @@ export class AuthService implements OnModuleInit {
   async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
     const normalizedEmail = email.toLowerCase().trim();
 
-    this.logger.log(`Password reset requested for email: ${this.maskEmail(normalizedEmail)}`);
+    this.logger.log(
+      `Password reset requested for email: ${this.maskEmail(normalizedEmail)}`,
+    );
 
     try {
       const user = await this.prisma.user.findFirst({
@@ -1193,28 +1290,36 @@ export class AuthService implements OnModuleInit {
 
       // Generic response to prevent email enumeration
       if (!user) {
-        this.logger.warn(`Password reset attempted for non-existent/inactive email: ${this.maskEmail(normalizedEmail)}`);
+        this.logger.warn(
+          `Password reset attempted for non-existent/inactive email: ${this.maskEmail(normalizedEmail)}`,
+        );
         await this.artificialDelay();
         return {
           success: true,
-          message: 'If an account with that email exists, a password reset link has been sent.',
+          message:
+            'If an account with that email exists, a password reset link has been sent.',
         };
       }
 
       // Web3-only users don't have passwords
       if (!user.passwordHash) {
-        this.logger.warn(`Password reset attempted for web3-only user: ${user.id}`);
+        this.logger.warn(
+          `Password reset attempted for web3-only user: ${user.id}`,
+        );
         await this.artificialDelay();
         return {
           success: true,
-          message: 'If an account with that email exists, a password reset link has been sent.',
+          message:
+            'If an account with that email exists, a password reset link has been sent.',
         };
       }
 
       // Generate secure reset token
       const resetToken = this.generateSecureToken();
       const hashedToken = this.hashToken(resetToken);
-      const expiresAt = new Date(Date.now() + this.PASSWORD_RESET_EXPIRATION_MS);
+      const expiresAt = new Date(
+        Date.now() + this.PASSWORD_RESET_EXPIRATION_MS,
+      );
 
       // Store hashed token in database
       await this.prisma.user.update({
@@ -1233,21 +1338,26 @@ export class AuthService implements OnModuleInit {
       );
 
       if (!emailSent) {
-        this.logger.error(`Failed to send password reset email to: ${this.maskEmail(normalizedEmail)}`);
+        this.logger.error(
+          `Failed to send password reset email to: ${this.maskEmail(normalizedEmail)}`,
+        );
       }
 
       this.logger.log(`Password reset email sent to user: ${user.id}`);
 
       return {
         success: true,
-        message: 'If an account with that email exists, a password reset link has been sent.',
+        message:
+          'If an account with that email exists, a password reset link has been sent.',
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Error in forgotPassword: ${errorMessage}`);
       return {
         success: true,
-        message: 'If an account with that email exists, a password reset link has been sent.',
+        message:
+          'If an account with that email exists, a password reset link has been sent.',
       };
     }
   }
@@ -1273,7 +1383,9 @@ export class AuthService implements OnModuleInit {
       });
 
       if (!user) {
-        this.logger.warn('Invalid or expired password reset token verification attempted');
+        this.logger.warn(
+          'Invalid or expired password reset token verification attempted',
+        );
         return {
           valid: false,
           message: 'Password reset link is invalid or has expired.',
@@ -1286,7 +1398,8 @@ export class AuthService implements OnModuleInit {
         expiresAt: user.passwordResetExpires!,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Error in verifyResetToken: ${errorMessage}`);
       return {
         valid: false,
@@ -1299,7 +1412,10 @@ export class AuthService implements OnModuleInit {
    * Reset password using the reset token
    * CWE-384 Fix: Invalidates all sessions after password reset
    */
-  async resetPassword(token: string, newPassword: string): Promise<ResetPasswordResponse> {
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<ResetPasswordResponse> {
     try {
       const hashedToken = this.hashToken(token);
 
@@ -1313,8 +1429,12 @@ export class AuthService implements OnModuleInit {
       });
 
       if (!user) {
-        this.logger.warn('Password reset attempted with invalid or expired token');
-        throw new BadRequestException('Password reset link is invalid or has expired.');
+        this.logger.warn(
+          'Password reset attempted with invalid or expired token',
+        );
+        throw new BadRequestException(
+          'Password reset link is invalid or has expired.',
+        );
       }
 
       // Hash new password
@@ -1342,23 +1462,31 @@ export class AuthService implements OnModuleInit {
         });
       });
 
-      this.logSecurityEvent(SecurityEventType.ALL_SESSIONS_INVALIDATED, user.id, {
-        reason: SessionInvalidationReason.PASSWORD_RESET,
-      });
+      this.logSecurityEvent(
+        SecurityEventType.ALL_SESSIONS_INVALIDATED,
+        user.id,
+        {
+          reason: SessionInvalidationReason.PASSWORD_RESET,
+        },
+      );
 
       this.logger.log(`Password reset successful for user: ${user.id}`);
 
       return {
         success: true,
-        message: 'Your password has been reset successfully. Please log in with your new password.',
+        message:
+          'Your password has been reset successfully. Please log in with your new password.',
       };
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Error in resetPassword: ${errorMessage}`);
-      throw new BadRequestException('An error occurred while resetting your password. Please try again.');
+      throw new BadRequestException(
+        'An error occurred while resetting your password. Please try again.',
+      );
     }
   }
 
@@ -1384,7 +1512,10 @@ export class AuthService implements OnModuleInit {
   /**
    * Verify OTP against stored hash
    */
-  private async verifyOtpHash(otp: string, hashedOtp: string): Promise<boolean> {
+  private async verifyOtpHash(
+    otp: string,
+    hashedOtp: string,
+  ): Promise<boolean> {
     return bcrypt.compare(otp, hashedOtp);
   }
 
@@ -1543,11 +1674,14 @@ export class AuthService implements OnModuleInit {
 
       // Generic response for security (prevent email enumeration)
       if (!user) {
-        this.logger.warn(`OTP resend requested for non-existent email: ${this.maskEmail(normalizedEmail)}`);
+        this.logger.warn(
+          `OTP resend requested for non-existent email: ${this.maskEmail(normalizedEmail)}`,
+        );
         await this.artificialDelay();
         return {
           success: true,
-          message: 'If an account with that email exists, a verification code has been sent.',
+          message:
+            'If an account with that email exists, a verification code has been sent.',
         };
       }
 
@@ -1555,7 +1689,8 @@ export class AuthService implements OnModuleInit {
         // Still return generic message
         return {
           success: true,
-          message: 'If an account with that email exists, a verification code has been sent.',
+          message:
+            'If an account with that email exists, a verification code has been sent.',
         };
       }
 
@@ -1613,7 +1748,9 @@ export class AuthService implements OnModuleInit {
       );
 
       if (!emailSent) {
-        this.logger.error(`Failed to resend OTP email to: ${this.maskEmail(normalizedEmail)}`);
+        this.logger.error(
+          `Failed to resend OTP email to: ${this.maskEmail(normalizedEmail)}`,
+        );
       } else {
         this.logSecurityEvent(SecurityEventType.OTP_SENT, user.id, {
           email: this.maskEmail(normalizedEmail),
@@ -1622,7 +1759,8 @@ export class AuthService implements OnModuleInit {
 
       return {
         success: true,
-        message: 'If an account with that email exists, a verification code has been sent.',
+        message:
+          'If an account with that email exists, a verification code has been sent.',
       };
     } catch (error) {
       // Handle Prisma connection errors with user-friendly messages
@@ -1641,7 +1779,8 @@ export class AuthService implements OnModuleInit {
 
       // Handle connection/pool errors
       if (this.prisma.isConnectionError(error)) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
         this.logger.error(
           `Database connection error in resendOtp: ${errorMessage}`,
           { email: this.maskEmail(normalizedEmail) },
@@ -1649,16 +1788,17 @@ export class AuthService implements OnModuleInit {
 
         return {
           success: false,
-          message: 'Unable to connect to the service. Please try again in a moment.',
+          message:
+            'Unable to connect to the service. Please try again in a moment.',
         };
       }
 
       // Handle unexpected errors
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(
-        `Unexpected error in resendOtp: ${errorMessage}`,
-        { email: this.maskEmail(normalizedEmail) },
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Unexpected error in resendOtp: ${errorMessage}`, {
+        email: this.maskEmail(normalizedEmail),
+      });
 
       return {
         success: false,
@@ -1701,7 +1841,9 @@ export class AuthService implements OnModuleInit {
 
     // Generic error for security
     if (!user) {
-      this.logger.warn(`OTP verification attempted for non-existent email: ${this.maskEmail(normalizedEmail)}`);
+      this.logger.warn(
+        `OTP verification attempted for non-existent email: ${this.maskEmail(normalizedEmail)}`,
+      );
       await this.artificialDelay();
       return {
         success: false,
@@ -1728,10 +1870,14 @@ export class AuthService implements OnModuleInit {
 
     // Check max attempts (lockout protection)
     if (user.otpAttempts >= OTP_CONFIG.maxAttempts) {
-      this.logSecurityEvent(SecurityEventType.OTP_MAX_ATTEMPTS_EXCEEDED, user.id, {
-        email: this.maskEmail(normalizedEmail),
-        attempts: user.otpAttempts,
-      });
+      this.logSecurityEvent(
+        SecurityEventType.OTP_MAX_ATTEMPTS_EXCEEDED,
+        user.id,
+        {
+          email: this.maskEmail(normalizedEmail),
+          attempts: user.otpAttempts,
+        },
+      );
 
       // Clear OTP to force new request
       await this.prisma.user.update({
@@ -1745,7 +1891,8 @@ export class AuthService implements OnModuleInit {
 
       return {
         success: false,
-        message: 'Maximum verification attempts exceeded. Please request a new code.',
+        message:
+          'Maximum verification attempts exceeded. Please request a new code.',
       };
     }
 
@@ -1793,9 +1940,10 @@ export class AuthService implements OnModuleInit {
 
       return {
         success: false,
-        message: remainingAttempts > 0
-          ? `Invalid verification code. ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`
-          : 'Maximum verification attempts exceeded. Please request a new code.',
+        message:
+          remainingAttempts > 0
+            ? `Invalid verification code. ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`
+            : 'Maximum verification attempts exceeded. Please request a new code.',
       };
     }
 
@@ -1850,9 +1998,10 @@ export class AuthService implements OnModuleInit {
   private maskEmail(email: string): string {
     const [local, domain] = email.split('@');
     if (!local || !domain) return '***@***';
-    const maskedLocal = local.length > 2
-      ? local[0] + '*'.repeat(local.length - 2) + local[local.length - 1]
-      : '*'.repeat(local.length);
+    const maskedLocal =
+      local.length > 2
+        ? local[0] + '*'.repeat(local.length - 2) + local[local.length - 1]
+        : '*'.repeat(local.length);
     return `${maskedLocal}@${domain}`;
   }
 

@@ -107,7 +107,9 @@ export class TreasuryService {
   /**
    * Get user's FBT stake by wallet address
    */
-  async getUserFBTStakeByAddress(walletAddress: string): Promise<FBTStake | null> {
+  async getUserFBTStakeByAddress(
+    walletAddress: string,
+  ): Promise<FBTStake | null> {
     const stake = await this.prisma.fBTStake.findFirst({
       where: {
         stakerAddress: walletAddress.toLowerCase(),
@@ -529,9 +531,7 @@ export class TreasuryService {
   /**
    * Process a YieldHarvested event (treasury endowment)
    */
-  async processTreasuryYieldHarvestedEvent(
-    yieldAmount: bigint,
-  ): Promise<void> {
+  async processTreasuryYieldHarvestedEvent(yieldAmount: bigint): Promise<void> {
     const stats = await this.getOrCreateTreasuryStats();
 
     // Distribute yield to FBT stakers
@@ -657,7 +657,9 @@ export class TreasuryService {
   /**
    * Map Prisma FeeSourceType to DTO enum
    */
-  private mapPrismaFeeSourceTypeToDto(type: PrismaFeeSourceType): FeeSourceType {
+  private mapPrismaFeeSourceTypeToDto(
+    type: PrismaFeeSourceType,
+  ): FeeSourceType {
     const mapping: Record<PrismaFeeSourceType, FeeSourceType> = {
       STAKING_POOL: FeeSourceType.STAKING_POOL,
       IMPACT_DAO_POOL: FeeSourceType.IMPACT_DAO_POOL,

@@ -125,7 +125,9 @@ export class AnalyticsService {
   /**
    * Get fundraiser analytics
    */
-  async getFundraiserAnalytics(fundraiserId: string): Promise<FundraiserAnalytics> {
+  async getFundraiserAnalytics(
+    fundraiserId: string,
+  ): Promise<FundraiserAnalytics> {
     const fundraiser = await this.prisma.fundraiser.findUnique({
       where: { id: fundraiserId },
     });
@@ -157,9 +159,10 @@ export class AnalyticsService {
 
     const totalRaisedBigInt = donations._sum?.amount ?? BigInt(0);
     const donationsCount = donations._count?.id ?? 0;
-    const avgDonation = donationsCount > 0
-      ? (totalRaisedBigInt / BigInt(donationsCount)).toString()
-      : '0';
+    const avgDonation =
+      donationsCount > 0
+        ? (totalRaisedBigInt / BigInt(donationsCount)).toString()
+        : '0';
 
     // Calculate weekly growth
     const weekAgo = new Date();
@@ -186,9 +189,10 @@ export class AnalyticsService {
 
     const current = lastWeekDonations._sum?.amount ?? BigInt(0);
     const previous = previousWeekDonations._sum?.amount ?? BigInt(0);
-    const weeklyGrowth = previous > BigInt(0)
-      ? Number(((current - previous) * BigInt(10000)) / previous) / 100
-      : 0;
+    const weeklyGrowth =
+      previous > BigInt(0)
+        ? Number(((current - previous) * BigInt(10000)) / previous) / 100
+        : 0;
 
     return {
       fundraiserId,
@@ -242,10 +246,13 @@ export class AnalyticsService {
     });
 
     // Calculate engagement rate
-    const totalEngagement = (posts._sum?.likesCount ?? 0) + (posts._sum?.repostsCount ?? 0);
-    const engagementRate = user.followersCount > 0
-      ? (totalEngagement / (user.followersCount * (posts._count?.id || 1))) * 100
-      : 0;
+    const totalEngagement =
+      (posts._sum?.likesCount ?? 0) + (posts._sum?.repostsCount ?? 0);
+    const engagementRate =
+      user.followersCount > 0
+        ? (totalEngagement / (user.followersCount * (posts._count?.id || 1))) *
+          100
+        : 0;
 
     return {
       userId,
@@ -308,8 +315,12 @@ export class AnalyticsService {
     days: number = 7,
   ): Promise<PeriodComparison> {
     const now = new Date();
-    const currentPeriodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    const previousPeriodStart = new Date(currentPeriodStart.getTime() - days * 24 * 60 * 60 * 1000);
+    const currentPeriodStart = new Date(
+      now.getTime() - days * 24 * 60 * 60 * 1000,
+    );
+    const previousPeriodStart = new Date(
+      currentPeriodStart.getTime() - days * 24 * 60 * 60 * 1000,
+    );
 
     let current: string;
     let previous: string;
@@ -322,7 +333,9 @@ export class AnalyticsService {
             _sum: { amount: true }, // BigInt field
           }),
           this.prisma.donation.aggregate({
-            where: { createdAt: { gte: previousPeriodStart, lt: currentPeriodStart } },
+            where: {
+              createdAt: { gte: previousPeriodStart, lt: currentPeriodStart },
+            },
             _sum: { amount: true }, // BigInt field
           }),
         ]);
@@ -332,8 +345,14 @@ export class AnalyticsService {
       }
       case 'stakers': {
         const [currentStakers, previousStakers] = await Promise.all([
-          this.prisma.stake.count({ where: { stakedAt: { gte: currentPeriodStart } } }),
-          this.prisma.stake.count({ where: { stakedAt: { gte: previousPeriodStart, lt: currentPeriodStart } } }),
+          this.prisma.stake.count({
+            where: { stakedAt: { gte: currentPeriodStart } },
+          }),
+          this.prisma.stake.count({
+            where: {
+              stakedAt: { gte: previousPeriodStart, lt: currentPeriodStart },
+            },
+          }),
         ]);
         current = currentStakers.toString();
         previous = previousStakers.toString();
@@ -341,8 +360,14 @@ export class AnalyticsService {
       }
       case 'users': {
         const [currentUsers, previousUsers] = await Promise.all([
-          this.prisma.user.count({ where: { createdAt: { gte: currentPeriodStart } } }),
-          this.prisma.user.count({ where: { createdAt: { gte: previousPeriodStart, lt: currentPeriodStart } } }),
+          this.prisma.user.count({
+            where: { createdAt: { gte: currentPeriodStart } },
+          }),
+          this.prisma.user.count({
+            where: {
+              createdAt: { gte: previousPeriodStart, lt: currentPeriodStart },
+            },
+          }),
         ]);
         current = currentUsers.toString();
         previous = previousUsers.toString();
@@ -352,9 +377,12 @@ export class AnalyticsService {
 
     const currentBigInt = BigInt(current);
     const previousBigInt = BigInt(previous);
-    const changePercent = previousBigInt > BigInt(0)
-      ? Number(((currentBigInt - previousBigInt) * BigInt(10000)) / previousBigInt) / 100
-      : 0;
+    const changePercent =
+      previousBigInt > BigInt(0)
+        ? Number(
+            ((currentBigInt - previousBigInt) * BigInt(10000)) / previousBigInt,
+          ) / 100
+        : 0;
 
     return {
       current,

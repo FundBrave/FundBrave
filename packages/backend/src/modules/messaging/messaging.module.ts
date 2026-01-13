@@ -14,14 +14,8 @@ import { WebSocketsModule } from '../websockets/websockets.module';
  * - GraphQL subscriptions for real-time updates
  */
 @Module({
-  imports: [
-    PrismaModule,
-    WebSocketsModule,
-  ],
-  providers: [
-    MessagingService,
-    MessagingResolver,
-  ],
+  imports: [PrismaModule, WebSocketsModule],
+  providers: [MessagingService, MessagingResolver],
   exports: [MessagingService],
 })
 export class MessagingModule {}

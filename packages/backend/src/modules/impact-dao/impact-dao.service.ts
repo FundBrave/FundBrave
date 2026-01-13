@@ -104,7 +104,9 @@ export class ImpactDAOService {
   /**
    * Get a user's Impact DAO stake by wallet address
    */
-  async getUserStakeByAddress(walletAddress: string): Promise<ImpactDAOStake | null> {
+  async getUserStakeByAddress(
+    walletAddress: string,
+  ): Promise<ImpactDAOStake | null> {
     const stake = await this.prisma.impactDAOStake.findFirst({
       where: {
         stakerAddress: walletAddress.toLowerCase(),
@@ -122,7 +124,10 @@ export class ImpactDAOService {
   /**
    * Get all Impact DAO stakers with pagination
    */
-  async getStakers(limit: number, offset: number): Promise<PaginatedImpactDAOStakers> {
+  async getStakers(
+    limit: number,
+    offset: number,
+  ): Promise<PaginatedImpactDAOStakers> {
     const [stakes, total] = await Promise.all([
       this.prisma.impactDAOStake.findMany({
         where: { isActive: true },
@@ -197,9 +202,12 @@ export class ImpactDAOService {
       };
     }
 
-    const daoShare = (totalYield * BigInt(stake.daoShare)) / BigInt(TOTAL_BASIS);
-    const stakerShare = (totalYield * BigInt(stake.stakerShare)) / BigInt(TOTAL_BASIS);
-    const platformShare = (totalYield * BigInt(stake.platformShare)) / BigInt(TOTAL_BASIS);
+    const daoShare =
+      (totalYield * BigInt(stake.daoShare)) / BigInt(TOTAL_BASIS);
+    const stakerShare =
+      (totalYield * BigInt(stake.stakerShare)) / BigInt(TOTAL_BASIS);
+    const platformShare =
+      (totalYield * BigInt(stake.platformShare)) / BigInt(TOTAL_BASIS);
 
     return {
       totalYield: totalYield.toString(),
@@ -473,7 +481,8 @@ export class ImpactDAOService {
           totalYield: args.totalYield,
           daoAmount: args.daoShare,
           stakerAmount: stakeShare,
-          platformAmount: (args.platformShare * stake.principal) / totalPrincipal,
+          platformAmount:
+            (args.platformShare * stake.principal) / totalPrincipal,
           txHash: `${txHash}-${stake.id}`,
           blockNumber,
           chainId,
@@ -621,7 +630,7 @@ export class ImpactDAOService {
       BigInt(0),
     );
 
-    let stats = await this.prisma.impactDAOPoolStats.findFirst();
+    const stats = await this.prisma.impactDAOPoolStats.findFirst();
 
     if (stats) {
       await this.prisma.impactDAOPoolStats.update({

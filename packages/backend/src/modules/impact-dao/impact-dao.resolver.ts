@@ -60,7 +60,7 @@ export class ImpactDAOResolver {
   @Query(() => ImpactDAOStake, {
     name: 'myImpactDAOStake',
     nullable: true,
-    description: 'Get the current user\'s Impact DAO stake',
+    description: "Get the current user's Impact DAO stake",
   })
   @UseGuards(JwtAuthGuard)
   async getMyImpactDAOStake(
@@ -134,7 +134,7 @@ export class ImpactDAOResolver {
   @Query(() => YieldSplit, {
     name: 'myDAOYieldSplit',
     nullable: true,
-    description: 'Get current user\'s custom yield split configuration',
+    description: "Get current user's custom yield split configuration",
   })
   @UseGuards(JwtAuthGuard)
   async getMyDAOYieldSplit(
@@ -190,8 +190,10 @@ export class ImpactDAOResolver {
     filter: (payload, variables) => {
       // Optional: Filter by address if provided
       if (variables.address) {
-        return payload.impactDAOStakeUpdated.stake.stakerAddress.toLowerCase() ===
-          variables.address.toLowerCase();
+        return (
+          payload.impactDAOStakeUpdated.stake.stakerAddress.toLowerCase() ===
+          variables.address.toLowerCase()
+        );
       }
       return true;
     },
@@ -217,7 +219,9 @@ export class ImpactDAOResolver {
 /**
  * Publish stake update event
  */
-export function publishStakeUpdate(payload: ImpactDAOStakeUpdatedPayload): void {
+export function publishStakeUpdate(
+  payload: ImpactDAOStakeUpdatedPayload,
+): void {
   pubSub.publish(IMPACT_DAO_EVENTS.STAKE_UPDATED, {
     impactDAOStakeUpdated: payload,
   });

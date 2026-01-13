@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, ActivityType as PrismaActivityType, Prisma as PrismaNamespace } from '@prisma/client';
+import {
+  Prisma,
+  ActivityType as PrismaActivityType,
+  Prisma as PrismaNamespace,
+} from '@prisma/client';
 
 // Activity types matching the Prisma schema
 export enum ActivityType {
@@ -484,17 +488,10 @@ export class ActivityService {
   /**
    * Log search action
    */
-  async logSearch(
-    userId: string | undefined,
-    query: string,
-  ): Promise<void> {
-    await this.logActivity(
-      userId,
-      ActivityType.SEARCH,
-      undefined,
-      'search',
-      { query },
-    );
+  async logSearch(userId: string | undefined, query: string): Promise<void> {
+    await this.logActivity(userId, ActivityType.SEARCH, undefined, 'search', {
+      query,
+    });
   }
 
   // ==================== Cleanup Methods ====================

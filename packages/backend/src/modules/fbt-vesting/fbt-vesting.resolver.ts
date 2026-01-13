@@ -48,7 +48,7 @@ export class FBTVestingResolver {
    */
   @Query(() => PaginatedVestingSchedules, {
     name: 'myVestingSchedules',
-    description: 'Get current user\'s vesting schedules',
+    description: "Get current user's vesting schedules",
   })
   @UseGuards(JwtAuthGuard)
   async getMyVestingSchedules(
@@ -56,7 +56,11 @@ export class FBTVestingResolver {
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
   ): Promise<PaginatedVestingSchedules> {
-    return this.fbtVestingService.getUserVestingSchedules(user.id, limit, offset);
+    return this.fbtVestingService.getUserVestingSchedules(
+      user.id,
+      limit,
+      offset,
+    );
   }
 
   /**
@@ -111,9 +115,7 @@ export class FBTVestingResolver {
     description: 'Get total vested FBT not yet claimed',
   })
   @UseGuards(JwtAuthGuard)
-  async getMyTotalVested(
-    @CurrentUser() user: { id: string },
-  ): Promise<string> {
+  async getMyTotalVested(@CurrentUser() user: { id: string }): Promise<string> {
     return this.fbtVestingService.getTotalVested(user.id);
   }
 

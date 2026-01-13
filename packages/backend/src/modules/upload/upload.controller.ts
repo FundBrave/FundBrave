@@ -99,7 +99,9 @@ export class UploadController {
     }
 
     const results = await Promise.all(
-      files.map((file) => this.uploadService.uploadPostMedia(file, req.user.id)),
+      files.map((file) =>
+        this.uploadService.uploadPostMedia(file, req.user.id),
+      ),
     );
 
     return {
@@ -123,7 +125,10 @@ export class UploadController {
       throw new BadRequestException('No file provided');
     }
 
-    const result = await this.uploadService.uploadMessageMedia(file, req.user.id);
+    const result = await this.uploadService.uploadMessageMedia(
+      file,
+      req.user.id,
+    );
     return this.mapToResponse(result);
   }
 
@@ -146,7 +151,10 @@ export class UploadController {
       throw new BadRequestException('Fundraiser ID is required');
     }
 
-    const result = await this.uploadService.uploadFundraiserMedia(file, fundraiserId);
+    const result = await this.uploadService.uploadFundraiserMedia(
+      file,
+      fundraiserId,
+    );
     return this.mapToResponse(result);
   }
 
@@ -169,7 +177,9 @@ export class UploadController {
     }
 
     const results = await Promise.all(
-      files.map((file) => this.uploadService.uploadFundraiserMedia(file, fundraiserId)),
+      files.map((file) =>
+        this.uploadService.uploadFundraiserMedia(file, fundraiserId),
+      ),
     );
 
     return {
@@ -229,10 +239,11 @@ export class UploadController {
     }
 
     const expiration = expiresIn ? parseInt(expiresIn, 10) : 3600;
-    const presignedUrl = await this.uploadService.generatePresignedUrlFromFileUrl(
-      fileUrl,
-      expiration,
-    );
+    const presignedUrl =
+      await this.uploadService.generatePresignedUrlFromFileUrl(
+        fileUrl,
+        expiration,
+      );
 
     return {
       presignedUrl,

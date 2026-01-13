@@ -152,7 +152,9 @@ describe('TrendingService', () => {
 
   describe('getTrendingHashtags', () => {
     it('should return trending hashtags for 24h period', async () => {
-      prismaService.trendingHashtag.findMany.mockResolvedValue([mockTrendingHashtag]);
+      prismaService.trendingHashtag.findMany.mockResolvedValue([
+        mockTrendingHashtag,
+      ]);
 
       const result = await service.getTrendingHashtags({
         limit: 10,
@@ -172,7 +174,9 @@ describe('TrendingService', () => {
     });
 
     it('should return trending hashtags for 7d period', async () => {
-      prismaService.trendingHashtag.findMany.mockResolvedValue([mockTrendingHashtag]);
+      prismaService.trendingHashtag.findMany.mockResolvedValue([
+        mockTrendingHashtag,
+      ]);
 
       await service.getTrendingHashtags({
         limit: 10,
@@ -202,7 +206,9 @@ describe('TrendingService', () => {
 
   describe('getTrendingFundraisers', () => {
     it('should return trending fundraisers', async () => {
-      prismaService.trendingFundraiser.findMany.mockResolvedValue([mockTrendingFundraiser]);
+      prismaService.trendingFundraiser.findMany.mockResolvedValue([
+        mockTrendingFundraiser,
+      ]);
 
       const result = await service.getTrendingFundraisers({
         limit: 10,
@@ -304,7 +310,9 @@ describe('TrendingService', () => {
         _sum: { amount: '2000' },
       });
       prismaService.trendingFundraiser.upsert.mockResolvedValue({});
-      prismaService.trendingFundraiser.deleteMany.mockResolvedValue({ count: 0 });
+      prismaService.trendingFundraiser.deleteMany.mockResolvedValue({
+        count: 0,
+      });
 
       await service.calculateTrendingFundraisers('24h');
 
@@ -348,7 +356,9 @@ describe('TrendingService', () => {
       prismaService.fundraiser.findMany.mockResolvedValue([]);
       prismaService.user.findMany.mockResolvedValue([]);
       prismaService.trendingHashtag.deleteMany.mockResolvedValue({ count: 0 });
-      prismaService.trendingFundraiser.deleteMany.mockResolvedValue({ count: 0 });
+      prismaService.trendingFundraiser.deleteMany.mockResolvedValue({
+        count: 0,
+      });
       prismaService.trendingUser.deleteMany.mockResolvedValue({ count: 0 });
 
       // This is a cron job that runs hourly
@@ -387,8 +397,12 @@ describe('TrendingService', () => {
 
   describe('getAllTrending', () => {
     it('should return combined trending data', async () => {
-      prismaService.trendingHashtag.findMany.mockResolvedValue([mockTrendingHashtag]);
-      prismaService.trendingFundraiser.findMany.mockResolvedValue([mockTrendingFundraiser]);
+      prismaService.trendingHashtag.findMany.mockResolvedValue([
+        mockTrendingHashtag,
+      ]);
+      prismaService.trendingFundraiser.findMany.mockResolvedValue([
+        mockTrendingFundraiser,
+      ]);
       prismaService.trendingUser.findMany.mockResolvedValue([mockTrendingUser]);
 
       const result = await service.getAllTrending({

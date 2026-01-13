@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, NotificationType as PrismaNotificationType } from '@prisma/client';
+import {
+  Prisma,
+  NotificationType as PrismaNotificationType,
+} from '@prisma/client';
 import {
   Notification,
   NotificationActor,
@@ -54,7 +57,10 @@ export class NotificationsService {
     const where: Prisma.NotificationWhereInput = {
       recipientId: userId,
       ...(unreadOnly && { read: false }),
-      ...(types && types.length > 0 && { type: { in: types as PrismaNotificationType[] } }),
+      ...(types &&
+        types.length > 0 && {
+          type: { in: types as PrismaNotificationType[] },
+        }),
     };
 
     const [notifications, total, unreadCount] = await Promise.all([
@@ -353,7 +359,9 @@ export class NotificationsService {
   /**
    * Delete all notifications for a user (cleanup)
    */
-  async deleteAllNotifications(userId: string): Promise<NotificationOperationResult> {
+  async deleteAllNotifications(
+    userId: string,
+  ): Promise<NotificationOperationResult> {
     const result = await this.prisma.notification.deleteMany({
       where: { recipientId: userId },
     });
@@ -634,10 +642,7 @@ export class NotificationsService {
   /**
    * Create a FBT vested notification
    */
-  async notifyFBTVested(
-    recipientId: string,
-    amount: string,
-  ): Promise<void> {
+  async notifyFBTVested(recipientId: string, amount: string): Promise<void> {
     try {
       await this.createNotification(
         recipientId,

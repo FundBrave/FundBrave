@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, Stake as PrismaStake, Fundraiser as PrismaFundraiser, User as PrismaUser } from '@prisma/client';
+import {
+  Prisma,
+  Stake as PrismaStake,
+  Fundraiser as PrismaFundraiser,
+  User as PrismaUser,
+} from '@prisma/client';
 import {
   Stake,
   StakerInfo,
@@ -233,7 +238,9 @@ export class StakingService {
     );
 
     const fundraiserIds = new Set(
-      stakes.filter((s) => !s.isGlobal && s.fundraiserId).map((s) => s.fundraiserId),
+      stakes
+        .filter((s) => !s.isGlobal && s.fundraiserId)
+        .map((s) => s.fundraiserId),
     );
 
     const globalStake = stakes.find((s) => s.isGlobal);
@@ -296,7 +303,9 @@ export class StakingService {
   /**
    * Get staking leaderboard
    */
-  async getStakingLeaderboard(limit: number = 10): Promise<StakingLeaderboardEntry[]> {
+  async getStakingLeaderboard(
+    limit: number = 10,
+  ): Promise<StakingLeaderboardEntry[]> {
     const leaderboardData = await this.prisma.stake.groupBy({
       by: ['stakerAddress'],
       where: { isActive: true },
@@ -401,7 +410,10 @@ export class StakingService {
   /**
    * Get user's votes for an epoch
    */
-  async getUserEpochVotes(userId: string, epochNumber: number): Promise<UserGlobalPoolVotes | null> {
+  async getUserEpochVotes(
+    userId: string,
+    epochNumber: number,
+  ): Promise<UserGlobalPoolVotes | null> {
     const epoch = await this.prisma.globalPoolEpoch.findUnique({
       where: { epochNumber },
     });
@@ -431,9 +443,10 @@ export class StakingService {
       fundraiserId: v.fundraiserId,
       fundraiserName: v.fundraiser.name,
       weight: v.weight.toString(), // Convert BigInt to string
-      percentage: totalWeight > BigInt(0)
-        ? Number((v.weight * BigInt(10000)) / totalWeight) / 100
-        : 0,
+      percentage:
+        totalWeight > BigInt(0)
+          ? Number((v.weight * BigInt(10000)) / totalWeight) / 100
+          : 0,
     }));
 
     return {
@@ -666,7 +679,10 @@ export class StakingService {
       ),
     );
 
-    return this.getUserEpochVotes(userId, input.epochNumber) as Promise<UserGlobalPoolVotes>;
+    return this.getUserEpochVotes(
+      userId,
+      input.epochNumber,
+    ) as Promise<UserGlobalPoolVotes>;
   }
 
   // ==================== Blockchain Event Processing ====================
@@ -758,7 +774,9 @@ export class StakingService {
       return newStake;
     });
 
-    this.logger.log(`Processed Staked event: ${stakerAddress} staked ${args.amount}`);
+    this.logger.log(
+      `Processed Staked event: ${stakerAddress} staked ${args.amount}`,
+    );
 
     return this.mapToStakeDto(stake);
   }
@@ -782,7 +800,9 @@ export class StakingService {
     });
 
     if (!stake) {
-      this.logger.warn(`No active stake found for ${stakerAddress} at ${args.poolAddress}`);
+      this.logger.warn(
+        `No active stake found for ${stakerAddress} at ${args.poolAddress}`,
+      );
       return;
     }
 
@@ -827,7 +847,9 @@ export class StakingService {
       });
     });
 
-    this.logger.log(`Processed Unstaked event: ${stakerAddress} unstaked ${args.amount}`);
+    this.logger.log(
+      `Processed Unstaked event: ${stakerAddress} unstaked ${args.amount}`,
+    );
   }
 
   // ==================== Helper Methods ====================
@@ -895,7 +917,7 @@ export class StakingService {
     const yieldSplit: YieldSplitConfig | undefined =
       stake.causeShare !== null
         ? {
-            causeShare: stake.causeShare!,
+            causeShare: stake.causeShare,
             stakerShare: stake.stakerShare!,
             platformShare: stake.platformShare!,
           }

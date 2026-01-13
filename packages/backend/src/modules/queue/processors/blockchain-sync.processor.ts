@@ -1,4 +1,9 @@
-import { Process, Processor, OnQueueFailed, OnQueueCompleted } from '@nestjs/bull';
+import {
+  Process,
+  Processor,
+  OnQueueFailed,
+  OnQueueCompleted,
+} from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bull';
 import { QUEUE_NAMES, BlockchainSyncJobData } from '../queue.service';
@@ -19,10 +24,13 @@ export class BlockchainSyncProcessor {
   ) {}
 
   @Process()
-  async handleBlockchainSyncJob(job: Job<BlockchainSyncJobData>): Promise<void> {
+  async handleBlockchainSyncJob(
+    job: Job<BlockchainSyncJobData>,
+  ): Promise<void> {
     this.logger.debug(`Processing blockchain sync job ${job.id}`);
 
-    const { chainId, contractAddress, contractName, fromBlock, toBlock } = job.data;
+    const { chainId, contractAddress, contractName, fromBlock, toBlock } =
+      job.data;
 
     try {
       // Get last synced block

@@ -348,7 +348,9 @@ export class FundraisersService {
   /**
    * Get fundraiser categories with counts
    */
-  async getCategoriesWithCounts(): Promise<{ category: string; count: number }[]> {
+  async getCategoriesWithCounts(): Promise<
+    { category: string; count: number }[]
+  > {
     const fundraisers = await this.prisma.fundraiser.findMany({
       where: { isActive: true },
       select: { categories: true },
@@ -497,7 +499,9 @@ export class FundraisersService {
     }
 
     if (fundraiser.creatorId !== userId) {
-      throw new UnauthorizedException('Only the creator can update this fundraiser');
+      throw new UnauthorizedException(
+        'Only the creator can update this fundraiser',
+      );
     }
 
     const updated = await this.prisma.fundraiser.update({
@@ -724,7 +728,9 @@ export class FundraisersService {
     });
 
     if (!fundraiser) {
-      this.logger.warn(`Fundraiser ${args.fundraiserId} not found for GoalReached event`);
+      this.logger.warn(
+        `Fundraiser ${args.fundraiserId} not found for GoalReached event`,
+      );
       return;
     }
 
@@ -820,7 +826,9 @@ export class FundraisersService {
   /**
    * Build Prisma where clause from filter input
    */
-  private buildWhereClause(filter?: FundraiserFilterInput): Prisma.FundraiserWhereInput {
+  private buildWhereClause(
+    filter?: FundraiserFilterInput,
+  ): Prisma.FundraiserWhereInput {
     if (!filter) {
       return {};
     }
@@ -938,15 +946,17 @@ export class FundraisersService {
     };
 
     // Convert BigInt targetAmount to string for DTO
-    const milestones: FundraiserMilestone[] = fundraiser.milestones.map((m) => ({
-      id: m.id,
-      title: m.title,
-      description: m.description ?? undefined,
-      targetAmount: m.targetAmount.toString(),
-      isReached: m.isReached,
-      reachedAt: m.reachedAt ?? undefined,
-      createdAt: m.createdAt,
-    }));
+    const milestones: FundraiserMilestone[] = fundraiser.milestones.map(
+      (m) => ({
+        id: m.id,
+        title: m.title,
+        description: m.description ?? undefined,
+        targetAmount: m.targetAmount.toString(),
+        isReached: m.isReached,
+        reachedAt: m.reachedAt ?? undefined,
+        createdAt: m.createdAt,
+      }),
+    );
 
     const updates: FundraiserUpdate[] = fundraiser.updates.map((u) => ({
       id: u.id,

@@ -1,0 +1,5 @@
+-- Add onboarding fields to users table
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "birthdate" TIMESTAMP(3);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "goals" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "interests" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "onboardingCompleted" BOOLEAN NOT NULL DEFAULT false;

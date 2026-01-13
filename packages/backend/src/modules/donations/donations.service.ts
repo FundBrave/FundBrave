@@ -222,7 +222,9 @@ export class DonationsService {
   /**
    * Get donation statistics for a fundraiser
    */
-  async getFundraiserDonationStats(fundraiserId: string): Promise<DonationStats> {
+  async getFundraiserDonationStats(
+    fundraiserId: string,
+  ): Promise<DonationStats> {
     const donations = await this.prisma.donation.findMany({
       where: { fundraiserId },
       select: {
@@ -247,8 +249,10 @@ export class DonationsService {
         ? (totalDonated / BigInt(donations.length)).toString()
         : '0';
 
-    const largestDonation = donations.length > 0 ? donations[0].amount.toString() : '0';
-    const lastDonation = donations.length > 0 ? donations[donations.length - 1] : null;
+    const largestDonation =
+      donations.length > 0 ? donations[0].amount.toString() : '0';
+    const lastDonation =
+      donations.length > 0 ? donations[donations.length - 1] : null;
 
     return {
       totalDonated: totalDonated.toString(),
@@ -291,9 +295,12 @@ export class DonationsService {
       donationsCount: donations.length,
       fundraisersDonatedTo: uniqueFundraisers.size,
       averageDonation,
-      firstDonationAt: donations.length > 0 ? donations[0].createdAt : undefined,
+      firstDonationAt:
+        donations.length > 0 ? donations[0].createdAt : undefined,
       lastDonationAt:
-        donations.length > 0 ? donations[donations.length - 1].createdAt : undefined,
+        donations.length > 0
+          ? donations[donations.length - 1].createdAt
+          : undefined,
     };
   }
 
@@ -333,22 +340,24 @@ export class DonationsService {
 
     const donorMap = new Map(donors.map((d) => [d.walletAddress, d]));
 
-    const entries: DonationLeaderboardEntry[] = leaderboardData.map((data, index) => {
-      const donor = donorMap.get(data.donorAddress);
-      return {
-        rank: index + 1,
-        donor: {
-          id: donor?.id,
-          walletAddress: data.donorAddress,
-          username: donor?.username ?? undefined,
-          displayName: donor?.displayName ?? undefined,
-          avatarUrl: donor?.avatarUrl ?? undefined,
-          isAnonymous: false,
-        },
-        totalDonated: data._sum?.amount?.toString() ?? '0',
-        donationsCount: data._count?.id ?? 0,
-      };
-    });
+    const entries: DonationLeaderboardEntry[] = leaderboardData.map(
+      (data, index) => {
+        const donor = donorMap.get(data.donorAddress);
+        return {
+          rank: index + 1,
+          donor: {
+            id: donor?.id,
+            walletAddress: data.donorAddress,
+            username: donor?.username ?? undefined,
+            displayName: donor?.displayName ?? undefined,
+            avatarUrl: donor?.avatarUrl ?? undefined,
+            isAnonymous: false,
+          },
+          totalDonated: data._sum?.amount?.toString() ?? '0',
+          donationsCount: data._count?.id ?? 0,
+        };
+      },
+    );
 
     return {
       entries,
@@ -360,7 +369,9 @@ export class DonationsService {
   /**
    * Get recent donation activity (for live feed)
    */
-  async getRecentDonationActivity(limit: number = 20): Promise<RecentDonationActivity[]> {
+  async getRecentDonationActivity(
+    limit: number = 20,
+  ): Promise<RecentDonationActivity[]> {
     const donations = await this.prisma.donation.findMany({
       where: { isAnonymous: false },
       select: {
@@ -548,7 +559,9 @@ export class DonationsService {
       return newDonation;
     });
 
-    this.logger.log(`Recorded donation ${donation.id} for ${input.fundraiserId}`);
+    this.logger.log(
+      `Recorded donation ${donation.id} for ${input.fundraiserId}`,
+    );
 
     return this.mapToDonationDto(donation);
   }
@@ -748,7 +761,9 @@ export class DonationsService {
   /**
    * Build Prisma where clause from filter input
    */
-  private buildWhereClause(filter?: DonationFilterInput): Prisma.DonationWhereInput {
+  private buildWhereClause(
+    filter?: DonationFilterInput,
+  ): Prisma.DonationWhereInput {
     if (!filter) return {};
 
     const where: Prisma.DonationWhereInput = {};
@@ -808,11 +823,15 @@ export class DonationsService {
     const donor: DonorInfo = {
       id: donation.donor?.id,
       walletAddress: donation.donorAddress,
-      username: donation.isAnonymous ? undefined : donation.donor?.username ?? undefined,
+      username: donation.isAnonymous
+        ? undefined
+        : (donation.donor?.username ?? undefined),
       displayName: donation.isAnonymous
         ? undefined
-        : donation.donor?.displayName ?? undefined,
-      avatarUrl: donation.isAnonymous ? undefined : donation.donor?.avatarUrl ?? undefined,
+        : (donation.donor?.displayName ?? undefined),
+      avatarUrl: donation.isAnonymous
+        ? undefined
+        : (donation.donor?.avatarUrl ?? undefined),
       isAnonymous: donation.isAnonymous,
     };
 

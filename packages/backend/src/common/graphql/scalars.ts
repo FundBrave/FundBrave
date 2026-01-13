@@ -17,7 +17,9 @@ export const BigIntScalar = new GraphQLScalarType({
     if (typeof value === 'number') {
       return value.toString();
     }
-    throw new Error('BigInt can only serialize bigint, string, or number values');
+    throw new Error(
+      'BigInt can only serialize bigint, string, or number values',
+    );
   },
   parseValue(value: unknown): string {
     if (typeof value === 'string') {

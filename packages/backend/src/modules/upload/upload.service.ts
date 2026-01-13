@@ -10,9 +10,18 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 
 // File type validation
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
-const ALLOWED_DOCUMENT_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+const ALLOWED_DOCUMENT_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
 
 // Size limits (in bytes)
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
@@ -50,14 +59,20 @@ export class UploadService {
 
   constructor(private readonly configService: ConfigService) {
     this.region = this.configService.get<string>('AWS_REGION', 'us-east-1');
-    this.bucket = this.configService.get<string>('AWS_S3_BUCKET', 'fundbrave-media');
+    this.bucket = this.configService.get<string>(
+      'AWS_S3_BUCKET',
+      'fundbrave-media',
+    );
     this.cdnUrl = this.configService.get<string>('CDN_URL');
 
     this.s3Client = new S3Client({
       region: this.region,
       credentials: {
         accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID', ''),
-        secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY', ''),
+        secretAccessKey: this.configService.get<string>(
+          'AWS_SECRET_ACCESS_KEY',
+          '',
+        ),
       },
     });
   }
@@ -124,7 +139,10 @@ export class UploadService {
   /**
    * Upload an avatar image
    */
-  async uploadAvatar(file: Express.Multer.File, userId: string): Promise<UploadResult> {
+  async uploadAvatar(
+    file: Express.Multer.File,
+    userId: string,
+  ): Promise<UploadResult> {
     return this.uploadFile(file, {
       folder: `avatars/${userId}`,
       maxSize: MAX_AVATAR_SIZE,
@@ -136,7 +154,10 @@ export class UploadService {
   /**
    * Upload a banner image
    */
-  async uploadBanner(file: Express.Multer.File, userId: string): Promise<UploadResult> {
+  async uploadBanner(
+    file: Express.Multer.File,
+    userId: string,
+  ): Promise<UploadResult> {
     return this.uploadFile(file, {
       folder: `banners/${userId}`,
       maxSize: MAX_BANNER_SIZE,
@@ -246,7 +267,10 @@ export class UploadService {
   /**
    * Generate a presigned URL for private file access
    */
-  async generatePresignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+  async generatePresignedUrl(
+    key: string,
+    expiresIn: number = 3600,
+  ): Promise<string> {
     try {
       const command = new GetObjectCommand({
         Bucket: this.bucket,

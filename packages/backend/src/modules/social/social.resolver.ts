@@ -38,12 +38,25 @@ export class SocialResolver {
   async getPosts(
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
-    @Args('filter', { type: () => PostFilterInput, nullable: true }) filter?: PostFilterInput,
-    @Args('sortBy', { type: () => PostSortBy, defaultValue: PostSortBy.CREATED_AT }) sortBy?: PostSortBy,
-    @Args('order', { type: () => SortOrder, defaultValue: SortOrder.DESC }) order?: SortOrder,
+    @Args('filter', { type: () => PostFilterInput, nullable: true })
+    filter?: PostFilterInput,
+    @Args('sortBy', {
+      type: () => PostSortBy,
+      defaultValue: PostSortBy.CREATED_AT,
+    })
+    sortBy?: PostSortBy,
+    @Args('order', { type: () => SortOrder, defaultValue: SortOrder.DESC })
+    order?: SortOrder,
     @CurrentUser() viewer?: { id: string },
   ): Promise<PaginatedPosts> {
-    return this.socialService.getPosts(limit, offset, filter, sortBy, order, viewer?.id);
+    return this.socialService.getPosts(
+      limit,
+      offset,
+      filter,
+      sortBy,
+      order,
+      viewer?.id,
+    );
   }
 
   @Query(() => PaginatedPosts, { name: 'userPosts' })
@@ -80,7 +93,8 @@ export class SocialResolver {
   @UseGuards(JwtAuthGuard)
   async getFeed(
     @CurrentUser() user: { id: string },
-    @Args('feedType', { type: () => FeedType, defaultValue: FeedType.HOME }) feedType: FeedType,
+    @Args('feedType', { type: () => FeedType, defaultValue: FeedType.HOME })
+    feedType: FeedType,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('cursor', { nullable: true }) cursor?: string,
   ): Promise<Feed> {
@@ -113,7 +127,12 @@ export class SocialResolver {
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
     @CurrentUser() viewer?: { id: string },
   ): Promise<PaginatedComments> {
-    return this.socialService.getPostComments(postId, limit, offset, viewer?.id);
+    return this.socialService.getPostComments(
+      postId,
+      limit,
+      offset,
+      viewer?.id,
+    );
   }
 
   // ==================== Post Mutations ====================
