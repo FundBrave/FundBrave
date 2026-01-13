@@ -101,7 +101,7 @@ export function useComments({
     if (enabled) {
       refetch();
     }
-  }, [postId, sortOrder, enabled]);
+  }, [refetch, enabled]);
 
   return {
     threads,
