@@ -53,79 +53,6 @@ const ProfileDetails: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
           error={errors.avatar}
         />
 
-        {/* Name & Username Row */}
-        <motion.div
-          className="flex gap-5 w-full flex-col sm:flex-row"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          {/* Name Field */}
-          <div className="flex flex-col gap-3 flex-1 sm:max-w-[267px]">
-            <label
-              htmlFor="name"
-              className="text-foreground text-lg font-medium tracking-wide"
-            >
-              Name
-            </label>
-            <div
-              className={`h-[60px] bg-surface-elevated rounded-xl px-8 py-4 flex items-center gap-2 border ${
-                errors.name && touchedFields.has("name")
-                  ? "border-red-500"
-                  : "border-border-default"
-              } focus-within:border-purple-500 transition-colors`}
-            >
-              <User className="w-6 h-6 text-muted-foreground" />
-              <input
-                id="name"
-                type="text"
-                name="name"
-                inputMode="text"
-                value={formData.name}
-                onChange={handleInputChange}
-                onBlur={() => handleBlur("name")}
-                placeholder="John Doe"
-                className="flex-1 min-w-0 bg-transparent text-foreground text-base outline-none placeholder:text-muted-foreground font-medium tracking-wide"
-              />
-            </div>
-            {errors.name && touchedFields.has("name") && (
-              <p className="text-red-400 text-sm">{errors.name}</p>
-            )}
-          </div>
-
-          {/* Username Field */}
-          <div className="flex flex-col gap-3 flex-1 sm:max-w-[267px]">
-            <label
-              htmlFor="username"
-              className="text-foreground text-lg font-medium tracking-wide"
-            >
-              Username
-            </label>
-            <div
-              className={`h-[60px] bg-surface-elevated rounded-xl px-8 py-4 flex items-center gap-2 border ${
-                errors.username && touchedFields.has("username")
-                  ? "border-red-500"
-                  : "border-border-default"
-              } focus-within:border-purple-500 transition-colors`}
-            >
-              <User className="w-6 h-6 text-text-tertiary" />
-              <input
-                id="username"
-                type="text"
-                name="username"
-                inputMode="text"
-                value={formData.username}
-                onChange={handleInputChange}
-                onBlur={() => handleBlur("username")}
-                placeholder="johndoe"
-                className="flex-1 min-w-0 bg-transparent text-foreground text-base outline-none placeholder:text-text-tertiary font-medium tracking-wide"
-              />
-            </div>
-            {errors.username && touchedFields.has("username") && (
-              <p className="text-red-400 text-sm">{errors.username}</p>
-            )}
-          </div>
-        </motion.div>
 
         {/* Email Field */}
         <motion.div
@@ -135,33 +62,33 @@ const ProfileDetails: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
           transition={{ delay: 0.3 }}
         >
           <label
-            htmlFor="email"
+            htmlFor="username"
             className="text-foreground text-lg font-medium tracking-wide"
           >
-            Email
+            Username
           </label>
           <div
             className={`h-[60px] bg-surface-elevated rounded-xl px-8 py-4 flex items-center gap-2 border ${
-              errors.email && touchedFields.has("email")
+              errors.username && touchedFields.has("username")
                 ? "border-red-500"
                 : "border-border-default"
-            } focus-within:border-purple-500 transition-colors`}
+            } transition-colors focus-within:border-purple-500`}
           >
-            <Mail className="w-6 h-6 text-muted-foreground" />
+            <User className="w-6 h-6 text-text-tertiary" />
             <input
-              id="email"
-              type="email"
-              name="email"
-              inputMode="email"
-              value={formData.email}
+              id="username"
+              type="text"
+              name="username"
+              inputMode="text"
+              value={formData.username}
               onChange={handleInputChange}
-              onBlur={() => handleBlur("email")}
-              placeholder="johndoe@gmail.com"
-              className="flex-1 min-w-0 bg-transparent text-foreground text-base outline-none placeholder:text-muted-foreground font-medium tracking-wide"
+              onBlur={() => handleBlur("username")}
+              placeholder="johndoe"
+              className="flex-1 min-w-0 text-foreground border-0! border-black border-none! text-base outline-none placeholder:text-muted-foreground font-medium tracking-wide"
             />
           </div>
-          {errors.email && touchedFields.has("email") && (
-            <p className="text-red-400 text-sm">{errors.email}</p>
+          {errors.username && touchedFields.has("username") && (
+            <p className="text-red-400 text-sm">{errors.username}</p>
           )}
         </motion.div>
 
@@ -217,7 +144,7 @@ const ProfileDetails: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
               onBlur={() => handleBlur("bio")}
               placeholder="Write here..."
               rows={5}
-              className="w-full bg-transparent text-foreground text-base outline-none placeholder:text-muted-foreground font-medium tracking-wide resize-none"
+              className="w-full bg-transparent focus:border-none! focus:border-0! text-foreground text-base outline-none placeholder:text-muted-foreground font-medium tracking-wide resize-none"
             />
           </div>
           <div className="flex justify-between">
