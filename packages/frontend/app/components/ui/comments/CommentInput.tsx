@@ -105,7 +105,7 @@ export function CommentInput({
             {(isReply || onCancel) && (
               <button
                 onClick={handleCancel}
-                className="min-h-[44px] min-w-[44px] px-3 py-1.5 text-xs text-text-secondary hover:text-foreground active:text-foreground active:scale-[0.98] transition-colors"
+                className="min-h-[44px] min-w-[44px] px-3 py-1.5 text-xs text-text-secondary hover:text-foreground active:scale-[0.98] transition-colors"
               >
                 Cancel
               </button>

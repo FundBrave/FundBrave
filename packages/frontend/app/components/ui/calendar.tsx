@@ -38,7 +38,7 @@ function Calendar({
         weekdays: "flex",
         weekday: "text-muted-foreground rounded-md w-11 font-normal text-[0.8rem] text-center",
         week: "flex w-full mt-2",
-        day: "size-11 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+        day: "size-11 text-center text-sm p-0 relative focus-within:z-20",
         day_button: cn(
           "size-11 p-0 font-normal text-foreground hover:bg-purple-900/50 active:bg-purple-900/70 active:scale-[0.98] rounded-md transition-colors",
           "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-background"

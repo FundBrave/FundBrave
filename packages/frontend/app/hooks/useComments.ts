@@ -95,7 +95,8 @@ export function useComments({
     await fetchComments(true);
   }, [fetchComments]);
 
-  // Initial fetch
+  // Initial fetch - intentionally omitting refetch from deps to prevent infinite loops
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (enabled) {
       refetch();
