@@ -179,7 +179,7 @@ function MobileDrawer({
         aria-hidden="true"
       />
       {/* Drawer */}
-      <div className="fixed inset-y-0 left-0 w-72 bg-background border-r border-white/10 z-50 md:hidden overflow-y-auto">
+      <div className="fixed inset-y-0 left-0 w-72 bg-background border-r border-white/10 z-50 md:hidden overflow-y-auto scrollbar-hidden">
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h2 className="text-lg font-semibold text-foreground">Settings</h2>
           <button
@@ -229,7 +229,7 @@ export default function SettingsLayout({
 
       <div className="flex h-[calc(100vh-65px)] md:h-screen">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:flex md:flex-col md:w-64 lg:w-72 border-r border-white/10 bg-background overflow-y-auto">
+        <aside className="hidden md:flex md:flex-col md:w-64 lg:w-72 border-r border-white/10 bg-background overflow-y-auto scrollbar-hidden">
           {/* Desktop Header */}
           <div className="flex items-center gap-3 p-4 border-b border-white/10">
             <Link
@@ -245,7 +245,7 @@ export default function SettingsLayout({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto scrollbar-hidden">
           <div className="max-w-3xl mx-auto p-4 md:p-6 lg:p-8">{children}</div>
         </main>
       </div>

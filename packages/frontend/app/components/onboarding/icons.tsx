@@ -179,6 +179,98 @@ export const RocketIcon = React.forwardRef<SVGSVGElement, IconProps>(
 );
 RocketIcon.displayName = "RocketIcon";
 
+/* Heart Icon - for Interests step */
+export const HeartIcon = React.forwardRef<SVGSVGElement, IconProps>(
+  ({ className, useGradient, ...props }, ref) => {
+    const gradientId = useId();
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="22"
+        viewBox="0 0 24 22"
+        fill="none"
+        className={className}
+        {...props}
+        ref={ref}
+      >
+        <GradientDefs gradientId={gradientId} />
+        <path
+          d="M12 21.35L10.55 20.03C5.4 15.36 2 12.27 2 8.5C2 5.41 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.08C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.41 22 8.5C22 12.27 18.6 15.36 13.45 20.03L12 21.35Z"
+          fill={useGradient ? `url(#${gradientId})` : "currentColor"}
+        />
+      </svg>
+    );
+  }
+);
+HeartIcon.displayName = "HeartIcon";
+
+/* Wallet Icon - for Connect Wallet step */
+export const WalletIcon = React.forwardRef<SVGSVGElement, IconProps>(
+  ({ className, useGradient, ...props }, ref) => {
+    const gradientId = useId();
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="22"
+        viewBox="0 0 24 22"
+        fill="none"
+        className={className}
+        {...props}
+        ref={ref}
+      >
+        <GradientDefs gradientId={gradientId} />
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M2 4C2 2.34315 3.34315 1 5 1H19C20.6569 1 22 2.34315 22 4V6H5C4.44772 6 4 5.55228 4 5C4 4.44772 4.44772 4 5 4H20V4C20 3.44772 19.5523 3 19 3H5C4.44772 3 4 3.44772 4 4H2ZM2 7V18C2 19.6569 3.34315 21 5 21H19C20.6569 21 22 19.6569 22 18V8H5C3.34315 8 2 6.65685 2 5V7ZM17 14.5C17.8284 14.5 18.5 13.8284 18.5 13C18.5 12.1716 17.8284 11.5 17 11.5C16.1716 11.5 15.5 12.1716 15.5 13C15.5 13.8284 16.1716 14.5 17 14.5Z"
+          fill={useGradient ? `url(#${gradientId})` : "currentColor"}
+        />
+      </svg>
+    );
+  }
+);
+WalletIcon.displayName = "WalletIcon";
+
+/* Users Icon - for Follow Suggestions step */
+export const UsersIcon = React.forwardRef<SVGSVGElement, IconProps>(
+  ({ className, useGradient, ...props }, ref) => {
+    const gradientId = useId();
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="20"
+        viewBox="0 0 24 20"
+        fill="none"
+        className={className}
+        {...props}
+        ref={ref}
+      >
+        <GradientDefs gradientId={gradientId} />
+        <path
+          d="M9 10C11.2091 10 13 8.20914 13 6C13 3.79086 11.2091 2 9 2C6.79086 2 5 3.79086 5 6C5 8.20914 6.79086 10 9 10Z"
+          fill={useGradient ? `url(#${gradientId})` : "currentColor"}
+        />
+        <path
+          d="M9 12C5.13401 12 2 14.2386 2 17V18H16V17C16 14.2386 12.866 12 9 12Z"
+          fill={useGradient ? `url(#${gradientId})` : "currentColor"}
+        />
+        <path
+          d="M16.5 10C18.433 10 20 8.433 20 6.5C20 4.567 18.433 3 16.5 3C15.6716 3 14.9086 3.29398 14.3032 3.78032C14.7469 4.41814 15 5.18086 15 6C15 7.17669 14.5 8.24073 13.7071 9.00002C14.3902 9.62501 15.3008 10 16.5 10Z"
+          fill={useGradient ? `url(#${gradientId})` : "currentColor"}
+        />
+        <path
+          d="M17 12C16.5093 12 16.0343 12.0455 15.5786 12.1329C16.4928 13.1698 17.0977 14.4579 17.2353 15.8866C17.5696 15.9607 17.9174 16 18.2727 16H22V15C22 13.0726 19.866 12 17 12Z"
+          fill={useGradient ? `url(#${gradientId})` : "currentColor"}
+        />
+      </svg>
+    );
+  }
+);
+UsersIcon.displayName = "UsersIcon";
+
 /* Check Icon  */
 
 const CheckIcon = React.forwardRef<SVGSVGElement, IconProps>(
@@ -214,6 +306,9 @@ export const onboardingIcons = {
   GroupPersonIcon,
   PencilIcon,
   RocketIcon,
+  HeartIcon,
+  WalletIcon,
+  UsersIcon,
   CheckIcon,
 };
 

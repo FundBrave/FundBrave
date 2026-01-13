@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, type MouseEvent } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { CommentSection } from "@/app/components/ui/comments";
 import { PostHeader } from "./PostHeader";
 import { PostContent } from "./PostContent";
 import { PostImageGrid } from "./PostImageGrid";
-import { PostActions } from "./PostActions";
+import { PostActionBar } from "./PostActionBar";
 import { PostIndicator } from "./PostIndicator";
 import { postCardVariants, getVariantDefaults, type PostCardProps } from "./types";
 import type { PostImage } from "@/app/types/post";
@@ -35,6 +36,7 @@ export function PostCard(props: PostCardProps) {
     onMenuClick,
     onAuthorClick,
     onImageClick,
+    onPostClick,
     onAddComment,
     onLikeComment,
     onUnlikeComment,
@@ -42,6 +44,8 @@ export function PostCard(props: PostCardProps) {
     onDeleteComment,
     ...restProps
   } = props;
+
+  const router = useRouter();
 
   // Merge variant defaults with explicit props
   const variantDefaults = getVariantDefaults(variant);
@@ -87,8 +91,49 @@ export function PostCard(props: PostCardProps) {
     onFollow?.(post.author.id ?? post.author.username);
   };
 
+  // Handle post click - navigates to post detail page
+  const handlePostClick = useCallback(
+    (e: MouseEvent<HTMLDivElement>) => {
+      // Only navigate if the click target is the container itself or non-interactive content
+      const target = e.target as HTMLElement;
+
+      // Don't navigate if clicking on interactive elements
+      if (
+        target.closest("button") ||
+        target.closest("a") ||
+        target.closest('[role="button"]') ||
+        target.closest("input") ||
+        target.closest("textarea")
+      ) {
+        return;
+      }
+
+      // Call custom handler if provided, otherwise navigate
+      if (onPostClick) {
+        onPostClick(post.id);
+      } else {
+        router.push(`/p/${post.id}`);
+      }
+    },
+    [onPostClick, post.id, router]
+  );
+
+  // Stop propagation helper for nested interactive elements
+  const stopPropagation = useCallback((e: MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
   return (
-    <div className={cn(postCardVariants({ variant }), className)}>
+    <article
+      onClick={handlePostClick}
+      className={cn(
+        postCardVariants({ variant }),
+        "cursor-pointer",
+        className
+      )}
+      role="article"
+      aria-label={`Post by ${post.author.name}`}
+    >
       {/* Liked indicator */}
       {showLikedIndicator && <PostIndicator type="liked" />}
 
@@ -99,7 +144,10 @@ export function PostCard(props: PostCardProps) {
           <img
             src={post.author.avatar}
             alt={post.author.name}
-            onClick={() => onAuthorClick?.(post.author.id ?? post.author.username)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAuthorClick?.(post.author.id ?? post.author.username);
+            }}
             className={cn(
               "w-10 h-10 rounded-full flex-shrink-0 object-cover",
               onAuthorClick && "cursor-pointer"
@@ -127,7 +175,10 @@ export function PostCard(props: PostCardProps) {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-1 flex-wrap">
                 <span
-                  onClick={() => onAuthorClick?.(post.author.id ?? post.author.username)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAuthorClick?.(post.author.id ?? post.author.username);
+                  }}
                   className={cn(
                     "text-foreground font-bold",
                     onAuthorClick && "hover:underline cursor-pointer"
@@ -177,21 +228,29 @@ export function PostCard(props: PostCardProps) {
           )}
 
           {/* Actions */}
-          <PostActions
-            likesCount={post.likesCount}
-            commentsCount={post.commentsCount}
-            sharesCount={post.sharesCount}
-            viewsCount={post.viewsCount}
-            isLiked={post.isLiked}
-            isBookmarked={post.isBookmarked}
-            showComments={showComments}
-            readOnly={readOnly}
-            onLike={handleLikeClick}
-            onComment={handleCommentClick}
-            onRepost={() => onRepost?.(post.id)}
-            onBookmark={() => onBookmark?.(post.id)}
-            onShare={() => onShare?.(post.id)}
-          />
+          {!readOnly && (
+            <PostActionBar
+              post={{
+                id: post.id,
+                likesCount: post.likesCount,
+                commentsCount: post.commentsCount,
+                isLiked: post.isLiked,
+                isBookmarked: post.isBookmarked ?? false,
+              }}
+              campaign={post.campaign}
+              onLike={handleLikeClick}
+              onComment={handleCommentClick}
+              onShare={() => onShare?.(post.id)}
+              onBookmark={() => onBookmark?.(post.id)}
+              onDonate={post.campaign ? () => {
+                // Navigate to campaign donation page
+                router.push(`/campaigns/${post.campaign!.id}/donate`);
+              } : undefined}
+              size="md"
+              context="feed"
+              className="mt-3 -ml-1"
+            />
+          )}
 
           {/* Comments Section */}
           {enableComments && showComments && (
@@ -212,7 +271,7 @@ export function PostCard(props: PostCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 

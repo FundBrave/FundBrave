@@ -1073,4 +1073,239 @@ a,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  /* Disable specific animations when reduced motion is preferred */
+  .animate-float,
+  .animate-page-fade-in,
+  .campaign-progress-shimmer::after,
+  .campaign-skeleton::before {
+    animation: none !important;
+  }
+}
+
+/* ============================================================================
+   ENHANCED FOCUS STYLES (WCAG 2.2 AA Compliant)
+   ============================================================================ */
+
+/**
+ * Focus Ring - Primary focus indicator
+ * 2px solid ring with primary color, offset from element
+ * Meets WCAG 2.2 AA 3:1 contrast requirement for focus indicators
+ */
+.focus-ring-primary {
+  --focus-ring-color: var(--primary);
+  --focus-ring-offset: 2px;
+  --focus-ring-width: 2px;
+}
+
+.focus-ring-primary:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--focus-ring-offset) var(--background),
+    0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) var(--focus-ring-color);
+}
+
+/**
+ * Focus Ring - Inset variant (for elements with rounded corners or images)
+ */
+.focus-ring-inset:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+/**
+ * Focus Ring - High contrast for dark backgrounds
+ */
+.focus-ring-high-contrast:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+/**
+ * Interactive element base focus style
+ * Applied to buttons, links, inputs, etc.
+ */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[role="checkbox"]:focus-visible,
+[role="radio"]:focus-visible,
+[role="switch"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="menuitem"]:focus-visible,
+[role="option"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/**
+ * Remove default outline and use custom focus ring for form inputs
+ */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 0;
+  border-color: var(--primary);
+}
+
+/**
+ * Focus within - for containers that should indicate focus
+ */
+.focus-within-ring:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/**
+ * Keyboard-only focus (hide focus ring for mouse users)
+ * Note: This works because :focus-visible only triggers for keyboard navigation
+ */
+.keyboard-focus-only:focus {
+  outline: none;
+}
+
+.keyboard-focus-only:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   ARIA STATE STYLES
+   ============================================================================ */
+
+/**
+ * Pressed state (for toggle buttons)
+ * Note: Background color styling for pressed states should be handled
+ * by individual components to avoid unintended styling on action buttons
+ * that use aria-pressed for accessibility but only need text color changes.
+ */
+
+/**
+ * Expanded state (for accordions, dropdowns)
+ */
+[aria-expanded="true"] > .expand-icon {
+  transform: rotate(180deg);
+}
+
+/**
+ * Selected state (for tabs, options)
+ */
+[aria-selected="true"] {
+  --selected-bg: color-mix(in srgb, var(--primary) 10%, transparent);
+  background-color: var(--selected-bg);
+}
+
+/**
+ * Current page (for navigation)
+ */
+[aria-current="page"] {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/**
+ * Invalid form fields
+ */
+[aria-invalid="true"] {
+  border-color: var(--destructive) !important;
+}
+
+[aria-invalid="true"]:focus-visible {
+  outline-color: var(--destructive);
+}
+
+/**
+ * Disabled state
+ */
+[aria-disabled="true"],
+[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/**
+ * Busy/Loading state
+ */
+[aria-busy="true"] {
+  cursor: wait;
+}
+
+/* 404 Page Animations */
+@keyframes subtle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: subtle-float 3s ease-in-out infinite;
+}
+
+.animate-page-fade-in {
+  animation: page-fade-in 300ms ease-out forwards;
+}
+
+/* Search Modal Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 200ms ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 300ms ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 300ms ease-out;
 }

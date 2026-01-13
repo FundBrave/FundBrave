@@ -348,7 +348,7 @@ export default function CampaignCard({
         </div>
 
         {/* View Campaign Link with Arrow Animation - CSS transitions */}
-        <Link href={`/campaigns/${id}`} className="mt-1 cursor-pointer group/link">
+        <Link href={`/campaigns/${id}`} className="mt-1 cursor-pointer group/link min-h-[44px] flex items-center active:scale-[0.98] transition-transform">
           <div className="flex items-center gap-1">
             <span
               className="text-transparent bg-clip-text font-semibold text-[16px] tracking-[0.64px] font-['Montserrat']"
@@ -360,7 +360,7 @@ export default function CampaignCard({
               View Campaign
             </span>
             <ArrowRight
-              className="w-4 h-4 opacity-0 -translate-x-2 transition-all duration-200 group-hover/link:opacity-100 group-hover/link:translate-x-0"
+              className="w-4 h-4 opacity-0 -translate-x-2 transition-all duration-200 group-hover/link:opacity-100 group-hover/link:translate-x-0 group-active/link:opacity-100 group-active/link:translate-x-0"
               style={{ color: "rgb(69, 12, 240)" }}
             />
           </div>

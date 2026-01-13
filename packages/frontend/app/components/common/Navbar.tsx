@@ -5,21 +5,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import gsap from "gsap";
-import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
-import { EASE, DURATION } from "@/lib/constants/animation";
 import { useTheme } from "@/app/components/theme/theme-provider";
+import { useSearch } from "@/app/provider/SearchProvider";
 import { Button } from "@/app/components/ui/button";
 import { Avatar } from "@/app/components/ui/Avatar";
 import {
   Search,
   Settings,
-  Bell,
   MessageCircle,
   Menu,
   X,
   ChevronDown,
 } from "@/app/components/ui/icons";
+import { NotificationBell, NotificationPanel } from "@/app/components/notifications";
 
 /**
  * Navigation link configuration
@@ -52,16 +51,13 @@ export interface NavbarProps {
 export default function Navbar({ className }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const pathname = usePathname();
   const { theme } = useTheme();
+  const { openSearch } = useSearch();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navContainerRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const linkRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Theme-aware logo: light logo for dark mode, dark logo for light mode
   const logoSrc =
@@ -136,35 +132,6 @@ export default function Navbar({ className }: NavbarProps) {
     setUserDropdownOpen(!userDropdownOpen);
   };
 
-  // Expand search bar
-  const expandSearch = useCallback(() => {
-    setIsSearchExpanded(true);
-    // Focus after animation starts
-    setTimeout(() => searchInputRef.current?.focus(), 100);
-  }, []);
-
-  // Collapse search bar
-  const collapseSearch = useCallback(() => {
-    setIsSearchExpanded(false);
-    setSearchQuery("");
-  }, []);
-
-  // Handle search input blur
-  const handleSearchBlur = useCallback(() => {
-    // Only collapse if search is empty
-    if (!searchQuery) {
-      collapseSearch();
-    }
-  }, [searchQuery, collapseSearch]);
-
-  // Handle escape key to close search
-  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      collapseSearch();
-      searchInputRef.current?.blur();
-    }
-  }, [collapseSearch]);
-
   return (
     <nav
       className={cn(
@@ -196,66 +163,14 @@ export default function Navbar({ className }: NavbarProps) {
             </div>
           </Link>
 
-          {/* Search Bar - Icon that expands to search bar */}
-          <motion.div
-            ref={searchContainerRef}
-            onClick={() => !isSearchExpanded && expandSearch()}
-            animate={{
-              width: isSearchExpanded ? 220 : 44,
-              borderRadius: isSearchExpanded ? 16 : 22,
-            }}
-            transition={{
-              duration: DURATION.fast,
-              ease: EASE.snappy,
-            }}
-            className={cn(
-              "bg-surface-sunken flex items-center h-11 shrink-0 overflow-hidden",
-              !isSearchExpanded && "cursor-pointer hover:bg-surface-elevated justify-center",
-              isSearchExpanded && "px-3 gap-2"
-            )}
-            role="search"
+          {/* Search Button - Opens global SearchModal */}
+          <button
+            onClick={openSearch}
+            className="min-h-[44px] min-w-[44px] size-11 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-elevated active:bg-surface-overlay active:scale-[0.98] transition-colors cursor-pointer"
+            aria-label="Search (Cmd+K)"
           >
-            <Search size={20} className="text-text-secondary shrink-0" aria-hidden="true" />
-            <AnimatePresence>
-              {isSearchExpanded && (
-                <motion.div
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: "auto" }}
-                  exit={{ opacity: 0, width: 0 }}
-                  transition={{ duration: DURATION.fast, ease: EASE.snappy }}
-                  className="flex items-center flex-1 min-w-0"
-                >
-                  <label htmlFor="desktop-search" className="sr-only">
-                    Search campaigns
-                  </label>
-                  <input
-                    id="desktop-search"
-                    ref={searchInputRef}
-                    type="search"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onBlur={handleSearchBlur}
-                    onKeyDown={handleSearchKeyDown}
-                    className="bg-transparent border-none outline-none text-foreground placeholder:text-text-secondary text-sm tracking-wide font-normal w-full"
-                    style={{ fontFamily: "Poppins, sans-serif" }}
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSearchQuery("");
-                        searchInputRef.current?.focus();
-                      }}
-                      className="shrink-0 ml-1"
-                    >
-                      <X size={16} className="text-text-tertiary hover:text-text-secondary transition-colors" />
-                    </button>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+            <Search size={20} className="text-text-secondary" />
+          </button>
 
           {/* Navigation Links - Always visible, no animation */}
           <div
@@ -315,30 +230,28 @@ export default function Navbar({ className }: NavbarProps) {
 
             {/* Icon Buttons Group */}
             <div className="flex gap-1.5 items-center">
-              {/* Settings Icon Button - 36px */}
+              {/* Settings Icon Button - 44px min touch target */}
               <button
-                className="size-9 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-overlay transition-colors"
+                className="min-h-[44px] min-w-[44px] size-9 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-overlay active:bg-surface-overlay active:scale-[0.98] transition-colors"
                 aria-label="Settings"
               >
                 <Settings size={18} className="text-foreground/80" />
               </button>
 
-              {/* Messages Icon Button - 36px */}
+              {/* Messages Icon Button - 44px min touch target */}
               <Link
                 href="/messenger"
-                className="size-9 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-overlay transition-colors"
+                className="min-h-[44px] min-w-[44px] size-9 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-overlay active:bg-surface-overlay active:scale-[0.98] transition-colors"
                 aria-label="Messages"
               >
                 <MessageCircle size={18} className="text-foreground/80" />
               </Link>
 
-              {/* Notifications Icon Button - 36px */}
-              <button
-                className="size-9 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-overlay transition-colors relative"
-                aria-label="Notifications"
-              >
-                <Bell size={18} className="text-foreground/80" />
-              </button>
+              {/* Notifications Bell with Panel */}
+              <div className="relative">
+                <NotificationBell size="md" />
+                <NotificationPanel />
+              </div>
 
               {/* User Avatar with Dropdown */}
               <div className="relative" ref={dropdownRef}>
@@ -455,21 +368,20 @@ export default function Navbar({ className }: NavbarProps) {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-3">
-            {/* Search Button (Mobile) */}
+            {/* Search Button (Mobile) - Opens global SearchModal */}
             <button
-              className="size-11 rounded-full bg-surface-sunken flex items-center justify-center active:bg-surface-overlay"
-              aria-label="Search"
+              onClick={openSearch}
+              className="size-11 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-elevated active:bg-surface-overlay active:scale-[0.98] transition-colors"
+              aria-label="Search (Cmd+K)"
             >
               <Search size={20} className="text-text-secondary" />
             </button>
 
-            {/* Notifications Button (Mobile) */}
-            <button
-              className="size-11 rounded-full bg-surface-overlay border border-border-default flex items-center justify-center active:bg-surface-overlay"
-              aria-label="Notifications"
-            >
-              <Bell size={20} className="text-foreground/80" />
-            </button>
+            {/* Notifications Bell (Mobile) */}
+            <div className="relative">
+              <NotificationBell size="sm" />
+              <NotificationPanel />
+            </div>
 
             {/* User Avatar (Mobile) */}
             <Avatar
@@ -508,22 +420,19 @@ export default function Navbar({ className }: NavbarProps) {
 
           {/* Mobile Menu Panel */}
           <div className="fixed top-16 left-0 right-0 bg-background border-t border-border-default z-[60] lg:hidden max-h-[calc(100vh-64px)] overflow-y-auto">
-            {/* Mobile Search */}
+            {/* Mobile Search Button - Opens global SearchModal */}
             <div className="p-4 border-b border-border-default">
-              <div className="bg-surface-sunken flex items-center gap-2 h-12 px-4 rounded-xl" role="search">
-                <Search size={20} className="text-text-secondary shrink-0" aria-hidden="true" />
-                <label htmlFor="mobile-search" className="sr-only">
-                  Search campaigns
-                </label>
-                <input
-                  id="mobile-search"
-                  type="search"
-                  placeholder="Type to Search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent border-none outline-none text-foreground placeholder:text-text-secondary text-sm w-full"
-                />
-              </div>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openSearch();
+                }}
+                className="w-full bg-surface-sunken flex items-center gap-2 h-12 px-4 rounded-xl hover:bg-surface-elevated active:bg-surface-overlay transition-colors"
+                aria-label="Search (Cmd+K)"
+              >
+                <Search size={20} className="text-text-secondary shrink-0" />
+                <span className="text-text-secondary text-sm">Type to Search...</span>
+              </button>
             </div>
 
             {/* Mobile Navigation Links */}
@@ -536,7 +445,7 @@ export default function Navbar({ className }: NavbarProps) {
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 px-6 py-4 text-base transition-colors",
+                      "flex items-center gap-3 px-6 py-4 min-h-[44px] text-base transition-colors active:bg-white/10 active:scale-[0.99]",
                       isActive
                         ? "text-foreground bg-surface-overlay border-l-2 border-primary-500"
                         : "text-text-secondary hover:text-foreground hover:bg-surface-overlay"
@@ -577,7 +486,7 @@ export default function Navbar({ className }: NavbarProps) {
               <Link
                 href="/settings"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated transition-colors"
+                className="flex flex-col items-center gap-2 p-4 min-h-[44px] rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated active:bg-surface-elevated active:scale-[0.98] transition-colors"
               >
                 <Settings size={24} className="text-foreground/80" />
                 <span className="text-xs text-text-secondary">Settings</span>
@@ -585,7 +494,7 @@ export default function Navbar({ className }: NavbarProps) {
               <Link
                 href="/messenger"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated transition-colors"
+                className="flex flex-col items-center gap-2 p-4 min-h-[44px] rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated active:bg-surface-elevated active:scale-[0.98] transition-colors"
               >
                 <MessageCircle size={24} className="text-foreground/80" />
                 <span className="text-xs text-text-secondary">Messages</span>
@@ -593,7 +502,7 @@ export default function Navbar({ className }: NavbarProps) {
               <Link
                 href="/profile/me"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated transition-colors"
+                className="flex flex-col items-center gap-2 p-4 min-h-[44px] rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated active:bg-surface-elevated active:scale-[0.98] transition-colors"
               >
                 <Avatar
                   src="/image.png"

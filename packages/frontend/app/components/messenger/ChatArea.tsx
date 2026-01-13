@@ -162,7 +162,7 @@ function MessageInput({
       <button
         type="button"
         onClick={onEmojiClick}
-        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-overlay hover:text-foreground"
+        className="flex min-h-[44px] min-w-[44px] h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-overlay hover:text-foreground active:bg-white/20 active:scale-[0.98]"
         aria-label="Add emoji"
       >
         <Smile className="h-5 w-5" />
@@ -182,7 +182,7 @@ function MessageInput({
         <button
           type="button"
           onClick={onAttachmentClick}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors hover:text-foreground"
+          className="absolute right-3 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-tertiary transition-colors hover:text-foreground active:text-foreground active:scale-[0.98]"
           aria-label="Add attachment"
         >
           <Paperclip className="h-5 w-5" />
@@ -194,9 +194,9 @@ function MessageInput({
         type="submit"
         disabled={!message.trim()}
         className={cn(
-          "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all",
+          "flex min-h-[44px] min-w-[44px] h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all",
           message.trim()
-            ? "bg-[linear-gradient(90deg,var(--color-primary)_0%,var(--color-purple-500)_50%,var(--color-soft-purple-500)_100%)] text-white shadow-[0_8px_30px_0_rgba(97,36,243,0.35)] hover:brightness-110"
+            ? "bg-[linear-gradient(90deg,var(--color-primary)_0%,var(--color-purple-500)_50%,var(--color-soft-purple-500)_100%)] text-white shadow-[0_8px_30px_0_rgba(97,36,243,0.35)] hover:brightness-110 active:brightness-90 active:scale-[0.98]"
             : "bg-surface-overlay text-text-tertiary cursor-not-allowed"
         )}
         aria-label="Send message"

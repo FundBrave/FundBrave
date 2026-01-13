@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Check } from "@/app/components/ui/icons";
 import { ComponentType } from "react";
+import { useReducedMotion } from "@/app/hooks/useReducedMotion";
 
 type StepStatus = "completed" | "active" | "inactive" | "next";
 
@@ -30,19 +31,31 @@ const checkmarkTransition = {
 /**
  * Step item component for desktop sidebar
  * Shows icon, title, subtitle, and visual state (inactive/active/completed)
- * Active state features a breathing glow effect instead of scale pulse
+ * Active state features a breathing glow effect (respects reduced motion preference)
  */
 export const StepItem = ({ Icon, title, subtitle, status }: StepItemProps) => {
+  const prefersReducedMotion = useReducedMotion();
   const isCompleted = status === "completed";
   const isActive = status === "active";
   const isInactive = status === "inactive";
   const isNext = status === "next";
 
+  // Breathing glow animation - disabled for reduced motion
+  const breathingGlow = !prefersReducedMotion && isActive
+    ? [
+        "0 0 0 0 rgba(139, 92, 246, 0)",
+        "0 0 20px 8px rgba(139, 92, 246, 0.4)",
+        "0 0 0 0 rgba(139, 92, 246, 0)",
+      ]
+    : isActive
+      ? "0 0 15px 4px rgba(139, 92, 246, 0.3)" // Static glow for reduced motion
+      : "0 0 0 0 rgba(139, 92, 246, 0)";
+
   return (
-    <div className="flex items-center gap-4 rounded-lg transition-all duration-300">
+    <div className="flex items-center gap-3 rounded-lg transition-all duration-300">
       {/* Animated circle with icon - breathing glow when active */}
       <motion.div
-        className="relative w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+        className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
         animate={{
           backgroundColor: isCompleted
             ? "var(--color-primary)"
@@ -51,19 +64,13 @@ export const StepItem = ({ Icon, title, subtitle, status }: StepItemProps) => {
             : "var(--color-surface-sunken)",
           borderWidth: isInactive || isNext ? 2 : 0,
           borderColor: isInactive || isNext ? "var(--color-border-subtle)" : "transparent",
-          // Breathing glow effect for active state
-          boxShadow: isActive
-            ? [
-                "0 0 0 0 rgba(139, 92, 246, 0)",
-                "0 0 20px 8px rgba(139, 92, 246, 0.4)",
-                "0 0 0 0 rgba(139, 92, 246, 0)",
-              ]
-            : "0 0 0 0 rgba(139, 92, 246, 0)",
+          // Breathing glow effect for active state (respects reduced motion)
+          boxShadow: breathingGlow,
         }}
         transition={{
-          duration: 0.3,
+          duration: prefersReducedMotion ? 0.15 : 0.3,
           boxShadow: {
-            repeat: isActive ? Infinity : 0,
+            repeat: !prefersReducedMotion && isActive ? Infinity : 0,
             duration: 2,
             ease: "easeInOut",
           },
@@ -80,7 +87,7 @@ export const StepItem = ({ Icon, title, subtitle, status }: StepItemProps) => {
               exit="exit"
               transition={checkmarkTransition}
             >
-              <Check className="w-6 h-6 text-white" />
+              <Check className="w-5 h-5 text-white" />
             </motion.div>
           ) : (
             <motion.div
@@ -92,7 +99,7 @@ export const StepItem = ({ Icon, title, subtitle, status }: StepItemProps) => {
             >
               <Icon
                 useGradient={isNext}
-                className={`w-5 h-5 ${
+                className={`w-[18px] h-[18px] ${
                   isActive
                     ? "text-white"
                     : isNext

@@ -1,0 +1,554 @@
+{
+  "metadata": {
+    "title": "FundBrave",
+    "description": "Decentralized fundraising platform"
+  },
+  "common": {
+    "actions": {
+      "donate": "Donate",
+      "share": "Share",
+      "follow": "Follow",
+      "unfollow": "Unfollow",
+      "save": "Save",
+      "cancel": "Cancel",
+      "submit": "Submit",
+      "continue": "Continue",
+      "back": "Back",
+      "close": "Close",
+      "edit": "Edit",
+      "delete": "Delete",
+      "search": "Search",
+      "filter": "Filter",
+      "sortBy": "Sort by",
+      "viewAll": "View all",
+      "loadMore": "Load more",
+      "tryAgain": "Try again",
+      "learnMore": "Learn more",
+      "create": "Create",
+      "update": "Update",
+      "confirm": "Confirm",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "remove": "Remove",
+      "clear": "Clear",
+      "reset": "Reset",
+      "apply": "Apply",
+      "show": "Show",
+      "hide": "Hide",
+      "expand": "Expand",
+      "collapse": "Collapse"
+    },
+    "labels": {
+      "email": "Email",
+      "password": "Password",
+      "username": "Username",
+      "displayName": "Display name",
+      "bio": "Bio",
+      "location": "Location",
+      "website": "Website",
+      "name": "Name",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone number",
+      "address": "Address",
+      "city": "City",
+      "country": "Country",
+      "optional": "Optional",
+      "required": "Required"
+    },
+    "status": {
+      "loading": "Loading...",
+      "saving": "Saving...",
+      "processing": "Processing...",
+      "success": "Success!",
+      "error": "Something went wrong",
+      "offline": "You're offline",
+      "online": "You're back online",
+      "pending": "Pending",
+      "completed": "Completed",
+      "failed": "Failed",
+      "active": "Active",
+      "inactive": "Inactive",
+      "verified": "Verified",
+      "unverified": "Unverified"
+    },
+    "time": {
+      "now": "Just now",
+      "minutesAgo": "{count, plural, one {# minute ago} other {# minutes ago}}",
+      "hoursAgo": "{count, plural, one {# hour ago} other {# hours ago}}",
+      "daysAgo": "{count, plural, one {# day ago} other {# days ago}}",
+      "weeksAgo": "{count, plural, one {# week ago} other {# weeks ago}}",
+      "monthsAgo": "{count, plural, one {# month ago} other {# months ago}}",
+      "yearsAgo": "{count, plural, one {# year ago} other {# years ago}}",
+      "seconds": "{count, plural, one {# second} other {# seconds}}",
+      "minutes": "{count, plural, one {# minute} other {# minutes}}",
+      "hours": "{count, plural, one {# hour} other {# hours}}",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "weeks": "{count, plural, one {# week} other {# weeks}}",
+      "months": "{count, plural, one {# month} other {# months}}",
+      "years": "{count, plural, one {# year} other {# years}}"
+    },
+    "numbers": {
+      "currency": "{amount, number, ::currency/USD}",
+      "percentage": "{value, number, ::percent}",
+      "compact": "{value, number, ::compact-short}"
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalidEmail": "Please enter a valid email address",
+      "invalidUrl": "Please enter a valid URL",
+      "minLength": "Must be at least {min} characters",
+      "maxLength": "Must be no more than {max} characters",
+      "passwordMismatch": "Passwords do not match",
+      "invalidFormat": "Invalid format"
+    }
+  },
+  "navigation": {
+    "home": "Home",
+    "campaigns": "Campaigns",
+    "community": "Community",
+    "profile": "Profile",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "messages": "Messages",
+    "earnings": "Earnings",
+    "leaderboard": "Leaderboard",
+    "help": "Help",
+    "signOut": "Sign out",
+    "menu": "Menu",
+    "moreOptions": "More options"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account",
+      "emailPlaceholder": "Enter your email",
+      "passwordPlaceholder": "Enter your password",
+      "forgotPassword": "Forgot password?",
+      "submitButton": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUpLink": "Sign up",
+      "rememberMe": "Remember me",
+      "orContinueWith": "Or continue with"
+    },
+    "signup": {
+      "title": "Create your account",
+      "subtitle": "Join the FundBrave community",
+      "submitButton": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "termsAgreement": "By creating an account, you agree to our {terms} and {privacy}",
+      "termsLink": "Terms of Service",
+      "privacyLink": "Privacy Policy",
+      "confirmPasswordPlaceholder": "Confirm your password"
+    },
+    "forgotPassword": {
+      "title": "Reset your password",
+      "subtitle": "Enter your email and we'll send you a reset link",
+      "submitButton": "Send Reset Link",
+      "backToLogin": "Back to login",
+      "checkEmail": "Check your email",
+      "emailSent": "We've sent a password reset link to {email}"
+    },
+    "resetPassword": {
+      "title": "Create new password",
+      "subtitle": "Enter your new password below",
+      "newPasswordPlaceholder": "Enter new password",
+      "confirmPasswordPlaceholder": "Confirm new password",
+      "submitButton": "Reset Password",
+      "success": "Password reset successfully"
+    },
+    "errors": {
+      "invalidEmail": "Please enter a valid email address",
+      "invalidPassword": "Password must be at least 8 characters",
+      "emailInUse": "This email is already registered",
+      "invalidCredentials": "Invalid email or password",
+      "tooManyAttempts": "Too many attempts. Please try again later.",
+      "accountNotFound": "No account found with this email",
+      "weakPassword": "Password is too weak",
+      "expiredLink": "This link has expired",
+      "genericError": "An error occurred. Please try again."
+    },
+    "social": {
+      "google": "Continue with Google",
+      "github": "Continue with GitHub",
+      "twitter": "Continue with Twitter"
+    }
+  },
+  "campaigns": {
+    "browse": {
+      "title": "Browse Campaigns",
+      "subtitle": "Discover causes that matter",
+      "emptyState": "No campaigns found",
+      "emptyStateAction": "Try adjusting your filters",
+      "searchPlaceholder": "Search campaigns...",
+      "allCategories": "All Categories",
+      "featured": "Featured",
+      "trending": "Trending",
+      "newest": "Newest",
+      "endingSoon": "Ending Soon",
+      "mostFunded": "Most Funded"
+    },
+    "card": {
+      "raised": "raised",
+      "goal": "goal",
+      "donors": "{count, plural, one {# donor} other {# donors}}",
+      "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+      "fundedBadge": "Funded",
+      "verifiedBadge": "Verified",
+      "ended": "Ended",
+      "percentFunded": "{percent}% funded"
+    },
+    "detail": {
+      "story": "Story",
+      "updates": "Updates",
+      "comments": "Comments",
+      "donors": "Donors",
+      "sharePrompt": "Share this campaign",
+      "reportCampaign": "Report campaign",
+      "createdBy": "Created by",
+      "lastUpdated": "Last updated {date}",
+      "organizer": "Organizer",
+      "beneficiary": "Beneficiary",
+      "location": "Location",
+      "category": "Category"
+    },
+    "create": {
+      "title": "Create a Campaign",
+      "subtitle": "Start your fundraising journey",
+      "steps": {
+        "basics": "Basics",
+        "story": "Tell Your Story",
+        "media": "Add Media",
+        "goal": "Set Goal",
+        "review": "Review"
+      },
+      "basics": {
+        "titleLabel": "Campaign Title",
+        "titlePlaceholder": "Give your campaign a clear, compelling title",
+        "categoryLabel": "Category",
+        "categoryPlaceholder": "Select a category",
+        "locationLabel": "Location",
+        "locationPlaceholder": "Where is this campaign based?"
+      },
+      "story": {
+        "label": "Your Story",
+        "placeholder": "Tell potential donors why this cause matters...",
+        "tips": "Tips for a great story",
+        "tipsList": {
+          "personal": "Make it personal - share your connection to the cause",
+          "specific": "Be specific about how funds will be used",
+          "updates": "Promise regular updates to build trust"
+        }
+      },
+      "media": {
+        "coverImage": "Cover Image",
+        "coverImageHint": "Recommended: 1200x630px, max 5MB",
+        "gallery": "Additional Images",
+        "video": "Campaign Video",
+        "videoHint": "Add a YouTube or Vimeo link"
+      },
+      "goal": {
+        "amountLabel": "Funding Goal",
+        "amountPlaceholder": "Enter amount",
+        "currencyLabel": "Currency",
+        "durationLabel": "Campaign Duration",
+        "durationHint": "How long should your campaign run?",
+        "endDateLabel": "End Date",
+        "flexible": "Flexible goal",
+        "flexibleHint": "Keep funds even if goal isn't reached"
+      },
+      "review": {
+        "title": "Review Your Campaign",
+        "subtitle": "Make sure everything looks good before publishing",
+        "preview": "Preview",
+        "publish": "Publish Campaign",
+        "saveDraft": "Save as Draft"
+      }
+    },
+    "donate": {
+      "title": "Make a Donation",
+      "amountLabel": "Donation amount",
+      "customAmount": "Custom amount",
+      "tipLabel": "Add a tip to FundBrave",
+      "tipInfo": "Tips help us keep FundBrave free for organizers",
+      "totalLabel": "Total",
+      "submitButton": "Complete Donation",
+      "processingButton": "Processing...",
+      "successTitle": "Thank you!",
+      "successMessage": "Your donation of {amount} has been sent to {campaign}",
+      "anonymous": "Donate anonymously",
+      "anonymousHint": "Your name won't be shown publicly",
+      "message": "Leave a message (optional)",
+      "messagePlaceholder": "Write a supportive message...",
+      "selectCrypto": "Select cryptocurrency",
+      "impactPreview": "Your impact",
+      "shareSuccess": "Share your contribution"
+    },
+    "categories": {
+      "all": "All",
+      "medical": "Medical",
+      "education": "Education",
+      "emergency": "Emergency",
+      "nonprofit": "Nonprofit",
+      "animals": "Animals",
+      "environment": "Environment",
+      "community": "Community",
+      "creative": "Creative",
+      "sports": "Sports",
+      "travel": "Travel",
+      "business": "Business",
+      "other": "Other"
+    }
+  },
+  "profile": {
+    "tabs": {
+      "posts": "Posts",
+      "campaigns": "Campaigns",
+      "donations": "Donations",
+      "likes": "Likes",
+      "comments": "Comments"
+    },
+    "stats": {
+      "followers": "{count, plural, one {# Follower} other {# Followers}}",
+      "following": "{count} Following",
+      "campaigns": "{count, plural, one {# Campaign} other {# Campaigns}}",
+      "totalRaised": "Total Raised",
+      "totalDonated": "Total Donated"
+    },
+    "actions": {
+      "editProfile": "Edit Profile",
+      "shareProfile": "Share Profile",
+      "copyLink": "Copy Profile Link",
+      "viewPublicProfile": "View Public Profile"
+    },
+    "edit": {
+      "title": "Edit Profile",
+      "avatar": "Profile Photo",
+      "changeAvatar": "Change photo",
+      "removeAvatar": "Remove photo",
+      "cover": "Cover Image",
+      "changeCover": "Change cover",
+      "saveChanges": "Save Changes"
+    },
+    "empty": {
+      "posts": "No posts yet",
+      "campaigns": "No campaigns yet",
+      "donations": "No donations yet",
+      "likes": "No liked posts yet",
+      "comments": "No comments yet"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "emptyState": "No notifications yet",
+    "emptyStateSubtext": "When you get notifications, they'll show up here",
+    "markAllRead": "Mark all as read",
+    "settings": "Notification Settings",
+    "types": {
+      "donation": "{name} donated {amount} to your campaign",
+      "follow": "{name} started following you",
+      "comment": "{name} commented on your campaign",
+      "milestone": "Your campaign reached {percent}% of its goal!",
+      "like": "{name} liked your post",
+      "mention": "{name} mentioned you in a post",
+      "update": "{campaign} posted an update",
+      "reply": "{name} replied to your comment"
+    },
+    "filters": {
+      "all": "All",
+      "unread": "Unread",
+      "donations": "Donations",
+      "social": "Social"
+    }
+  },
+  "wallet": {
+    "connect": {
+      "title": "Connect Wallet",
+      "subtitle": "Choose your wallet to continue",
+      "detected": "Detected wallets",
+      "popular": "Popular wallets",
+      "showAll": "Show all wallets",
+      "whatIsWallet": "What is a wallet?",
+      "connecting": "Connecting...",
+      "connected": "Connected",
+      "disconnect": "Disconnect",
+      "confirmInWallet": "Confirm in your wallet"
+    },
+    "status": {
+      "notConnected": "Not connected",
+      "connected": "Connected: {address}",
+      "wrongNetwork": "Wrong network",
+      "switchNetwork": "Switch to {network}"
+    },
+    "errors": {
+      "rejected": "Connection cancelled",
+      "notDetected": "Wallet not detected",
+      "connectionFailed": "Connection failed",
+      "installWallet": "Install {wallet}"
+    },
+    "wallets": {
+      "metamask": "MetaMask",
+      "coinbase": "Coinbase Wallet",
+      "walletconnect": "WalletConnect"
+    }
+  },
+  "errors": {
+    "404": {
+      "title": "Page Not Found",
+      "message": "The page you're looking for doesn't exist or has been moved.",
+      "primaryAction": "Return Home",
+      "searchPlaceholder": "Search FundBrave...",
+      "quickLinks": "Quick Links",
+      "campaignTitle": "Campaign Not Found",
+      "campaignMessage": "This campaign may have ended, been removed, or the link might be incorrect.",
+      "profileTitle": "User Not Found",
+      "profileMessage": "This profile doesn't exist or may have been deactivated."
+    },
+    "500": {
+      "title": "Something went wrong",
+      "message": "We're having trouble loading this page. Please try again.",
+      "primaryAction": "Try Again"
+    },
+    "network": {
+      "offline": "You're offline. Check your connection.",
+      "timeout": "Request timed out. Please try again.",
+      "serverError": "Server error. Please try again later."
+    },
+    "generic": {
+      "title": "Error",
+      "message": "An unexpected error occurred",
+      "tryAgain": "Try Again",
+      "contactSupport": "Contact Support"
+    }
+  },
+  "accessibility": {
+    "skipToMain": "Skip to main content",
+    "menuToggle": "Toggle menu",
+    "closeModal": "Close modal",
+    "openInNewTab": "Opens in new tab",
+    "required": "Required field",
+    "loading": "Loading content",
+    "expandSection": "Expand {section}",
+    "collapseSection": "Collapse {section}",
+    "announcements": {
+      "pageLoaded": "{page} loaded",
+      "navigationChanged": "Navigated to {page}",
+      "formError": "Form has {count, plural, one {# error} other {# errors}}",
+      "itemAdded": "{item} added",
+      "itemRemoved": "{item} removed"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to FundBrave",
+      "subtitle": "Let's set up your profile",
+      "getStarted": "Get Started"
+    },
+    "steps": {
+      "profile": "Profile Details",
+      "goals": "Your Goals",
+      "verification": "Verify Email",
+      "social": "Connect Social"
+    },
+    "profile": {
+      "title": "Tell us about yourself",
+      "subtitle": "This helps personalize your experience",
+      "uploadPhoto": "Upload a profile photo"
+    },
+    "goals": {
+      "title": "What brings you here?",
+      "subtitle": "Select all that apply",
+      "options": {
+        "fundraise": "Start a fundraising campaign",
+        "donate": "Donate to causes I care about",
+        "discover": "Discover new campaigns",
+        "connect": "Connect with my community"
+      }
+    },
+    "verification": {
+      "title": "Verify your email",
+      "subtitle": "We sent a code to {email}",
+      "resendCode": "Resend code",
+      "codeSent": "Code sent!",
+      "enterCode": "Enter verification code"
+    },
+    "complete": {
+      "title": "You're all set!",
+      "subtitle": "Start exploring FundBrave",
+      "exploreCampaigns": "Explore Campaigns",
+      "createCampaign": "Create Your First Campaign"
+    },
+    "progress": {
+      "step": "Step {current} of {total}",
+      "skip": "Skip for now"
+    }
+  },
+  "community": {
+    "title": "Community",
+    "createPost": "Create Post",
+    "postPlaceholder": "What's on your mind?",
+    "emptyFeed": "No posts yet",
+    "emptyFeedAction": "Be the first to share something!",
+    "post": {
+      "like": "Like",
+      "comment": "Comment",
+      "share": "Share",
+      "save": "Save",
+      "report": "Report",
+      "delete": "Delete",
+      "edit": "Edit",
+      "likes": "{count, plural, one {# like} other {# likes}}",
+      "comments": "{count, plural, one {# comment} other {# comments}}",
+      "shares": "{count, plural, one {# share} other {# shares}}"
+    },
+    "comments": {
+      "placeholder": "Write a comment...",
+      "reply": "Reply",
+      "viewReplies": "View {count, plural, one {# reply} other {# replies}}",
+      "hideReplies": "Hide replies"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "account": "Account",
+      "notifications": "Notifications",
+      "privacy": "Privacy",
+      "security": "Security",
+      "appearance": "Appearance",
+      "language": "Language"
+    },
+    "account": {
+      "email": "Email Address",
+      "changeEmail": "Change email",
+      "deleteAccount": "Delete Account",
+      "deleteWarning": "This action cannot be undone"
+    },
+    "appearance": {
+      "theme": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "privacy": {
+      "profileVisibility": "Profile Visibility",
+      "public": "Public",
+      "private": "Private",
+      "donationVisibility": "Show my donations publicly"
+    }
+  },
+  "footer": {
+    "about": "About",
+    "help": "Help Center",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "contact": "Contact",
+    "copyright": "{year} FundBrave. All rights reserved.",
+    "social": {
+      "twitter": "Twitter",
+      "discord": "Discord",
+      "github": "GitHub"
+    }
+  }
+}

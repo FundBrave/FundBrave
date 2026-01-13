@@ -38,6 +38,9 @@ TESTING_QUICKSTART.md
 *.mcp.json
 .cache/
 
+# Internal docs (plans, specs)
+packages/frontend/docs/
+
 # dependencies
 node_modules/
 /.pnp
@@ -70,4 +73,4 @@ next-env.d.ts
 
 # Build artifacts
 .next/
-coverage/
+coverage/tmpclaude-*

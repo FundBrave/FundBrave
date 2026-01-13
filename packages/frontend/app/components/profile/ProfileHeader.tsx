@@ -1,13 +1,17 @@
 "use client";
 
+import { useState } from 'react';
 import {
   LinkedInIcon,
   XIcon,
   InstagramIcon,
   FacebookIcon,
 } from "@/app/components/ui/icons/SocialIcons";
+import { FollowButton } from "@/app/components/social/FollowButton";
+import { FollowersModal } from "@/app/components/social/FollowersModal";
 
 interface UserData {
+  id: string;
   name: string;
   username: string;
   country: string;
@@ -17,6 +21,8 @@ interface UserData {
   followers: number;
   following: number;
   memberSince: string;
+  isCurrentUser?: boolean;
+  isFollowing?: boolean;
   socialLinks: {
     linkedin?: string;
     instagram?: string;
@@ -32,12 +38,27 @@ interface ProfileHeaderProps {
 /**
  * ProfileHeader - Displays user's profile information
  * Includes name, username, points, bio, followers/following stats, and social links
+ * Now with Follow button and clickable follower/following counts
  */
 export default function ProfileHeader({ user }: ProfileHeaderProps) {
+  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
+  const [modalInitialTab, setModalInitialTab] = useState<'followers' | 'following'>('followers');
+
+  const handleFollowersClick = () => {
+    setModalInitialTab('followers');
+    setIsFollowersModalOpen(true);
+  };
+
+  const handleFollowingClick = () => {
+    setModalInitialTab('following');
+    setIsFollowersModalOpen(true);
+  };
+
   return (
-    <div className="flex flex-col gap-5">
-      {/* Top Section - Name and Social Links */}
-      <div className="flex items-start justify-between">
+    <>
+      <div className="flex flex-col gap-5">
+        {/* Top Section - Name, Social Links, and Follow Button */}
+        <div className="flex items-start justify-between gap-4">
         {/* User Info */}
         <div className="flex flex-col gap-1.5 max-w-[795px]">
           {/* Name and Country Flag */}
@@ -72,51 +93,63 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           </p>
         </div>
 
-        {/* Social Links */}
-        <div className="flex gap-5 items-center">
-          {user.socialLinks.linkedin && (
-            <a
-              href={user.socialLinks.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-6 h-6 text-foreground hover:text-primary transition-colors"
-              aria-label="LinkedIn"
-            >
-              <LinkedInIcon className="w-full h-full" />
-            </a>
-          )}
-          {user.socialLinks.instagram && (
-            <a
-              href={user.socialLinks.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-6 h-6 text-foreground hover:text-primary transition-colors"
-              aria-label="Instagram"
-            >
-              <InstagramIcon className="w-full h-full" />
-            </a>
-          )}
-          {user.socialLinks.twitter && (
-            <a
-              href={user.socialLinks.twitter}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-6 h-6 text-foreground hover:text-primary transition-colors"
-              aria-label="Twitter/X"
-            >
-              <XIcon className="w-full h-full" />
-            </a>
-          )}
-          {user.socialLinks.facebook && (
-            <a
-              href={user.socialLinks.facebook}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-6 h-6 text-foreground hover:text-primary transition-colors"
-              aria-label="Facebook"
-            >
-              <FacebookIcon className="w-full h-full" />
-            </a>
+        {/* Social Links and Follow Button */}
+        <div className="flex gap-4 items-center">
+          {/* Social Links */}
+          <div className="flex gap-5 items-center">
+            {user.socialLinks.linkedin && (
+              <a
+                href={user.socialLinks.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-6 h-6 text-foreground hover:text-primary transition-colors"
+                aria-label="LinkedIn"
+              >
+                <LinkedInIcon className="w-full h-full" />
+              </a>
+            )}
+            {user.socialLinks.instagram && (
+              <a
+                href={user.socialLinks.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-6 h-6 text-foreground hover:text-primary transition-colors"
+                aria-label="Instagram"
+              >
+                <InstagramIcon className="w-full h-full" />
+              </a>
+            )}
+            {user.socialLinks.twitter && (
+              <a
+                href={user.socialLinks.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-6 h-6 text-foreground hover:text-primary transition-colors"
+                aria-label="Twitter/X"
+              >
+                <XIcon className="w-full h-full" />
+              </a>
+            )}
+            {user.socialLinks.facebook && (
+              <a
+                href={user.socialLinks.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-6 h-6 text-foreground hover:text-primary transition-colors"
+                aria-label="Facebook"
+              >
+                <FacebookIcon className="w-full h-full" />
+              </a>
+            )}
+          </div>
+
+          {/* Follow Button - Only show if not current user */}
+          {!user.isCurrentUser && (
+            <FollowButton
+              userId={user.id}
+              initialIsFollowing={user.isFollowing}
+              initialFollowerCount={user.followers}
+            />
           )}
         </div>
       </div>
@@ -124,20 +157,40 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
       {/* Stats Row - Followers/Following and Member Since */}
       <div className="flex items-center justify-between">
         <div className="flex gap-4 text-base">
-          <p className="font-bold">
+          {/* Clickable Followers Count */}
+          <button
+            onClick={handleFollowersClick}
+            className="font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--primary)] rounded px-2 -mx-2 py-1 -my-1 transition-colors hover:bg-white/5"
+            aria-label={`View ${user.followers} followers`}
+          >
             <span className="text-foreground tracking-wide">{user.followers}</span>{" "}
             <span className="text-text-secondary font-normal">Followers</span>
-          </p>
-          <p className="font-bold">
+          </button>
+
+          {/* Clickable Following Count */}
+          <button
+            onClick={handleFollowingClick}
+            className="font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--primary)] rounded px-2 -mx-2 py-1 -my-1 transition-colors hover:bg-white/5"
+            aria-label={`View ${user.following} following`}
+          >
             <span className="text-foreground tracking-wide">{user.following}</span>{" "}
             <span className="text-text-secondary font-normal">Following</span>
-          </p>
+          </button>
         </div>
         <p className="text-foreground font-bold text-base">
           Member since {user.memberSince}
         </p>
       </div>
     </div>
+
+    {/* Followers Modal */}
+    <FollowersModal
+      userId={user.id}
+      initialTab={modalInitialTab}
+      isOpen={isFollowersModalOpen}
+      onClose={() => setIsFollowersModalOpen(false)}
+    />
+    </>
   );
 }
 

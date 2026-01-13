@@ -36,7 +36,10 @@ export function PostImageGrid({ images, onImageClick, className }: PostImageGrid
       {displayImages.map((image, index) => (
         <div
           key={index}
-          onClick={() => onImageClick?.(index)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onImageClick?.(index);
+          }}
           className={cn(
             "relative overflow-hidden cursor-pointer",
             images.length === 1 && "aspect-video",

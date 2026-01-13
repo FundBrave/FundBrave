@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * @deprecated Use PostActionBar instead. This component will be removed.
+ */
+
 import { useRef, useCallback, useEffect } from "react";
 import gsap from "gsap";
 import { Heart, MessageCircle, Repeat2, BarChart3, Bookmark, Share } from "@/app/components/ui/icons";
@@ -206,10 +210,7 @@ export function PostActions({
         )}
         aria-label={`${commentsCount} comments`}
       >
-        <div className={cn(
-          "p-3 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center",
-          !readOnly && "group-hover:bg-primary/10"
-        )}>
+        <div className="p-3 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
           <MessageCircle ref={commentIconRef} size={18} />
         </div>
         <span className="text-[13px]">
@@ -227,10 +228,7 @@ export function PostActions({
         )}
         aria-label={`${sharesCount} reposts`}
       >
-        <div className={cn(
-          "p-3 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center",
-          !readOnly && "group-hover:bg-green-500/10"
-        )}>
+        <div className="p-3 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
           <Repeat2 ref={repostIconRef} size={18} />
         </div>
         <span className="text-[13px]">
@@ -249,10 +247,7 @@ export function PostActions({
         )}
         aria-label={`${likesCount} likes`}
       >
-        <div className={cn(
-          "p-3 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center",
-          !readOnly && "group-hover:bg-pink-500/10"
-        )}>
+        <div className="p-3 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
           <Heart ref={likeIconRef} size={18} fill={isLiked ? "currentColor" : "none"} />
         </div>
         <span ref={likeCountRef} className="text-[13px]">
@@ -265,7 +260,7 @@ export function PostActions({
         className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors group cursor-default"
         aria-label={`${formatCompactNumber(viewsCount)} views`}
       >
-        <div className="p-3 rounded-full group-hover:bg-primary/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
+        <div className="p-3 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
           <BarChart3 size={18} />
         </div>
         <span className="text-[13px]">
@@ -280,7 +275,7 @@ export function PostActions({
           disabled={readOnly}
           className={cn(
             "p-3 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center",
-            isBookmarked ? "text-primary" : "text-text-secondary hover:text-primary hover:bg-primary/10",
+            isBookmarked ? "text-primary" : "text-text-secondary hover:text-primary",
             readOnly && "cursor-default opacity-70"
           )}
           aria-label="Bookmark"
@@ -291,7 +286,7 @@ export function PostActions({
           onClick={readOnly ? undefined : handleShare}
           disabled={readOnly}
           className={cn(
-            "p-3 rounded-full text-text-secondary hover:text-primary hover:bg-primary/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center",
+            "p-3 rounded-full text-text-secondary hover:text-primary transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center",
             readOnly && "cursor-default opacity-70"
           )}
           aria-label="Share"

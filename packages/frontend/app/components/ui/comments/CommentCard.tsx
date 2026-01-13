@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { Heart, MessageCircle, MoreHorizontal, Trash2 } from "@/app/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { CommentInput } from "./CommentInput";
-import type { Comment } from "@/app/provider/PostsContext";
+import type { Comment } from "@/app/types/comment";
 
 // Format relative time (e.g., "2h ago", "3d ago")
 function formatRelativeTime(dateString: string): string {
@@ -33,6 +33,11 @@ interface CommentCardProps {
   depth?: number;
   maxDepth?: number;
   currentUserUsername?: string;
+  isReply?: boolean;           // Smaller avatar, indented
+  isCreator?: boolean;         // Show "Creator" badge
+  isPinned?: boolean;          // Pinned styling
+  isHighlighted?: boolean;     // Deep link highlight
+  showThreadConnector?: boolean;
 }
 
 /**
@@ -47,6 +52,11 @@ export function CommentCard({
   depth = 0,
   maxDepth = 3,
   currentUserUsername = "janesmith",
+  isReply = false,
+  isCreator = false,
+  isPinned = false,
+  isHighlighted = false,
+  showThreadConnector = false,
 }: CommentCardProps) {
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -125,11 +135,21 @@ export function CommentCard({
     setShowMenu(false);
   };
 
+  // Avatar size based on reply status
+  const avatarSize = isReply ? "w-8 h-8" : "w-10 h-10";
+
   return (
-    <div className={cn("flex flex-col gap-3", depth > 0 && "ml-8 pl-4 border-l border-border-subtle/50")}>
+    <div className={cn(
+      "flex flex-col gap-3",
+      isPinned && "bg-primary-500/5 rounded-lg p-2 border border-primary-500/20",
+      isHighlighted && "bg-primary-500/10 rounded-lg -mx-2 px-2 animate-pulse-highlight"
+    )}>
       <div className="flex gap-3">
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-surface-sunken border border-border-subtle flex-shrink-0 overflow-hidden">
+        <div className={cn(
+          avatarSize,
+          "rounded-full bg-surface-sunken border border-border-subtle flex-shrink-0 overflow-hidden"
+        )}>
           <img
             src={comment.author.avatar}
             alt={comment.author.name}
@@ -152,6 +172,16 @@ export function CommentCard({
               >
                 <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81s-1.27 2.52-.81 3.91c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.9.81 3.91s2.52 1.27 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.67-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.04 4.3l-3.71-3.71 1.41-1.41 2.3 2.3 5.3-5.3 1.41 1.41-6.71 6.71z" />
               </svg>
+            )}
+            {isCreator && (
+              <span className="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-primary-500/20 text-primary-300 rounded">
+                Creator
+              </span>
+            )}
+            {isPinned && (
+              <span className="text-xs text-foreground-muted">
+                📌 Pinned
+              </span>
             )}
             <span className="text-text-tertiary text-xs">
               @{comment.author.username}

@@ -68,10 +68,10 @@ export default function ProfileTabs({
             ref={setTabRef(tab.id)}
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              "font-medium text-base leading-6 tracking-wide transition-colors px-2",
+              "font-medium text-base leading-6 tracking-wide transition-colors px-2 min-h-[44px] active:scale-[0.98]",
               activeTab === tab.id
                 ? "text-foreground"
-                : "text-text-secondary hover:text-foreground/80"
+                : "text-text-secondary hover:text-foreground/80 active:text-foreground/90"
             )}
           >
             {tab.label}
