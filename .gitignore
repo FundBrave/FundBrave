@@ -25,6 +25,7 @@ yarn-debug.log*
 .env
 .env.local
 .env.*.local
+.nul
 
 # Temporary files
 *.tmp

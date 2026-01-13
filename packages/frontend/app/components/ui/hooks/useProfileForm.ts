@@ -3,7 +3,6 @@ import { z } from "zod";
 
 // Zod validation schema
 export const profileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
   username: z
     .string()
     .min(3, "Username must be at least 3 characters")
@@ -11,7 +10,6 @@ export const profileSchema = z.object({
       /^[a-zA-Z0-9_]+$/,
       "Username can only contain letters, numbers, and underscores"
     ),
-  email: z.string().email("Please enter a valid email address"),
   birthdate: z.string().min(1, "Please select your birthdate"),
   bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
   avatar: z.string().optional(),
@@ -32,9 +30,7 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
   const { onSubmitSuccess, initialData } = options;
 
   const [formData, setFormData] = useState<ProfileFormData>({
-    name: initialData?.name ?? "",
     username: initialData?.username ?? "",
-    email: initialData?.email ?? "",
     birthdate: initialData?.birthdate ?? "",
     bio: initialData?.bio ?? "",
     avatar: initialData?.avatar ?? "",
@@ -90,51 +86,48 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
     [formData]
   );
 
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const handleFileSelect = useCallback((file: File) => {
+    if (!file) return;
 
-      // Validate file type
-      if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+    // Validate file type
+    if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        avatar: "Please upload PNG or JPEG format only",
+      }));
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({
+        ...prev,
+        avatar: "File size must be less than 5MB",
+      }));
+      return;
+    }
+
+    // Check dimensions
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(img.src); // Clean up
+      if (img.width < 400 || img.height < 400) {
         setErrors((prev) => ({
           ...prev,
-          avatar: "Please upload PNG or JPEG format only",
+          avatar: "Image must be at least 400x400px",
         }));
-        return;
+      } else {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setAvatarPreview(reader.result as string);
+          setFormData((prev) => ({ ...prev, avatar: reader.result as string }));
+          setErrors((prev) => ({ ...prev, avatar: undefined }));
+        };
+        reader.readAsDataURL(file);
       }
-
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors((prev) => ({
-          ...prev,
-          avatar: "File size must be less than 5MB",
-        }));
-        return;
-      }
-
-      // Check dimensions
-      const img = new Image();
-      img.onload = () => {
-        if (img.width < 400 || img.height < 400) {
-          setErrors((prev) => ({
-            ...prev,
-            avatar: "Image must be at least 400x400px",
-          }));
-        } else {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setAvatarPreview(reader.result as string);
-            setFormData((prev) => ({ ...prev, avatar: reader.result as string }));
-            setErrors((prev) => ({ ...prev, avatar: undefined }));
-          };
-          reader.readAsDataURL(file);
-        }
-      };
-      img.src = URL.createObjectURL(file);
-    },
-    []
-  );
+    };
+    img.src = URL.createObjectURL(file);
+  }, []);
 
   const removeAvatar = useCallback(() => {
     setAvatarPreview(null);
@@ -142,13 +135,13 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
   }, []);
 
   const getInitials = useCallback(() => {
-    if (!formData.name.trim()) return "?";
-    const parts = formData.name.trim().split(" ");
+    if (!formData.username.trim()) return "?";
+    const parts = formData.username.trim().split(" ");
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
     return parts[0].substring(0, 2).toUpperCase();
-  }, [formData.name]);
+  }, [formData.username]);
 
   const handleSubmit = useCallback(async () => {
     // Validate all fields

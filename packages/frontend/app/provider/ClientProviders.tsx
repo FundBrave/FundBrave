@@ -20,11 +20,12 @@ const WalletProvider = dynamic(
 interface ClientProvidersProps {
   children: React.ReactNode;
   messages: Record<string, unknown>;
+  locale: string;
 }
 
-export function ClientProviders({ children, messages }: ClientProvidersProps) {
+export function ClientProviders({ children, messages, locale }: ClientProvidersProps) {
   return (
-    <NextIntlClientProvider messages={messages}>
+    <NextIntlClientProvider messages={messages} locale={locale}>
       <WalletProvider>
         <AuthProvider>
           <ThemeProvider defaultTheme="light" storageKey="fundbrave-theme">

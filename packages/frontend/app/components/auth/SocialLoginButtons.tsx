@@ -72,14 +72,14 @@ export default function SocialLoginButtons({
       </motion.button>
 
 
-     <motion.div
+     {/*<motion.div
         className="flex flex-1 items-center justify-center gap-2 rounded-lg border-[2px] shadow-[3px] border-border-subtle bg-transparent py-3 text-foreground transition-colors hover:bg-foreground/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         variants={buttonVariants}
         whileHover={!isGoogleLoading ? "hover" : undefined}
         whileTap={!isGoogleLoading ? "tap" : undefined}
       >
          <WalletLoginButton onError={handleWalletError} />
-      </motion.div>
+      </motion.div>*/}
     </motion.div>
   );
 }
