@@ -1,4 +1,11 @@
-import { Field, ObjectType, InputType, Int, ID, registerEnumType } from '@nestjs/graphql';
+import {
+  Field,
+  ObjectType,
+  InputType,
+  Int,
+  ID,
+  registerEnumType,
+} from '@nestjs/graphql';
 import {
   IsString,
   IsNumber,

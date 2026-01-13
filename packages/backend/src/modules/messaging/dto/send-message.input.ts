@@ -14,7 +14,9 @@ import {
  */
 @InputType()
 export class SendMessageInput {
-  @Field(() => ID, { description: 'The ID of the conversation to send the message to' })
+  @Field(() => ID, {
+    description: 'The ID of the conversation to send the message to',
+  })
   @IsUUID()
   @IsNotEmpty()
   conversationId: string;
@@ -26,7 +28,10 @@ export class SendMessageInput {
   @MaxLength(5000)
   content: string;
 
-  @Field({ nullable: true, description: 'Optional media URL attached to the message' })
+  @Field({
+    nullable: true,
+    description: 'Optional media URL attached to the message',
+  })
   @IsOptional()
   @IsUrl()
   mediaUrl?: string;
@@ -49,7 +54,10 @@ export class SendDirectMessageInput {
   @MaxLength(5000)
   content: string;
 
-  @Field({ nullable: true, description: 'Optional media URL attached to the message' })
+  @Field({
+    nullable: true,
+    description: 'Optional media URL attached to the message',
+  })
   @IsOptional()
   @IsUrl()
   mediaUrl?: string;

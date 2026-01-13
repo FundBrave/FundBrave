@@ -1,4 +1,12 @@
-import { Field, ObjectType, InputType, Int, ID, registerEnumType } from '@nestjs/graphql';
+import {
+  Field,
+  ObjectType,
+  InputType,
+  Int,
+  ID,
+  registerEnumType,
+} from '@nestjs/graphql';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsOptional,
@@ -6,6 +14,7 @@ import {
   IsEmail,
   IsUrl,
   IsEthereumAddress,
+  IsDateString,
   MaxLength,
   MinLength,
   Matches,
@@ -109,6 +118,23 @@ export class User {
 
   @Field()
   isActive: boolean;
+
+  // Onboarding fields
+  @Field({ nullable: true })
+  @ApiPropertyOptional({ description: 'User birthdate' })
+  birthdate?: Date;
+
+  @Field(() => [String])
+  @ApiProperty({ description: 'User goals', isArray: true })
+  goals: string[];
+
+  @Field(() => [String])
+  @ApiProperty({ description: 'User interests', isArray: true })
+  interests: string[];
+
+  @Field()
+  @ApiProperty({ description: 'Whether onboarding is completed' })
+  onboardingCompleted: boolean;
 
   @Field()
   createdAt: Date;
@@ -261,6 +287,18 @@ export class UpdateProfileInput {
   @IsString()
   @MaxLength(50)
   displayName?: string;
+
+  @Field({ nullable: true })
+  @ApiPropertyOptional({
+    description: 'User birthdate in ISO 8601 format',
+    example: '1990-05-15',
+  })
+  @IsOptional()
+  @IsDateString(
+    {},
+    { message: 'Birthdate must be a valid ISO 8601 date string' },
+  )
+  birthdate?: string;
 
   @Field({ nullable: true })
   @IsOptional()

@@ -281,7 +281,11 @@ describe('NotificationsService', () => {
 
   describe('markAsRead', () => {
     it('should mark a notification as read', async () => {
-      const readNotification = { ...mockNotification, read: true, readAt: new Date() };
+      const readNotification = {
+        ...mockNotification,
+        read: true,
+        readAt: new Date(),
+      };
       prismaService.notification.update.mockResolvedValue(readNotification);
 
       const result = await service.markAsRead(mockNotification.id, mockUser.id);
@@ -338,7 +342,10 @@ describe('NotificationsService', () => {
     it('should delete a notification', async () => {
       prismaService.notification.delete.mockResolvedValue(mockNotification);
 
-      const result = await service.deleteNotification(mockNotification.id, mockUser.id);
+      const result = await service.deleteNotification(
+        mockNotification.id,
+        mockUser.id,
+      );
 
       expect(result.success).toBe(true);
       expect(prismaService.notification.delete).toHaveBeenCalledWith({
@@ -365,7 +372,10 @@ describe('NotificationsService', () => {
     it('should not create notification when liking own post', async () => {
       const ownPost = { ...mockPost, authorId: mockActor.id };
       prismaService.post.findUnique.mockResolvedValue(ownPost);
-      prismaService.user.findUnique.mockResolvedValue({ ...mockUser, id: mockActor.id });
+      prismaService.user.findUnique.mockResolvedValue({
+        ...mockUser,
+        id: mockActor.id,
+      });
 
       await service.notifyLike(mockActor.id, 'Post', mockPost.id);
 
@@ -408,7 +418,12 @@ describe('NotificationsService', () => {
         type: NotificationType.DONATION_RECEIVED,
       });
 
-      await service.notifyDonation(mockActor.id, mockFundraiser.id, '100', 'USDC');
+      await service.notifyDonation(
+        mockActor.id,
+        mockFundraiser.id,
+        '100',
+        'USDC',
+      );
 
       expect(prismaService.fundraiser.findUnique).toHaveBeenCalledWith({
         where: { id: mockFundraiser.id },

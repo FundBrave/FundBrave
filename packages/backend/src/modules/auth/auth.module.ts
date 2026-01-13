@@ -18,7 +18,9 @@ import { PrismaModule } from '../../prisma/prisma.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService): Promise<JwtModuleOptions> => {
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<JwtModuleOptions> => {
         // Get expiration from config or use default (in seconds for type safety)
         const expiresInConfig = configService.get<string>('JWT_EXPIRES_IN');
         // Convert duration string to seconds if provided, otherwise default to 1 day (86400 seconds)

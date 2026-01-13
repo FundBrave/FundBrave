@@ -112,7 +112,9 @@ export class PrismaService
     for (let attempt = 1; attempt <= CONNECTION_RETRY_ATTEMPTS; attempt++) {
       try {
         this.connectionAttempts = attempt;
-        this.logger.log(`Attempting database connection (attempt ${attempt}/${CONNECTION_RETRY_ATTEMPTS})...`);
+        this.logger.log(
+          `Attempting database connection (attempt ${attempt}/${CONNECTION_RETRY_ATTEMPTS})...`,
+        );
 
         await this.$connect();
         this.isConnected = true;
@@ -121,8 +123,11 @@ export class PrismaService
         this.logConnectionInfo();
         return;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.error(`Database connection attempt ${attempt} failed: ${errorMessage}`);
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(
+          `Database connection attempt ${attempt} failed: ${errorMessage}`,
+        );
 
         if (attempt < CONNECTION_RETRY_ATTEMPTS) {
           const delay = CONNECTION_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
@@ -130,7 +135,9 @@ export class PrismaService
           await this.sleep(delay);
         } else {
           this.logger.error('All database connection attempts failed');
-          throw new Error(`Failed to connect to database after ${CONNECTION_RETRY_ATTEMPTS} attempts: ${errorMessage}`);
+          throw new Error(
+            `Failed to connect to database after ${CONNECTION_RETRY_ATTEMPTS} attempts: ${errorMessage}`,
+          );
         }
       }
     }
@@ -146,7 +153,8 @@ export class PrismaService
       this.isConnected = false;
       this.logger.log('Database disconnected successfully');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Error disconnecting from database: ${errorMessage}`);
     }
   }
@@ -183,9 +191,12 @@ export class PrismaService
   private logConnectionInfo(): void {
     const databaseUrl = process.env.DATABASE_URL || '';
     const isSupabasePgBouncer = databaseUrl.includes('pgbouncer=true');
-    const connectionLimit = databaseUrl.match(/connection_limit=(\d+)/)?.[1] || 'default';
+    const connectionLimit =
+      databaseUrl.match(/connection_limit=(\d+)/)?.[1] || 'default';
 
-    this.logger.log(`Connection mode: ${isSupabasePgBouncer ? 'Supabase PgBouncer (Transaction)' : 'Direct/Session'}`);
+    this.logger.log(
+      `Connection mode: ${isSupabasePgBouncer ? 'Supabase PgBouncer (Transaction)' : 'Direct/Session'}`,
+    );
     this.logger.log(`Connection limit: ${connectionLimit}`);
     this.logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   }
@@ -202,7 +213,9 @@ export class PrismaService
       await this.performHealthCheck();
     }, HEALTH_CHECK_INTERVAL_MS);
 
-    this.logger.log(`Database health check started (interval: ${HEALTH_CHECK_INTERVAL_MS}ms)`);
+    this.logger.log(
+      `Database health check started (interval: ${HEALTH_CHECK_INTERVAL_MS}ms)`,
+    );
   }
 
   /**
@@ -228,7 +241,8 @@ export class PrismaService
       }
     } catch (error) {
       this.isConnected = false;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Database health check failed: ${errorMessage}`);
 
       // Attempt reconnection
@@ -364,7 +378,9 @@ export class PrismaService
    * Enable shutdown hooks for graceful termination
    * @deprecated Use onModuleDestroy instead. This method is kept for backward compatibility.
    */
-  async enableShutdownHooks(app: { close: () => Promise<void> }): Promise<void> {
+  async enableShutdownHooks(app: {
+    close: () => Promise<void>;
+  }): Promise<void> {
     this.logger.warn(
       'enableShutdownHooks is deprecated. NestJS OnModuleDestroy lifecycle hook handles shutdown automatically.',
     );

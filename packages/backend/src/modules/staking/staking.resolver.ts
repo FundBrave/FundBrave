@@ -28,9 +28,7 @@ export class StakingResolver {
   // ==================== Queries ====================
 
   @Query(() => Stake, { name: 'stake' })
-  async getStake(
-    @Args('id', { type: () => ID }) id: string,
-  ): Promise<Stake> {
+  async getStake(@Args('id', { type: () => ID }) id: string): Promise<Stake> {
     return this.stakingService.getStakeById(id);
   }
 
@@ -40,7 +38,10 @@ export class StakingResolver {
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
     @Args('filter', { type: () => StakeFilterInput, nullable: true })
     filter?: StakeFilterInput,
-    @Args('sortBy', { type: () => StakeSortBy, defaultValue: StakeSortBy.STAKED_AT })
+    @Args('sortBy', {
+      type: () => StakeSortBy,
+      defaultValue: StakeSortBy.STAKED_AT,
+    })
     sortBy?: StakeSortBy,
     @Args('order', { type: () => SortOrder, defaultValue: SortOrder.DESC })
     order?: SortOrder,
@@ -162,9 +163,7 @@ export class StakingResolver {
 
   @Mutation(() => Boolean)
   @UseGuards(JwtAuthGuard)
-  async processUnstake(
-    @Args('input') input: UnstakeInput,
-  ): Promise<boolean> {
+  async processUnstake(@Args('input') input: UnstakeInput): Promise<boolean> {
     await this.stakingService.processUnstake(input);
     return true;
   }

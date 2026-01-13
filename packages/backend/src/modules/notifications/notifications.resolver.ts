@@ -78,7 +78,8 @@ export class NotificationsResolver {
   @UseGuards(JwtAuthGuard)
   async getNotificationsByType(
     @CurrentUser() user: { id: string },
-    @Args('types', { type: () => [NotificationType] }) types: NotificationType[],
+    @Args('types', { type: () => [NotificationType] })
+    types: NotificationType[],
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
   ): Promise<PaginatedNotifications> {
@@ -126,7 +127,10 @@ export class NotificationsResolver {
     @CurrentUser() user: { id: string },
     @Args('notificationId', { type: () => ID }) notificationId: string,
   ): Promise<NotificationOperationResult> {
-    return this.notificationsService.deleteNotification(notificationId, user.id);
+    return this.notificationsService.deleteNotification(
+      notificationId,
+      user.id,
+    );
   }
 
   @Mutation(() => NotificationOperationResult)

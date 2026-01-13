@@ -228,10 +228,7 @@ export class FBTVestingService {
     }
 
     // Calculate burns - amount is now BigInt directly
-    const totalBurned = burns.reduce(
-      (sum, b) => sum + b.amount,
-      BigInt(0),
-    );
+    const totalBurned = burns.reduce((sum, b) => sum + b.amount, BigInt(0));
 
     // Get unique recipients
     const uniqueRecipients = await this.prisma.fBTVestingSchedule.groupBy({

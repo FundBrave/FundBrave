@@ -1799,6 +1799,7 @@ input UpdateProfileInput {
   avatarUrl: String
   bannerUrl: String
   bio: String
+  birthdate: String
   displayName: String
   email: String
   isPrivate: Boolean
@@ -1811,11 +1812,14 @@ type User {
   avatarUrl: String
   bannerUrl: String
   bio: String
+  birthdate: DateTime
   createdAt: DateTime!
   displayName: String
   email: String
   emailVerified: Boolean!
+  goals: [String!]!
   id: ID!
+  interests: [String!]!
   isActive: Boolean!
   isBlocked: Boolean
   isFollowedBy: Boolean
@@ -1824,6 +1828,7 @@ type User {
   isVerifiedCreator: Boolean!
   lastSeenAt: DateTime
   location: String
+  onboardingCompleted: Boolean!
   stats: UserStats!
   updatedAt: DateTime!
   username: String

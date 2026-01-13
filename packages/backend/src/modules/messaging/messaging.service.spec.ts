@@ -95,18 +95,20 @@ const createMockPrismaService = () => ({
   block: {
     findFirst: jest.fn(),
   },
-  $transaction: jest.fn((callback) => callback({
-    message: {
-      create: jest.fn().mockResolvedValue(mockMessage),
-      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-    },
-    conversation: {
-      update: jest.fn(),
-    },
-    conversationParticipant: {
-      update: jest.fn(),
-    },
-  })),
+  $transaction: jest.fn((callback) =>
+    callback({
+      message: {
+        create: jest.fn().mockResolvedValue(mockMessage),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      conversation: {
+        update: jest.fn(),
+      },
+      conversationParticipant: {
+        update: jest.fn(),
+      },
+    }),
+  ),
 });
 
 describe('MessagingService', () => {
@@ -136,7 +138,9 @@ describe('MessagingService', () => {
   describe('startConversation', () => {
     it('should throw CannotMessageSelfException when trying to message self', async () => {
       await expect(
-        service.startConversation(mockUser1.id, { participantId: mockUser1.id }),
+        service.startConversation(mockUser1.id, {
+          participantId: mockUser1.id,
+        }),
       ).rejects.toThrow(CannotMessageSelfException);
     });
 
@@ -144,7 +148,9 @@ describe('MessagingService', () => {
       prismaService.user.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.startConversation(mockUser1.id, { participantId: mockUser2.id }),
+        service.startConversation(mockUser1.id, {
+          participantId: mockUser2.id,
+        }),
       ).rejects.toThrow(UserNotFoundException);
     });
 

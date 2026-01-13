@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma, User as PrismaUser } from '@prisma/client';
+import { createHash } from 'crypto';
 import {
   User,
   UserMinimal,
@@ -16,6 +17,10 @@ import {
   UpdateNotificationSettingsInput,
   UserFilterInput,
   VerificationBadge,
+  CompleteOnboardingDto,
+  OnboardingStatusDto,
+  VALID_GOAL_IDS,
+  VALID_INTEREST_IDS,
 } from './dto';
 import {
   UserNotFoundException,
@@ -57,7 +62,10 @@ export class UsersService {
   /**
    * Get user by wallet address
    */
-  async getUserByWallet(walletAddress: string, viewerId?: string): Promise<User> {
+  async getUserByWallet(
+    walletAddress: string,
+    viewerId?: string,
+  ): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: { walletAddress: walletAddress.toLowerCase() },
     });
@@ -129,7 +137,10 @@ export class UsersService {
   /**
    * Search users
    */
-  async searchUsers(query: string, limit: number = 10): Promise<UserSearchResult> {
+  async searchUsers(
+    query: string,
+    limit: number = 10,
+  ): Promise<UserSearchResult> {
     const users = await this.prisma.user.findMany({
       where: {
         OR: [
@@ -160,7 +171,8 @@ export class UsersService {
         displayName: u.displayName ?? undefined,
         avatarUrl: u.avatarUrl ?? undefined,
         isVerifiedCreator: u.isVerifiedCreator,
-        verificationBadge: u.verificationBadge as VerificationBadge ?? undefined,
+        verificationBadge:
+          (u.verificationBadge as VerificationBadge) ?? undefined,
       })),
       total: users.length,
     };
@@ -208,7 +220,8 @@ export class UsersService {
         displayName: f.follower.displayName ?? undefined,
         avatarUrl: f.follower.avatarUrl ?? undefined,
         isVerifiedCreator: f.follower.isVerifiedCreator,
-        verificationBadge: f.follower.verificationBadge as VerificationBadge ?? undefined,
+        verificationBadge:
+          (f.follower.verificationBadge as VerificationBadge) ?? undefined,
       },
       createdAt: f.createdAt,
     }));
@@ -262,7 +275,8 @@ export class UsersService {
         displayName: f.following.displayName ?? undefined,
         avatarUrl: f.following.avatarUrl ?? undefined,
         isVerifiedCreator: f.following.isVerifiedCreator,
-        verificationBadge: f.following.verificationBadge as VerificationBadge ?? undefined,
+        verificationBadge:
+          (f.following.verificationBadge as VerificationBadge) ?? undefined,
       },
       createdAt: f.createdAt,
     }));
@@ -444,7 +458,10 @@ export class UsersService {
   /**
    * Update user profile
    */
-  async updateProfile(userId: string, input: UpdateProfileInput): Promise<User> {
+  async updateProfile(
+    userId: string,
+    input: UpdateProfileInput,
+  ): Promise<User> {
     // Check username availability if being changed
     if (input.username) {
       const usernameExists = await this.prisma.user.findFirst({
@@ -459,6 +476,9 @@ export class UsersService {
       }
     }
 
+    // Parse birthdate if provided
+    const birthdate = input.birthdate ? new Date(input.birthdate) : undefined;
+
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -471,6 +491,7 @@ export class UsersService {
         website: input.website,
         email: input.email?.toLowerCase(),
         isPrivate: input.isPrivate,
+        birthdate,
       },
     });
 
@@ -563,7 +584,10 @@ export class UsersService {
   /**
    * Unfollow a user
    */
-  async unfollowUser(followerId: string, followingId: string): Promise<boolean> {
+  async unfollowUser(
+    followerId: string,
+    followingId: string,
+  ): Promise<boolean> {
     const existingFollow = await this.prisma.follow.findUnique({
       where: {
         followerId_followingId: { followerId, followingId },
@@ -594,7 +618,11 @@ export class UsersService {
   /**
    * Block a user
    */
-  async blockUser(blockerId: string, blockedId: string, reason?: string): Promise<boolean> {
+  async blockUser(
+    blockerId: string,
+    blockedId: string,
+    reason?: string,
+  ): Promise<boolean> {
     if (blockerId === blockedId) {
       throw new InvalidInputException('Cannot block yourself');
     }
@@ -654,6 +682,161 @@ export class UsersService {
     return !user;
   }
 
+  // ==================== Onboarding Methods ====================
+
+  /**
+   * Generate a default avatar URL using DiceBear API
+   * Creates a unique, deterministic avatar based on the identifier
+   * @param identifier - Unique identifier (user ID, wallet address, or username)
+   * @returns DiceBear avatar URL
+   */
+  generateDefaultAvatar(identifier: string): string {
+    // Create a hash from the identifier for consistent avatar generation
+    const hash = createHash('sha256').update(identifier).digest('hex');
+
+    // Use DiceBear's "bottts" style for fun, unique robot avatars
+    // Alternative styles: adventurer, avataaars, big-ears, big-smile, etc.
+    const style = 'bottts';
+
+    // Use first 16 chars of hash as seed for consistent generation
+    const seed = hash.substring(0, 16);
+
+    // DiceBear API v7 URL format with some styling options
+    return `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+  }
+
+  /**
+   * Get onboarding status for a user
+   * @param userId - User ID
+   * @returns Onboarding status with completion details
+   */
+  async getOnboardingStatus(userId: string): Promise<OnboardingStatusDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        username: true,
+        avatarUrl: true,
+        goals: true,
+        interests: true,
+        onboardingCompleted: true,
+      },
+    });
+
+    if (!user) {
+      throw new UserNotFoundException(userId);
+    }
+
+    return {
+      completed: user.onboardingCompleted,
+      username: user.username ?? undefined,
+      hasUsername: !!user.username,
+      hasGoals: user.goals.length > 0,
+      hasInterests: user.interests.length > 0,
+      hasAvatar: !!user.avatarUrl,
+    };
+  }
+
+  /**
+   * Complete user onboarding
+   * Saves all onboarding data in a single transaction
+   * Generates default avatar if not provided
+   * @param userId - User ID
+   * @param input - Complete onboarding data
+   * @returns Updated user profile
+   */
+  async completeOnboarding(
+    userId: string,
+    input: CompleteOnboardingDto,
+  ): Promise<User> {
+    const { profile, goals, interests } = input;
+
+    // Validate goals
+    const invalidGoals = goals.filter(
+      (goal) =>
+        !VALID_GOAL_IDS.includes(goal as (typeof VALID_GOAL_IDS)[number]),
+    );
+    if (invalidGoals.length > 0) {
+      throw new InvalidInputException(
+        `Invalid goal IDs: ${invalidGoals.join(', ')}`,
+        { invalidGoals, validGoals: VALID_GOAL_IDS },
+      );
+    }
+
+    // Validate interests if provided
+    if (interests && interests.length > 0) {
+      const invalidInterests = interests.filter(
+        (interest) =>
+          !VALID_INTEREST_IDS.includes(
+            interest as (typeof VALID_INTEREST_IDS)[number],
+          ),
+      );
+      if (invalidInterests.length > 0) {
+        throw new InvalidInputException(
+          `Invalid interest IDs: ${invalidInterests.join(', ')}`,
+          { invalidInterests, validInterests: VALID_INTEREST_IDS },
+        );
+      }
+    }
+
+    // Check if username is available (if being set)
+    const usernameExists = await this.prisma.user.findFirst({
+      where: {
+        username: profile.username.toLowerCase(),
+        id: { not: userId },
+      },
+    });
+
+    if (usernameExists) {
+      throw new UsernameAlreadyTakenException(profile.username);
+    }
+
+    // Get current user to check if avatar is already set
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { avatarUrl: true, walletAddress: true },
+    });
+
+    if (!currentUser) {
+      throw new UserNotFoundException(userId);
+    }
+
+    // Determine avatar URL: use provided, keep existing, or generate default
+    let avatarUrl = profile.avatarUrl;
+    if (!avatarUrl && !currentUser.avatarUrl) {
+      // Generate default avatar using user's wallet address or ID
+      avatarUrl = this.generateDefaultAvatar(
+        currentUser.walletAddress || userId,
+      );
+    } else if (!avatarUrl) {
+      // Keep existing avatar (convert null to undefined)
+      avatarUrl = currentUser.avatarUrl || undefined;
+    }
+
+    // Parse birthdate if provided
+    const birthdate = profile.birthdate ? new Date(profile.birthdate) : null;
+
+    // Perform atomic update with transaction
+    const updatedUser = await this.prisma.$transaction(async (tx) => {
+      return tx.user.update({
+        where: { id: userId },
+        data: {
+          username: profile.username.toLowerCase(),
+          displayName: profile.displayName ?? null,
+          bio: profile.bio ?? null,
+          avatarUrl: avatarUrl ?? undefined,
+          birthdate,
+          goals,
+          interests: interests ?? [],
+          onboardingCompleted: true,
+        },
+      });
+    });
+
+    this.logger.log(`Onboarding completed for user ${userId}`);
+
+    return this.mapToUserDto(updatedUser);
+  }
+
   // ==================== Helper Methods ====================
 
   /**
@@ -681,7 +864,10 @@ export class UsersService {
   /**
    * Map Prisma user to DTO
    */
-  private async mapToUserDto(user: PrismaUser, viewerId?: string): Promise<User> {
+  private async mapToUserDto(
+    user: PrismaUser,
+    viewerId?: string,
+  ): Promise<User> {
     const stats: UserStats = {
       followersCount: user.followersCount,
       followingCount: user.followingCount,
@@ -721,10 +907,15 @@ export class UsersService {
       location: user.location ?? undefined,
       website: user.website ?? undefined,
       isVerifiedCreator: user.isVerifiedCreator,
-      verificationBadge: user.verificationBadge as VerificationBadge ?? undefined,
+      verificationBadge:
+        (user.verificationBadge as VerificationBadge) ?? undefined,
       stats,
       isPrivate: user.isPrivate,
       isActive: user.isActive,
+      birthdate: user.birthdate ?? undefined,
+      goals: user.goals ?? [],
+      interests: user.interests ?? [],
+      onboardingCompleted: user.onboardingCompleted,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       lastSeenAt: user.lastSeenAt ?? undefined,

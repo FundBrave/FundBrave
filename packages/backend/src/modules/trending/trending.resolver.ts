@@ -20,7 +20,10 @@ export class TrendingResolver {
 
   @Query(() => [TrendingHashtag], { name: 'trendingHashtags' })
   async getTrendingHashtags(
-    @Args('period', { type: () => TrendingPeriod, defaultValue: TrendingPeriod.TWENTY_FOUR_HOURS })
+    @Args('period', {
+      type: () => TrendingPeriod,
+      defaultValue: TrendingPeriod.TWENTY_FOUR_HOURS,
+    })
     period: TrendingPeriod,
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
   ): Promise<TrendingHashtag[]> {
@@ -29,7 +32,10 @@ export class TrendingResolver {
 
   @Query(() => [TrendingFundraiser], { name: 'trendingFundraisers' })
   async getTrendingFundraisers(
-    @Args('period', { type: () => TrendingPeriod, defaultValue: TrendingPeriod.TWENTY_FOUR_HOURS })
+    @Args('period', {
+      type: () => TrendingPeriod,
+      defaultValue: TrendingPeriod.TWENTY_FOUR_HOURS,
+    })
     period: TrendingPeriod,
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
   ): Promise<TrendingFundraiser[]> {
@@ -38,7 +44,10 @@ export class TrendingResolver {
 
   @Query(() => [TrendingUser], { name: 'trendingUsers' })
   async getTrendingUsers(
-    @Args('period', { type: () => TrendingPeriod, defaultValue: TrendingPeriod.TWENTY_FOUR_HOURS })
+    @Args('period', {
+      type: () => TrendingPeriod,
+      defaultValue: TrendingPeriod.TWENTY_FOUR_HOURS,
+    })
     period: TrendingPeriod,
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
   ): Promise<TrendingUser[]> {

@@ -12,7 +12,12 @@ export const QUEUE_NAMES = {
 
 // Job types
 export interface EmailJobData {
-  type: 'verification' | 'password-reset' | 'welcome' | 'notification-digest' | 'custom';
+  type:
+    | 'verification'
+    | 'password-reset'
+    | 'welcome'
+    | 'notification-digest'
+    | 'custom';
   to: string;
   subject?: string;
   template?: string;
@@ -55,10 +60,14 @@ export class QueueService {
   private readonly logger = new Logger(QueueService.name);
 
   constructor(
-    @InjectQueue(QUEUE_NAMES.EMAIL) private readonly emailQueue: Queue<EmailJobData>,
-    @InjectQueue(QUEUE_NAMES.NOTIFICATION) private readonly notificationQueue: Queue<NotificationJobData>,
-    @InjectQueue(QUEUE_NAMES.TRENDING) private readonly trendingQueue: Queue<TrendingJobData>,
-    @InjectQueue(QUEUE_NAMES.BLOCKCHAIN_SYNC) private readonly blockchainSyncQueue: Queue<BlockchainSyncJobData>,
+    @InjectQueue(QUEUE_NAMES.EMAIL)
+    private readonly emailQueue: Queue<EmailJobData>,
+    @InjectQueue(QUEUE_NAMES.NOTIFICATION)
+    private readonly notificationQueue: Queue<NotificationJobData>,
+    @InjectQueue(QUEUE_NAMES.TRENDING)
+    private readonly trendingQueue: Queue<TrendingJobData>,
+    @InjectQueue(QUEUE_NAMES.BLOCKCHAIN_SYNC)
+    private readonly blockchainSyncQueue: Queue<BlockchainSyncJobData>,
   ) {}
 
   // ==================== Email Queue ====================
@@ -66,7 +75,10 @@ export class QueueService {
   /**
    * Add email job to queue
    */
-  async addEmailJob(data: EmailJobData, options?: { delay?: number; priority?: number }): Promise<Job<EmailJobData>> {
+  async addEmailJob(
+    data: EmailJobData,
+    options?: { delay?: number; priority?: number },
+  ): Promise<Job<EmailJobData>> {
     const job = await this.emailQueue.add(data, {
       delay: options?.delay,
       priority: options?.priority,
@@ -86,7 +98,11 @@ export class QueueService {
   /**
    * Add verification email job
    */
-  async sendVerificationEmail(email: string, token: string, username?: string): Promise<Job<EmailJobData>> {
+  async sendVerificationEmail(
+    email: string,
+    token: string,
+    username?: string,
+  ): Promise<Job<EmailJobData>> {
     return this.addEmailJob({
       type: 'verification',
       to: email,
@@ -97,7 +113,10 @@ export class QueueService {
   /**
    * Add password reset email job
    */
-  async sendPasswordResetEmail(email: string, token: string): Promise<Job<EmailJobData>> {
+  async sendPasswordResetEmail(
+    email: string,
+    token: string,
+  ): Promise<Job<EmailJobData>> {
     return this.addEmailJob({
       type: 'password-reset',
       to: email,
@@ -108,7 +127,10 @@ export class QueueService {
   /**
    * Add welcome email job
    */
-  async sendWelcomeEmail(email: string, username: string): Promise<Job<EmailJobData>> {
+  async sendWelcomeEmail(
+    email: string,
+    username: string,
+  ): Promise<Job<EmailJobData>> {
     return this.addEmailJob({
       type: 'welcome',
       to: email,
@@ -294,20 +316,28 @@ export class QueueService {
   /**
    * Get all queues status
    */
-  async getAllQueuesStatus(): Promise<Record<string, {
-    waiting: number;
-    active: number;
-    completed: number;
-    failed: number;
-    delayed: number;
-  }>> {
-    const statuses: Record<string, {
-      waiting: number;
-      active: number;
-      completed: number;
-      failed: number;
-      delayed: number;
-    }> = {};
+  async getAllQueuesStatus(): Promise<
+    Record<
+      string,
+      {
+        waiting: number;
+        active: number;
+        completed: number;
+        failed: number;
+        delayed: number;
+      }
+    >
+  > {
+    const statuses: Record<
+      string,
+      {
+        waiting: number;
+        active: number;
+        completed: number;
+        failed: number;
+        delayed: number;
+      }
+    > = {};
 
     for (const name of Object.values(QUEUE_NAMES)) {
       statuses[name] = await this.getQueueStatus(name);

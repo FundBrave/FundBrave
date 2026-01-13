@@ -346,7 +346,9 @@ describe('AuthService', () => {
         avatarUrl: 'https://google.com/avatar.png',
       };
 
-      prismaService.user.findFirst.mockResolvedValue(existingUserWithoutProfile);
+      prismaService.user.findFirst.mockResolvedValue(
+        existingUserWithoutProfile,
+      );
       prismaService.user.update.mockResolvedValue(updatedUser);
 
       const result = await service.findOrCreateGoogleUser({
@@ -566,7 +568,9 @@ describe('AuthService', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      prismaService.user.findFirst.mockRejectedValue(new Error('Database error'));
+      prismaService.user.findFirst.mockRejectedValue(
+        new Error('Database error'),
+      );
 
       const result = await service.verifyResetToken('some-token');
 
@@ -586,9 +590,11 @@ describe('AuthService', () => {
     };
 
     beforeEach(() => {
-      (prismaService as any).$transaction = jest.fn().mockImplementation(
-        async (callback: any) => callback(mockTransactionClient),
-      );
+      (prismaService as any).$transaction = jest
+        .fn()
+        .mockImplementation(async (callback: any) =>
+          callback(mockTransactionClient),
+        );
     });
 
     it('should reset password for valid token', async () => {
@@ -598,7 +604,10 @@ describe('AuthService', () => {
         passwordResetExpires: new Date(Date.now() + 1800000),
       });
 
-      const result = await service.resetPassword('valid-token', 'NewSecureP@ss1');
+      const result = await service.resetPassword(
+        'valid-token',
+        'NewSecureP@ss1',
+      );
 
       expect(result.success).toBe(true);
       expect(result.message).toContain('reset successfully');

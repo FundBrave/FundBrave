@@ -60,7 +60,7 @@ export class TreasuryResolver {
   @Query(() => FBTStake, {
     name: 'myFBTStake',
     nullable: true,
-    description: 'Get current user\'s FBT stake in treasury',
+    description: "Get current user's FBT stake in treasury",
   })
   @UseGuards(JwtAuthGuard)
   async getMyFBTStake(
@@ -120,7 +120,8 @@ export class TreasuryResolver {
     description: 'Get platform fees filtered by source type',
   })
   async getPlatformFeesBySource(
-    @Args('sourceType', { type: () => FeeSourceType }) sourceType: FeeSourceType,
+    @Args('sourceType', { type: () => FeeSourceType })
+    sourceType: FeeSourceType,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
   ): Promise<PaginatedPlatformFees> {
@@ -161,7 +162,7 @@ export class TreasuryResolver {
    */
   @Query(() => TreasuryEndowmentInfo, {
     name: 'treasuryEndowmentInfo',
-    description: 'Get treasury\'s endowment information',
+    description: "Get treasury's endowment information",
   })
   async getTreasuryEndowmentInfo(): Promise<TreasuryEndowmentInfo> {
     return this.treasuryService.getTreasuryEndowmentInfo();
@@ -228,9 +229,7 @@ export function publishTreasuryStatsUpdated(
 /**
  * Publish FBT stake updated event
  */
-export function publishFBTStakeUpdated(
-  payload: FBTStakeUpdatedPayload,
-): void {
+export function publishFBTStakeUpdated(payload: FBTStakeUpdatedPayload): void {
   pubSub.publish(TREASURY_EVENTS.FBT_STAKE_UPDATED, {
     fbtStakeUpdated: payload,
   });

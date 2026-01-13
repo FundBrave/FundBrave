@@ -7,7 +7,9 @@ import { IsUUID, IsNotEmpty } from 'class-validator';
  */
 @InputType()
 export class StartConversationInput {
-  @Field(() => ID, { description: 'The ID of the user to start a conversation with' })
+  @Field(() => ID, {
+    description: 'The ID of the user to start a conversation with',
+  })
   @IsUUID()
   @IsNotEmpty()
   participantId: string;

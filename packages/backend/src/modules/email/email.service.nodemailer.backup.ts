@@ -128,7 +128,9 @@ export class EmailService {
       return false;
     }
 
-    const { subject, html } = notificationDigestEmailTemplate({ notifications });
+    const { subject, html } = notificationDigestEmailTemplate({
+      notifications,
+    });
     return this.sendEmail({ to: email, subject, html });
   }
 

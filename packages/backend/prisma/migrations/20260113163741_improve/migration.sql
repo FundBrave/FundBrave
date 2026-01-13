@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "users" ALTER COLUMN "goals" DROP DEFAULT,
+ALTER COLUMN "interests" DROP DEFAULT;

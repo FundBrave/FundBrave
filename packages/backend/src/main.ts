@@ -48,34 +48,54 @@ function validateEnvironment(logger: Logger): void {
 
   // Fail if required variables are missing
   if (missingRequired.length > 0) {
-    logger.error(`CRITICAL: Missing required environment variables: ${missingRequired.join(', ')}`);
-    throw new Error(`Missing required environment variables: ${missingRequired.join(', ')}`);
+    logger.error(
+      `CRITICAL: Missing required environment variables: ${missingRequired.join(', ')}`,
+    );
+    throw new Error(
+      `Missing required environment variables: ${missingRequired.join(', ')}`,
+    );
   }
 
   // Warn about missing recommended variables
   if (missingRecommended.length > 0) {
-    logger.warn(`Missing recommended environment variables: ${missingRecommended.join(', ')}`);
+    logger.warn(
+      `Missing recommended environment variables: ${missingRecommended.join(', ')}`,
+    );
   }
 
   // Validate JWT_SECRET strength
   const jwtSecret = process.env.JWT_SECRET;
   if (jwtSecret && jwtSecret.length < 32) {
-    logger.warn('WARNING: JWT_SECRET should be at least 32 characters for production security');
+    logger.warn(
+      'WARNING: JWT_SECRET should be at least 32 characters for production security',
+    );
   }
 
   // Validate WALLET_ENCRYPTION_KEY format
   const encryptionKey = process.env.WALLET_ENCRYPTION_KEY;
   if (encryptionKey) {
     if (!/^[a-fA-F0-9]{64}$/.test(encryptionKey)) {
-      logger.error('CRITICAL: WALLET_ENCRYPTION_KEY must be 64 hex characters (32 bytes)');
-      throw new Error('WALLET_ENCRYPTION_KEY must be 64 hex characters (32 bytes)');
+      logger.error(
+        'CRITICAL: WALLET_ENCRYPTION_KEY must be 64 hex characters (32 bytes)',
+      );
+      throw new Error(
+        'WALLET_ENCRYPTION_KEY must be 64 hex characters (32 bytes)',
+      );
     }
 
     // Check for weak/default keys
-    const weakKeys = ['0'.repeat(64), 'a'.repeat(64), '1234567890'.repeat(6) + '1234'];
+    const weakKeys = [
+      '0'.repeat(64),
+      'a'.repeat(64),
+      '1234567890'.repeat(6) + '1234',
+    ];
     if (weakKeys.includes(encryptionKey.toLowerCase())) {
-      logger.error('CRITICAL: WALLET_ENCRYPTION_KEY cannot be a weak or default value');
-      throw new Error('WALLET_ENCRYPTION_KEY cannot be a weak or default value');
+      logger.error(
+        'CRITICAL: WALLET_ENCRYPTION_KEY cannot be a weak or default value',
+      );
+      throw new Error(
+        'WALLET_ENCRYPTION_KEY cannot be a weak or default value',
+      );
     }
   }
 
@@ -87,7 +107,14 @@ function validateEnvironment(logger: Logger): void {
  * CWE-522 Fix: Properly configured to accept HttpOnly cookies from frontend
  */
 function configureCors(): {
-  origin: string | string[] | boolean | ((origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void);
+  origin:
+    | string
+    | string[]
+    | boolean
+    | ((
+        origin: string | undefined,
+        callback: (err: Error | null, allow?: boolean) => void,
+      ) => void);
   credentials: boolean;
   methods: string[];
   allowedHeaders: string[];
@@ -96,7 +123,8 @@ function configureCors(): {
 } {
   const nodeEnv = process.env.NODE_ENV || 'development';
   const frontendUrl = process.env.FRONTEND_URL;
-  const additionalOrigins = process.env.ALLOWED_ORIGINS?.split(',').filter(Boolean) || [];
+  const additionalOrigins =
+    process.env.ALLOWED_ORIGINS?.split(',').filter(Boolean) || [];
 
   // In production, strictly limit CORS origins
   if (nodeEnv === 'production') {
@@ -109,14 +137,21 @@ function configureCors(): {
     origins.push(...additionalOrigins);
 
     if (origins.length === 0) {
-      throw new Error('FRONTEND_URL or ALLOWED_ORIGINS must be set in production');
+      throw new Error(
+        'FRONTEND_URL or ALLOWED_ORIGINS must be set in production',
+      );
     }
 
     return {
       origin: origins,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Cookie',
+      ],
       exposedHeaders: ['X-Total-Count', 'X-Page-Count', 'Set-Cookie'],
       maxAge: 86400, // 24 hours
     };
@@ -132,7 +167,7 @@ function configureCors(): {
     allowedDevelopmentOrigins.push(frontendUrl);
   }
 
-  additionalOrigins.forEach(origin => {
+  additionalOrigins.forEach((origin) => {
     if (!allowedDevelopmentOrigins.includes(origin)) {
       allowedDevelopmentOrigins.push(origin);
     }
@@ -155,7 +190,12 @@ function configureCors(): {
     },
     credentials: true, // Critical: allows cookies to be sent cross-origin
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Cookie',
+    ],
     exposedHeaders: ['X-Total-Count', 'X-Page-Count', 'Set-Cookie'],
     maxAge: 86400,
   };
@@ -269,10 +309,15 @@ async function bootstrap() {
   });
 
   // Swagger API Documentation (disable in production if needed)
-  if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true') {
+  if (
+    process.env.NODE_ENV !== 'production' ||
+    process.env.ENABLE_SWAGGER === 'true'
+  ) {
     const config = new DocumentBuilder()
       .setTitle('FundBrave API')
-      .setDescription('Decentralized fundraising platform API with DeFi mechanics')
+      .setDescription(
+        'Decentralized fundraising platform API with DeFi mechanics',
+      )
       .setVersion('1.0')
       .addBearerAuth(
         {
@@ -318,10 +363,15 @@ async function bootstrap() {
   logger.log('='.repeat(80));
   logger.log(`Application is running on: http://localhost:${port}`);
   logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.log(`Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3001'}`);
+  logger.log(
+    `Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3001'}`,
+  );
   logger.log('='.repeat(80));
 
-  if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true') {
+  if (
+    process.env.NODE_ENV !== 'production' ||
+    process.env.ENABLE_SWAGGER === 'true'
+  ) {
     logger.log(`API Documentation: http://localhost:${port}/api/docs`);
   }
 

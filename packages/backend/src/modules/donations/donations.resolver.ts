@@ -41,9 +41,7 @@ export class DonationsResolver {
   }
 
   @Query(() => Donation, { name: 'donationByTxHash' })
-  async getDonationByTxHash(
-    @Args('txHash') txHash: string,
-  ): Promise<Donation> {
+  async getDonationByTxHash(@Args('txHash') txHash: string): Promise<Donation> {
     return this.donationsService.getDonationByTxHash(txHash);
   }
 
@@ -53,12 +51,21 @@ export class DonationsResolver {
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
     @Args('filter', { type: () => DonationFilterInput, nullable: true })
     filter?: DonationFilterInput,
-    @Args('sortBy', { type: () => DonationSortBy, defaultValue: DonationSortBy.CREATED_AT })
+    @Args('sortBy', {
+      type: () => DonationSortBy,
+      defaultValue: DonationSortBy.CREATED_AT,
+    })
     sortBy?: DonationSortBy,
     @Args('order', { type: () => SortOrder, defaultValue: SortOrder.DESC })
     order?: SortOrder,
   ): Promise<PaginatedDonations> {
-    return this.donationsService.getDonations(limit, offset, filter, sortBy, order);
+    return this.donationsService.getDonations(
+      limit,
+      offset,
+      filter,
+      sortBy,
+      order,
+    );
   }
 
   @Query(() => PaginatedDonations, { name: 'fundraiserDonations' })
@@ -67,7 +74,11 @@ export class DonationsResolver {
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
   ): Promise<PaginatedDonations> {
-    return this.donationsService.getFundraiserDonations(fundraiserId, limit, offset);
+    return this.donationsService.getFundraiserDonations(
+      fundraiserId,
+      limit,
+      offset,
+    );
   }
 
   @Query(() => PaginatedDonations, { name: 'userDonations' })
@@ -122,11 +133,17 @@ export class DonationsResolver {
 
   @Query(() => DonationLeaderboard, { name: 'donationLeaderboard' })
   async getDonationLeaderboard(
-    @Args('period', { type: () => LeaderboardPeriod, defaultValue: LeaderboardPeriod.ALL })
+    @Args('period', {
+      type: () => LeaderboardPeriod,
+      defaultValue: LeaderboardPeriod.ALL,
+    })
     period: LeaderboardPeriod,
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
   ): Promise<DonationLeaderboard> {
-    return this.donationsService.getDonationLeaderboard(period as 'all' | '7d' | '30d' | '90d', limit);
+    return this.donationsService.getDonationLeaderboard(
+      period as 'all' | '7d' | '30d' | '90d',
+      limit,
+    );
   }
 
   @Query(() => [DonationLeaderboardEntry], { name: 'topDonors' })
@@ -157,6 +174,10 @@ export class DonationsResolver {
     @CurrentUser() user: { id: string; walletAddress: string },
     @Args('input') input: RecordDonationInput,
   ): Promise<Donation> {
-    return this.donationsService.recordDonation(user.id, user.walletAddress, input);
+    return this.donationsService.recordDonation(
+      user.id,
+      user.walletAddress,
+      input,
+    );
   }
 }

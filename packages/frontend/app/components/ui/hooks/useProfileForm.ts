@@ -10,7 +10,7 @@ export const profileSchema = z.object({
       /^[a-zA-Z0-9_]+$/,
       "Username can only contain letters, numbers, and underscores"
     ),
-  birthdate: z.string().min(1, "Please select your birthdate"),
+  birthdate: z.string().optional(),
   bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
   avatar: z.string().optional(),
 });

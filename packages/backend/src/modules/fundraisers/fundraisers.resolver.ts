@@ -101,7 +101,11 @@ export class FundraisersResolver {
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
   ): Promise<PaginatedFundraisers> {
-    return this.fundraisersService.getFundraisersByCreator(user.id, limit, offset);
+    return this.fundraisersService.getFundraisersByCreator(
+      user.id,
+      limit,
+      offset,
+    );
   }
 
   @Query(() => PaginatedFundraisers, { name: 'fundraisersByCreator' })
@@ -110,7 +114,11 @@ export class FundraisersResolver {
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
   ): Promise<PaginatedFundraisers> {
-    return this.fundraisersService.getFundraisersByCreator(creatorId, limit, offset);
+    return this.fundraisersService.getFundraisersByCreator(
+      creatorId,
+      limit,
+      offset,
+    );
   }
 
   @Query(() => FundraisersMinimalResponse, { name: 'fundraisersMinimal' })
@@ -152,7 +160,12 @@ export class FundraisersResolver {
     @Args('txHash') txHash: string,
     @Args('onChainId', { type: () => Int }) onChainId: number,
   ): Promise<Fundraiser> {
-    return this.fundraisersService.createFundraiser(user.id, input, txHash, onChainId);
+    return this.fundraisersService.createFundraiser(
+      user.id,
+      input,
+      txHash,
+      onChainId,
+    );
   }
 
   @Mutation(() => Fundraiser)
@@ -162,7 +175,11 @@ export class FundraisersResolver {
     @Args('fundraiserId', { type: () => ID }) fundraiserId: string,
     @Args('input') input: UpdateFundraiserInput,
   ): Promise<Fundraiser> {
-    return this.fundraisersService.updateFundraiser(fundraiserId, user.id, input);
+    return this.fundraisersService.updateFundraiser(
+      fundraiserId,
+      user.id,
+      input,
+    );
   }
 
   @Mutation(() => FundraiserUpdate)
@@ -172,7 +189,11 @@ export class FundraisersResolver {
     @Args('fundraiserId', { type: () => ID }) fundraiserId: string,
     @Args('input') input: CreateFundraiserUpdateInput,
   ): Promise<FundraiserUpdate> {
-    return this.fundraisersService.addFundraiserUpdate(fundraiserId, user.id, input);
+    return this.fundraisersService.addFundraiserUpdate(
+      fundraiserId,
+      user.id,
+      input,
+    );
   }
 
   @Mutation(() => FundraiserMilestone)

@@ -123,10 +123,13 @@ export function passwordResetEmailTemplate(data: {
     </p>
 
     <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">
-      This password reset was requested on ${new Date().toLocaleString('en-US', {
-        dateStyle: 'full',
-        timeStyle: 'short'
-      })}.
+      This password reset was requested on ${new Date().toLocaleString(
+        'en-US',
+        {
+          dateStyle: 'full',
+          timeStyle: 'short',
+        },
+      )}.
       If you didn't make this request, no action is needed.
     </p>
   `;
@@ -140,9 +143,10 @@ export function passwordResetEmailTemplate(data: {
 /**
  * Welcome email template
  */
-export function welcomeEmailTemplate(data: {
-  username: string;
-}): { subject: string; html: string } {
+export function welcomeEmailTemplate(data: { username: string }): {
+  subject: string;
+  html: string;
+} {
   const dashboardUrl = `${process.env.FRONTEND_URL || 'https://fundbrave.com'}/dashboard`;
 
   const content = `

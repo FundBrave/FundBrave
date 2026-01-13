@@ -28,8 +28,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!jwtSecret) {
       throw new Error(
         'FATAL: JWT_SECRET environment variable is not set. ' +
-        'Application cannot start without a secure JWT secret. ' +
-        'Please set JWT_SECRET in your .env file.'
+          'Application cannot start without a secure JWT secret. ' +
+          'Please set JWT_SECRET in your .env file.',
       );
     }
 

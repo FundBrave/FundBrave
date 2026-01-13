@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { StepComponentProps } from "@/lib/onboarding-steps";
 import { useOnboardingData } from "@/app/provider/OnboardingDataContext";
@@ -79,11 +79,47 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [cooldownSeconds, setCooldownSeconds] = useState(60); // Start with 60s cooldown (OTP just sent)
   const [retryCount, setRetryCount] = useState(0);
-  const MAX_RETRIES = 2;
 
+  // Store interval ID in ref to persist across renders and enable cleanup
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const MAX_RETRIES = 2;
   const userEmail = data.email || "your email";
+
+  // Cleanup interval on unmount or when cooldown reaches 0
+  useEffect(() => {
+    // Start countdown if cooldownSeconds > 0
+    if (cooldownSeconds > 0) {
+      // Clear any existing interval first (prevent duplicates)
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+
+      intervalRef.current = setInterval(() => {
+        setCooldownSeconds((prev) => {
+          if (prev <= 1) {
+            // Clear interval when reaching 0
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    // Cleanup function: runs on unmount or before re-running effect
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [cooldownSeconds]); // Re-run only when cooldownSeconds changes
 
   const handleInputChange = (index: number, value: string) => {
     if (value.length > 1) return;
@@ -171,7 +207,8 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
   };
 
   const handleResendOtp = async () => {
-    if (cooldownSeconds > 0) {
+    // Early return if cooldown active or already resending
+    if (cooldownSeconds > 0 || isResending) {
       return;
     }
 
@@ -190,20 +227,9 @@ const VerifyEmail: React.FC<StepComponentProps> = ({ onNext }) => {
       if (response.success) {
         setSuccessMessage(response.message || "Verification code sent!");
 
-        // Set cooldown if provided
-        if (response.cooldownSeconds) {
+        // Set cooldown - the useEffect will handle the countdown
+        if (response.cooldownSeconds && response.cooldownSeconds > 0) {
           setCooldownSeconds(response.cooldownSeconds);
-
-          // Countdown timer
-          const interval = setInterval(() => {
-            setCooldownSeconds((prev) => {
-              if (prev <= 1) {
-                clearInterval(interval);
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
         }
       } else {
         setError(response.message || "Failed to resend code. Please try again.");

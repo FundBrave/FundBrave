@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { motion } from "motion/react";
 import confetti from "canvas-confetti";
 import { PartyPopper } from "@/app/components/ui/icons";
@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useOnboardingData } from "@/app/provider/OnboardingDataContext";
 import { useReducedMotion } from "@/app/hooks/useReducedMotion";
 import { EASE_ORGANIC } from "@/lib/constants/animation";
+import { onboardingApi } from "@/lib/api/onboarding";
 
 // Staggered text reveal variants
 const textContainerVariants = {
@@ -136,8 +137,10 @@ const fireConfetti = () => {
  */
 const Welcome: React.FC<StepComponentProps> = ({ onBack }) => {
   const router = useRouter();
-  const { markComplete } = useOnboardingData();
+  const { data, markComplete } = useOnboardingData();
   const prefersReducedMotion = useReducedMotion();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fire confetti on mount (only if motion is allowed)
   useEffect(() => {
@@ -151,21 +154,55 @@ const Welcome: React.FC<StepComponentProps> = ({ onBack }) => {
     }
   }, [prefersReducedMotion]);
 
-  const handleGoHome = useCallback(() => {
-    // Fire one more confetti burst on completion
-    if (!prefersReducedMotion) {
-      confetti({
-        particleCount: 60,
-        spread: 80,
-        origin: { y: 0.7 },
-        colors: ["#450CF0", "#8B5CF6", "#CD82FF"],
-      });
-    }
+  const handleGoHome = useCallback(async () => {
+    // Prevent double submission
+    if (isSubmitting) return;
 
-    // Mark onboarding as complete and navigate to home
-    markComplete();
-    router.push("/");
-  }, [markComplete, router, prefersReducedMotion]);
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // Prepare onboarding data for submission
+      const onboardingData = {
+        profile: {
+          username: data.profile.username,
+          displayName: data.profile.fullName || data.profile.username,
+          birthdate: data.profile.birthdate || undefined,
+          bio: data.profile.bio || undefined,
+          avatarUrl: data.profile.avatar || undefined, // Only if user uploaded one
+        },
+        goals: data.goals,
+        interests: [], // Can be added later if needed
+      };
+
+      // Submit to backend
+      await onboardingApi.completeOnboarding(onboardingData);
+
+      // Fire one more confetti burst on completion
+      if (!prefersReducedMotion) {
+        confetti({
+          particleCount: 60,
+          spread: 80,
+          origin: { y: 0.7 },
+          colors: ["#450CF0", "#8B5CF6", "#CD82FF"],
+        });
+      }
+
+      // Mark onboarding as complete and navigate to home
+      markComplete();
+      router.push("/");
+    } catch (err) {
+      setIsSubmitting(false);
+
+      // User-friendly error message
+      const errorMessage = err instanceof Error
+        ? err.message
+        : "Failed to complete onboarding. Please try again.";
+
+      setError(errorMessage);
+      console.error("Onboarding completion error:", err);
+    }
+  }, [isSubmitting, data, markComplete, router, prefersReducedMotion]);
 
   return (
     <motion.div
@@ -244,6 +281,17 @@ const Welcome: React.FC<StepComponentProps> = ({ onBack }) => {
         </motion.p>
       </motion.div>
 
+      {/* Error message */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg"
+        >
+          <p className="text-red-400 text-sm">{error}</p>
+        </motion.div>
+      )}
+
       {/* Final action buttons with stagger */}
       <motion.div
         className="flex flex-col sm:flex-row gap-4 justify-center"
@@ -251,10 +299,11 @@ const Welcome: React.FC<StepComponentProps> = ({ onBack }) => {
         initial="hidden"
         animate="visible"
       >
-        {onBack && (
+        {onBack && !isSubmitting && (
           <motion.button
             onClick={onBack}
-            className="py-3 px-6 min-h-[44px] bg-secondary rounded-lg text-foreground font-semibold"
+            disabled={isSubmitting}
+            className="py-3 px-6 min-h-[44px] bg-secondary rounded-lg text-foreground font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             variants={buttonVariants}
             whileHover={prefersReducedMotion ? {} : { scale: 1.02, y: -1 }}
             whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
@@ -265,20 +314,31 @@ const Welcome: React.FC<StepComponentProps> = ({ onBack }) => {
         )}
         <motion.button
           onClick={handleGoHome}
-          className="py-3 px-6 min-h-[44px] rounded-lg text-white font-semibold"
+          disabled={isSubmitting}
+          className="py-3 px-6 min-h-[44px] rounded-lg text-white font-semibold disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           variants={buttonVariants}
-          whileHover={prefersReducedMotion ? {} : {
+          whileHover={prefersReducedMotion || isSubmitting ? {} : {
             scale: 1.02,
             y: -2,
             boxShadow: "0 8px 25px rgba(139, 92, 246, 0.5)",
           }}
-          whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+          whileTap={prefersReducedMotion || isSubmitting ? {} : { scale: 0.98 }}
           transition={buttonSpring}
           style={{
             background: "linear-gradient(97deg, var(--primary-500) 0%, var(--soft-purple-500) 100%)",
           }}
         >
-          Go to Home
+          {isSubmitting ? (
+            <>
+              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Completing...</span>
+            </>
+          ) : (
+            "Go to Home"
+          )}
         </motion.button>
       </motion.div>
     </motion.div>

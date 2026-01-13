@@ -53,10 +53,8 @@ export class WealthBuildingService {
           acc.totalDirectToBeneficiaries + donation.directAmount,
         totalEndowmentPrincipal:
           acc.totalEndowmentPrincipal + donation.endowmentPrincipal,
-        totalYieldGenerated:
-          acc.totalYieldGenerated + donation.lifetimeYield,
-        totalCauseYieldPaid:
-          acc.totalCauseYieldPaid + donation.causeYieldPaid,
+        totalYieldGenerated: acc.totalYieldGenerated + donation.lifetimeYield,
+        totalCauseYieldPaid: acc.totalCauseYieldPaid + donation.causeYieldPaid,
         totalDonorStockValue:
           acc.totalDonorStockValue + donation.donorStockValue,
       }),
@@ -411,7 +409,8 @@ export class WealthBuildingService {
       data: {
         raisedAmount: fundraiser.raisedAmount + args.directAmount,
         endowmentEnabled: true,
-        endowmentPrincipal: fundraiser.endowmentPrincipal + args.endowmentAmount,
+        endowmentPrincipal:
+          fundraiser.endowmentPrincipal + args.endowmentAmount,
         donorsCount: { increment: 1 },
       },
     });
@@ -532,21 +531,23 @@ export class WealthBuildingService {
     });
 
     if (user) {
-      const existingPortfolio = await this.prisma.donorStockPortfolio.findUnique({
-        where: {
-          donorId_stockToken: {
-            donorId: user.id,
-            stockToken: args.stockToken.toLowerCase(),
+      const existingPortfolio =
+        await this.prisma.donorStockPortfolio.findUnique({
+          where: {
+            donorId_stockToken: {
+              donorId: user.id,
+              stockToken: args.stockToken.toLowerCase(),
+            },
           },
-        },
-      });
+        });
 
       if (existingPortfolio) {
         await this.prisma.donorStockPortfolio.update({
           where: { id: existingPortfolio.id },
           data: {
             stockBalance: existingPortfolio.stockBalance + args.stockAmount,
-            totalUSDCInvested: existingPortfolio.totalUSDCInvested + args.usdcAmount,
+            totalUSDCInvested:
+              existingPortfolio.totalUSDCInvested + args.usdcAmount,
           },
         });
       } else {
@@ -602,9 +603,7 @@ export class WealthBuildingService {
         },
       });
 
-      this.logger.log(
-        `Enabled wealth building for fundraiser ${fundraiserId}`,
-      );
+      this.logger.log(`Enabled wealth building for fundraiser ${fundraiserId}`);
     }
   }
 
@@ -613,10 +612,7 @@ export class WealthBuildingService {
   /**
    * Update stock price (called by scheduled job)
    */
-  async updateStockPrice(
-    tokenAddress: string,
-    price: string,
-  ): Promise<void> {
+  async updateStockPrice(tokenAddress: string, price: string): Promise<void> {
     await this.prisma.supportedStock.update({
       where: { tokenAddress: tokenAddress.toLowerCase() },
       data: {

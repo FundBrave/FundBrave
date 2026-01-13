@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, Post as PrismaPost, Comment as PrismaComment, MediaType } from '@prisma/client';
+import {
+  Prisma,
+  Post as PrismaPost,
+  Comment as PrismaComment,
+  MediaType,
+} from '@prisma/client';
 import {
   Post,
   PostAuthor,
@@ -651,7 +656,9 @@ export class SocialService {
     ]);
 
     const items = await Promise.all(
-      bookmarks.map((b) => this.mapToPostDto(b.post as PostWithRelations, userId)),
+      bookmarks.map((b) =>
+        this.mapToPostDto(b.post as PostWithRelations, userId),
+      ),
     );
 
     return {
@@ -711,7 +718,9 @@ export class SocialService {
     ]);
 
     const items = await Promise.all(
-      comments.map((c) => this.mapToCommentDto(c as CommentWithRelations, viewerId)),
+      comments.map((c) =>
+        this.mapToCommentDto(c as CommentWithRelations, viewerId),
+      ),
     );
 
     return {
@@ -724,7 +733,10 @@ export class SocialService {
   /**
    * Create a comment
    */
-  async createComment(userId: string, input: CreateCommentInput): Promise<Comment> {
+  async createComment(
+    userId: string,
+    input: CreateCommentInput,
+  ): Promise<Comment> {
     const post = await this.prisma.post.findUnique({
       where: { id: input.postId },
     });
@@ -803,7 +815,9 @@ export class SocialService {
     }
 
     if (comment.authorId !== userId) {
-      throw new UnauthorizedException('Only the author can delete this comment');
+      throw new UnauthorizedException(
+        'Only the author can delete this comment',
+      );
     }
 
     await this.prisma.$transaction([
@@ -885,7 +899,7 @@ export class SocialService {
     limit: number,
     cursor?: string,
   ): Promise<Feed> {
-    let where: Prisma.PostWhereInput = {
+    const where: Prisma.PostWhereInput = {
       visibility: PostVisibility.PUBLIC,
       parentId: null,
     };
@@ -924,7 +938,10 @@ export class SocialService {
       items.map((p) => this.mapToPostDto(p, userId)),
     );
 
-    const nextCursor = items.length > 0 ? items[items.length - 1].createdAt.toISOString() : undefined;
+    const nextCursor =
+      items.length > 0
+        ? items[items.length - 1].createdAt.toISOString()
+        : undefined;
 
     return {
       posts: mappedPosts,
@@ -938,7 +955,9 @@ export class SocialService {
   /**
    * Get trending hashtags
    */
-  async getTrendingHashtags(limit: number = 10): Promise<SocialTrendingHashtag[]> {
+  async getTrendingHashtags(
+    limit: number = 10,
+  ): Promise<SocialTrendingHashtag[]> {
     const hashtags = await this.prisma.hashtag.findMany({
       orderBy: [{ usageCount: 'desc' }, { lastUsedAt: 'desc' }],
       take: limit,
@@ -989,7 +1008,9 @@ export class SocialService {
   /**
    * Build where clause for posts
    */
-  private buildPostWhereClause(filter?: PostFilterInput): Prisma.PostWhereInput {
+  private buildPostWhereClause(
+    filter?: PostFilterInput,
+  ): Prisma.PostWhereInput {
     if (!filter) return {};
 
     const where: Prisma.PostWhereInput = {};
@@ -1053,7 +1074,10 @@ export class SocialService {
   /**
    * Map Prisma post to DTO
    */
-  private async mapToPostDto(post: PostWithRelations, viewerId?: string): Promise<Post> {
+  private async mapToPostDto(
+    post: PostWithRelations,
+    viewerId?: string,
+  ): Promise<Post> {
     const author: PostAuthor = {
       id: post.author.id,
       walletAddress: post.author.walletAddress,
@@ -1154,7 +1178,9 @@ export class SocialService {
     let isLiked: boolean | undefined;
     if (viewerId) {
       const like = await this.prisma.commentLike.findUnique({
-        where: { userId_commentId: { userId: viewerId, commentId: comment.id } },
+        where: {
+          userId_commentId: { userId: viewerId, commentId: comment.id },
+        },
       });
       isLiked = !!like;
     }

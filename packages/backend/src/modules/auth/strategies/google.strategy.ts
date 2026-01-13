@@ -48,9 +48,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
     // Log configuration status (without exposing secrets)
     if (clientID && clientSecret) {
-      this.logger.log(`Google OAuth configured with callback URL: ${callbackURL}`);
+      this.logger.log(
+        `Google OAuth configured with callback URL: ${callbackURL}`,
+      );
     } else {
-      this.logger.warn('Google OAuth credentials not configured. OAuth will not work.');
+      this.logger.warn(
+        'Google OAuth credentials not configured. OAuth will not work.',
+      );
     }
   }
 
@@ -84,14 +88,18 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     if (!email) {
       this.logger.warn(`Google OAuth: No email returned for Google ID ${id}`);
       done(
-        new Error('Email is required for authentication. Please allow email access in Google.'),
+        new Error(
+          'Email is required for authentication. Please allow email access in Google.',
+        ),
         undefined,
       );
       return;
     }
 
     try {
-      this.logger.debug(`Google OAuth: Authenticating user with email ${this.maskEmail(email)}`);
+      this.logger.debug(
+        `Google OAuth: Authenticating user with email ${this.maskEmail(email)}`,
+      );
 
       // Find or create user with Google ID
       // This method now blocks auto-linking to password-protected accounts (CWE-640)
@@ -102,10 +110,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         avatarUrl: avatarUrl || undefined,
       });
 
-      this.logger.log(`Google OAuth: Successfully authenticated user ${user.id}`);
+      this.logger.log(
+        `Google OAuth: Successfully authenticated user ${user.id}`,
+      );
       done(null, user);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
         `Google OAuth: Authentication failed for ${this.maskEmail(email)}: ${errorMessage}`,
       );

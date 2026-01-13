@@ -57,7 +57,9 @@ export class InvalidYieldSplitException extends BadRequestException {
   constructor(message?: string) {
     super({
       code: 'INVALID_YIELD_SPLIT',
-      message: message || 'Yield split must sum to 10000 basis points with minimum 200 platform share',
+      message:
+        message ||
+        'Yield split must sum to 10000 basis points with minimum 200 platform share',
     });
   }
 }
@@ -83,9 +85,10 @@ export class EndowmentNotFoundException extends NotFoundException {
   constructor(donorAddress?: string, fundraiserId?: number) {
     super({
       code: 'ENDOWMENT_NOT_FOUND',
-      message: donorAddress && fundraiserId
-        ? `No endowment found for donor ${donorAddress} and fundraiser ${fundraiserId}`
-        : 'Endowment not found',
+      message:
+        donorAddress && fundraiserId
+          ? `No endowment found for donor ${donorAddress} and fundraiser ${fundraiserId}`
+          : 'Endowment not found',
       details: { donorAddress, fundraiserId },
     });
   }
@@ -319,9 +322,7 @@ export class UserNotFoundException extends NotFoundException {
   constructor(identifier?: string) {
     super({
       code: 'USER_NOT_FOUND',
-      message: identifier
-        ? `User ${identifier} not found`
-        : 'User not found',
+      message: identifier ? `User ${identifier} not found` : 'User not found',
     });
   }
 }

@@ -61,7 +61,7 @@ export class WealthBuildingResolver {
    */
   @Query(() => PaginatedWealthBuildingDonations, {
     name: 'myWealthBuildingDonations',
-    description: 'Get current user\'s wealth building donations',
+    description: "Get current user's wealth building donations",
   })
   @UseGuards(JwtAuthGuard)
   async getMyWealthBuildingDonations(
@@ -78,7 +78,7 @@ export class WealthBuildingResolver {
    */
   @Query(() => StockPortfolio, {
     name: 'myStockPortfolio',
-    description: 'Get current user\'s stock portfolio from donations',
+    description: "Get current user's stock portfolio from donations",
   })
   @UseGuards(JwtAuthGuard)
   async getMyStockPortfolio(
@@ -125,7 +125,7 @@ export class WealthBuildingResolver {
    */
   @Query(() => [PendingEndowmentYield], {
     name: 'myPendingEndowmentYield',
-    description: 'Get pending yield for all user\'s endowments',
+    description: "Get pending yield for all user's endowments",
   })
   @UseGuards(JwtAuthGuard)
   async getMyPendingEndowmentYield(
@@ -187,7 +187,9 @@ export class WealthBuildingResolver {
     @Args('fundraiserId', { type: () => Int, nullable: true })
     fundraiserId?: number,
   ) {
-    return pubSub.asyncIterableIterator(WEALTH_BUILDING_EVENTS.DONATION_CREATED);
+    return pubSub.asyncIterableIterator(
+      WEALTH_BUILDING_EVENTS.DONATION_CREATED,
+    );
   }
 
   /**

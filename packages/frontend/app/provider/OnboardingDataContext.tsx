@@ -11,6 +11,7 @@ import {
 
 // Types for onboarding data
 export interface ProfileData {
+  username: string;
   fullName: string;
   email: string;
   birthdate: string;
@@ -46,6 +47,7 @@ interface OnboardingDataContextValue {
 const initialData: OnboardingData = {
   email: "",
   profile: {
+    username: "",
     fullName: "",
     email: "",
     birthdate: "",

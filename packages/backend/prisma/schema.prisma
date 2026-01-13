@@ -57,6 +57,12 @@ model User {
   fbtVestedTotal   BigInt @default(0) // Total FBT vested (wei)
   fbtVestedClaimed BigInt @default(0) // FBT claimed from vesting (wei)
 
+  // Onboarding
+  birthdate           DateTime?
+  goals               String[]   // Array of goal IDs like "raise-funds", "support-causes"
+  interests           String[]   // Array of interest category IDs
+  onboardingCompleted Boolean    @default(false)
+
   // Privacy
   isPrivate        Boolean @default(false)
   isActive         Boolean @default(true)

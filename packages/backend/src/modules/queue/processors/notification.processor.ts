@@ -1,4 +1,9 @@
-import { Process, Processor, OnQueueFailed, OnQueueCompleted } from '@nestjs/bull';
+import {
+  Process,
+  Processor,
+  OnQueueFailed,
+  OnQueueCompleted,
+} from '@nestjs/bull';
 import { Logger, Inject, forwardRef } from '@nestjs/common';
 import type { Job } from 'bull';
 import { QUEUE_NAMES, NotificationJobData } from '../queue.service';
@@ -22,7 +27,9 @@ export class NotificationProcessor {
 
   @Process()
   async handleNotificationJob(job: Job<NotificationJobData>): Promise<void> {
-    this.logger.debug(`Processing notification job ${job.id}: ${job.data.type}`);
+    this.logger.debug(
+      `Processing notification job ${job.id}: ${job.data.type}`,
+    );
 
     const { type, recipientId, recipientIds, notification } = job.data;
 
@@ -73,7 +80,9 @@ export class NotificationProcessor {
       );
       this.logger.debug(`Notification created for user ${recipientId}`);
     } catch (error) {
-      this.logger.debug(`Notification creation skipped for user ${recipientId}: ${error}`);
+      this.logger.debug(
+        `Notification creation skipped for user ${recipientId}: ${error}`,
+      );
     }
   }
 
@@ -97,7 +106,9 @@ export class NotificationProcessor {
       );
 
       processed += batch.length;
-      this.logger.debug(`Processed ${processed}/${recipientIds.length} batch notifications`);
+      this.logger.debug(
+        `Processed ${processed}/${recipientIds.length} batch notifications`,
+      );
     }
 
     this.logger.log(`Batch notifications completed: ${processed} users`);
@@ -142,7 +153,9 @@ export class NotificationProcessor {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    this.logger.log(`Broadcast notifications completed: ${totalProcessed} users`);
+    this.logger.log(
+      `Broadcast notifications completed: ${totalProcessed} users`,
+    );
   }
 
   @OnQueueCompleted()

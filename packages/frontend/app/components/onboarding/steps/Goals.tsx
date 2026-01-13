@@ -15,6 +15,7 @@ import {
 import OnboardingNavButtons from "@/app/components/onboarding/OnboardingNavButtons";
 import { useReducedMotion } from "@/app/hooks/useReducedMotion";
 import { EASE } from "@/lib/constants/animation";
+import { useOnboardingData } from "@/app/provider/OnboardingDataContext";
 
 interface GoalOption {
   id: string;
@@ -23,6 +24,13 @@ interface GoalOption {
   icon: React.ReactNode;
 }
 
+/**
+ * Goal options for onboarding
+ * IMPORTANT: These IDs must match the VALID_GOAL_IDS in the backend
+ * Backend path: packages/backend/src/modules/users/dto/onboarding.dto.ts
+ * Valid IDs: 'raise-funds', 'support-causes', 'build-community',
+ *            'discover-projects', 'invest-impact', 'learn-defi'
+ */
 const GOAL_OPTIONS: GoalOption[] = [
   {
     id: "raise-funds",
@@ -43,21 +51,21 @@ const GOAL_OPTIONS: GoalOption[] = [
     icon: <Users className="w-6 h-6" />,
   },
   {
-    id: "earn-rewards",
-    title: "Earn Rewards",
-    description: "Get NFT badges and recognition for contributions",
-    icon: <Gift className="w-6 h-6" />,
-  },
-  {
-    id: "global-impact",
-    title: "Global Impact",
-    description: "Support international causes and projects",
+    id: "discover-projects",
+    title: "Discover Projects",
+    description: "Explore and find impactful causes to support",
     icon: <Globe className="w-6 h-6" />,
   },
   {
-    id: "explore-defi",
-    title: "Explore DeFi",
-    description: "Learn and participate in decentralized finance",
+    id: "invest-impact",
+    title: "Invest in Impact",
+    description: "Build wealth while supporting meaningful causes",
+    icon: <Gift className="w-6 h-6" />,
+  },
+  {
+    id: "learn-defi",
+    title: "Learn DeFi",
+    description: "Understand and participate in decentralized finance",
     icon: <Sparkles className="w-6 h-6" />,
   },
 ];
@@ -106,6 +114,7 @@ const iconContainerVariants = {
 };
 
 const Goals: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
+  const { updateGoals } = useOnboardingData();
   const [selectedGoals, setSelectedGoals] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +140,10 @@ const Goals: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
     }
 
     setIsLoading(true);
+
+    // Save goals to context
+    updateGoals(Array.from(selectedGoals));
+
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
 

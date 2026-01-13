@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { z } from "zod";
 import { LinkedInIcon, XIcon, InstagramIcon } from "@/app/components/ui/icons/SocialIcons";
 import OnboardingNavButtons from "@/app/components/onboarding/OnboardingNavButtons";
+import { useOnboardingData } from "@/app/provider/OnboardingDataContext";
 
 // Validation schema
 const socialSchema = z.object({
@@ -60,6 +61,7 @@ const SOCIAL_FIELDS: SocialField[] = [
 ];
 
 const SocialProfile: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
+  const { updateSocial } = useOnboardingData();
   const [formData, setFormData] = useState<SocialFormData>({
     linkedin: "",
     twitter: "",
@@ -136,6 +138,15 @@ const SocialProfile: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
     }
 
     setIsLoading(true);
+
+    // Save social profiles to context
+    updateSocial({
+      twitter: formData.twitter,
+      instagram: formData.instagram,
+      linkedin: formData.linkedin,
+      github: "", // Not collected in this form
+    });
+
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
 

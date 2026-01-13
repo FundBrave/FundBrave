@@ -318,7 +318,10 @@ describe('ModerationService', () => {
     it('should review a report with HIDE_POST action', async () => {
       prismaService.report.findUnique.mockResolvedValue(mockReport);
       prismaService.post.findUnique.mockResolvedValue(mockPost);
-      prismaService.post.update.mockResolvedValue({ ...mockPost, isHidden: true });
+      prismaService.post.update.mockResolvedValue({
+        ...mockPost,
+        isHidden: true,
+      });
       prismaService.report.update.mockResolvedValue({
         ...mockReport,
         status: ReportStatus.RESOLVED,

@@ -1,11 +1,4 @@
-import {
-  Resolver,
-  Query,
-  Mutation,
-  Args,
-  Int,
-  ID,
-} from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int, ID } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { MessagingService } from './messaging.service';
 import {
@@ -51,7 +44,8 @@ export class MessagingResolver {
    */
   @Query(() => PaginatedConversations, {
     name: 'conversations',
-    description: 'Get all conversations for the current user sorted by last message time',
+    description:
+      'Get all conversations for the current user sorted by last message time',
   })
   @UseGuards(JwtAuthGuard)
   async getConversations(
@@ -164,14 +158,18 @@ export class MessagingResolver {
    * Send a direct message to a user (creates conversation if needed)
    */
   @Mutation(() => Message, {
-    description: 'Send a direct message to a user (creates conversation if needed)',
+    description:
+      'Send a direct message to a user (creates conversation if needed)',
   })
   @UseGuards(JwtAuthGuard)
   async sendDirectMessage(
     @CurrentUser() user: { id: string },
     @Args('input') input: SendDirectMessageInput,
   ): Promise<Message> {
-    const message = await this.messagingService.sendDirectMessage(user.id, input);
+    const message = await this.messagingService.sendDirectMessage(
+      user.id,
+      input,
+    );
 
     // Emit via WebSocket for real-time delivery
     this.eventsGateway.emitNewMessage({
@@ -195,7 +193,10 @@ export class MessagingResolver {
     @Args('input') input: MarkMessagesReadInput,
   ): Promise<MarkReadResult> {
     const beforeMark = new Date();
-    const result = await this.messagingService.markMessagesAsRead(user.id, input);
+    const result = await this.messagingService.markMessagesAsRead(
+      user.id,
+      input,
+    );
 
     if (result.messagesMarkedRead > 0) {
       // Get the message IDs that were marked as read

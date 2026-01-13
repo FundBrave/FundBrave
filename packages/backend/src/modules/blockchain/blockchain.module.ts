@@ -36,13 +36,7 @@ import { FBTVestingModule } from '../fbt-vesting/fbt-vesting.module';
     TreasuryModule,
     FBTVestingModule,
   ],
-  providers: [
-    BlockchainIndexerService,
-    EventsService,
-  ],
-  exports: [
-    BlockchainIndexerService,
-    EventsService,
-  ],
+  providers: [BlockchainIndexerService, EventsService],
+  exports: [BlockchainIndexerService, EventsService],
 })
 export class BlockchainModule {}
