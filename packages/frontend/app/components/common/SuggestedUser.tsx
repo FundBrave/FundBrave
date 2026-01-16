@@ -13,13 +13,15 @@ import type { SuggestedUserProps } from "@/app/types/home";
  * - Avatar on left
  * - Name and @username in center
  * - Follow button on right with GSAP animation
+ * - Handles follow/unfollow with optimistic UI updates
  */
 
 export function SuggestedUser({ user, onFollow }: SuggestedUserProps) {
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const handleFollow = useCallback(() => {
+  const handleFollow = useCallback(async () => {
     // GSAP animation on button click
     if (buttonRef.current) {
       gsap
@@ -35,9 +37,21 @@ export function SuggestedUser({ user, onFollow }: SuggestedUserProps) {
         });
     }
 
+    // Optimistic UI update
+    const wasFollowing = isFollowing;
     setIsFollowing((prev) => !prev);
-    onFollow?.(user.id);
-  }, [onFollow, user.id]);
+    setIsLoading(true);
+
+    try {
+      await onFollow?.(user.id);
+    } catch (error) {
+      // Revert on error
+      console.error("Failed to follow/unfollow user:", error);
+      setIsFollowing(wasFollowing);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [onFollow, user.id, isFollowing]);
 
   return (
     <div className="flex items-center gap-3 py-2">
@@ -73,12 +87,13 @@ export function SuggestedUser({ user, onFollow }: SuggestedUserProps) {
         variant={isFollowing ? "secondary" : "primary"}
         size="md"
         onClick={handleFollow}
+        disabled={isLoading}
         className={cn(
           "shrink-0 min-w-[80px]",
           isFollowing && "bg-surface-overlay border-border-default"
         )}
       >
-        {isFollowing ? "Following" : "Follow"}
+        {isLoading ? "..." : isFollowing ? "Following" : "Follow"}
       </Button>
     </div>
   );

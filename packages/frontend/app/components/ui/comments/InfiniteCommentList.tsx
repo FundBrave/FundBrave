@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { CommentThread } from "./CommentThread";
 import type { CommentThread as CommentThreadType } from "@/app/types/comment";
 import type { CommentSortOrder } from "@/app/types/comment";
+import { useComments } from "@/app/hooks/useComments";
+import { useAddComment } from "@/app/hooks/useAddComment";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
@@ -30,71 +32,48 @@ export function InfiniteCommentList({
   currentUserUsername,
   creatorUsername,
 }: InfiniteCommentListProps) {
-  const [threads, setThreads] = useState<CommentThreadType[]>(initialThreads);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [cursor, setCursor] = useState<string | undefined>();
-  const [error, setError] = useState<string | null>(null);
-
   const observerTarget = useRef<HTMLDivElement>(null);
-  const isInitialMount = useRef(true);
 
-  // Fetch comments (mock implementation - replace with actual API call)
-  const fetchComments = async (reset = false) => {
-    if (isLoading || (!reset && !hasMore)) return;
+  // Use the useComments hook to fetch real comments
+  const {
+    threads,
+    isLoading,
+    isError,
+    error: hookError,
+    hasMore,
+    totalCount,
+    fetchMore,
+    refetch,
+  } = useComments({
+    postId,
+    sortOrder,
+    limit: 20,
+    enabled: true,
+  });
 
-    setIsLoading(true);
-    setError(null);
+  // Use the useAddComment hook for adding replies
+  const { addComment } = useAddComment();
 
-    try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/posts/${postId}/comments?sort=${sortOrder}&cursor=${cursor || ''}`);
-      // const data = await response.json();
+  const error = isError ? hookError?.message || "Failed to load comments" : null;
 
-      // Mock delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock response (replace with actual data)
-      const mockThreads: CommentThreadType[] = [];
-
-      if (reset) {
-        setThreads(mockThreads);
-        setCursor(undefined);
-      } else {
-        setThreads((prev) => [...prev, ...mockThreads]);
-      }
-
-      setHasMore(false); // Update based on actual response
-      onCommentCountChange?.(threads.length + mockThreads.length);
-    } catch (err) {
-      setError("Failed to load comments. Please try again.");
-      console.error("Error fetching comments:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Initial load
+  // Update parent component with comment count
   useEffect(() => {
-    if (isInitialMount.current && initialThreads.length === 0) {
-      fetchComments(true);
-      isInitialMount.current = false;
+    if (totalCount !== undefined) {
+      onCommentCountChange?.(totalCount);
     }
-  }, []);
+  }, [totalCount, onCommentCountChange]);
 
   // Reload when sort order changes
   useEffect(() => {
-    if (!isInitialMount.current) {
-      fetchComments(true);
-    }
-  }, [sortOrder]);
+    refetch();
+  }, [sortOrder, refetch]);
 
   // Infinite scroll observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoading) {
-          fetchComments();
+          fetchMore();
         }
       },
       { threshold: 0.1, rootMargin: "300px" }
@@ -110,7 +89,7 @@ export function InfiniteCommentList({
         observer.unobserve(currentTarget);
       }
     };
-  }, [hasMore, isLoading, cursor]);
+  }, [hasMore, isLoading, fetchMore]);
 
   // Auto-scroll to highlighted comment
   useEffect(() => {
@@ -129,9 +108,15 @@ export function InfiniteCommentList({
     }
   }, [highlightCommentId, threads]);
 
-  const handleReply = (commentId: string, content: string) => {
-    // TODO: Implement reply API call
-    console.log("Reply to comment:", commentId, content);
+  const handleReply = async (commentId: string, content: string) => {
+    try {
+      // Add reply with parentId (commentId is the parent)
+      await addComment(postId, content, commentId);
+      // The cache update in useAddComment hook should handle updating the UI
+      // The refetchQueries will ensure the comment list is refreshed
+    } catch (error) {
+      console.error("Error adding reply:", error);
+    }
   };
 
   const handleLike = (commentId: string) => {
@@ -155,12 +140,27 @@ export function InfiniteCommentList({
   };
 
   // Loading state (initial)
-  if (isInitialMount.current && isLoading) {
+  if (isLoading && threads.length === 0) {
     return (
       <div className="flex flex-col gap-4 py-8">
         {[...Array(3)].map((_, i) => (
           <CommentSkeleton key={i} />
         ))}
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-center">
+        <p className="text-sm text-destructive mb-3">{error}</p>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 text-sm font-medium bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -190,21 +190,6 @@ export function InfiniteCommentList({
         <p className="text-sm text-foreground-muted">
           Be the first to share your thoughts!
         </p>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <p className="text-sm text-destructive mb-3">{error}</p>
-        <button
-          onClick={() => fetchComments(true)}
-          className="px-4 py-2 text-sm font-medium bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
-        >
-          Try Again
-        </button>
       </div>
     );
   }

@@ -68,14 +68,14 @@ export interface FeedListProps {
 // Props for People to Follow
 export interface PeopleToFollowProps {
   users: SuggestedUser[];
-  onFollow?: (userId: string) => void;
+  onFollow?: (userId: string) => void | Promise<void>;
   onRefresh?: () => void;
   className?: string;
 }
 
 export interface SuggestedUserProps {
   user: SuggestedUser;
-  onFollow?: (userId: string) => void;
+  onFollow?: (userId: string) => void | Promise<void>;
 }
 
 // Create post inline props

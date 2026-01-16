@@ -1,0 +1,269 @@
+# Fragment for Post Author
+fragment PostAuthorFields on PostAuthor {
+  id
+  username
+  displayName
+  avatarUrl
+  walletAddress
+  isVerifiedCreator
+}
+
+# Fragment for Post Media
+fragment PostMediaFields on PostMedia {
+  id
+  type
+  url
+  thumbnail
+  alt
+  width
+  height
+  mimeType
+}
+
+# Fragment for Post Fundraiser Link
+fragment PostFundraiserLinkFields on PostFundraiserLink {
+  id
+  name
+  onChainId
+  images
+  goalAmount
+  raisedAmount
+}
+
+# Fragment for Complete Post
+fragment PostFields on Post {
+  id
+  content
+  type
+  visibility
+  createdAt
+  updatedAt
+  isEdited
+  isPinned
+  author {
+    ...PostAuthorFields
+  }
+  media {
+    ...PostMediaFields
+  }
+  fundraiser {
+    ...PostFundraiserLinkFields
+  }
+  mentions
+  tags
+  likesCount
+  repostsCount
+  replyCount
+  bookmarksCount
+  viewsCount
+  isLiked
+  isReposted
+  isBookmarked
+  parentId
+}
+
+# Fragment for Comment
+fragment CommentFields on Comment {
+  id
+  postId
+  parentId
+  content
+  createdAt
+  updatedAt
+  likesCount
+  isLiked
+  author {
+    ...PostAuthorFields
+  }
+  replies {
+    id
+    content
+    createdAt
+    likesCount
+    isLiked
+    author {
+      ...PostAuthorFields
+    }
+  }
+}
+
+# ============================================
+# QUERIES
+# ============================================
+
+# Get feed (home, following, explore)
+query GetFeed($feedType: FeedType!, $cursor: String, $limit: Int = 20) {
+  feed(feedType: $feedType, cursor: $cursor, limit: $limit) {
+    posts {
+      ...PostFields
+    }
+    hasMore
+    nextCursor
+  }
+}
+
+# Get a single post
+query GetPost($id: ID!) {
+  post(id: $id) {
+    ...PostFields
+  }
+}
+
+# Get posts with filters
+query GetPosts(
+  $filter: PostFilterInput
+  $sortBy: PostSortBy = CREATED_AT
+  $order: SortOrder = DESC
+  $limit: Int = 20
+  $offset: Int = 0
+) {
+  posts(filter: $filter, sortBy: $sortBy, order: $order, limit: $limit, offset: $offset) {
+    items {
+      ...PostFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get user's posts
+query GetUserPosts($userId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  userPosts(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      ...PostFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get post comments
+query GetPostComments($postId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  postComments(postId: $postId, limit: $limit, offset: $offset) {
+    items {
+      ...CommentFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get post replies
+query GetPostReplies($postId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  postReplies(postId: $postId, limit: $limit, offset: $offset) {
+    items {
+      ...PostFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get posts by hashtag
+query GetPostsByHashtag($tag: String!, $limit: Int = 20, $offset: Int = 0) {
+  postsByHashtag(tag: $tag, limit: $limit, offset: $offset) {
+    items {
+      ...PostFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get trending hashtags
+query GetTrendingHashtags($limit: Int = 10, $period: TrendingPeriod = TWENTY_FOUR_HOURS) {
+  trendingHashtags(limit: $limit, period: $period) {
+    id
+    tag
+    postsCount
+    score
+    period
+    calculatedAt
+  }
+}
+
+# Get my bookmarks
+query GetMyBookmarks($limit: Int = 20, $offset: Int = 0) {
+  myBookmarks(limit: $limit, offset: $offset) {
+    items {
+      ...PostFields
+    }
+    hasMore
+    total
+  }
+}
+
+# ============================================
+# MUTATIONS
+# ============================================
+
+# Create a new post
+mutation CreatePost($input: CreatePostInput!) {
+  createPost(input: $input) {
+    ...PostFields
+  }
+}
+
+# Update a post
+mutation UpdatePost($postId: ID!, $input: UpdatePostInput!) {
+  updatePost(postId: $postId, input: $input) {
+    ...PostFields
+  }
+}
+
+# Delete a post
+mutation DeletePost($postId: ID!) {
+  deletePost(postId: $postId)
+}
+
+# Like a post
+mutation LikePost($postId: ID!) {
+  likePost(postId: $postId)
+}
+
+# Unlike a post
+mutation UnlikePost($postId: ID!) {
+  unlikePost(postId: $postId)
+}
+
+# Repost
+mutation Repost($input: RepostInput!) {
+  repost(input: $input)
+}
+
+# Remove repost
+mutation RemoveRepost($postId: ID!) {
+  removeRepost(postId: $postId)
+}
+
+# Bookmark a post
+mutation BookmarkPost($postId: ID!) {
+  bookmarkPost(postId: $postId)
+}
+
+# Remove bookmark
+mutation RemoveBookmark($postId: ID!) {
+  removeBookmark(postId: $postId)
+}
+
+# Create a comment
+mutation CreateComment($input: CreateCommentInput!) {
+  createComment(input: $input) {
+    ...CommentFields
+  }
+}
+
+# Delete a comment
+mutation DeleteComment($commentId: ID!) {
+  deleteComment(commentId: $commentId)
+}
+
+# Like a comment
+mutation LikeComment($commentId: ID!) {
+  likeComment(commentId: $commentId)
+}
+
+# Unlike a comment
+mutation UnlikeComment($commentId: ID!) {
+  unlikeComment(commentId: $commentId)
+}

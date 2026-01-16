@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useLikeCommentMutation, useUnlikeCommentMutation } from "@/app/generated/graphql";
 
 interface UseLikeCommentReturn {
   likeComment: (commentId: string) => Promise<boolean>;
@@ -10,64 +11,68 @@ interface UseLikeCommentReturn {
 }
 
 /**
- * useLikeComment - Like/unlike a comment with optimistic update
+ * useLikeComment - Like/unlike a comment with optimistic update using GraphQL
  */
 export function useLikeComment(): UseLikeCommentReturn {
-  const [isLiking, setIsLiking] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [likeCommentMutation, { loading: isLiking, error: likeError }] = useLikeCommentMutation();
+  const [unlikeCommentMutation, { loading: isUnliking, error: unlikeError }] = useUnlikeCommentMutation();
 
   const likeComment = useCallback(async (commentId: string): Promise<boolean> => {
-    setIsLiking(true);
-    setError(null);
-
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch(`/api/comments/${commentId}/like`, {
-        method: "POST",
+      const result = await likeCommentMutation({
+        variables: { commentId },
+        optimisticResponse: {
+          likeComment: true,
+        },
+        update: (cache) => {
+          // Update the comment's isLiked status and likesCount in cache
+          cache.modify({
+            id: cache.identify({ __typename: 'Comment', id: commentId }),
+            fields: {
+              isLiked: () => true,
+              likesCount: (prev) => prev + 1,
+            },
+          });
+        },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to like comment");
-      }
-
-      return true;
+      return result.data?.likeComment ?? false;
     } catch (err) {
-      setError(err as Error);
       console.error("Error liking comment:", err);
       return false;
-    } finally {
-      setIsLiking(false);
     }
-  }, []);
+  }, [likeCommentMutation]);
 
   const unlikeComment = useCallback(async (commentId: string): Promise<boolean> => {
-    setIsLiking(true);
-    setError(null);
-
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch(`/api/comments/${commentId}/like`, {
-        method: "DELETE",
+      const result = await unlikeCommentMutation({
+        variables: { commentId },
+        optimisticResponse: {
+          unlikeComment: true,
+        },
+        update: (cache) => {
+          // Update the comment's isLiked status and likesCount in cache
+          cache.modify({
+            id: cache.identify({ __typename: 'Comment', id: commentId }),
+            fields: {
+              isLiked: () => false,
+              likesCount: (prev) => Math.max(0, prev - 1),
+            },
+          });
+        },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to unlike comment");
-      }
-
-      return true;
+      return result.data?.unlikeComment ?? false;
     } catch (err) {
-      setError(err as Error);
       console.error("Error unliking comment:", err);
       return false;
-    } finally {
-      setIsLiking(false);
     }
-  }, []);
+  }, [unlikeCommentMutation]);
 
   return {
     likeComment,
     unlikeComment,
-    isLiking,
-    error,
+    isLiking: isLiking || isUnliking,
+    error: likeError || unlikeError || null,
   };
 }

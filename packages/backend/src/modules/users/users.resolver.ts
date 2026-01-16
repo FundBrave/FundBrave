@@ -147,6 +147,41 @@ export class UsersResolver {
     return this.usersService.isFollowing(user.id, userId);
   }
 
+  /**
+   * Get suggested users for "Who to Follow" section
+   *
+   * Returns personalized user suggestions based on:
+   * - Follower count (popularity)
+   * - Recent post activity (engagement)
+   * - Verification status (trust)
+   * - Random factor (variety)
+   *
+   * For authenticated users, excludes:
+   * - Current user
+   * - Users already being followed
+   * - Blocked users (bidirectional)
+   *
+   * For anonymous users, returns popular/active users
+   */
+  @Query(() => [User], {
+    name: 'suggestedUsers',
+    description:
+      'Get personalized user suggestions for "Who to Follow" section',
+  })
+  async getSuggestedUsers(
+    @Args('limit', {
+      type: () => Int,
+      defaultValue: 5,
+      description: 'Maximum number of suggestions to return (default: 5)',
+    })
+    limit: number,
+    @CurrentUser() viewer?: { id: string },
+  ): Promise<User[]> {
+    // Clamp limit to reasonable bounds (1-20)
+    const clampedLimit = Math.min(Math.max(limit, 1), 20);
+    return this.usersService.getSuggestedUsers(viewer?.id, clampedLimit);
+  }
+
   // ==================== Mutations ====================
 
   @Mutation(() => User)

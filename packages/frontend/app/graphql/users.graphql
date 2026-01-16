@@ -1,0 +1,292 @@
+# Fragment for User Minimal
+fragment UserMinimalFields on UserMinimal {
+  id
+  username
+  displayName
+  avatarUrl
+  walletAddress
+  isVerifiedCreator
+  verificationBadge
+}
+
+# Fragment for User Stats
+fragment UserStatsFields on UserStats {
+  followersCount
+  followingCount
+  postsCount
+  fundraisersCount
+  totalDonated
+  totalStaked
+  reputationScore
+  fbtBalance
+  fbtStakedBalance
+  fbtVestedTotal
+  fbtVestedClaimed
+}
+
+# Fragment for Complete User
+fragment UserFields on User {
+  id
+  username
+  displayName
+  avatarUrl
+  bannerUrl
+  bio
+  location
+  website
+  walletAddress
+  email
+  emailVerified
+  birthdate
+  interests
+  goals
+  isVerifiedCreator
+  verificationBadge
+  isPrivate
+  isActive
+  onboardingCompleted
+  createdAt
+  updatedAt
+  lastSeenAt
+  isFollowing
+  isFollowedBy
+  isBlocked
+  stats {
+    ...UserStatsFields
+  }
+}
+
+# Fragment for Follow Relation
+fragment FollowRelationFields on FollowRelation {
+  id
+  createdAt
+  user {
+    ...UserMinimalFields
+  }
+}
+
+# ============================================
+# QUERIES
+# ============================================
+
+# Get current user
+query GetMe {
+  me {
+    ...UserFields
+  }
+}
+
+# Get user by ID
+query GetUser($id: ID!) {
+  user(id: $id) {
+    ...UserFields
+  }
+}
+
+# Get user by username
+query GetUserByUsername($username: String!) {
+  userByUsername(username: $username) {
+    ...UserFields
+  }
+}
+
+# Get user by wallet address
+query GetUserByWallet($walletAddress: String!) {
+  userByWallet(walletAddress: $walletAddress) {
+    ...UserFields
+  }
+}
+
+# Search users
+query SearchUsers($query: String!, $limit: Int = 10) {
+  searchUsers(query: $query, limit: $limit) {
+    users {
+      ...UserMinimalFields
+    }
+    total
+  }
+}
+
+# Get followers
+query GetFollowers($userId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  followers(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      ...FollowRelationFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get following
+query GetFollowing($userId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  following(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      ...FollowRelationFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get my followers
+query GetMyFollowers($limit: Int = 20, $offset: Int = 0) {
+  myFollowers(limit: $limit, offset: $offset) {
+    items {
+      ...FollowRelationFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get my following
+query GetMyFollowing($limit: Int = 20, $offset: Int = 0) {
+  myFollowing(limit: $limit, offset: $offset) {
+    items {
+      ...FollowRelationFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Check if following a user
+query IsFollowing($userId: ID!) {
+  isFollowing(userId: $userId)
+}
+
+# Check if username is available
+query IsUsernameAvailable($username: String!) {
+  isUsernameAvailable(username: $username)
+}
+
+# Get trending users
+query GetTrendingUsers($limit: Int = 10, $period: TrendingPeriod = TWENTY_FOUR_HOURS) {
+  trendingUsers(limit: $limit, period: $period) {
+    id
+    userId
+    username
+    displayName
+    avatarUrl
+    walletAddress
+    followersCount
+    score
+    period
+    calculatedAt
+  }
+}
+
+# Get users with filters
+query GetUsers($filter: UserFilterInput, $limit: Int = 20, $offset: Int = 0) {
+  users(filter: $filter, limit: $limit, offset: $offset) {
+    items {
+      ...UserFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get user activity summary
+query GetUserActivity($userId: ID!) {
+  userActivity(userId: $userId) {
+    postsLast30Days
+    commentsLast30Days
+    donationsLast30Days
+    donatedAmountLast30Days
+    stakesLast30Days
+    earnedFBTLast30Days
+  }
+}
+
+# Get my activity summary
+query GetMyActivity {
+  myActivity {
+    postsLast30Days
+    commentsLast30Days
+    donationsLast30Days
+    donatedAmountLast30Days
+    stakesLast30Days
+    earnedFBTLast30Days
+  }
+}
+
+# Get user donation stats
+query GetUserDonationStats($userId: ID!) {
+  userDonationStats(userId: $userId) {
+    totalDonated
+    donationsCount
+    fundraisersDonatedTo
+    averageDonation
+    firstDonationAt
+    lastDonationAt
+  }
+}
+
+# Get my donation stats
+query GetMyDonationStats {
+  myDonationStats {
+    totalDonated
+    donationsCount
+    fundraisersDonatedTo
+    averageDonation
+    firstDonationAt
+    lastDonationAt
+  }
+}
+
+# Get user staking stats
+query GetUserStakingStats($userId: ID!) {
+  userStakingStats(userId: $userId) {
+    totalStaked
+    activeStakesCount
+    fundraisersStakedIn
+    globalPoolStake
+    pendingYield
+    totalYieldEarned
+  }
+}
+
+# Get my staking stats
+query GetMyStakingStats {
+  myStakingStats {
+    totalStaked
+    activeStakesCount
+    fundraisersStakedIn
+    globalPoolStake
+    pendingYield
+    totalYieldEarned
+  }
+}
+
+# ============================================
+# MUTATIONS
+# ============================================
+
+# Update profile
+mutation UpdateProfile($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    ...UserFields
+  }
+}
+
+# Follow a user
+mutation FollowUser($userId: ID!) {
+  followUser(userId: $userId)
+}
+
+# Unfollow a user
+mutation UnfollowUser($userId: ID!) {
+  unfollowUser(userId: $userId)
+}
+
+# Block a user
+mutation BlockUser($userId: ID!, $reason: String) {
+  blockUser(userId: $userId, reason: $reason)
+}
+
+# Unblock a user
+mutation UnblockUser($userId: ID!) {
+  unblockUser(userId: $userId)
+}

@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { NextIntlClientProvider } from 'next-intl';
 import { AuthProvider } from './AuthProvider';
+import { ApolloProvider } from './ApolloProvider';
 import { ThemeProvider } from '../components/theme';
 import { ToastProvider } from '../components/ui/Toast';
 import { PostsProvider } from './PostsContext';
@@ -28,23 +29,25 @@ export function ClientProviders({ children, messages, locale }: ClientProvidersP
     <NextIntlClientProvider messages={messages} locale={locale}>
       <WalletProvider>
         <AuthProvider>
-          <ThemeProvider defaultTheme="light" storageKey="fundbrave-theme">
-            <ToastProvider>
-              <PostsProvider>
-                <SearchProvider>
-                  <NotificationProvider>
-                    {/* Skip Link - WCAG 2.2 AA: Bypass Blocks (2.4.1) */}
-                    <SkipLink targetId="main-content" label="Skip to main content" />
+          <ApolloProvider>
+            <ThemeProvider defaultTheme="light" storageKey="fundbrave-theme">
+              <ToastProvider>
+                <PostsProvider>
+                  <SearchProvider>
+                    <NotificationProvider>
+                      {/* Skip Link - WCAG 2.2 AA: Bypass Blocks (2.4.1) */}
+                      <SkipLink targetId="main-content" label="Skip to main content" />
 
-                    {/* Notification Toasts */}
-                    <NotificationToast />
+                      {/* Notification Toasts */}
+                      <NotificationToast />
 
-                    {children}
-                  </NotificationProvider>
-                </SearchProvider>
-              </PostsProvider>
-            </ToastProvider>
-          </ThemeProvider>
+                      {children}
+                    </NotificationProvider>
+                  </SearchProvider>
+                </PostsProvider>
+              </ToastProvider>
+            </ThemeProvider>
+          </ApolloProvider>
         </AuthProvider>
       </WalletProvider>
     </NextIntlClientProvider>

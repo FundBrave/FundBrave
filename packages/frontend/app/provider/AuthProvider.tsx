@@ -201,7 +201,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, [user, scheduleTokenRefresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const value: AuthContextType = {
     user,

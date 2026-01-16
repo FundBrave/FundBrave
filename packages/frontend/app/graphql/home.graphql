@@ -1,0 +1,56 @@
+# Home page queries
+# Queries specifically for the home page feed and sidebars
+
+# Fragment for Donation Leaderboard Entry
+fragment DonationLeaderboardEntryFields on DonationLeaderboardEntry {
+  rank
+  totalDonated
+  donationsCount
+  donor {
+    id
+    username
+    displayName
+    avatarUrl
+    walletAddress
+    isAnonymous
+  }
+}
+
+# ============================================
+# QUERIES
+# ============================================
+
+# Get Donation Leaderboard
+# Used in: Home page right sidebar - Top Funders
+query GetDonationLeaderboard($period: LeaderboardPeriod = ALL, $limit: Int = 6) {
+  donationLeaderboard(period: $period, limit: $limit) {
+    entries {
+      ...DonationLeaderboardEntryFields
+    }
+    period
+    total
+  }
+}
+
+# Get Suggested Users (People to Follow)
+# Used in: Home page right sidebar - People to Follow
+# Returns personalized user suggestions based on smart algorithm
+query GetSuggestedUsers($limit: Int = 5) {
+  suggestedUsers(limit: $limit) {
+    id
+    username
+    displayName
+    avatarUrl
+    walletAddress
+    isVerifiedCreator
+    verificationBadge
+    isFollowing
+    isFollowedBy
+    stats {
+      followersCount
+      followingCount
+      postsCount
+      reputationScore
+    }
+  }
+}

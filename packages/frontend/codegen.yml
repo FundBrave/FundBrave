@@ -1,0 +1,61 @@
+overwrite: true
+schema: "../backend/src/schema.gql"
+documents: "app/graphql/**/*.graphql"
+generates:
+  app/generated/graphql.ts:
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-react-apollo"
+    config:
+      # TypeScript configuration
+      scalars:
+        DateTime: string
+        JSON: any
+
+      # React Apollo configuration
+      withHooks: true
+      withComponent: false
+      withHOC: false
+      withMutationFn: false
+      withRefetchFn: false
+
+      # Generated hook naming
+      hooksSuffix: ""
+
+      # Type generation options
+      skipTypename: false
+      enumsAsTypes: true
+      immutableTypes: false
+      maybeValue: T | null
+
+      # Import configuration
+      apolloReactCommonImportFrom: "@apollo/client"
+      apolloReactHooksImportFrom: "@apollo/client"
+
+      # Fragment handling
+      fragmentMode: "embedded"
+
+      # Operation naming
+      operationResultSuffix: ""
+
+      # Add __typename to all types
+      addTypename: true
+
+      # Generate types with strict nullability
+      strictScalars: true
+
+      # React Apollo specific
+      reactApolloVersion: 3
+      withResultType: true
+      withMutationOptionsType: true
+      withSubscriptionOptionsType: false
+      # Disable suspense hooks for Apollo Client 4.x compatibility
+      withSuspenseQuery: false
+
+      # Improve generated code
+      skipDocumentsValidation: false
+      declarationKind: "interface"
+
+      # Optional: Add descriptions as JSDoc comments
+      addDocBlocks: true

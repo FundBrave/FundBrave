@@ -28,6 +28,7 @@ const ProfileDetails: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
     errors,
     touchedFields,
     isLoading,
+    isUploadingAvatar,
     avatarPreview,
     handleInputChange,
     handleBlur,
@@ -139,6 +140,7 @@ const ProfileDetails: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
           onFileSelect={handleFileSelect}
           onRemove={removeAvatar}
           error={errors.avatar}
+          isLoading={isUploadingAvatar}
         />
 
 

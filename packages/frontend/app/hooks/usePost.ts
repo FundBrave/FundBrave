@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useGetPostQuery } from "@/app/generated/graphql";
 
 interface Post {
   id: string;
@@ -51,59 +51,92 @@ interface UsePostReturn {
 }
 
 /**
- * usePost - Fetch a single post by ID
+ * usePost - Fetch a single post by ID using GraphQL
  */
 export function usePost({ postId, enabled = true }: UsePostOptions): UsePostReturn {
-  const [post, setPost] = useState<Post | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const { data, loading, error, refetch } = useGetPostQuery({
+    variables: { id: postId },
+    skip: !enabled || !postId,
+    fetchPolicy: 'cache-and-network',
+  });
 
-  const fetchPost = useCallback(async () => {
-    if (!enabled || !postId) return;
-
-    setIsLoading(true);
-    setIsError(false);
-    setError(null);
-
-    try {
-      // TODO: Replace with actual API call
-      const response = await fetch(`/api/posts/${postId}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("Post not found");
-        }
-        throw new Error("Failed to fetch post");
+  // Transform GraphQL data to match expected format
+  const post: Post | null = data?.post
+    ? {
+        id: data.post.id,
+        content: data.post.content || "",
+        author: {
+          id: data.post.author.id,
+          name: data.post.author.displayName || data.post.author.username || "",
+          username: data.post.author.username || "",
+          avatar: data.post.author.avatarUrl || "",
+          isVerified: data.post.author.isVerifiedCreator || false,
+          isFollowing: false, // Not available in current schema
+        },
+        createdAt: data.post.createdAt,
+        updatedAt: data.post.updatedAt || null,
+        likesCount: data.post.likesCount || 0,
+        commentsCount: data.post.replyCount || 0,
+        sharesCount: data.post.repostsCount || 0,
+        isLiked: data.post.isLiked || false,
+        isBookmarked: data.post.isBookmarked || false,
+        canEdit: false, // Not available in current schema - could be derived from auth context
+        canDelete: false, // Not available in current schema - could be derived from auth context
+        type: mapPostType(data.post.type),
+        media: data.post.media?.map((m) => ({
+          id: m.id,
+          type: inferMediaType(m.url),
+          url: m.url,
+          thumbnailUrl: m.thumbnail || m.url,
+          altText: m.alt || undefined,
+        })),
+        campaign: data.post.fundraiser
+          ? {
+              id: data.post.fundraiser.id,
+              title: data.post.fundraiser.name,
+              suggestedAmount: undefined,
+            }
+          : undefined,
       }
-
-      const data: Post = await response.json();
-      setPost(data);
-    } catch (err) {
-      setIsError(true);
-      setError(err as Error);
-      console.error("Error fetching post:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [postId, enabled]);
-
-  const refetch = useCallback(async () => {
-    await fetchPost();
-  }, [fetchPost]);
-
-  // Initial fetch
-  useEffect(() => {
-    if (enabled && postId) {
-      fetchPost();
-    }
-  }, [postId, enabled, fetchPost]);
+    : null;
 
   return {
     post,
-    isLoading,
-    isError,
-    error,
-    refetch,
+    isLoading: loading,
+    isError: !!error,
+    error: error || null,
+    refetch: async () => {
+      await refetch();
+    },
   };
+}
+
+// Helper functions
+function mapPostType(
+  type: string
+): "community" | "campaign_update" | "campaign_share" {
+  if (type === "FUNDRAISER_UPDATE") return "campaign_update";
+  if (type === "FUNDRAISER_SHARE") return "campaign_share";
+  return "community";
+}
+
+function inferMediaType(url: string): "image" | "video" | "link" {
+  const lowerUrl = url.toLowerCase();
+  if (
+    lowerUrl.endsWith(".jpg") ||
+    lowerUrl.endsWith(".jpeg") ||
+    lowerUrl.endsWith(".png") ||
+    lowerUrl.endsWith(".gif") ||
+    lowerUrl.endsWith(".webp")
+  ) {
+    return "image";
+  }
+  if (
+    lowerUrl.endsWith(".mp4") ||
+    lowerUrl.endsWith(".webm") ||
+    lowerUrl.endsWith(".mov")
+  ) {
+    return "video";
+  }
+  return "link";
 }

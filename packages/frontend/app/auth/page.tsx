@@ -1,10 +1,12 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import SignupPage from "./signup/page";
 import LoginPage from "./login/page";
 import AuthHero from "../components/auth/AuthHero";
 import { AnimatePresence, motion, Variants, Transition } from "motion/react";
+import { useAuth } from "../provider/AuthProvider";
 
 interface AuthViewProps {
   key: "signup" | "login";
@@ -17,8 +19,17 @@ const Page = () => {
   type AuthViewKey = "signup" | "login";
   type Direction = 1 | -1;
 
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
   const [view, setView] = React.useState<AuthViewKey>("login");
   const [direction, setDirection] = React.useState<Direction>(1);
+
+  // Redirect authenticated users to homepage
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/");
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   // This function handles view changes and calculates the correct animation direction.
   // We prevent unnecessary re-renders by checking if the view is already active.
@@ -90,6 +101,19 @@ const Page = () => {
       scale: 0.95, // Consistent scale for smooth exit
     }),
   };
+
+  // Don't render auth page if user is authenticated or still loading
+  if (isLoading) {
+    return (
+      <div className="flex h-dvh items-center justify-center">
+        <div className="text-text-secondary">Loading...</div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null; // Redirecting...
+  }
 
   return (
     <div className="flex h-dvh">

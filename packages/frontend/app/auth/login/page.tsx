@@ -16,6 +16,7 @@ import FormInput from "../../components/auth/FormInput";
 import { Button } from "../../components/ui/button";
 import { authApi } from "../../../lib/api/auth";
 import SocialLoginButtons from "../../components/auth/SocialLoginButtons";
+import { useAuth } from "../../provider/AuthProvider";
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 interface LoginPageProps {
@@ -24,6 +25,7 @@ interface LoginPageProps {
 
 export default function LoginPage({ onToggle }: LoginPageProps) {
   const router = useRouter();
+  const { login: authLogin } = useAuth();
   
   // Form state
   const [formData, setFormData] = useState<LoginFormValues>({
@@ -126,11 +128,9 @@ export default function LoginPage({ onToggle }: LoginPageProps) {
         password: formData.password,
       });
 
-      // Store auth data
-      authApi.storeAuthData(response);
-
-      // Redirect to homepage
-      router.push("/");
+      // Update AuthProvider state (which stores auth data and sets user)
+      // The auth page's useEffect will automatically redirect to "/" when isAuthenticated becomes true
+      authLogin(response);
     } catch (error) {
       if (error instanceof Error) {
         setServerError(error.message);

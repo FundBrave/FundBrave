@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Share2, Bookmark, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePosts } from "@/app/provider/PostsContext";
+import { useBookmarkPostMutation, useRemoveBookmarkMutation } from "@/app/generated/graphql";
 import { PostActionBar } from "@/app/components/ui/post/PostActionBar";
 import { CommentSectionHeader } from "@/app/components/ui/comments/CommentSectionHeader";
 import { InfiniteCommentList } from "@/app/components/ui/comments/InfiniteCommentList";
@@ -58,6 +60,10 @@ export function PostDetailClient({
   autoFocusReply = false,
 }: PostDetailClientProps) {
   const router = useRouter();
+  const { likePost, unlikePost, addComment } = usePosts();
+  const [bookmarkPostMutation] = useBookmarkPostMutation();
+  const [removeBookmarkMutation] = useRemoveBookmarkMutation();
+
   const [sortOrder, setSortOrder] = useState<CommentSortOrder>("newest");
   const [commentsCount, setCommentsCount] = useState(post.commentsCount);
   const [isLiked, setIsLiked] = useState(post.isLiked);
@@ -97,10 +103,26 @@ export function PostDetailClient({
     }
   };
 
-  const handleLike = () => {
+  const handleLike = async () => {
+    const previousIsLiked = isLiked;
+    const previousLikesCount = likesCount;
+
+    // Optimistic update
     setIsLiked(!isLiked);
     setLikesCount((prev) => (isLiked ? prev - 1 : prev + 1));
-    // TODO: API call
+
+    try {
+      if (isLiked) {
+        await unlikePost(post.id);
+      } else {
+        await likePost(post.id);
+      }
+    } catch (error) {
+      // Rollback on error
+      setIsLiked(previousIsLiked);
+      setLikesCount(previousLikesCount);
+      console.error("Error toggling like:", error);
+    }
   };
 
   const handleComment = () => {
@@ -137,9 +159,27 @@ export function PostDetailClient({
     }
   };
 
-  const handleBookmark = () => {
+  const handleBookmark = async () => {
+    const previousIsBookmarked = isBookmarked;
+
+    // Optimistic update
     setIsBookmarked(!isBookmarked);
-    // TODO: API call
+
+    try {
+      if (isBookmarked) {
+        await removeBookmarkMutation({
+          variables: { postId: post.id },
+        });
+      } else {
+        await bookmarkPostMutation({
+          variables: { postId: post.id },
+        });
+      }
+    } catch (error) {
+      // Rollback on error
+      setIsBookmarked(previousIsBookmarked);
+      console.error("Error toggling bookmark:", error);
+    }
   };
 
   const handleDonate = () => {
@@ -148,9 +188,12 @@ export function PostDetailClient({
   };
 
   const handleSubmitComment = async (content: string) => {
-    // TODO: API call
-    console.log("Submit comment:", content);
-    setCommentsCount((prev) => prev + 1);
+    try {
+      await addComment(post.id, content);
+      setCommentsCount((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+    }
   };
 
   return (

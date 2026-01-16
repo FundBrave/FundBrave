@@ -16,6 +16,7 @@ import FormInput from "../../components/auth/FormInput";
 import PasswordStrengthIndicator from "../../components/auth/PasswordStrengthIndicator";
 import { Button } from "../../components/ui/button";
 import { authApi } from "../../../lib/api/auth";
+import { useAuth } from "../../provider/AuthProvider";
 
 type SignUpData = z.infer<typeof signUpSchema>;
 
@@ -24,6 +25,7 @@ interface SignUpPageProps {
 }
 export default function SignUpPage({ onToggle }: SignUpPageProps) {
   const router = useRouter();
+  const { login: authLogin } = useAuth();
   const [formData, setFormData] = React.useState<SignUpData>({
     username: "",
     email: "",
@@ -163,8 +165,8 @@ export default function SignUpPage({ onToggle }: SignUpPageProps) {
         password: formData.password,
       });
 
-      // Store auth data
-      authApi.storeAuthData(response);
+      // Update AuthProvider state (which stores auth data and sets user)
+      authLogin(response);
 
       // Store email and username in localStorage for onboarding
       if (typeof window !== "undefined") {
@@ -184,7 +186,7 @@ export default function SignUpPage({ onToggle }: SignUpPageProps) {
         localStorage.setItem("onboarding_data", JSON.stringify(onboardingData));
       }
 
-      // Redirect to onboarding
+      // Redirect to onboarding - AuthProvider will handle auth state
       router.push("/onboarding");
     } catch (error) {
       if (error instanceof Error) {
