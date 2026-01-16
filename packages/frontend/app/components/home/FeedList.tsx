@@ -1,24 +1,24 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { usePosts } from "@/app/provider/PostsContext";
+import { useGetFeedQuery } from "@/app/generated/graphql";
 import { PostCard, fromContextPost } from "@/app/components/profile";
 import { Spinner } from "@/app/components/ui/Spinner";
 import { useInfiniteScroll } from "@/app/hooks/useInfiniteScroll";
 import type { FeedListProps, FeedFilter } from "@/app/types/home";
+import type { Post } from "@/app/provider/PostsContext";
 
 /**
  * FeedList - Main feed with posts and infinite scroll
- * Uses existing PostCard component and PostsContext
+ * Uses GraphQL to fetch feed data
  * Twitter-like infinite scroll pagination
  */
 
 export function FeedList({ filter = "recent", className }: FeedListProps) {
   const {
-    posts,
-    isLoading,
     likePost,
     unlikePost,
     addComment,
@@ -28,30 +28,82 @@ export function FeedList({ filter = "recent", className }: FeedListProps) {
     deleteComment,
   } = usePosts();
 
-  const [hasMore, setHasMore] = useState(true);
+  // Fetch feed from GraphQL
+  const { data, loading, error, fetchMore } = useGetFeedQuery({
+    variables: {
+      feedType: 'HOME',
+      limit: 20,
+      cursor: undefined,
+    },
+    fetchPolicy: 'cache-and-network',
+    notifyOnNetworkStatusChange: true,
+  });
+
+  // Transform GraphQL data to Post format
+  const posts: Post[] = data?.feed?.posts?.map((post) => ({
+    id: post.id,
+    content: post.content || "",
+    imageUrl: post.media?.[0]?.url, // Use media array from GraphQL
+    author: {
+      name: post.author.displayName || post.author.username || "Unknown",
+      username: post.author.username || "",
+      avatar: post.author.avatarUrl || "",
+      isVerified: post.author.isVerifiedCreator || false,
+    },
+    likesCount: post.likesCount || 0,
+    commentsCount: post.replyCount || 0, // GraphQL schema uses replyCount
+    sharesCount: post.repostsCount || 0, // GraphQL schema uses repostsCount
+    viewsCount: post.viewsCount || 0,
+    createdAt: post.createdAt,
+    isLiked: post.isLiked || false, // GraphQL schema uses isLiked
+    comments: [],
+  })) || [];
+
+  const hasMore = data?.feed?.hasMore || false;
+  const cursor = data?.feed?.nextCursor;
 
   // Load more posts callback
   const loadMore = useCallback(async () => {
-    // Simulate loading more posts
-    // In real app, this would fetch from API with pagination
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (!hasMore || !cursor) return;
 
-    // For demo, disable after initial load since we're using mock data
-    setHasMore(false);
-  }, []);
+    try {
+      await fetchMore({
+        variables: {
+          feedType: 'HOME',
+          limit: 20,
+          cursor,
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+
+          return {
+            feed: {
+              ...fetchMoreResult.feed,
+              posts: [
+                ...(prev.feed?.posts || []),
+                ...(fetchMoreResult.feed?.posts || []),
+              ],
+            },
+          };
+        },
+      });
+    } catch (err) {
+      console.error("Error loading more posts:", err);
+    }
+  }, [hasMore, cursor, fetchMore]);
 
   // Infinite scroll hook
   const { sentinelRef, isLoading: isLoadingMore, setIsLoading } = useInfiniteScroll(
     async () => {
-      if (!hasMore || isLoadingMore) return;
+      if (!hasMore || isLoadingMore || loading) return;
       setIsLoading(true);
       await loadMore();
       setIsLoading(false);
     },
-    { enabled: hasMore }
+    { enabled: hasMore && !loading }
   );
 
-  // Sort posts based on filter
+  // Sort posts based on filter (client-side sorting for now)
   const sortedPosts = [...posts].sort((a, b) => {
     switch (filter) {
       case "popular":
@@ -114,8 +166,18 @@ export function FeedList({ filter = "recent", className }: FeedListProps) {
     [deleteComment]
   );
 
+  // Error state
+  if (error) {
+    return (
+      <div className={cn("flex flex-col items-center justify-center py-12", className)}>
+        <p className="text-red-400 text-sm">Failed to load feed</p>
+        <p className="text-white/30 text-sm mt-1">Please try again later</p>
+      </div>
+    );
+  }
+
   // Loading state
-  if (isLoading && posts.length === 0) {
+  if (loading && posts.length === 0) {
     return (
       <div className={cn("flex justify-center py-12", className)}>
         <Spinner size="lg" />
@@ -124,7 +186,7 @@ export function FeedList({ filter = "recent", className }: FeedListProps) {
   }
 
   // Empty state
-  if (!isLoading && posts.length === 0) {
+  if (!loading && posts.length === 0) {
     return (
       <div className={cn("flex flex-col items-center justify-center py-12", className)}>
         <p className="text-white/40 text-sm">No posts yet</p>

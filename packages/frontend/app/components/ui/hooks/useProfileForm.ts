@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { z } from "zod";
+import { uploadApi } from "@/lib/api/upload";
 
 // Zod validation schema
 export const profileSchema = z.object({
@@ -40,6 +41,7 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
     Partial<Record<keyof ProfileFormData, string>>
   >({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initialData?.avatar ?? null
   );
@@ -86,14 +88,14 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
     [formData]
   );
 
-  const handleFileSelect = useCallback((file: File) => {
+  const handleFileSelect = useCallback(async (file: File) => {
     if (!file) return;
 
     // Validate file type
-    if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+    if (!["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(file.type)) {
       setErrors((prev) => ({
         ...prev,
-        avatar: "Please upload PNG or JPEG format only",
+        avatar: "Please upload PNG, JPEG, or WebP format only",
       }));
       return;
     }
@@ -109,24 +111,61 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
 
     // Check dimensions
     const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(img.src); // Clean up
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = async () => {
+      URL.revokeObjectURL(objectUrl); // Clean up
+
       if (img.width < 400 || img.height < 400) {
         setErrors((prev) => ({
           ...prev,
           avatar: "Image must be at least 400x400px",
         }));
-      } else {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setAvatarPreview(reader.result as string);
-          setFormData((prev) => ({ ...prev, avatar: reader.result as string }));
-          setErrors((prev) => ({ ...prev, avatar: undefined }));
-        };
-        reader.readAsDataURL(file);
+        return;
+      }
+
+      // Create preview from file
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to S3
+      setIsUploadingAvatar(true);
+      setErrors((prev) => ({ ...prev, avatar: undefined }));
+
+      try {
+        const uploadResult = await uploadApi.uploadAvatar(file);
+
+        // Store S3 URL in form data
+        setFormData((prev) => ({ ...prev, avatar: uploadResult.url }));
+
+        // Keep preview for UI
+        setAvatarPreview(uploadResult.url);
+
+        setIsUploadingAvatar(false);
+      } catch (error) {
+        console.error("Avatar upload failed:", error);
+        setIsUploadingAvatar(false);
+        setAvatarPreview(null);
+        setFormData((prev) => ({ ...prev, avatar: "" }));
+        setErrors((prev) => ({
+          ...prev,
+          avatar: error instanceof Error ? error.message : "Failed to upload avatar. Please try again.",
+        }));
       }
     };
-    img.src = URL.createObjectURL(file);
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      setErrors((prev) => ({
+        ...prev,
+        avatar: "Failed to load image. Please try another file.",
+      }));
+    };
+
+    img.src = objectUrl;
   }, []);
 
   const removeAvatar = useCallback(() => {
@@ -193,6 +232,7 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
     errors,
     touchedFields,
     isLoading,
+    isUploadingAvatar,
     avatarPreview,
     handleInputChange,
     handleBlur,

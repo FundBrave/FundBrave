@@ -259,14 +259,14 @@ class AuthApiClient {
    */
   async checkAuth(): Promise<AuthResponse['user'] | null> {
     try {
-      const data = await apiClient.get<{ user: AuthResponse['user'] }>(
+      const data = await apiClient.get<AuthResponse['user']>(
         `/api/auth/me`,
         { skipRefresh: true } // Don't refresh during initial auth check
       );
 
       // Update stored user data
-      this.storeAuthData({ user: data.user });
-      return data.user;
+      this.storeAuthData({ user: data });
+      return data;
     } catch (error) {
       console.error('Auth check error:', error);
       return null;

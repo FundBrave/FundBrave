@@ -15,6 +15,8 @@ import { Button } from "@/app/components/ui/button";
 import CreatePost from "@/app/components/ui/CreatePost/CreatePost";
 import type { CreatePostInlineProps } from "@/app/types/home";
 import type { PublishData } from "@/app/components/ui/types/CreatePost.types";
+import { useCreatePostMutation } from "@/app/generated/graphql";
+import { useCurrentUser } from "@/app/hooks/useCurrentUser";
 
 /**
  * CreatePostInline - Simplified inline create post area for home feed
@@ -44,11 +46,23 @@ const MEDIA_ACTIONS = [
 ];
 
 export function CreatePostInline({
-  userAvatar = DEFAULT_USER.avatar,
+  userAvatar,
   onCreatePost,
   className,
 }: CreatePostInlineProps) {
+  const { currentUser } = useCurrentUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [createPostMutation, { loading: isPublishing }] = useCreatePostMutation();
+
+  // Use provided avatar, fallback to current user's avatar, then to default
+  const avatarUrl = userAvatar || currentUser?.avatarUrl || DEFAULT_USER.avatar;
+
+  // Build user profile for CreatePost modal
+  const userProfile = currentUser ? {
+    name: currentUser.displayName,
+    avatar: currentUser.avatarUrl,
+    audience: "everyone" as const,
+  } : undefined;
 
   const handleOpenModal = useCallback(() => {
     setIsModalOpen(true);
@@ -59,10 +73,46 @@ export function CreatePostInline({
     setIsModalOpen(false);
   }, []);
 
-  const handlePublish = useCallback((data: PublishData) => {
-    console.log("Post published:", data);
-    setIsModalOpen(false);
-  }, []);
+  const handlePublish = useCallback(async (data: PublishData) => {
+    try {
+      if (data.type === "post") {
+        // Determine post type based on content
+        let postType = "TEXT";
+        if (data.mediaUrls && data.mediaUrls.length > 0) {
+          // Check if any URL is a video
+          const hasVideo = data.mediaUrls.some(url =>
+            url.includes('.mp4') || url.includes('.webm') || url.includes('.mov')
+          );
+          postType = hasVideo ? "VIDEO" : "IMAGE";
+        }
+
+        // Create a regular post
+        await createPostMutation({
+          variables: {
+            input: {
+              content: data.content,
+              mediaUrls: data.mediaUrls || [],
+              type: postType,
+              visibility: "PUBLIC", // Default to PUBLIC visibility
+            },
+          },
+          // Refetch the feed to show the new post
+          refetchQueries: ["GetFeed"],
+        });
+
+        console.log("Post created successfully");
+      } else {
+        // Campaign update - for now just log it
+        // TODO: implement campaign update mutation
+        console.log("Campaign update:", data);
+      }
+
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Failed to create post:", error);
+      // Keep modal open on error so user can try again
+    }
+  }, [createPostMutation]);
 
   return (
     <>
@@ -76,7 +126,7 @@ export function CreatePostInline({
         <div className="flex items-center gap-3">
           {/* User Avatar */}
           <Avatar
-            src={userAvatar}
+            src={avatarUrl}
             alt="Your avatar"
             size="md"
             className="shrink-0"
@@ -126,7 +176,12 @@ export function CreatePostInline({
       </div>
 
       {/* Create Post Modal */}
-      <CreatePost isOpen={isModalOpen} onClose={handleCloseModal} onPublish={handlePublish} />
+      <CreatePost
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onPublish={handlePublish}
+        user={userProfile}
+      />
     </>
   );
 }

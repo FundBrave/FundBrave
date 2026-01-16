@@ -394,6 +394,141 @@ export class UsersService {
     return !!block;
   }
 
+  /**
+   * Get suggested users for "Who to Follow" section
+   *
+   * Algorithm scoring (100 total):
+   * - Follower count: 40% weight (popularity)
+   * - Post activity (last 30 days): 30% weight (engagement)
+   * - Verified creator status: 20% weight (trust)
+   * - Random factor: 10% weight (variety)
+   *
+   * Exclusions:
+   * - Current user (if authenticated)
+   * - Users already being followed (if authenticated)
+   * - Blocked users (bidirectional)
+   * - Inactive/suspended users
+   *
+   * @param viewerId - Current user ID (optional for anonymous users)
+   * @param limit - Maximum number of suggestions to return
+   * @returns Array of suggested users
+   */
+  async getSuggestedUsers(
+    viewerId: string | undefined,
+    limit: number,
+  ): Promise<User[]> {
+    // Build exclusion list based on viewer context
+    const excludedUserIds: string[] = [];
+
+    if (viewerId) {
+      // Add current user to exclusion list
+      excludedUserIds.push(viewerId);
+
+      // Fetch users already being followed and blocked users in parallel
+      const [followingRecords, blockRecords] = await Promise.all([
+        this.prisma.follow.findMany({
+          where: { followerId: viewerId },
+          select: { followingId: true },
+        }),
+        this.prisma.block.findMany({
+          where: {
+            OR: [{ blockerId: viewerId }, { blockedId: viewerId }],
+          },
+          select: { blockerId: true, blockedId: true },
+        }),
+      ]);
+
+      // Add followed users to exclusion list
+      followingRecords.forEach((f) => excludedUserIds.push(f.followingId));
+
+      // Add blocked users (bidirectional) to exclusion list
+      blockRecords.forEach((b) => {
+        if (b.blockerId !== viewerId) {
+          excludedUserIds.push(b.blockerId);
+        }
+        if (b.blockedId !== viewerId) {
+          excludedUserIds.push(b.blockedId);
+        }
+      });
+    }
+
+    // Build where clause for candidate users
+    const where: Prisma.UserWhereInput = {
+      isActive: true,
+      isSuspended: false,
+    };
+
+    // Apply exclusions if any exist
+    if (excludedUserIds.length > 0) {
+      // Remove duplicates for efficiency
+      const uniqueExcludedIds = [...new Set(excludedUserIds)];
+      where.id = { notIn: uniqueExcludedIds };
+    }
+
+    // Calculate the date threshold for recent activity (30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Fetch candidate users with recent post count for scoring
+    // Get more candidates than needed for better randomization
+    const candidateMultiplier = 3;
+    const candidates = await this.prisma.user.findMany({
+      where,
+      include: {
+        _count: {
+          select: {
+            posts: {
+              where: {
+                createdAt: { gte: thirtyDaysAgo },
+              },
+            },
+          },
+        },
+      },
+      take: limit * candidateMultiplier,
+    });
+
+    // Score and rank candidates
+    const scoredCandidates = candidates.map((candidate) => {
+      const recentPostsCount = candidate._count.posts;
+
+      // Normalize scores to a 0-100 scale for each factor
+      // Follower count: Log scale to handle large differences (40% weight)
+      const followerScore =
+        Math.min(Math.log10((candidate.followersCount || 0) + 1) * 20, 100) *
+        0.4;
+
+      // Recent activity: Linear scale capped at 10 posts (30% weight)
+      const activityScore = Math.min(recentPostsCount * 10, 100) * 0.3;
+
+      // Verified status: Binary (20% weight)
+      const verifiedScore = (candidate.isVerifiedCreator ? 100 : 0) * 0.2;
+
+      // Random factor for variety (10% weight)
+      const randomScore = Math.random() * 100 * 0.1;
+
+      const totalScore =
+        followerScore + activityScore + verifiedScore + randomScore;
+
+      return {
+        user: candidate,
+        score: totalScore,
+      };
+    });
+
+    // Sort by score (descending) and take the top N
+    const topCandidates = scoredCandidates
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+
+    // Map to User DTOs
+    const suggestedUsers = await Promise.all(
+      topCandidates.map(({ user }) => this.mapToUserDto(user, viewerId)),
+    );
+
+    return suggestedUsers;
+  }
+
   // ==================== Mutation Methods ====================
 
   /**
@@ -701,8 +836,8 @@ export class UsersService {
     // Use first 16 chars of hash as seed for consistent generation
     const seed = hash.substring(0, 16);
 
-    // DiceBear API v7 URL format with some styling options
-    return `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+    // DiceBear API v7 URL format with some styling options (using PNG for better Next.js compatibility)
+    return `https://api.dicebear.com/7.x/${style}/png?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
   }
 
   /**

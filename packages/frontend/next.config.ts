@@ -23,6 +23,21 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "api.dicebear.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "fundbrave-media.s3.us-east-2.amazonaws.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.*.amazonaws.com",
+        pathname: "/**",
+      },
     ],
   },
 };

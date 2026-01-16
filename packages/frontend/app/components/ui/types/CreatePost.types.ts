@@ -28,6 +28,7 @@ export interface CampaignOption {
 export interface PostData {
   type: "post";
   content: string;
+  mediaUrls?: string[];
 }
 
 export interface CampaignUpdateData {
@@ -36,6 +37,7 @@ export interface CampaignUpdateData {
   campaign: string;
   title: string;
   update: string;
+  mediaUrls?: string[];
 }
 
 export type PublishData = PostData | CampaignUpdateData;

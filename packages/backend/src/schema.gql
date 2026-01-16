@@ -1343,6 +1343,12 @@ type Query {
   """Get stock purchase history for an address"""
   stockPurchaseHistory(address: String!, limit: Int! = 20, offset: Int! = 0): PaginatedStockPurchases!
 
+  """Get personalized user suggestions for "Who to Follow" section"""
+  suggestedUsers(
+    """Maximum number of suggestions to return (default: 5)"""
+    limit: Int! = 5
+  ): [User!]!
+
   """Get list of supported stock tokens"""
   supportedStocks: [SupportedStockInfo!]!
   topDonors(fundraiserId: ID!, limit: Int! = 10): [DonationLeaderboardEntry!]!

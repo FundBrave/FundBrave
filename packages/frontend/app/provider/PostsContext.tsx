@@ -3,12 +3,20 @@
 import React, {
   createContext,
   useContext,
-  useState,
   useCallback,
-  useEffect,
   ReactNode,
 } from "react";
-import { MOCK_POSTS } from "@/lib/constants/mock-profile-activity";
+import {
+  useCreatePostMutation,
+  useLikePostMutation,
+  useUnlikePostMutation,
+  useRepostMutation,
+  useDeletePostMutation,
+  useCreateCommentMutation,
+  useLikeCommentMutation,
+  useUnlikeCommentMutation,
+  useDeleteCommentMutation,
+} from "@/app/generated/graphql";
 
 // ============================================
 // TYPES
@@ -59,16 +67,17 @@ interface PostsContextValue {
   posts: Post[];
   isLoading: boolean;
   // Post actions
-  addPost: (content: string, imageUrl?: string) => void;
-  likePost: (postId: string) => void;
-  unlikePost: (postId: string) => void;
-  deletePost: (postId: string) => void;
+  addPost: (content: string, imageUrl?: string) => Promise<void>;
+  likePost: (postId: string) => Promise<void>;
+  unlikePost: (postId: string) => Promise<void>;
+  deletePost: (postId: string) => Promise<void>;
+  repost: (postId: string) => Promise<void>;
   // Comment actions
-  addComment: (postId: string, content: string) => void;
-  likeComment: (postId: string, commentId: string) => void;
-  unlikeComment: (postId: string, commentId: string) => void;
-  replyToComment: (postId: string, commentId: string, content: string) => void;
-  deleteComment: (postId: string, commentId: string) => void;
+  addComment: (postId: string, content: string) => Promise<void>;
+  likeComment: (postId: string, commentId: string) => Promise<void>;
+  unlikeComment: (postId: string, commentId: string) => Promise<void>;
+  replyToComment: (postId: string, commentId: string, content: string) => Promise<void>;
+  deleteComment: (postId: string, commentId: string) => Promise<void>;
 }
 
 // ============================================
@@ -76,41 +85,6 @@ interface PostsContextValue {
 // ============================================
 
 const PostsContext = createContext<PostsContextValue | undefined>(undefined);
-
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-const generateId = () => `post-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-const getCurrentUser = (): PostAuthor => ({
-  name: "Jane Smith",
-  username: "janesmith",
-  avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-  isVerified: true,
-});
-
-// Convert mock posts to our Post type with comments array
-const convertMockPosts = (): Post[] => {
-  return MOCK_POSTS.map((mockPost) => ({
-    id: mockPost.id,
-    content: mockPost.content,
-    imageUrl: mockPost.imageUrl,
-    author: {
-      name: mockPost.author.name,
-      username: mockPost.author.username,
-      avatar: mockPost.author.avatar,
-      isVerified: mockPost.author.isVerified,
-    },
-    likesCount: mockPost.likesCount,
-    commentsCount: mockPost.commentsCount,
-    sharesCount: mockPost.sharesCount,
-    viewsCount: mockPost.viewsCount,
-    createdAt: mockPost.createdAt,
-    isLiked: false,
-    comments: [],
-  }));
-};
 
 // ============================================
 // PROVIDER
@@ -121,224 +95,318 @@ interface PostsProviderProps {
 }
 
 export function PostsProvider({ children }: PostsProviderProps) {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Initialize posts from localStorage or mock data
-  useEffect(() => {
-    const stored = localStorage.getItem("fundbrave_posts");
-    if (stored) {
-      try {
-        setPosts(JSON.parse(stored));
-      } catch {
-        setPosts(convertMockPosts());
-      }
-    } else {
-      setPosts(convertMockPosts());
-    }
-    setIsLoading(false);
-  }, []);
-
-  // Persist to localStorage on changes
-  useEffect(() => {
-    if (!isLoading && posts.length > 0) {
-      localStorage.setItem("fundbrave_posts", JSON.stringify(posts));
-    }
-  }, [posts, isLoading]);
+  // GraphQL Mutations
+  const [createPostMutation] = useCreatePostMutation();
+  const [likePostMutation] = useLikePostMutation();
+  const [unlikePostMutation] = useUnlikePostMutation();
+  const [repostMutation] = useRepostMutation();
+  const [deletePostMutation] = useDeletePostMutation();
+  const [createCommentMutation] = useCreateCommentMutation();
+  const [likeCommentMutation] = useLikeCommentMutation();
+  const [unlikeCommentMutation] = useUnlikeCommentMutation();
+  const [deleteCommentMutation] = useDeleteCommentMutation();
 
   // ============================================
   // POST ACTIONS
   // ============================================
 
-  const addPost = useCallback((content: string, imageUrl?: string) => {
-    const newPost: Post = {
-      id: generateId(),
-      content,
-      imageUrl,
-      author: getCurrentUser(),
-      likesCount: 0,
-      commentsCount: 0,
-      sharesCount: 0,
-      viewsCount: 0,
-      createdAt: new Date().toISOString(),
-      isLiked: false,
-      comments: [],
-    };
-    setPosts((prev) => [newPost, ...prev]);
-  }, []);
+  const addPost = useCallback(async (content: string, imageUrl?: string) => {
+    try {
+      await createPostMutation({
+        variables: {
+          input: {
+            content,
+            mediaUrls: imageUrl ? [imageUrl] : undefined,
+            type: imageUrl ? 'MEDIA' : 'TEXT', // Use valid PostType enum values
+          },
+        },
+        refetchQueries: ['GetFeed', 'GetUserPosts'],
+        update: (cache, { data }) => {
+          if (!data?.createPost) return;
 
-  const likePost = useCallback((postId: string) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? { ...post, isLiked: true, likesCount: post.likesCount + 1 }
-          : post
-      )
-    );
-  }, []);
+          // Optimistically update cache
+          cache.modify({
+            fields: {
+              getFeed(existingFeed = { posts: [] }) {
+                const newPostRef = cache.writeFragment({
+                  data: data.createPost,
+                  fragment: gql`
+                    fragment NewPost on Post {
+                      id
+                      content
+                      type
+                      createdAt
+                    }
+                  `,
+                });
+                return {
+                  ...existingFeed,
+                  posts: [newPostRef, ...existingFeed.posts],
+                };
+              },
+            },
+          });
+        },
+      });
+    } catch (err) {
+      console.error("Error creating post:", err);
+      throw err;
+    }
+  }, [createPostMutation]);
 
-  const unlikePost = useCallback((postId: string) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? { ...post, isLiked: false, likesCount: Math.max(0, post.likesCount - 1) }
-          : post
-      )
-    );
-  }, []);
+  const likePost = useCallback(async (postId: string) => {
+    try {
+      await likePostMutation({
+        variables: { postId },
+        optimisticResponse: {
+          likePost: true,
+        },
+        update: (cache) => {
+          cache.modify({
+            id: cache.identify({ __typename: 'Post', id: postId }),
+            fields: {
+              isLiked: () => true, // GraphQL schema uses isLiked, not isLikedByMe
+              likesCount: (prev) => prev + 1,
+            },
+          });
+        },
+      });
+    } catch (err) {
+      console.error("Error liking post:", err);
+      throw err;
+    }
+  }, [likePostMutation]);
 
-  const deletePost = useCallback((postId: string) => {
-    setPosts((prev) => prev.filter((post) => post.id !== postId));
-  }, []);
+  const unlikePost = useCallback(async (postId: string) => {
+    try {
+      await unlikePostMutation({
+        variables: { postId },
+        optimisticResponse: {
+          unlikePost: true,
+        },
+        update: (cache) => {
+          cache.modify({
+            id: cache.identify({ __typename: 'Post', id: postId }),
+            fields: {
+              isLiked: () => false, // GraphQL schema uses isLiked, not isLikedByMe
+              likesCount: (prev) => Math.max(0, prev - 1),
+            },
+          });
+        },
+      });
+    } catch (err) {
+      console.error("Error unliking post:", err);
+      throw err;
+    }
+  }, [unlikePostMutation]);
+
+  const repost = useCallback(async (postId: string) => {
+    try {
+      await repostMutation({
+        variables: { input: { postId } }, // Repost uses RepostInput, not direct postId
+        refetchQueries: ['GetFeed', 'GetUserPosts'],
+        update: (cache) => {
+          cache.modify({
+            id: cache.identify({ __typename: 'Post', id: postId }),
+            fields: {
+              repostsCount: (prev) => prev + 1, // GraphQL schema uses repostsCount
+            },
+          });
+        },
+      });
+    } catch (err) {
+      console.error("Error reposting:", err);
+      throw err;
+    }
+  }, [repostMutation]);
+
+  const deletePost = useCallback(async (postId: string) => {
+    try {
+      await deletePostMutation({
+        variables: { postId },
+        update: (cache) => {
+          // Remove post from cache
+          cache.evict({ id: cache.identify({ __typename: 'Post', id: postId }) });
+          cache.gc();
+        },
+        refetchQueries: ['GetFeed', 'GetUserPosts'],
+      });
+    } catch (err) {
+      console.error("Error deleting post:", err);
+      throw err;
+    }
+  }, [deletePostMutation]);
 
   // ============================================
   // COMMENT ACTIONS
   // ============================================
 
-  const addComment = useCallback((postId: string, content: string) => {
-    const newComment: Comment = {
-      id: `comment-${Date.now()}`,
-      postId,
-      author: getCurrentUser(),
-      content,
-      likesCount: 0,
-      repliesCount: 0,
-      createdAt: new Date().toISOString(),
-      isLiked: false,
-      replies: [],
-    };
+  const addComment = useCallback(async (postId: string, content: string) => {
+    try {
+      await createCommentMutation({
+        variables: {
+          input: {
+            postId,
+            content,
+          },
+        },
+        optimisticResponse: {
+          createComment: {
+            __typename: 'Comment',
+            id: `temp-${Date.now()}`,
+            postId,
+            parentId: null,
+            content,
+            likesCount: 0,
+            isLiked: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            author: {
+              __typename: 'PostAuthor',
+              id: 'temp-author',
+              username: 'you',
+              displayName: 'You',
+              avatarUrl: '',
+              isVerifiedCreator: false,
+              walletAddress: '',
+            },
+            replies: [],
+          },
+        },
+        update: (cache, { data }) => {
+          if (!data?.createComment) return;
 
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              comments: [newComment, ...post.comments],
-              commentsCount: post.commentsCount + 1,
-            }
-          : post
-      )
-    );
-  }, []);
+          cache.modify({
+            id: cache.identify({ __typename: 'Post', id: postId }),
+            fields: {
+              replyCount: (prev) => prev + 1, // GraphQL schema uses replyCount for comments
+            },
+          });
+        },
+        refetchQueries: ['GetPostComments'],
+      });
+    } catch (err) {
+      console.error("Error adding comment:", err);
+      throw err;
+    }
+  }, [createCommentMutation]);
 
-  const likeComment = useCallback((postId: string, commentId: string) => {
-    setPosts((prev) =>
-      prev.map((post) => {
-        if (post.id !== postId) return post;
-        
-        const updateComment = (comments: Comment[]): Comment[] =>
-          comments.map((comment) => {
-            if (comment.id === commentId) {
-              return { ...comment, isLiked: true, likesCount: comment.likesCount + 1 };
-            }
-            if (comment.replies.length > 0) {
-              return { ...comment, replies: updateComment(comment.replies) };
-            }
-            return comment;
+  const likeComment = useCallback(async (postId: string, commentId: string) => {
+    try {
+      await likeCommentMutation({
+        variables: { commentId },
+        optimisticResponse: {
+          likeComment: true,
+        },
+        update: (cache) => {
+          cache.modify({
+            id: cache.identify({ __typename: 'Comment', id: commentId }),
+            fields: {
+              isLiked: () => true,
+              likesCount: (prev) => prev + 1,
+            },
+          });
+        },
+      });
+    } catch (err) {
+      console.error("Error liking comment:", err);
+      throw err;
+    }
+  }, [likeCommentMutation]);
+
+  const unlikeComment = useCallback(async (postId: string, commentId: string) => {
+    try {
+      await unlikeCommentMutation({
+        variables: { commentId },
+        optimisticResponse: {
+          unlikeComment: true,
+        },
+        update: (cache) => {
+          cache.modify({
+            id: cache.identify({ __typename: 'Comment', id: commentId }),
+            fields: {
+              isLiked: () => false,
+              likesCount: (prev) => Math.max(0, prev - 1),
+            },
+          });
+        },
+      });
+    } catch (err) {
+      console.error("Error unliking comment:", err);
+      throw err;
+    }
+  }, [unlikeCommentMutation]);
+
+  const replyToComment = useCallback(async (postId: string, commentId: string, content: string) => {
+    try {
+      await createCommentMutation({
+        variables: {
+          input: {
+            postId,
+            content,
+            parentId: commentId,
+          },
+        },
+        update: (cache, { data }) => {
+          if (!data?.createComment) return;
+
+          cache.modify({
+            id: cache.identify({ __typename: 'Post', id: postId }),
+            fields: {
+              replyCount: (prev) => prev + 1, // GraphQL schema uses replyCount
+            },
           });
 
-        return { ...post, comments: updateComment(post.comments) };
-      })
-    );
-  }, []);
+          cache.modify({
+            id: cache.identify({ __typename: 'Comment', id: commentId }),
+            fields: {
+              replies: (existingReplies = []) => [...existingReplies, data.createComment],
+            },
+          });
+        },
+        refetchQueries: ['GetPostComments'],
+      });
+    } catch (err) {
+      console.error("Error replying to comment:", err);
+      throw err;
+    }
+  }, [createCommentMutation]);
 
-  const unlikeComment = useCallback((postId: string, commentId: string) => {
-    setPosts((prev) =>
-      prev.map((post) => {
-        if (post.id !== postId) return post;
-        
-        const updateComment = (comments: Comment[]): Comment[] =>
-          comments.map((comment) => {
-            if (comment.id === commentId) {
-              return { ...comment, isLiked: false, likesCount: Math.max(0, comment.likesCount - 1) };
-            }
-            if (comment.replies.length > 0) {
-              return { ...comment, replies: updateComment(comment.replies) };
-            }
-            return comment;
+  const deleteComment = useCallback(async (postId: string, commentId: string) => {
+    try {
+      await deleteCommentMutation({
+        variables: { commentId },
+        update: (cache) => {
+          cache.modify({
+            id: cache.identify({ __typename: 'Post', id: postId }),
+            fields: {
+              replyCount: (prev) => Math.max(0, prev - 1), // GraphQL schema uses replyCount
+            },
           });
 
-        return { ...post, comments: updateComment(post.comments) };
-      })
-    );
-  }, []);
-
-  const replyToComment = useCallback((postId: string, commentId: string, content: string) => {
-    const newReply: Comment = {
-      id: `reply-${Date.now()}`,
-      postId,
-      parentId: commentId,
-      author: getCurrentUser(),
-      content,
-      likesCount: 0,
-      repliesCount: 0,
-      createdAt: new Date().toISOString(),
-      isLiked: false,
-      replies: [],
-    };
-
-    setPosts((prev) =>
-      prev.map((post) => {
-        if (post.id !== postId) return post;
-        
-        const addReply = (comments: Comment[]): Comment[] =>
-          comments.map((comment) => {
-            if (comment.id === commentId) {
-              return {
-                ...comment,
-                replies: [...comment.replies, newReply],
-                repliesCount: comment.repliesCount + 1,
-              };
-            }
-            if (comment.replies.length > 0) {
-              return { ...comment, replies: addReply(comment.replies) };
-            }
-            return comment;
-          });
-
-        return {
-          ...post,
-          comments: addReply(post.comments),
-          commentsCount: post.commentsCount + 1,
-        };
-      })
-    );
-  }, []);
-
-  const deleteComment = useCallback((postId: string, commentId: string) => {
-    setPosts((prev) =>
-      prev.map((post) => {
-        if (post.id !== postId) return post;
-        
-        const removeComment = (comments: Comment[]): Comment[] =>
-          comments
-            .filter((comment) => comment.id !== commentId)
-            .map((comment) => ({
-              ...comment,
-              replies: removeComment(comment.replies),
-            }));
-
-        const newComments = removeComment(post.comments);
-        return {
-          ...post,
-          comments: newComments,
-          commentsCount: post.commentsCount - 1,
-        };
-      })
-    );
-  }, []);
+          cache.evict({ id: cache.identify({ __typename: 'Comment', id: commentId }) });
+          cache.gc();
+        },
+        refetchQueries: ['GetPostComments'],
+      });
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+      throw err;
+    }
+  }, [deleteCommentMutation]);
 
   // ============================================
   // CONTEXT VALUE
   // ============================================
 
   const value: PostsContextValue = {
-    posts,
-    isLoading,
+    posts: [], // Posts now come from GraphQL queries, not context state
+    isLoading: false,
     addPost,
     likePost,
     unlikePost,
     deletePost,
+    repost,
     addComment,
     likeComment,
     unlikeComment,
@@ -364,3 +432,9 @@ export function usePosts() {
   }
   return context;
 }
+
+// ============================================
+// HELPER - Import gql for fragments
+// ============================================
+
+import { gql } from "@apollo/client";

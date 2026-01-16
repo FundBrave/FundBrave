@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Seed configuration
+// Run with: npm run seed
+// Uses: prisma/seed.ts
+
 // ==================== USER & AUTHENTICATION ====================
 
 model User {

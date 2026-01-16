@@ -80,8 +80,19 @@ export function PostCard(props: PostCardProps) {
   };
 
   const handleCommentClick = () => {
-    if (enableComments) {
-      setShowComments(!showComments);
+    // For feed posts, navigate to post detail page
+    // For post detail pages, toggle inline comments
+    if (enableComments && variant === "default") {
+      // Check if we're already on a post detail page
+      const isPostDetailPage = window.location.pathname.startsWith('/p/');
+
+      if (isPostDetailPage) {
+        // On detail page, toggle inline comments
+        setShowComments(!showComments);
+      } else {
+        // On feed, navigate to post detail page
+        router.push(`/p/${post.id}`);
+      }
     }
     onComment?.(post.id);
   };

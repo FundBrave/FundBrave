@@ -39,13 +39,21 @@ export interface ProfileSidebarProps {
   className?: string;
 }
 
-// Default navigation items
+// Navigation items with routes
 const defaultNavItems: NavItem[] = [
   { id: "saved", label: "Saved items", icon: Bookmark },
   { id: "account", label: "Account", icon: User },
   { id: "help", label: "Help center", icon: HelpCircle },
   { id: "settings", label: "Settings and privacy", icon: Settings },
 ];
+
+// Route mapping for navigation items
+const navRoutes: Record<string, string> = {
+  saved: "/bookmarks",
+  account: "/profile",
+  help: "/help",
+  settings: "/settings",
+};
 
 // Default footer links
 const defaultFooterLinks: FooterLink[] = [
@@ -63,17 +71,13 @@ export function ProfileSidebar({
 }: ProfileSidebarProps) {
   const { theme, setTheme } = useTheme();
 
-  // Placeholder handlers for navigation items
-  const handleNavClick = (id: string) => {
-    console.log(`Navigation clicked: ${id}`);
-  };
-
   const handleDarkModeToggle = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
   return (
     <aside
+      data-testid="profile-sidebar"
       className={cn(
         "flex flex-col bg-surface-elevated/60 rounded-xl overflow-hidden",
         className
@@ -136,11 +140,11 @@ export function ProfileSidebar({
       {/* Navigation Items */}
       <nav className="px-2 py-2 border-b border-border-default">
         {defaultNavItems.map((item) => (
-          <button
+          <Link
             key={item.id}
-            onClick={() => handleNavClick(item.id)}
+            href={navRoutes[item.id]}
             className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg",
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer",
               "text-foreground/70 hover:text-foreground hover:bg-surface-overlay",
               "transition-colors group"
             )}
@@ -148,7 +152,7 @@ export function ProfileSidebar({
             <item.icon className="w-5 h-5 text-text-secondary group-hover:text-foreground/70" />
             <span className="flex-1 text-sm text-left">{item.label}</span>
             <ChevronRight className="w-4 h-4 text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
-          </button>
+          </Link>
         ))}
 
         {/* Dark Mode Toggle */}

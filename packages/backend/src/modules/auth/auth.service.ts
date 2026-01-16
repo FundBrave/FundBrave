@@ -1589,6 +1589,11 @@ export class AuthService implements OnModuleInit {
     const hashedOtp = await this.hashOtp(otp);
     const expiresAt = new Date(Date.now() + OTP_CONFIG.expiryMs);
 
+    // Log OTP in development mode
+    if (process.env.NODE_ENV === 'development') {
+      this.logger.log(`🔐 OTP for ${user.email}: ${otp}`);
+    }
+
     // Store hashed OTP and reset attempt counter
     await this.prisma.user.update({
       where: { id: userId },
@@ -1717,6 +1722,11 @@ export class AuthService implements OnModuleInit {
       const otp = this.generateOtp();
       const hashedOtp = await this.hashOtp(otp);
       const expiresAt = new Date(Date.now() + OTP_CONFIG.expiryMs);
+
+      // Log OTP in development mode
+      if (process.env.NODE_ENV === 'development') {
+        this.logger.log(`🔐 OTP for ${user.email}: ${otp}`);
+      }
 
       // Store hashed OTP and reset attempt counter with retry logic
       await this.prisma.executeWithRetry(

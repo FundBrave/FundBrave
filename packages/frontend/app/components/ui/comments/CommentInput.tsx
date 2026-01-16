@@ -4,6 +4,7 @@ import { useState, KeyboardEvent } from "react";
 import { Send, Loader2 } from "@/app/components/ui/icons";
 import { TextAreaField } from "@/app/components/ui/form/FormFields";
 import { cn } from "@/lib/utils";
+import { useCurrentUser } from "@/app/hooks/useCurrentUser";
 
 interface CommentInputProps {
   placeholder?: string;
@@ -29,11 +30,15 @@ export function CommentInput({
   onSubmit,
   onCancel,
   isReply = false,
-  userAvatar = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
+  userAvatar,
   className,
 }: CommentInputProps) {
+  const { currentUser } = useCurrentUser();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Use provided avatar, fallback to current user's avatar, then to default
+  const avatarUrl = userAvatar || currentUser?.avatarUrl || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop";
 
   const handleSubmit = async () => {
     if (!content.trim() || isSubmitting) return;
@@ -72,7 +77,7 @@ export function CommentInput({
       {/* User Avatar */}
       <div className="w-8 h-8 rounded-full bg-surface-sunken border border-border-subtle flex-shrink-0 overflow-hidden">
         <img
-          src={userAvatar}
+          src={avatarUrl}
           alt="Your avatar"
           className="w-full h-full object-cover"
         />
