@@ -33,10 +33,70 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+/**
+ * Mapping of frontend-friendly sort options to backend enum values.
+ * This allows the frontend to use user-friendly names like 'oldest', 'newest'
+ * while the backend maintains proper enum types internally.
+ */
+type FrontendSortOption =
+  | 'oldest'
+  | 'newest'
+  | 'most-funded'
+  | 'least-funded';
+
+interface SortMapping {
+  sortBy: FundraiserSortBy;
+  order: SortOrder;
+}
+
+const FRONTEND_SORT_MAPPINGS: Record<FrontendSortOption, SortMapping> = {
+  oldest: { sortBy: FundraiserSortBy.CREATED_AT, order: SortOrder.ASC },
+  newest: { sortBy: FundraiserSortBy.CREATED_AT, order: SortOrder.DESC },
+  'most-funded': { sortBy: FundraiserSortBy.RAISED_AMOUNT, order: SortOrder.DESC },
+  'least-funded': { sortBy: FundraiserSortBy.RAISED_AMOUNT, order: SortOrder.ASC },
+};
+
 @ApiTags('Fundraisers')
 @Controller('fundraisers')
 export class FundraisersController {
   constructor(private readonly fundraisersService: FundraisersService) {}
+
+  /**
+   * Maps frontend-friendly sort values to backend enum values.
+   * If the value is a recognized frontend option (e.g., 'oldest'), it maps to the appropriate enum + order.
+   * If the value is already a valid backend enum value, it returns it as-is with the provided order.
+   * @param sortByParam - The sortBy value from the query parameter (could be frontend or backend format)
+   * @param orderParam - The order value from the query parameter (optional, used when sortBy is a backend enum value)
+   * @returns The mapped sortBy enum and order values
+   */
+  private mapSortParams(
+    sortByParam?: string,
+    orderParam?: SortOrder,
+  ): { sortBy?: FundraiserSortBy; order?: SortOrder } {
+    if (!sortByParam) {
+      return { sortBy: undefined, order: orderParam };
+    }
+
+    // Check if it's a frontend-friendly sort option
+    const frontendMapping = FRONTEND_SORT_MAPPINGS[sortByParam as FrontendSortOption];
+    if (frontendMapping) {
+      return frontendMapping;
+    }
+
+    // Check if it's already a valid backend enum value
+    const isValidEnumValue = Object.values(FundraiserSortBy).includes(
+      sortByParam as FundraiserSortBy,
+    );
+    if (isValidEnumValue) {
+      return {
+        sortBy: sortByParam as FundraiserSortBy,
+        order: orderParam ?? SortOrder.DESC,
+      };
+    }
+
+    // If not recognized, default to createdAt DESC
+    return { sortBy: FundraiserSortBy.CREATED_AT, order: SortOrder.DESC };
+  }
 
   // ==================== GET Endpoints ====================
 
@@ -50,7 +110,14 @@ export class FundraisersController {
   @ApiQuery({ name: 'isFeatured', required: false, type: Boolean })
   @ApiQuery({ name: 'goalReached', required: false, type: Boolean })
   @ApiQuery({ name: 'searchQuery', required: false, type: String })
-  @ApiQuery({ name: 'sortBy', required: false, enum: FundraiserSortBy })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    type: String,
+    description:
+      'Sort option. Frontend values: oldest, newest, most-funded, least-funded. ' +
+      'Backend enum values: createdAt, raisedAmount, donorsCount, deadline, goalAmount',
+  })
   @ApiQuery({ name: 'order', required: false, enum: SortOrder })
   @ApiResponse({ status: 200, description: 'Returns paginated fundraisers' })
   async getFundraisers(
@@ -62,7 +129,7 @@ export class FundraisersController {
     @Query('isFeatured') isFeatured?: string,
     @Query('goalReached') goalReached?: string,
     @Query('searchQuery') searchQuery?: string,
-    @Query('sortBy') sortBy?: FundraiserSortBy,
+    @Query('sortBy') sortBy?: string,
     @Query('order') order?: SortOrder,
   ): Promise<PaginatedFundraisers> {
     const filter: FundraiserFilterInput = {
@@ -74,7 +141,8 @@ export class FundraisersController {
       searchQuery,
     };
 
-    const sort = { sortBy, order };
+    // Map frontend-friendly sort values to backend enum values
+    const sort = this.mapSortParams(sortBy, order);
 
     return this.fundraisersService.getFundraisers(limit, offset, filter, sort);
   }

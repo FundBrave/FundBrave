@@ -92,7 +92,7 @@ packages/
 | **Auth** | JWT, SIWE (Web3), Google OAuth 2.0, AES-256-GCM |
 | **Web3** | ethers.js 6.16.0 for blockchain interaction |
 | **Storage** | AWS S3 with presigned URLs |
-| **Email** | Resend API (3,000/month free tier) |
+| **Email** | Resend API |
 | **Jobs** | Bull + Redis for background processing |
 | **Security** | Helmet, ReentrancyGuard, Pausable patterns |
 
@@ -105,8 +105,7 @@ packages/
 | **Security** | OpenZeppelin libraries (v5.1.0), ReentrancyGuard, Pausable |
 | **DeFi** | Aave V3, Morpho Blue, 1inch Swap, Backed Finance |
 | **Cross-chain** | LayerZero V2 OApp/OFT |
-| **Testing** | 10,624 lines of test code across 14 test files |
-| **Chains** | Polygon, Base, Celo, Zircuit, Rootstock, Arbitrum, Optimism |
+| **Chains** | StatusL2, Polygon, Base, Celo, Zircuit, Rootstock, Arbitrum, Optimism |
 
 ### AI Service (`packages/ai-service`)
 
@@ -200,171 +199,6 @@ BACKEND_URL=http://localhost:3000
 REDIS_URL=redis://localhost:6379
 DATABASE_URL=postgresql://user:pass@localhost:5432/fundbrave
 ```
-
----
-
-## Project Structure
-
-### Frontend (`packages/frontend`)
-
-```
-app/
-├── auth/                    # Authentication pages (login, signup, password reset)
-├── campaigns/               # Campaign listing, detail, creation, donation flow
-│   ├── [id]/               # Dynamic campaign detail pages
-│   └── create/             # Campaign creation wizard
-├── community/              # Social community features
-├── leaderboard/            # Donation leaderboards
-├── messenger/              # Direct messaging (protected)
-├── onboarding/             # 8-step onboarding flow
-├── profile/                # User profiles with tabs
-├── settings/               # User settings (6 sections)
-├── p/[id]/                # Post detail pages
-├── components/             # Shared UI components
-│   ├── ui/                # Base components (Button, Input, Modal, etc.)
-│   ├── auth/              # Auth-specific components
-│   ├── campaigns/         # Campaign cards, forms, donation UI
-│   ├── community/         # Posts, comments, social feed
-│   ├── profile/           # Profile tabs and sections
-│   └── onboarding/        # Onboarding step components
-├── provider/               # Context providers (Auth, Apollo, Theme, Posts)
-├── graphql/                # GraphQL queries and mutations
-├── generated/              # Auto-generated GraphQL types
-├── hooks/                  # Custom React hooks (15+)
-├── lib/                    # Utilities, API clients, Apollo config
-└── types/                  # TypeScript interfaces
-```
-
-**Key Features**:
-- 20+ main routes with dynamic segments
-- 100+ reusable components
-- GraphQL Codegen for type-safe queries
-- HttpOnly cookie authentication with auto-refresh
-- Infinite scroll pagination
-- Optimistic UI updates
-- Multi-chain wallet connection (6+ networks)
-
-### Backend (`packages/backend`)
-
-```
-src/
-├── modules/                # 19 Feature modules
-│   ├── auth/              # SIWE, OAuth, JWT sessions
-│   ├── users/             # Profiles, follows, reputation
-│   ├── fundraisers/       # Campaign CRUD, search, milestones
-│   ├── donations/         # Donation tracking, leaderboards
-│   ├── staking/           # Per-campaign staking pools
-│   ├── social/            # Posts, comments, likes, reposts
-│   ├── impact-dao/        # Collective treasury staking
-│   ├── wealth-building/   # Endowment + stock portfolio
-│   ├── treasury/          # Platform fee aggregation
-│   ├── fbt-vesting/       # Token vesting schedules
-│   ├── dao-voting/        # Off-chain governance
-│   ├── notifications/     # Push/email notifications
-│   ├── messaging/         # DMs and conversations
-│   ├── blockchain/        # Event indexing, contract registry
-│   ├── upload/            # S3 file uploads
-│   ├── websockets/        # Socket.IO gateway
-│   ├── queue/             # Bull job queues
-│   ├── moderation/        # Content reports
-│   ├── trending/          # Trending calculation
-│   └── analytics/         # Engagement metrics
-├── common/                # Shared utilities, decorators, DTOs
-├── graphql/               # Apollo Server configuration
-├── prisma/                # ORM integration
-└── strategies/            # Passport strategies (JWT, Google)
-
-prisma/
-├── schema.prisma          # 43 database models
-├── migrations/            # Database versioning
-└── seed.ts               # Seed data for development
-```
-
-**Key Features**:
-- 43 Prisma models with full relational schema
-- Hybrid GraphQL + REST API
-- Multi-auth (SIWE, Google OAuth, JWT)
-- WebSocket subscriptions (Socket.IO)
-- Background job processing (Bull + Redis)
-- Blockchain event indexing
-- S3 file uploads with CDN support
-- Real-time notifications
-
-### Smart Contracts (`packages/contracts`)
-
-```
-contracts/
-├── FundBraveToken.sol           # FBT governance token with vesting
-├── Fundraiser.sol               # Individual campaign (cloned)
-├── FundraiserFactory.sol        # Factory + entry point
-├── StakingPool.sol              # Aave-based yield (cloned)
-├── MorphoStakingPool.sol        # Morpho Blue alternative
-├── GlobalStakingPool.sol        # Platform-wide staking
-├── WealthBuildingDonation.sol   # 78/20 endowment model
-├── ImpactDAOPool.sol            # Collective treasury
-├── PlatformTreasury.sol         # Fee collection + distribution
-├── YieldDistributor.sol         # DAO-voted yield allocation
-├── ReceiptOFT.sol               # Cross-chain receipt tokens
-├── FundBraveBridge.sol          # LayerZero cross-chain
-├── FundBraveTimelock.sol        # Governance delays
-├── libraries/                   # CircuitBreaker, validation helpers
-├── interfaces/                  # IAavePool, IMetaMorpho, ISwapAdapter
-└── adapters/                    # 1inch, Uniswap, CowSwap, Backed
-
-test/                            # 10,624 lines of comprehensive tests
-deploy/                          # Hardhat deployment scripts
-```
-
-**Key Features**:
-- UUPS upgradeable contracts
-- Clones pattern for gas efficiency
-- 79/19/2 yield splits (configurable)
-- Cross-chain via LayerZero V2
-- Circuit breaker protection
-- Multi-chain deployment (6+ networks)
-
-### AI Service (`packages/ai-service`)
-
-```
-app/
-├── main.py                # FastAPI entry point
-├── config.py              # 90+ configuration variables
-├── api/                   # API routes
-│   ├── chat.py           # Conversational AI
-│   ├── verify_media.py   # Deepfake detection
-│   ├── advanced.py       # RAG, recommendations, fraud, moderation
-│   ├── training.py       # LoRA fine-tuning
-│   └── experiments.py    # A/B testing
-├── models/                # ML model wrappers
-│   ├── conversational.py # Qwen2.5-7B-Instruct
-│   ├── media_verifier.py # Deep-Fake-Detector-v2
-│   ├── multimodal.py     # Qwen2-VL-7B
-│   └── base.py           # Base model class
-├── services/              # Business logic services
-│   ├── cache.py          # Redis + in-memory fallback
-│   ├── rag.py            # ChromaDB vector search
-│   ├── recommendations.py # Personalized filtering
-│   ├── fraud_detection.py # Pattern analysis
-│   ├── moderation.py     # Content safety
-│   ├── safety.py         # Prompt injection prevention
-│   ├── training.py       # LoRA adapter training
-│   └── ab_testing.py     # Experiment framework
-└── schemas/               # Pydantic models
-
-tests/                     # Comprehensive test suite
-scripts/                   # Model download, testing scripts
-```
-
-**Key Features**:
-- 3 core ML models (7B+ parameters each)
-- 4-bit quantization (5-6GB memory per model)
-- RAG with ChromaDB vector database
-- LoRA fine-tuning support
-- Real-time streaming responses (SSE)
-- Multi-language support
-- A/B testing framework
-
----
 
 ## Core Features
 
