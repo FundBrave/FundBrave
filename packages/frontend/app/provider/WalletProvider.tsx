@@ -6,9 +6,25 @@ import { mainnet, sepolia, base, baseSepolia } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider, getDefaultConfig, darkTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
+import type { Chain } from 'viem';
+
+// Define localhost chain for Hardhat development
+const localhost = {
+  id: 31337,
+  name: 'Localhost',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Ether',
+    symbol: 'ETH',
+  },
+  rpcUrls: {
+    default: { http: ['http://127.0.0.1:8545'] },
+    public: { http: ['http://127.0.0.1:8545'] },
+  },
+} as const satisfies Chain;
 
 // Configure supported chains
-const chains = [mainnet, sepolia, base, baseSepolia] as const;
+const chains = [localhost, mainnet, sepolia, base, baseSepolia] as const;
 
 // Create wagmi config
 const config = getDefaultConfig({

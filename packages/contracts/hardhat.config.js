@@ -107,6 +107,15 @@ module.exports = {
       accounts: [PRIVATE_KEY],
       chainId: 10,
     },
+
+    // StatusL2 Testnet
+    statusL2Testnet: {
+      url: "https://public.sepolia.rpc.status.network",
+      accounts: [PRIVATE_KEY],
+      chainId: 1660990954,
+      gasPrice: "auto",
+      timeout: 60000,
+    },
   },
   
   etherscan: {
@@ -121,7 +130,18 @@ module.exports = {
       arbitrumSepolia: ETHERSCAN_API_KEY,
       optimisticEthereum: ETHERSCAN_API_KEY,
       optimisticSepolia: ETHERSCAN_API_KEY,
+      statusL2Testnet: "placeholder", // StatusL2 explorer may not require API key
     },
+    customChains: [
+      {
+        network: "statusL2Testnet",
+        chainId: 1660990954,
+        urls: {
+          apiURL: "https://sepoliascan.status.network/api",
+          browserURL: "https://sepoliascan.status.network",
+        },
+      },
+    ],
   },
   
   gasReporter: {

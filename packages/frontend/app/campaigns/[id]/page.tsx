@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { getCampaignById } from "../data";
 import CampaignHeader from "@/app/components/campaigns/view/CampaignHeader";
 import CampaignStatsCard from "@/app/components/campaigns/view/CampaignStatsCard";
@@ -9,14 +9,35 @@ import CampaignComments from "@/app/components/campaigns/view/CampaignComments";
 import CampaignUpdates from "@/app/components/campaigns/view/CampaignUpdates";
 import { CampaignActionBar } from "@/app/components/campaigns";
 import { BackHeader } from "@/app/components/common/BackHeader";
-import { ArrowLeft } from "@/app/components/ui/icons";
+import { ArrowLeft, Loader2 } from "@/app/components/ui/icons";
 import Link from "next/link";
 import Image from "next/image";
+import { useCampaign } from "@/app/hooks/useCampaigns";
+import { USDC_DECIMALS } from "@/app/lib/contracts/config";
+import { Button } from "@/app/components/ui/button";
 
 export default function CampaignViewPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
-  const campaign = getCampaignById(id);
+
+  // Fetch real campaign data from API
+  const { campaign: apiCampaign, isLoading, error } = useCampaign(id);
+
+  // Fallback to mock data if API fails
+  const mockCampaign = getCampaignById(id);
+  const campaign = apiCampaign || mockCampaign;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center text-foreground">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
+          <p className="text-text-secondary">Loading campaign...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!campaign) {
     return (
@@ -35,13 +56,25 @@ export default function CampaignViewPage() {
     );
   }
 
+  // Parse API campaign data
+  const amountRaised = apiCampaign
+    ? parseFloat(apiCampaign.amountRaised) / Math.pow(10, USDC_DECIMALS)
+    : campaign.amountRaised;
+  const targetAmount = apiCampaign
+    ? parseFloat(apiCampaign.goal) / Math.pow(10, USDC_DECIMALS)
+    : campaign.targetAmount;
+  const daysLeft = apiCampaign && apiCampaign.deadline
+    ? Math.max(0, Math.ceil((new Date(apiCampaign.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : campaign.daysLeft;
+
   // Campaign data for action bar
   const campaignData = {
     id: campaign.id,
-    title: campaign.title,
+    title: apiCampaign?.title || campaign.title,
     url: `https://fundbrave.com/campaigns/${campaign.id}`,
-    endDate: campaign.endDate,
-    description: campaign.story,
+    endDate: apiCampaign?.deadline || campaign.endDate,
+    description: apiCampaign?.description || campaign.story,
+    contractAddress: apiCampaign?.contractAddress,
   };
 
   return (
@@ -111,14 +144,33 @@ export default function CampaignViewPage() {
 
           {/* Right Column - Stats & Actions */}
           <div className="lg:col-span-4 lg:pl-4">
-            <div className="sticky top-6 sm:top-10">
+            <div className="sticky top-6 sm:top-10 space-y-4">
               <CampaignStatsCard
-                amountRaised={campaign.amountRaised}
-                targetAmount={campaign.targetAmount}
-                supportersCount={campaign.supportersCount}
-                daysLeft={campaign.daysLeft}
+                amountRaised={amountRaised}
+                targetAmount={targetAmount}
+                supportersCount={apiCampaign?.donorsCount || campaign.supportersCount}
+                daysLeft={daysLeft}
                 campaign={campaignData}
               />
+
+              {/* Donate & Stake Buttons */}
+              {apiCampaign && (
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => router.push(`/campaigns/${id}/donate`)}
+                    className="w-full py-3 bg-primary hover:bg-primary/90"
+                  >
+                    Donate Now
+                  </Button>
+                  <Button
+                    onClick={() => router.push(`/campaigns/${id}/stake`)}
+                    variant="outline"
+                    className="w-full py-3"
+                  >
+                    Stake to Earn Yield
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

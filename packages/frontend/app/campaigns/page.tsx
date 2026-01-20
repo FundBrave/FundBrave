@@ -4,13 +4,15 @@ import { useState } from "react";
 import { ChevronDown } from "@/app/components/ui/icons";
 import { CampaignCard, CategorySidebar, MobileCategoryFilter } from "../components/campaigns";
 import { Navbar } from "@/app/components/common";
+import { useCampaigns } from "@/app/hooks/useCampaigns";
+import type { CampaignCategory } from "@/app/types/campaign";
+import { USDC_DECIMALS } from "@/app/lib/contracts/config";
 
 // Sort options for filtering campaigns
 type SortOption = "oldest" | "newest" | "most-funded" | "least-funded";
 
-// Mock campaign data for demonstration
-// Using Unsplash for themed static images matching reference design
-const MOCK_CAMPAIGNS = [
+// Fallback mock data - shown only when API is unavailable
+const FALLBACK_CAMPAIGNS = [
   {
     id: "1",
     title: "Support John's Fight Against Cancer",
@@ -131,6 +133,12 @@ export default function CampaignsPage() {
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  // Fetch campaigns from API
+  const { campaigns: apiCampaigns, isLoading, error } = useCampaigns({
+    category: selectedCategory !== "all" ? (selectedCategory as CampaignCategory) : undefined,
+    sortBy,
+  });
+
   // Handle category selection from sidebar
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -157,6 +165,26 @@ export default function CampaignsPage() {
     };
     return sortTexts[option];
   };
+
+  // Use API data if available, fallback to mock data
+  const campaigns = apiCampaigns.length > 0 ? apiCampaigns : (error ? FALLBACK_CAMPAIGNS : []);
+
+  // Transform API campaigns to match CampaignCard props
+  const displayCampaigns = campaigns.map((campaign) => {
+    const goal = parseFloat(campaign.goal) || 1;
+    const raised = parseFloat(campaign.amountRaised) || 0;
+
+    return {
+      id: campaign.id,
+      title: campaign.title,
+      imageUrl: campaign.imageUrl || "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=400&h=300&fit=crop",
+      donorsCount: campaign.donorsCount || 0,
+      amountRaised: raised / Math.pow(10, USDC_DECIMALS),
+      targetAmount: goal / Math.pow(10, USDC_DECIMALS),
+      category: campaign.category,
+      status: campaign.isVerified ? ['verified' as const] : undefined,
+    };
+  });
 
   return (
     <>
@@ -224,19 +252,49 @@ export default function CampaignsPage() {
 
           {/* Campaigns Grid - Scrollable container with responsive columns */}
           <div className="flex-1 overflow-y-auto custom-scrollbar pb-6 pr-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-              {MOCK_CAMPAIGNS.map((campaign) => (
-                <CampaignCard
-                  key={campaign.id}
-                  id={campaign.id}
-                  title={campaign.title}
-                  imageUrl={campaign.imageUrl}
-                  donorsCount={campaign.donorsCount}
-                  amountRaised={campaign.amountRaised}
-                  targetAmount={campaign.targetAmount}
-                />
-              ))}
-            </div>
+            {error && (
+              <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
+                Failed to load campaigns from API. Showing fallback data.
+              </div>
+            )}
+
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <CampaignCard
+                    key={i}
+                    id={`skeleton-${i}`}
+                    title=""
+                    imageUrl=""
+                    donorsCount={0}
+                    amountRaised={0}
+                    targetAmount={0}
+                    isLoading={true}
+                  />
+                ))}
+              </div>
+            ) : displayCampaigns.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+                {displayCampaigns.map((campaign) => (
+                  <CampaignCard
+                    key={campaign.id}
+                    id={campaign.id}
+                    title={campaign.title}
+                    imageUrl={campaign.imageUrl}
+                    donorsCount={campaign.donorsCount}
+                    amountRaised={campaign.amountRaised}
+                    targetAmount={campaign.targetAmount}
+                    category={campaign.category}
+                    status={campaign.status}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+                <p className="text-text-secondary text-lg mb-2">No campaigns found</p>
+                <p className="text-text-secondary text-sm">Try adjusting your filters</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
