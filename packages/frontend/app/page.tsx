@@ -48,7 +48,7 @@ import type { UserProfile, LeaderboardEntry, SuggestedUser } from "@/app/types/h
  * - Instagram-like stories row
  *
  * Authentication:
- * - Redirects to /auth/login if not authenticated
+ * - Redirects to /auth if not authenticated
  * - Fetches real data from GraphQL API
  */
 

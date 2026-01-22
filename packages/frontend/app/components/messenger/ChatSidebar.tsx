@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Search, Plus, MessageSquare, X, Menu } from "@/app/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/app/components/ui/button";
-import { EmptyState } from "@/app/components/ui/EmptyState";
+import { EmptyStateCompact } from "@/app/components/ui/EmptyState";
 import { ChatListItem } from "./ChatListItem";
 import type { Chat, ChatFilterTab } from "@/app/types/messenger";
 
@@ -40,8 +40,8 @@ function EmptyChatState({ filterTab }: { filterTab: ChatFilterTab }) {
   };
 
   return (
-    <EmptyState
-      icon={<MessageSquare className="h-6 w-6 text-text-tertiary" />}
+    <EmptyStateCompact
+      icon={MessageSquare}
       message={getMessage()}
     />
   );

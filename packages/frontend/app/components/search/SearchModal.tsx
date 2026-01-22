@@ -11,6 +11,7 @@ import { CategoryChips } from "./CategoryChips";
 import { MOCK_CAMPAIGNS, MOCK_USERS, MockUser } from "./mockData";
 import { CampaignCardProps } from "@/app/components/campaigns/CampaignCard";
 import Link from "next/link";
+import { searchApi, SearchResults } from "@/lib/api/search";
 
 export interface SearchModalProps {
   isOpen: boolean;
@@ -21,39 +22,54 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [searchResults, setSearchResults] = useState<SearchResults>({
+    campaigns: [],
+    users: [],
+    posts: [],
+    total: 0,
+  });
+  const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounced search results
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return { campaigns: [], users: [] };
+  // Fetch search results from API
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults({ campaigns: [], users: [], posts: [], total: 0 });
+      return;
+    }
 
-    const query = searchQuery.toLowerCase();
+    const searchTimeout = setTimeout(async () => {
+      try {
+        setIsSearching(true);
+        const results = await searchApi.search(searchQuery, 'all', 10);
+        setSearchResults(results);
+      } catch (error) {
+        console.error('Search failed:', error);
+        // Fallback to mock data on error
+        const query = searchQuery.toLowerCase();
+        const campaigns = MOCK_CAMPAIGNS.filter((campaign) =>
+          campaign.title.toLowerCase().includes(query)
+        ).slice(0, 3);
+        const users = MOCK_USERS.filter((user) =>
+          user.name.toLowerCase().includes(query) ||
+          user.username.toLowerCase().includes(query)
+        ).slice(0, 2);
+        setSearchResults({
+          campaigns: campaigns as any,
+          users: users as any,
+          posts: [],
+          total: campaigns.length + users.length,
+        });
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300); // Debounce search by 300ms
 
-    // Filter campaigns
-    const campaigns = MOCK_CAMPAIGNS.filter((campaign) => {
-      const matchesQuery =
-        campaign.title.toLowerCase().includes(query) ||
-        campaign.category?.toLowerCase().includes(query);
+    return () => clearTimeout(searchTimeout);
+  }, [searchQuery]);
 
-      const matchesCategory =
-        selectedCategories.length === 0 ||
-        (campaign.category && selectedCategories.includes(campaign.category));
-
-      return matchesQuery && matchesCategory;
-    }).slice(0, 3);
-
-    // Filter users
-    const users = MOCK_USERS.filter(
-      (user) =>
-        user.name.toLowerCase().includes(query) ||
-        user.username.toLowerCase().includes(query)
-    ).slice(0, 2);
-
-    return { campaigns, users };
-  }, [searchQuery, selectedCategories]);
-
-  const totalResults = searchResults.campaigns.length + searchResults.users.length;
+  const totalResults = searchResults.campaigns.length + searchResults.users.length + searchResults.posts.length;
 
   // Focus trap and escape handling
   useEffect(() => {

@@ -41,7 +41,7 @@ export default function CallbackPage() {
           const decodedError = decodeURIComponent(errorParam);
           setError(getErrorMessage('oauth_error', decodedError));
           setIsProcessing(false);
-          setTimeout(() => router.push('/auth/login'), 3000);
+          setTimeout(() => router.push('/auth'), 3000);
           return;
         }
 
@@ -49,7 +49,7 @@ export default function CallbackPage() {
         if (!code) {
           setError(getErrorMessage('missing_code'));
           setIsProcessing(false);
-          setTimeout(() => router.push('/auth/login'), 3000);
+          setTimeout(() => router.push('/auth'), 3000);
           return;
         }
 
@@ -72,7 +72,7 @@ export default function CallbackPage() {
         } else {
           setError(getErrorMessage('exchange_failed', err instanceof Error ? err.message : undefined));
           setIsProcessing(false);
-          setTimeout(() => router.push('/auth/login'), 3000);
+          setTimeout(() => router.push('/auth'), 3000);
         }
       }
     };

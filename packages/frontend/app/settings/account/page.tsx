@@ -14,6 +14,8 @@ import type {
   AccountInfo,
   OAuthProvider,
 } from "./schemas";
+import { settingsApi } from "@/lib/api/settings";
+import { useAuth } from "@/app/provider/AuthProvider";
 
 /**
  * Mock API Functions
@@ -162,22 +164,43 @@ async function deleteAccount(data: DeleteAccountFormData): Promise<void> {
  * - DELETE /api/users/me - Delete account (soft)
  */
 export default function AccountSettingsPage() {
+  const { user, isAuthenticated } = useAuth();
+
   // Data state
   const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
-  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
+  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>(mockConnectedAccounts);
 
   // UI state
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch initial data
+  // Fetch initial data from settings API
   useEffect(() => {
     async function loadAccountData() {
+      if (!isAuthenticated) {
+        setIsLoading(false);
+        setError("Please log in to view account settings");
+        return;
+      }
+
       try {
-        const data = await fetchAccountData();
-        setAccountInfo(data.accountInfo);
-        setConnectedAccounts(data.connectedAccounts);
-      } catch {
+        const data = await settingsApi.getAllSettings();
+
+        // Transform API data to AccountInfo format
+        const transformedAccountInfo: AccountInfo = {
+          email: user?.email || "",
+          emailVerified: true, // TODO: Get from user object when available
+          createdAt: new Date(), // TODO: Get from user object when available
+          lastLoginAt: new Date(),
+          lastLoginLocation: "Unknown", // TODO: Get from backend when available
+          accountStatus: "active",
+          passwordLastChangedAt: new Date(), // TODO: Get from backend when available
+        };
+
+        setAccountInfo(transformedAccountInfo);
+        // OAuth connections will be set from mockConnectedAccounts for now
+      } catch (err) {
+        console.error("Failed to load settings:", err);
         setError("Failed to load account data. Please refresh the page.");
       } finally {
         setIsLoading(false);
@@ -185,57 +208,90 @@ export default function AccountSettingsPage() {
     }
 
     loadAccountData();
-  }, []);
+  }, [isAuthenticated, user]);
 
   // Handle email change
   const handleEmailChange = async (data: ChangeEmailFormData) => {
-    await changeEmail(data);
-    // In production, this would update the email after verification
+    try {
+      // TODO: Implement email change API endpoint in backend
+      // await settingsApi.updateProfile({ email: data.newEmail });
+      console.log("Email change requested:", data.newEmail);
+      throw new Error("Email change not yet implemented in backend");
+    } catch (err) {
+      throw err;
+    }
   };
 
   // Handle password change
   const handlePasswordChange = async (data: ChangePasswordFormData) => {
-    await changePassword(data);
-    // Update password changed date
-    if (accountInfo) {
-      setAccountInfo({
-        ...accountInfo,
-        passwordLastChangedAt: new Date(),
-      });
+    try {
+      // TODO: Implement password change API endpoint in backend
+      // await settingsApi.updatePassword(data);
+      console.log("Password change requested");
+
+      // Update password changed date
+      if (accountInfo) {
+        setAccountInfo({
+          ...accountInfo,
+          passwordLastChangedAt: new Date(),
+        });
+      }
+
+      throw new Error("Password change not yet implemented in backend");
+    } catch (err) {
+      throw err;
     }
   };
 
   // Handle OAuth connect
   const handleConnect = async (provider: OAuthProvider) => {
-    await connectProvider(provider);
-    // Update connected accounts
-    setConnectedAccounts((prev) =>
-      prev.map((account) =>
-        account.provider === provider
-          ? { ...account, connected: true, connectedAt: new Date() }
-          : account
-      )
-    );
+    try {
+      // TODO: Implement OAuth connection in backend
+      console.log("Connected provider:", provider);
+      // Update connected accounts
+      setConnectedAccounts((prev) =>
+        prev.map((account) =>
+          account.provider === provider
+            ? { ...account, connected: true, connectedAt: new Date() }
+            : account
+        )
+      );
+    } catch (err) {
+      console.error("Failed to connect provider:", err);
+      throw err;
+    }
   };
 
   // Handle OAuth disconnect
   const handleDisconnect = async (provider: OAuthProvider) => {
-    await disconnectProvider(provider);
-    // Update connected accounts
-    setConnectedAccounts((prev) =>
-      prev.map((account) =>
-        account.provider === provider
-          ? { ...account, connected: false, email: undefined, connectedAt: undefined }
-          : account
-      )
-    );
+    try {
+      // TODO: Implement OAuth disconnection in backend
+      console.log("Disconnected provider:", provider);
+      // Update connected accounts
+      setConnectedAccounts((prev) =>
+        prev.map((account) =>
+          account.provider === provider
+            ? { ...account, connected: false, email: undefined, connectedAt: undefined }
+            : account
+        )
+      );
+    } catch (err) {
+      console.error("Failed to disconnect provider:", err);
+      throw err;
+    }
   };
 
   // Handle account deletion
   const handleDeleteAccount = async (data: DeleteAccountFormData) => {
-    await deleteAccount(data);
-    // In production, this would redirect to a goodbye page
-    window.location.href = "/";
+    try {
+      // TODO: Implement account deletion API endpoint in backend
+      console.log("Account deletion requested");
+      // await settingsApi.deleteAccount(data.password);
+      // window.location.href = "/";
+      throw new Error("Account deletion not yet implemented in backend");
+    } catch (err) {
+      throw err;
+    }
   };
 
   // Loading state

@@ -1,20 +1,23 @@
 /**
  * useDonate Hook
- * Hook for donating to campaigns via Fundraiser contract
+ * Hook for donating to campaigns via Fundraiser contract and GraphQL
  */
 
 import { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useChainId } from 'wagmi';
 import { FUNDRAISER_ABI, ERC20_ABI } from '@/app/lib/contracts/abis';
 import { CONTRACT_ADDRESSES, USDC_DECIMALS } from '@/app/lib/contracts/config';
-import { apiClient } from '@/app/lib/api/client';
+import { useRecordDonationMutation } from '@/app/generated/graphql';
 import type { Address } from 'viem';
 
 export function useDonate(campaignAddress: Address) {
   const { address } = useAccount();
+  const chainId = useChainId();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsApproval, setNeedsApproval] = useState(false);
+
+  const [recordDonationMutation] = useRecordDonationMutation();
 
   const {
     writeContract,
@@ -120,25 +123,33 @@ export function useDonate(campaignAddress: Address) {
   const saveDonationToBackend = async (
     campaignId: string,
     amount: bigint,
-    transactionHash: string
+    transactionHash: string,
+    isAnonymous: boolean = false,
+    message?: string
   ) => {
     if (!address) return null;
 
     try {
-      const response = await apiClient.createDonation({
-        campaignId,
-        donor: address,
-        amount: amount.toString(),
-        token: CONTRACT_ADDRESSES.mockUsdc,
-        transactionHash,
+      const result = await recordDonationMutation({
+        variables: {
+          input: {
+            fundraiserId: campaignId,
+            amount: amount.toString(),
+            token: CONTRACT_ADDRESSES.mockUsdc,
+            txHash: transactionHash,
+            chainId: chainId,
+            isAnonymous,
+            message,
+          },
+        },
       });
 
-      if (!response.success) {
-        throw new Error(response.error || 'Failed to save donation to backend');
+      if (!result.data?.recordDonation) {
+        throw new Error('Failed to save donation to backend');
       }
 
       setIsProcessing(false);
-      return response.data;
+      return result.data.recordDonation;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save donation';
       setError(errorMessage);

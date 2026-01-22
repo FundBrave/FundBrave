@@ -22,7 +22,7 @@ import { useReducedMotion } from "@/app/hooks/useReducedMotion";
 import { GoalAmountInput } from "./GoalAmountInput";
 import { DurationPicker } from "./DurationPicker";
 import { BeneficiarySection } from "./BeneficiarySection";
-import { ImageUploadEnhanced } from "./ImageUploadEnhanced";
+import { ImageUploadWithVerification, type VerificationResult } from "./ImageUploadWithVerification";
 import { CampaignPreviewCard } from "./CampaignPreviewCard";
 import { SuccessModal } from "./SuccessModal";
 import { WalletAddressInput } from "@/app/components/ui/form/WalletAddressInput";
@@ -47,6 +47,7 @@ interface CampaignFormData {
   description: string;
   imageFile: File | null;
   imagePreview: string | null;
+  imageVerificationResult: VerificationResult | null;
   videoUrl: string;
   // Step 3: Details
   duration: string;
@@ -94,6 +95,7 @@ const INITIAL_FORM_DATA: CampaignFormData = {
   description: "",
   imageFile: null,
   imagePreview: null,
+  imageVerificationResult: null,
   videoUrl: "",
   duration: "30",
   isCustomDuration: false,
@@ -615,6 +617,7 @@ function StoryStep({ formData, setFormData, errors }: StepProps) {
           ...prev,
           imageFile: file,
           imagePreview: e.target?.result as string,
+          imageVerificationResult: null, // Reset verification when new image is selected
         }));
       };
       reader.readAsDataURL(file);
@@ -627,8 +630,19 @@ function StoryStep({ formData, setFormData, errors }: StepProps) {
       ...prev,
       imageFile: null,
       imagePreview: null,
+      imageVerificationResult: null,
     }));
   }, [setFormData]);
+
+  const handleVerificationComplete = useCallback(
+    (result: VerificationResult) => {
+      setFormData((prev) => ({
+        ...prev,
+        imageVerificationResult: result,
+      }));
+    },
+    [setFormData]
+  );
 
   return (
     <div className="space-y-6">
@@ -641,7 +655,7 @@ function StoryStep({ formData, setFormData, errors }: StepProps) {
         </p>
       </div>
 
-      <ImageUploadEnhanced
+      <ImageUploadWithVerification
         image={
           formData.imagePreview
             ? { file: formData.imageFile, preview: formData.imagePreview }
@@ -649,6 +663,12 @@ function StoryStep({ formData, setFormData, errors }: StepProps) {
         }
         onFileSelect={handleFileSelect}
         onRemove={handleRemoveImage}
+        onVerificationComplete={handleVerificationComplete}
+        campaignName={formData.title}
+        campaignDescription={formData.description}
+        blockSuspicious={true}
+        verificationRequired={true}
+        isVerifiedUser={false}
         error={errors.image}
       />
 

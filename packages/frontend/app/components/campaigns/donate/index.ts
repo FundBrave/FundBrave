@@ -17,3 +17,11 @@ export {
   default as CampaignInfoHeader,
   SecurityBadge,
 } from "./CampaignInfoHeader";
+
+// Cross-chain donation components
+export {
+  ChainSelector,
+  BridgeStatus,
+  DONATION_CHAINS,
+  type DonationChain,
+} from "./ChainSelector";

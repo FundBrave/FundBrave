@@ -2,6 +2,25 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type CampaignStake {
+  amount: String!
+  id: ID!
+  isActive: Boolean!
+  shares: String!
+  stakedAt: DateTime!
+  staker: CampaignStakerInfo!
+  txHash: String!
+  unstakedAt: DateTime
+}
+
+type CampaignStakerInfo {
+  avatarUrl: String
+  displayName: String
+  id: ID
+  username: String
+  walletAddress: String!
+}
+
 type CategoryCount {
   category: String!
   count: Int!
@@ -825,6 +844,21 @@ type NotificationOperationResult {
   success: Boolean!
 }
 
+type NotificationPreferences {
+  emailEnabled: Boolean!
+  notifyOnComment: Boolean!
+  notifyOnDAOProposal: Boolean!
+  notifyOnDonation: Boolean!
+  notifyOnFBTVesting: Boolean!
+  notifyOnFollow: Boolean!
+  notifyOnLike: Boolean!
+  notifyOnMention: Boolean!
+  notifyOnStake: Boolean!
+  notifyOnStockPurchase: Boolean!
+  notifyOnYieldHarvest: Boolean!
+  pushEnabled: Boolean!
+}
+
 type NotificationSettings {
   emailEnabled: Boolean!
   notifyOnComment: Boolean!
@@ -1128,6 +1162,16 @@ enum PostVisibility {
   FOLLOWERS
   PRIVATE
   PUBLIC
+}
+
+type PrivacySettings {
+  allowMessagesFromAnyone: Boolean!
+  isPrivate: Boolean!
+  showDonationHistory: Boolean!
+  showInSearchEngines: Boolean!
+  showOnlineStatus: Boolean!
+  showStakingActivity: Boolean!
+  showWalletBalance: Boolean!
 }
 
 """Category of DAO proposal"""
@@ -1498,6 +1542,15 @@ input ReviewReportInput {
   status: ReportStatus!
   suspensionDays: Int
   suspensionReason: String
+}
+
+type SecuritySettings {
+  activeSessions: Float!
+  emailVerified: Boolean!
+  lastPasswordChange: DateTime
+  loginAlertsEnabled: Boolean!
+  twoFactorEmail: String
+  twoFactorEnabled: Boolean!
 }
 
 input SendDirectMessageInput {

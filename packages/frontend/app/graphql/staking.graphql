@@ -1,0 +1,254 @@
+# Staking Queries and Mutations
+
+# Fragment for Stake
+fragment StakeFields on Stake {
+  id
+  amount
+  shares
+  chainId
+  poolAddress
+  isActive
+  isGlobal
+  stakedAt
+  unstakedAt
+  txHash
+  blockNumber
+  updatedAt
+  staker {
+    id
+    username
+    displayName
+    avatarUrl
+    walletAddress
+  }
+  fundraiser {
+    id
+    name
+    onChainId
+    stakingPoolAddr
+  }
+}
+
+# Fragment for FBT Stake
+fragment FBTStakeFields on FBTStake {
+  id
+  stakerAddress
+  amount
+  pendingYield
+  claimedYield
+  shareOfTreasury
+  isActive
+  stakedAt
+  unstakedAt
+  txHash
+}
+
+# Fragment for Impact DAO Stake
+fragment ImpactDAOStakeFields on ImpactDAOStake {
+  id
+  stakerAddress
+  principal
+  pendingUSDCYield
+  claimedUSDCYield
+  pendingFBTReward
+  claimedFBTReward
+  isActive
+  stakedAt
+  unstakedAt
+}
+
+# ============================================
+# QUERIES - Per-Campaign Staking
+# ============================================
+
+# Get stakes for a specific fundraiser
+query GetFundraiserStakes($fundraiserId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  fundraiserStakes(fundraiserId: $fundraiserId, limit: $limit, offset: $offset) {
+    items {
+      ...StakeFields
+    }
+    total
+    hasMore
+  }
+}
+
+# Get single stake by ID
+query GetStake($id: ID!) {
+  stake(id: $id) {
+    ...StakeFields
+  }
+}
+
+# Get my stakes across all campaigns
+query GetMyStakes($limit: Int = 20, $offset: Int = 0) {
+  myStakes(limit: $limit, offset: $offset) {
+    items {
+      ...StakeFields
+    }
+    total
+    hasMore
+  }
+}
+
+# Get user's stakes
+query GetUserStakes($userId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  userStakes(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      ...StakeFields
+    }
+    total
+    hasMore
+  }
+}
+
+# ============================================
+# QUERIES - Global Staking Pool
+# ============================================
+
+# Get global pool stakes
+query GetGlobalPoolStakes($limit: Int = 20, $offset: Int = 0) {
+  globalPoolStakes(limit: $limit, offset: $offset) {
+    items {
+      ...StakeFields
+    }
+    total
+    hasMore
+  }
+}
+
+# ============================================
+# QUERIES - FBT Token Staking
+# ============================================
+
+# Get my FBT stake
+query GetMyFBTStake {
+  myFBTStake {
+    ...FBTStakeFields
+  }
+}
+
+# Get FBT stake by address
+query GetFBTStakeByAddress($address: String!) {
+  fbtStakeByAddress(address: $address) {
+    ...FBTStakeFields
+  }
+}
+
+# Get all FBT stakers
+query GetFBTStakers($limit: Int = 20, $offset: Int = 0) {
+  fbtStakers(limit: $limit, offset: $offset) {
+    items {
+      address
+      amount
+      pendingYield
+      shareOfTreasury
+      username
+      avatarUrl
+    }
+    total
+    hasMore
+  }
+}
+
+# ============================================
+# QUERIES - Impact DAO Pool
+# ============================================
+
+# Get my Impact DAO stake
+query GetMyImpactDAOStake {
+  myImpactDAOStake {
+    ...ImpactDAOStakeFields
+  }
+}
+
+# Get Impact DAO stake by address
+query GetImpactDAOStakeByAddress($address: String!) {
+  impactDAOStakeByAddress(address: $address) {
+    ...ImpactDAOStakeFields
+  }
+}
+
+# Get all Impact DAO stakers
+query GetImpactDAOStakers($limit: Int = 20, $offset: Int = 0) {
+  impactDAOStakers(limit: $limit, offset: $offset) {
+    items {
+      address
+      principal
+      pendingYield
+      pendingFBTReward
+      username
+      avatarUrl
+      yieldSplit {
+        stakerShare
+        platformShare
+        daoShare
+      }
+    }
+    total
+    hasMore
+  }
+}
+
+# Get Impact DAO yield harvests
+query GetImpactDAOYieldHarvests($stakeId: String!, $limit: Int = 20, $offset: Int = 0) {
+  impactDAOYieldHarvests(stakeId: $stakeId, limit: $limit, offset: $offset) {
+    items {
+      id
+      stakeId
+      totalYield
+      stakerAmount
+      daoAmount
+      platformAmount
+      harvestedAt
+      txHash
+      blockNumber
+    }
+    total
+    hasMore
+  }
+}
+
+# ============================================
+# MUTATIONS
+# ============================================
+
+# Record a new stake (per-campaign or global)
+mutation RecordStake($input: RecordStakeInput!) {
+  recordStake(input: $input) {
+    ...StakeFields
+  }
+}
+
+# Process unstake (withdraw principal + yield)
+mutation ProcessUnstake($input: UnstakeInput!) {
+  processUnstake(input: $input)
+}
+
+# Record Impact DAO stake
+mutation RecordImpactDAOStake($input: ImpactDAORecordStakeInput!) {
+  recordImpactDAOStake(input: $input)
+}
+
+# ============================================
+# SUBSCRIPTIONS
+# ============================================
+
+# Subscribe to FBT staking events
+subscription OnFBTStakeUpdate($address: String) {
+  fbtStakeUpdated(address: $address) {
+    eventType
+    stake {
+      ...FBTStakeFields
+    }
+  }
+}
+
+# Subscribe to Impact DAO staking events
+subscription OnImpactDAOStakeUpdate($address: String) {
+  impactDAOStakeUpdated(address: $address) {
+    eventType
+    stake {
+      ...ImpactDAOStakeFields
+    }
+  }
+}

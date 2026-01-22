@@ -13,6 +13,7 @@ import {
   type SecurityState,
   type BackupCode,
 } from "./schemas";
+import { settingsApi } from "@/lib/api/settings";
 
 /**
  * Mock API Functions
@@ -150,7 +151,7 @@ const mockLoginAttempts: LoginAttempt[] = [
 ];
 
 /**
- * Simulates GET /api/users/me/security
+ * Backend API Functions
  */
 async function fetchSecurityData(): Promise<{
   twoFactorStatus: TwoFactorStatus;
@@ -158,87 +159,82 @@ async function fetchSecurityData(): Promise<{
   loginAttempts: LoginAttempt[];
   securityState: SecurityState;
 }> {
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  try {
+    const [allSettings, apiSessions] = await Promise.all([
+      settingsApi.getAllSettings(),
+      settingsApi.getSessions(),
+    ]);
 
-  const securityState: SecurityState = {
-    twoFactorEnabled: mockTwoFactorStatus.enabled,
-    twoFactorMethod: mockTwoFactorStatus.method,
-    recoveryEmailSet: false,
-    passwordAgeInDays: 45,
-    emailVerified: true,
-  };
+    const twoFactorStatus: TwoFactorStatus = {
+      enabled: allSettings.security.twoFactorEnabled,
+      method: allSettings.security.twoFactorMethod,
+      backupCodesRemaining: allSettings.security.twoFactorEnabled ? 10 : undefined,
+    };
 
-  return {
-    twoFactorStatus: mockTwoFactorStatus,
-    sessions: mockSessions,
-    loginAttempts: mockLoginAttempts,
-    securityState,
-  };
+    const securityState: SecurityState = {
+      twoFactorEnabled: allSettings.security.twoFactorEnabled,
+      twoFactorMethod: allSettings.security.twoFactorMethod,
+      recoveryEmailSet: false,
+      passwordAgeInDays: 45,
+      emailVerified: true,
+    };
+
+    // Transform API sessions to match local Session type (convert string to Date)
+    const sessions: Session[] = apiSessions.map(session => ({
+      ...session,
+      lastActiveAt: new Date(session.lastActiveAt),
+      createdAt: new Date(session.createdAt),
+    }));
+
+    // TODO: Fetch login attempts from backend
+    const loginAttempts = mockLoginAttempts;
+
+    return {
+      twoFactorStatus,
+      sessions,
+      loginAttempts,
+      securityState,
+    };
+  } catch (error) {
+    console.error('Failed to fetch security data:', error);
+    throw error;
+  }
 }
 
 /**
- * Simulates POST /api/users/me/2fa/setup
+ * Enable 2FA
  */
 async function enableTwoFactor(): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log("2FA enabled");
-  mockTwoFactorStatus.enabled = true;
-  mockTwoFactorStatus.method = "totp";
-  mockTwoFactorStatus.backupCodesRemaining = 10;
+  await settingsApi.enable2FA();
 }
 
 /**
- * Simulates DELETE /api/users/me/2fa
+ * Disable 2FA
  */
-async function disableTwoFactor(): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log("2FA disabled");
-  mockTwoFactorStatus.enabled = false;
-  mockTwoFactorStatus.method = undefined;
-  mockTwoFactorStatus.backupCodesRemaining = undefined;
+async function disableTwoFactor(password: string = ''): Promise<void> {
+  await settingsApi.disable2FA(password);
 }
 
 /**
- * Simulates POST /api/users/me/2fa/backup-codes
+ * Regenerate backup codes
  */
 async function regenerateBackupCodes(): Promise<BackupCode[]> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  const codes: BackupCode[] = [];
-  for (let i = 0; i < 10; i++) {
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-    const formatted = `${code.substring(0, 4)}-${code.substring(4, 8)}`;
-    codes.push({ code: formatted, used: false });
-  }
-
-  mockTwoFactorStatus.backupCodesRemaining = 10;
-  console.log("Backup codes regenerated");
-  return codes;
+  const response = await settingsApi.regenerateBackupCodes();
+  return response.codes.map(code => ({ code, used: false }));
 }
 
 /**
- * Simulates DELETE /api/users/me/sessions/{id}
+ * Revoke a session
  */
 async function revokeSession(sessionId: string): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log("Session revoked:", sessionId);
-  const index = mockSessions.findIndex((s) => s.id === sessionId);
-  if (index !== -1) {
-    mockSessions.splice(index, 1);
-  }
+  await settingsApi.revokeSession(sessionId);
 }
 
 /**
- * Simulates DELETE /api/users/me/sessions
+ * Revoke all other sessions
  */
 async function revokeAllOtherSessions(): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  console.log("All other sessions revoked");
-  const currentSession = mockSessions.find((s) => s.isCurrent);
-  mockSessions.length = 0;
-  if (currentSession) {
-    mockSessions.push(currentSession);
-  }
+  await settingsApi.revokeAllOtherSessions();
 }
 
 /**

@@ -131,6 +131,12 @@ interface CategoryTagProps {
 
 function CategoryTag({ category }: CategoryTagProps) {
   const config = categoryConfig[category];
+
+  // If category not found in config, don't render anything
+  if (!config) {
+    return null;
+  }
+
   const Icon = config.icon;
 
   return (

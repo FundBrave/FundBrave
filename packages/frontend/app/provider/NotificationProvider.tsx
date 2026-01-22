@@ -15,6 +15,8 @@ import type {
   GroupedNotifications,
   NotificationTimeGroup,
 } from "@/app/components/notifications/schemas";
+import { notificationsApi } from "@/lib/api/notifications";
+import { useAuth } from "./AuthProvider";
 
 // Polling interval in milliseconds (30 seconds as per spec)
 const POLLING_INTERVAL = 30000;
@@ -254,29 +256,33 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
    */
   const fetchUnreadCount = useCallback(async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/notifications/unread-count');
-      // const data = await response.json();
-      // setUnreadCount(data.count);
-
-      // Mock implementation
-      const mockCount = notifications.filter((n) => !n.isRead).length;
+      const data = await notificationsApi.getUnreadCount();
+      const newCount = data.count;
 
       // Check if we have new notifications to show toast
-      if (mockCount > previousUnreadCount.current && previousUnreadCount.current > 0) {
-        // Find the newest unread notification
-        const newestUnread = notifications.find((n) => !n.isRead);
-        if (newestUnread) {
-          addToast(newestUnread);
-        }
+      if (newCount > previousUnreadCount.current && previousUnreadCount.current > 0) {
+        // Find the newest unread notification (use state updater to get current notifications)
+        setNotifications((currentNotifications) => {
+          const newestUnread = (currentNotifications || []).find((n) => !n.isRead);
+          if (newestUnread) {
+            addToast(newestUnread);
+          }
+          return currentNotifications;
+        });
       }
 
-      previousUnreadCount.current = mockCount;
-      setUnreadCount(mockCount);
+      previousUnreadCount.current = newCount;
+      setUnreadCount(newCount);
     } catch (error) {
       console.error("Failed to fetch unread count:", error);
+      // Fallback to mock count on error (use state updater)
+      setNotifications((currentNotifications) => {
+        const mockCount = (currentNotifications || []).filter((n) => !n.isRead).length;
+        setUnreadCount(mockCount);
+        return currentNotifications;
+      });
     }
-  }, [notifications]);
+  }, []); // No dependencies needed since we use state updaters
 
   /**
    * Fetch notifications from API
@@ -287,33 +293,34 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      // const params = new URLSearchParams({
-      //   limit: '20',
-      //   ...(cursor && !reset ? { cursor } : {}),
-      // });
-      // const response = await fetch(`/api/notifications?${params}`);
-      // const data: NotificationsResponse = await response.json();
+      const offset = reset ? 0 : notifications.length;
+      const data = await notificationsApi.getNotifications(20, offset);
 
-      // Mock implementation
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
+      if (reset) {
+        setNotifications(data.notifications);
+        setCursor(null);
+      } else {
+        setNotifications((prev) => [...prev, ...data.notifications]);
+      }
+
+      setHasMore(data.hasMore);
+      setUnreadCount(data.unreadCount);
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+      // Fallback to mock data on error
       const mockData = generateMockNotifications();
-
       if (reset) {
         setNotifications(mockData);
         setCursor(null);
       } else {
         setNotifications((prev) => [...prev, ...mockData]);
       }
-
-      setHasMore(false); // Mock: no more data
+      setHasMore(false);
       setUnreadCount(mockData.filter((n) => !n.isRead).length);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading]);
+  }, [isLoading, notifications.length]);
 
   /**
    * Mark a single notification as read
@@ -326,8 +333,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setUnreadCount((prev) => Math.max(0, prev - 1));
 
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
+      await notificationsApi.markAsRead(id);
     } catch (error) {
       // Revert on error
       setNotifications((prev) =>
@@ -350,8 +356,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setUnreadCount(0);
 
     try {
-      // TODO: Replace with actual API call
-      // await fetch('/api/notifications/read-all', { method: 'PUT' });
+      await notificationsApi.markAllAsRead();
     } catch (error) {
       // Revert on error
       setNotifications(previousNotifications);
@@ -370,8 +375,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
 
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
+      await notificationsApi.deleteNotification(id);
     } catch (error) {
       // Revert on error
       setNotifications(previousNotifications);

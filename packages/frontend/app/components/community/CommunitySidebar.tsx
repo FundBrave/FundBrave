@@ -5,7 +5,7 @@ import { Search, Plus, Users, X, Menu } from "@/app/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/app/components/ui/Avatar";
 import { Button } from "@/app/components/ui/button";
-import { EmptyState } from "@/app/components/ui/EmptyState";
+import { EmptyStateCompact } from "@/app/components/ui/EmptyState";
 import type { Community, CommunityFilterTab } from "@/app/types/community";
 
 // Re-export types for backward compatibility
@@ -42,8 +42,8 @@ function EmptyCommunityState({
   };
 
   return (
-    <EmptyState
-      icon={<Users className="h-6 w-6 text-text-tertiary" />}
+    <EmptyStateCompact
+      icon={Users}
       message={getMessage()}
     />
   );

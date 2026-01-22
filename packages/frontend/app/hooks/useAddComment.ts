@@ -57,7 +57,7 @@ export function useAddComment(): UseAddCommentReturn {
             cache.modify({
               id: cache.identify({ __typename: 'Post', id: postId }),
               fields: {
-                replyCount: (prev) => prev + 1,
+                replyCount: (prev: number) => prev + 1,
               },
             });
 

@@ -47,9 +47,9 @@ interface CommunityFeedProps {
 function EmptyFeedState() {
   return (
     <EmptyState
-      icon={<MessageSquare className="h-8 w-8 text-text-tertiary" />}
+      icon={MessageSquare}
       title="No posts yet"
-      message="Be the first to share something with this community. Start a conversation or share an update."
+      description="Be the first to share something with this community. Start a conversation or share an update."
       className="py-16"
     />
   );

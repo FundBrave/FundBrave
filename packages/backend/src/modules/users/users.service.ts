@@ -11,6 +11,7 @@ import {
   PaginatedFollows,
   UserActivitySummary,
   UserSearchResult,
+  UserDashboardStats,
   NotificationSettings,
   CreateUserInput,
   UpdateProfileInput,
@@ -335,6 +336,67 @@ export class UsersService {
       postsLast30Days: posts,
       commentsLast30Days: comments,
       earnedFBTLast30Days: '0', // TODO: Calculate from FBT rewards
+    };
+  }
+
+  /**
+   * Get dashboard stats for user
+   * Returns key metrics for the user dashboard
+   */
+  async getUserDashboardStats(userId: string): Promise<UserDashboardStats> {
+    // Get user with basic stats
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        followersCount: true,
+        followingCount: true,
+        totalDonated: true,
+        totalStaked: true,
+        fbtBalance: true,
+      },
+    });
+
+    if (!user) {
+      throw new UserNotFoundException(userId);
+    }
+
+    // Get campaigns created and total raised
+    const campaigns = await this.prisma.fundraiser.findMany({
+      where: { creatorId: userId },
+      select: {
+        raisedAmount: true,
+      },
+    });
+
+    const campaignsCreated = campaigns.length;
+    const totalRaised = campaigns.reduce(
+      (sum, c) => BigInt(sum) + BigInt(c.raisedAmount),
+      BigInt(0),
+    );
+
+    // Get donations made count
+    const donationsMade = await this.prisma.donation.count({
+      where: { donorId: userId },
+    });
+
+    // Get active stakes count
+    const activeStakes = await this.prisma.stake.count({
+      where: {
+        stakerId: userId,
+        unstakedAt: null,
+      },
+    });
+
+    return {
+      campaignsCreated,
+      totalRaised: totalRaised.toString(),
+      donationsMade,
+      totalDonated: user.totalDonated.toString(),
+      stakingAmount: user.totalStaked.toString(),
+      activeStakes,
+      fbtBalance: user.fbtBalance.toString(),
+      followersCount: user.followersCount,
+      followingCount: user.followingCount,
     };
   }
 

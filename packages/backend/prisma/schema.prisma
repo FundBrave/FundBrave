@@ -67,11 +67,32 @@ model User {
   interests           String[]   // Array of interest category IDs
   onboardingCompleted Boolean    @default(false)
 
-  // Privacy
-  isPrivate        Boolean @default(false)
-  isActive         Boolean @default(true)
-  isSuspended      Boolean @default(false)
-  suspensionReason String?
+  // Privacy & Settings
+  isPrivate              Boolean @default(false)
+  isActive               Boolean @default(true)
+  isSuspended            Boolean @default(false)
+  suspensionReason       String?
+  showWalletBalance      Boolean @default(true)
+  showDonationHistory    Boolean @default(true)
+  showStakingActivity    Boolean @default(true)
+  allowMessagesFromAnyone Boolean @default(true)
+  showOnlineStatus       Boolean @default(true)
+  showInSearchEngines    Boolean @default(true)
+  loginAlertsEnabled     Boolean @default(true)
+
+  // Preferences
+  language  String @default("en")
+  timezone  String @default("UTC")
+  currency  String @default("USD")
+  darkMode  Boolean @default(false)
+
+  // Security
+  twoFactorEnabled    Boolean  @default(false)
+  twoFactorSecret     String?
+  twoFactorEmail      String?
+  twoFactorPending    Boolean  @default(false)
+  twoFactorBackupCodes String[]
+  passwordChangedAt   DateTime?
 
   // Timestamps
   createdAt  DateTime  @default(now())
@@ -155,6 +176,8 @@ model Session {
   expiresAt    DateTime
   ipAddress    String?
   userAgent    String?
+  location     String?  // Approximate location based on IP
+  lastActivity DateTime @default(now())
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ProfileSidebar,
   StatsCard,
@@ -17,6 +17,10 @@ import {
   mockWithdrawals,
   mockLeaderboard,
 } from "./data";
+import { useGetMeQuery, useGetFundraisersByCreatorQuery } from "@/app/generated/graphql";
+import { useAuth } from "@/app/provider/AuthProvider";
+import { Loader2 } from "@/app/components/ui/icons";
+import type { UserProfile, EarningsStats } from "@/app/types/earnings";
 
 /**
  * Creator Earnings Dashboard Page
@@ -34,6 +38,25 @@ import {
  */
 
 export default function DashboardPage() {
+  const { user: authUser, isAuthenticated } = useAuth();
+
+  // Fetch current user data from GraphQL
+  const { data: meData, loading: meLoading, error: meError } = useGetMeQuery({
+    skip: !isAuthenticated,
+    fetchPolicy: 'cache-and-network',
+  });
+
+  // Fetch user's campaigns
+  const { data: campaignsData, loading: campaignsLoading } = useGetFundraisersByCreatorQuery({
+    variables: {
+      creatorId: meData?.me?.id || '',
+      limit: 100,
+      offset: 0,
+    },
+    skip: !meData?.me?.id,
+    fetchPolicy: 'cache-and-network',
+  });
+
   // State for withdraw modal
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [selectedWithdrawAmount, setSelectedWithdrawAmount] = useState(0);
@@ -41,6 +64,33 @@ export default function DashboardPage() {
     null
   );
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Transform API data to match component props
+  const userProfile: UserProfile = meData?.me
+    ? {
+        id: meData.me.id,
+        name: meData.me.displayName || meData.me.username || "Anonymous",
+        username: meData.me.username ? `@${meData.me.username}` : "@anonymous",
+        avatar: meData.me.avatarUrl || mockUserProfile.avatar,
+        coverImage: mockUserProfile.coverImage, // TODO: Add cover image to GraphQL
+        bio: meData.me.bio || "",
+        postImpressions: meData.me.stats.postsCount || 0,
+        donations: meData.me.stats.fundraisersCount || 0,
+      }
+    : mockUserProfile;
+
+  // Calculate earnings stats from GraphQL data
+  const earningsStats: EarningsStats = meData?.me
+    ? {
+        totalAmount: parseFloat(meData.me.stats.totalDonated || "0"),
+        totalAmountChange: 0, // TODO: Calculate change from previous period
+        donations: parseFloat(meData.me.stats.totalDonated || "0"),
+        donationsChange: 0,
+        pointsEarnings: meData.me.stats.reputationScore || 0,
+        pointsEarningsChange: 0,
+        comparisonPeriod: "last month",
+      }
+    : mockEarningsStats;
 
   // Handle withdraw button click
   const handleWithdraw = (earningId: string) => {
@@ -73,6 +123,50 @@ export default function DashboardPage() {
     console.log("Premium subscription clicked - placeholder action");
   };
 
+  // Loading state
+  if (meLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <BackHeader title="Dashboard" fallbackHref="/" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
+            <p className="text-text-secondary">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (meError || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <BackHeader title="Dashboard" fallbackHref="/" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">
+              {!isAuthenticated ? "Authentication Required" : "Error Loading Dashboard"}
+            </h2>
+            <p className="text-text-secondary mb-6">
+              {!isAuthenticated
+                ? "Please log in to view your dashboard."
+                : "We couldn't load your dashboard data. Please try again."}
+            </p>
+            {!isAuthenticated && (
+              <a
+                href="/auth"
+                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90"
+              >
+                Log In
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <BackHeader title="Dashboard" fallbackHref="/" />
@@ -80,7 +174,7 @@ export default function DashboardPage() {
         {/* Left Sidebar - Profile */}
         <aside className="hidden lg:block w-[280px] shrink-0">
           <ProfileSidebar
-            user={mockUserProfile}
+            user={userProfile}
             onTryPremium={handleTryPremium}
             className="sticky top-6 h-fit"
           />
@@ -92,27 +186,27 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-6 border-b border-border-default">
             <StatsCard
               title="Total Amount"
-              value={mockEarningsStats.totalAmount}
+              value={earningsStats.totalAmount}
               prefix="$"
               suffix="k"
-              change={mockEarningsStats.totalAmountChange}
-              comparisonText={`Compared to (2,553k ${mockEarningsStats.comparisonPeriod})`}
+              change={earningsStats.totalAmountChange}
+              comparisonText={`Compared to ${earningsStats.comparisonPeriod}`}
             />
             <StatsCard
               title="Donations"
-              value={mockEarningsStats.donations}
+              value={earningsStats.donations}
               prefix="$"
               suffix="k"
-              change={mockEarningsStats.donationsChange}
-              comparisonText={`Compared to (1,498k ${mockEarningsStats.comparisonPeriod})`}
+              change={earningsStats.donationsChange}
+              comparisonText={`Compared to ${earningsStats.comparisonPeriod}`}
             />
             <StatsCard
               title="Points Earnings"
-              value={mockEarningsStats.pointsEarnings}
+              value={earningsStats.pointsEarnings}
               prefix="$"
               suffix="k"
-              change={mockEarningsStats.pointsEarningsChange}
-              comparisonText={`Compared to ($5,760k ${mockEarningsStats.comparisonPeriod})`}
+              change={earningsStats.pointsEarningsChange}
+              comparisonText={`Compared to ${earningsStats.comparisonPeriod}`}
             />
           </div>
 

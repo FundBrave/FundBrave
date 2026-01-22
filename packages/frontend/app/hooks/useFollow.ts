@@ -86,7 +86,7 @@ export function useFollow({
               id: cache.identify({ __typename: 'User', id: userId }),
               fields: {
                 isFollowedByMe: () => true,
-                followersCount: (prev) => prev + 1,
+                followersCount: (prev: number) => prev + 1,
               },
             });
           },
@@ -103,7 +103,7 @@ export function useFollow({
               id: cache.identify({ __typename: 'User', id: userId }),
               fields: {
                 isFollowedByMe: () => false,
-                followersCount: (prev) => Math.max(0, prev - 1),
+                followersCount: (prev: number) => Math.max(0, prev - 1),
               },
             });
           },

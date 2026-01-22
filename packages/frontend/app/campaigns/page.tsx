@@ -171,18 +171,22 @@ export default function CampaignsPage() {
 
   // Transform API campaigns to match CampaignCard props
   const displayCampaigns = campaigns.map((campaign) => {
-    const goal = parseFloat(campaign.goal) || 1;
-    const raised = parseFloat(campaign.amountRaised) || 0;
+    const goal = 'goal' in campaign
+      ? (typeof campaign.goal === 'string' ? parseFloat(campaign.goal) : campaign.goal)
+      : ('targetAmount' in campaign ? campaign.targetAmount : 1);
+    const raised = typeof campaign.amountRaised === 'string'
+      ? parseFloat(campaign.amountRaised)
+      : (typeof campaign.amountRaised === 'number' ? campaign.amountRaised : 0);
 
     return {
       id: campaign.id,
       title: campaign.title,
       imageUrl: campaign.imageUrl || "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=400&h=300&fit=crop",
-      donorsCount: campaign.donorsCount || 0,
+      donorsCount: 'donorsCount' in campaign ? (campaign.donorsCount || 0) : 0,
       amountRaised: raised / Math.pow(10, USDC_DECIMALS),
       targetAmount: goal / Math.pow(10, USDC_DECIMALS),
-      category: campaign.category,
-      status: campaign.isVerified ? ['verified' as const] : undefined,
+      category: 'category' in campaign ? campaign.category : undefined,
+      status: ('isVerified' in campaign && campaign.isVerified) ? ['verified' as const] : undefined,
     };
   });
 

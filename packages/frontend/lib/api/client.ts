@@ -178,7 +178,7 @@ class ApiClient {
 
       // Redirect to login if not already there
       if (!window.location.pathname.startsWith('/auth')) {
-        window.location.href = '/auth/login';
+        window.location.href = '/auth';
       }
     }
   }

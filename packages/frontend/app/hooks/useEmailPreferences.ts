@@ -13,62 +13,41 @@ import type {
   UpdateEmailPreferencesResponse,
   DEFAULT_EMAIL_PREFERENCES,
 } from '@/app/types/email-notifications';
+import { settingsApi } from '@/lib/api/settings';
+import { useAuth } from '@/app/provider/AuthProvider';
 
 /**
- * Mock API functions - Replace with actual GraphQL/REST API calls
- */
-
-/**
- * Fetch user's email preferences
- * In real implementation: GraphQL query or REST GET /api/notifications/preferences
+ * Fetch user's email preferences from backend
  */
 async function fetchEmailPreferences(): Promise<GetEmailPreferencesResponse> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  // Mock response - replace with actual API call
-  return {
-    preferences: {
-      donationAlerts: true,
-      campaignFunded: true,
-      campaignUpdates: true,
-      newFollowers: false,
-      comments: false,
-      replies: false,
-      mentions: false,
-      weeklyDigest: true,
-      marketing: false,
-    },
-    email: 'user@example.com',
-  };
+  try {
+    const settings = await settingsApi.getAllSettings();
+    return {
+      preferences: settings.notifications,
+      email: 'user@example.com', // TODO: Get from auth context
+    };
+  } catch (error) {
+    console.error('Failed to fetch email preferences:', error);
+    throw error;
+  }
 }
 
 /**
- * Update user's email preferences
- * In real implementation: GraphQL mutation or REST PUT /api/notifications/preferences
+ * Update user's email preferences on backend
  */
 async function updateEmailPreferences(
   request: UpdateEmailPreferencesRequest
 ): Promise<UpdateEmailPreferencesResponse> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  // Mock response - replace with actual API call
-  return {
-    preferences: {
-      donationAlerts: true,
-      campaignFunded: true,
-      campaignUpdates: true,
-      newFollowers: false,
-      comments: false,
-      replies: false,
-      mentions: false,
-      weeklyDigest: true,
-      marketing: false,
-      ...request.preferences,
-    },
-    success: true,
-  };
+  try {
+    const updated = await settingsApi.updateNotifications(request.preferences);
+    return {
+      preferences: updated,
+      success: true,
+    };
+  } catch (error) {
+    console.error('Failed to update email preferences:', error);
+    throw error;
+  }
 }
 
 /**

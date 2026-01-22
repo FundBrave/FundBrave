@@ -17,6 +17,19 @@ export interface Story {
 // Feed filter options
 export type FeedFilter = "popular" | "recent" | "most_viewed";
 
+// Re-export UserProfile from earnings types to avoid duplication
+export type { UserProfile } from "./earnings";
+
+// Leaderboard entry
+export interface LeaderboardEntry {
+  rank: number;
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  points: number;
+}
+
 // Suggested user for "People to Follow" section
 export interface SuggestedUser {
   id: string;

@@ -12,6 +12,8 @@ import {
   CommunityDetails,
 } from "@/app/components/community";
 import { BackHeader } from "@/app/components/common/BackHeader";
+import { PostEditor } from "@/app/components/social/PostEditor";
+import { useAuth } from "@/app/provider/AuthProvider";
 
 // Mock data for communities with Unsplash images
 const mockCommunities: Community[] = [
@@ -140,6 +142,7 @@ const mockPosts: CommunityPostData[] = [
 export default function CommunityPage() {
   const [selectedCommunityId, setSelectedCommunityId] = useState<string>("1");
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
   const handleSelectCommunity = (communityId: string) => {
     setSelectedCommunityId(communityId);
@@ -175,6 +178,11 @@ export default function CommunityPage() {
 
   const handleMediaClick = (mediaId: string) => {
     console.log("Media clicked:", mediaId);
+  };
+
+  const handlePostSubmit = (content: string, mentions: string[], imageUrl?: string) => {
+    console.log("Post submitted:", { content, mentions, imageUrl });
+    // TODO: Send to backend API
   };
 
   // Get selected community data
@@ -218,23 +226,38 @@ export default function CommunityPage() {
       </MobileDrawer>
 
       {/* Middle - Community Feed */}
-      <main className="min-h-0 min-w-0 flex-1">
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
         {selectedCommunity ? (
-          <CommunityFeed
-            community={{
-              id: selectedCommunity.id,
-              name: selectedCommunity.name,
-              avatar: selectedCommunity.avatar,
-              memberCount: mockCommunityDetails.memberCount,
-              onlineCount: mockCommunityDetails.onlineCount,
-              isJoined: selectedCommunity.isJoined,
-            }}
-            posts={mockPosts}
-            onJoin={handleJoinCommunity}
-            onFollowAuthor={handleFollowAuthor}
-            onReactToPost={handleReactToPost}
-            onCommentOnPost={handleCommentOnPost}
-          />
+          <div className="max-w-3xl mx-auto p-4 space-y-6">
+            {/* Post Editor - Only show for authenticated users */}
+            {isAuthenticated && (
+              <PostEditor
+                currentUserAvatar={user?.avatarUrl || undefined}
+                currentUserName={user?.displayName || user?.username || "You"}
+                placeholder={`What would you like to share with ${selectedCommunity.name}?`}
+                onSubmit={handlePostSubmit}
+                enableModeration={true}
+                allowFlaggedContent={true}
+              />
+            )}
+
+            {/* Community Feed */}
+            <CommunityFeed
+              community={{
+                id: selectedCommunity.id,
+                name: selectedCommunity.name,
+                avatar: selectedCommunity.avatar,
+                memberCount: mockCommunityDetails.memberCount,
+                onlineCount: mockCommunityDetails.onlineCount,
+                isJoined: selectedCommunity.isJoined,
+              }}
+              posts={mockPosts}
+              onJoin={handleJoinCommunity}
+              onFollowAuthor={handleFollowAuthor}
+              onReactToPost={handleReactToPost}
+              onCommentOnPost={handleCommentOnPost}
+            />
+          </div>
         ) : (
           <div className="flex h-full items-center justify-center">
             <p className="text-neutral-dark-200">Select a community to view</p>

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   Prisma,
@@ -343,6 +343,26 @@ export class ModerationService {
     return count > 0;
   }
 
+  /**
+   * Get all reports for a specific target (alias for getReportedContent)
+   */
+  async getReportsByTarget(
+    entityType: string,
+    entityId: string,
+  ): Promise<PaginatedReports> {
+    return this.getReportedContent(entityType, entityId);
+  }
+
+  /**
+   * Get user's report history (alias for getMyReports)
+   */
+  async getUserReportHistory(
+    userId: string,
+    options: { limit: number; offset: number },
+  ): Promise<PaginatedReports> {
+    return this.getMyReports(userId, options.limit, options.offset);
+  }
+
   // ==================== Mutation Methods ====================
 
   /**
@@ -443,6 +463,13 @@ export class ModerationService {
         success: false,
         message: 'Report not found',
       };
+    }
+
+    // Check if report is already resolved
+    if (report.status !== 'PENDING') {
+      throw new ForbiddenException(
+        'Report has already been resolved and cannot be reviewed again',
+      );
     }
 
     // Update report status
@@ -671,21 +698,37 @@ export class ModerationService {
    * Map Prisma report to DTO
    */
   private mapToReportDto(report: ReportWithRelations): Report {
-    const reporter: ReportUser = {
-      id: report.reporter.id,
-      walletAddress: report.reporter.walletAddress,
-      username: report.reporter.username ?? undefined,
-      displayName: report.reporter.displayName ?? undefined,
-      avatarUrl: report.reporter.avatarUrl ?? undefined,
-    };
+    const reporter: ReportUser = report.reporter
+      ? {
+          id: report.reporter.id,
+          walletAddress: report.reporter.walletAddress,
+          username: report.reporter.username ?? undefined,
+          displayName: report.reporter.displayName ?? undefined,
+          avatarUrl: report.reporter.avatarUrl ?? undefined,
+        }
+      : {
+          id: '',
+          walletAddress: '',
+          username: undefined,
+          displayName: undefined,
+          avatarUrl: undefined,
+        };
 
-    const reported: ReportUser = {
-      id: report.reported.id,
-      walletAddress: report.reported.walletAddress,
-      username: report.reported.username ?? undefined,
-      displayName: report.reported.displayName ?? undefined,
-      avatarUrl: report.reported.avatarUrl ?? undefined,
-    };
+    const reported: ReportUser = report.reported
+      ? {
+          id: report.reported.id,
+          walletAddress: report.reported.walletAddress,
+          username: report.reported.username ?? undefined,
+          displayName: report.reported.displayName ?? undefined,
+          avatarUrl: report.reported.avatarUrl ?? undefined,
+        }
+      : {
+          id: '',
+          walletAddress: '',
+          username: undefined,
+          displayName: undefined,
+          avatarUrl: undefined,
+        };
 
     const post: ReportedPost | undefined = report.post
       ? {

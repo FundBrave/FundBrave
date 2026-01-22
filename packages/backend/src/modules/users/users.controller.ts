@@ -29,6 +29,7 @@ import {
   PaginatedFollows,
   UserActivitySummary,
   UserSearchResult,
+  UserDashboardStats,
   NotificationSettings,
   UpdateProfileInput,
   UpdateNotificationSettingsInput,
@@ -99,6 +100,21 @@ export class UsersController {
     @CurrentUser() user: { id: string },
   ): Promise<UserActivitySummary> {
     return this.usersService.getUserActivity(user.id);
+  }
+
+  @Get('me/stats')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user dashboard stats' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns dashboard statistics including campaigns, donations, staking',
+    type: UserDashboardStats,
+  })
+  async getMyStats(
+    @CurrentUser() user: { id: string },
+  ): Promise<UserDashboardStats> {
+    return this.usersService.getUserDashboardStats(user.id);
   }
 
   @Get('me/followers')

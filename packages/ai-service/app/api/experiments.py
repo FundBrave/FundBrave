@@ -10,7 +10,7 @@ Provides endpoints for experiment management:
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from loguru import logger
 
@@ -109,7 +109,7 @@ class ExperimentResultResponse(BaseModel):
 
 @router.post("/create", response_model=ExperimentResponse)
 @limiter.limit("20/hour")
-async def create_experiment(request: CreateExperimentRequest):
+async def create_experiment(request: Request, body: CreateExperimentRequest):
     """
     Create a new A/B test experiment.
 
@@ -119,26 +119,26 @@ async def create_experiment(request: CreateExperimentRequest):
     service = get_ab_testing_service()
 
     # Check if experiment already exists
-    existing = service._experiments.get(request.experiment_id)
+    existing = service._experiments.get(body.experiment_id)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Experiment with ID '{request.experiment_id}' already exists",
+            detail=f"Experiment with ID '{body.experiment_id}' already exists",
         )
 
     # Create experiment
     variants = [
         {"name": v.name, "weight": v.weight, "config": v.config}
-        for v in request.variants
+        for v in body.variants
     ]
 
     experiment = service.create_experiment(
-        experiment_id=request.experiment_id,
-        name=request.name,
-        description=request.description,
+        experiment_id=body.experiment_id,
+        name=body.name,
+        description=body.description,
         variants=variants,
-        target_sample_size=request.target_sample_size,
-        target_feature=request.target_feature,
+        target_sample_size=body.target_sample_size,
+        target_feature=body.target_feature,
     )
 
     return ExperimentResponse(
@@ -282,7 +282,7 @@ async def delete_experiment(experiment_id: str):
 
 @router.post("/variant", response_model=VariantAssignmentResponse)
 @limiter.limit("1000/minute")
-async def get_variant(request: GetVariantRequest):
+async def get_variant(request: Request, body: GetVariantRequest):
     """
     Get the variant assignment for a user in an experiment.
 
@@ -291,20 +291,20 @@ async def get_variant(request: GetVariantRequest):
     """
     service = get_ab_testing_service()
 
-    if request.experiment_id not in service._experiments:
+    if body.experiment_id not in service._experiments:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Experiment not found: {request.experiment_id}",
+            detail=f"Experiment not found: {body.experiment_id}",
         )
 
     variant_name, variant_config = service.get_variant(
-        experiment_id=request.experiment_id,
-        user_id=request.user_id,
+        experiment_id=body.experiment_id,
+        user_id=body.user_id,
     )
 
     return VariantAssignmentResponse(
-        experiment_id=request.experiment_id,
-        user_id=request.user_id,
+        experiment_id=body.experiment_id,
+        user_id=body.user_id,
         variant_name=variant_name,
         variant_config=variant_config,
     )
@@ -312,7 +312,7 @@ async def get_variant(request: GetVariantRequest):
 
 @router.post("/conversion")
 @limiter.limit("1000/minute")
-async def record_conversion(request: RecordConversionRequest):
+async def record_conversion(request: Request, body: RecordConversionRequest):
     """
     Record a conversion for a user in an experiment.
 
@@ -320,17 +320,17 @@ async def record_conversion(request: RecordConversionRequest):
     """
     service = get_ab_testing_service()
 
-    if request.experiment_id not in service._experiments:
+    if body.experiment_id not in service._experiments:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Experiment not found: {request.experiment_id}",
+            detail=f"Experiment not found: {body.experiment_id}",
         )
 
     success = service.record_conversion(
-        experiment_id=request.experiment_id,
-        user_id=request.user_id,
-        value=request.value,
-        metadata=request.metadata,
+        experiment_id=body.experiment_id,
+        user_id=body.user_id,
+        value=body.value,
+        metadata=body.metadata,
     )
 
     if success:
@@ -379,7 +379,7 @@ async def get_experiment_results(experiment_id: str):
 
 @router.post("/ai/create-defaults")
 @limiter.limit("5/hour")
-async def create_default_ai_experiments():
+async def create_default_ai_experiments(request: Request):
     """
     Create default AI-related experiments.
 
@@ -443,7 +443,7 @@ async def get_user_assignments(user_id: str):
 
 @router.post("/bulk-variant")
 @limiter.limit("100/minute")
-async def get_bulk_variants(requests: list[GetVariantRequest]):
+async def get_bulk_variants(request: Request, body: list[GetVariantRequest]):
     """
     Get variant assignments for multiple experiment/user combinations.
 
@@ -452,7 +452,7 @@ async def get_bulk_variants(requests: list[GetVariantRequest]):
     service = get_ab_testing_service()
 
     results = []
-    for req in requests:
+    for req in body:
         if req.experiment_id not in service._experiments:
             results.append({
                 "experiment_id": req.experiment_id,

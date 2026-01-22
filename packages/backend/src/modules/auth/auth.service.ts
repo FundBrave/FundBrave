@@ -1986,6 +1986,93 @@ export class AuthService implements OnModuleInit {
     };
   }
 
+  // ==================== DEBUG/TEST METHODS ====================
+
+  /**
+   * Verify test user credentials exist and are valid
+   * Used for debugging authentication issues in development
+   */
+  async verifyTestUserCredentials(): Promise<{
+    exists: boolean;
+    hasPassword: boolean;
+    passwordValid: boolean;
+    isActive: boolean;
+    isSuspended: boolean;
+    emailVerified: boolean;
+    details?: {
+      id: string;
+      email: string;
+      username: string;
+    };
+    error?: string;
+  }> {
+    const testEmail = 'okwuosahpaschal@gmail.com';
+    const testPassword = '84316860p*A';
+
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: { email: testEmail.toLowerCase() },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          passwordHash: true,
+          isActive: true,
+          isSuspended: true,
+          emailVerified: true,
+        },
+      });
+
+      if (!user) {
+        return {
+          exists: false,
+          hasPassword: false,
+          passwordValid: false,
+          isActive: false,
+          isSuspended: false,
+          emailVerified: false,
+          error: `Test user ${testEmail} not found in database. Run 'npm run create-test-user' or 'npm run seed' to create it.`,
+        };
+      }
+
+      const hasPassword = !!user.passwordHash;
+      let passwordValid = false;
+
+      if (hasPassword) {
+        passwordValid = await bcrypt.compare(testPassword, user.passwordHash!);
+      }
+
+      return {
+        exists: true,
+        hasPassword,
+        passwordValid,
+        isActive: user.isActive,
+        isSuspended: user.isSuspended,
+        emailVerified: user.emailVerified,
+        details: {
+          id: user.id,
+          email: user.email!,
+          username: user.username ?? 'N/A',
+        },
+        ...((!hasPassword || !passwordValid) && {
+          error: !hasPassword
+            ? 'User has no password set. This may be an OAuth-only account.'
+            : 'Password verification failed. The stored hash may not match the expected password.',
+        }),
+      };
+    } catch (error) {
+      return {
+        exists: false,
+        hasPassword: false,
+        passwordValid: false,
+        isActive: false,
+        isSuspended: false,
+        emailVerified: false,
+        error: `Database error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
+    }
+  }
+
   // ==================== UTILITY METHODS ====================
 
   /**

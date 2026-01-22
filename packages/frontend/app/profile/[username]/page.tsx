@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,54 +17,10 @@ import {
 } from "@/app/components/profile";
 import { CreatePost } from "@/app/components/ui";
 import { usePosts } from "@/app/provider/PostsContext";
-import { getMockUserByUsername } from "@/lib/constants/mock-users";
-import {
-  MOCK_DONATIONS,
-  MOCK_LIKES,
-  MOCK_COMMENTS,
-} from "@/lib/constants/mock-profile-activity";
+import { useUserProfile } from "@/app/hooks/useUserProfile";
+import { useGetFundraisersByCreatorQuery } from "@/app/generated/graphql";
 import type { PublishData } from "@/app/components/ui/types/CreatePost.types";
-
-// Default placeholder images using Unsplash (free to use)
-const DEFAULT_CAMPAIGN_IMAGES = [
-  "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=300&fit=crop",
-  "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=300&fit=crop",
-  "https://images.unsplash.com/photo-1584515933487-779824d29309?w=400&h=300&fit=crop",
-];
-
-// Mock campaigns data
-const mockCampaigns = [
-  {
-    id: "1",
-    title: "Support John's Fight Against Cancer",
-    imageUrl: DEFAULT_CAMPAIGN_IMAGES[0],
-    donorsCount: 2543,
-    amountRaised: 340,
-    targetAmount: 1500,
-    currency: "USD",
-    endDate: new Date("2025-02-15"),
-  },
-  {
-    id: "2",
-    title: "Help Build a School in Rural Kenya",
-    imageUrl: DEFAULT_CAMPAIGN_IMAGES[1],
-    donorsCount: 1287,
-    amountRaised: 850,
-    targetAmount: 2000,
-    currency: "USD",
-    endDate: new Date("2025-03-01"),
-  },
-  {
-    id: "3",
-    title: "Emergency Relief for Natural Disaster",
-    imageUrl: DEFAULT_CAMPAIGN_IMAGES[2],
-    donorsCount: 3891,
-    amountRaised: 1200,
-    targetAmount: 3000,
-    currency: "USD",
-    endDate: new Date("2025-01-31"),
-  },
-];
+import { useAuth } from "@/app/provider/AuthProvider";
 
 // Tab options for the profile page
 type ProfileTab = "posts" | "donations" | "campaigns" | "likes" | "comments";
@@ -80,11 +36,51 @@ export default function ProfilePage() {
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const { addPost } = usePosts();
   const plusIconRef = useRef<SVGSVGElement>(null);
+  const { user: currentUser } = useAuth();
 
   const username = params.username as string;
 
-  // Try to fetch user data from mock users
-  const user = getMockUserByUsername(username);
+  // Handle "me" route - redirect to actual username
+  useEffect(() => {
+    if (username === "me") {
+      if (currentUser?.username) {
+        // Redirect to user's actual username
+        router.replace(`/profile/${currentUser.username}`);
+      } else if (!currentUser && username === "me") {
+        // Not authenticated, redirect to login
+        router.push("/auth");
+      }
+    }
+  }, [username, currentUser, router]);
+
+  // Skip fetching if username is "me" (will redirect)
+  const shouldFetch = username !== "me";
+
+  // Fetch user profile data from GraphQL
+  const { user, isLoading: userLoading, error: userError } = useUserProfile(shouldFetch ? username : "");
+
+  // Fetch user's campaigns
+  const { data: campaignsData, loading: campaignsLoading } = useGetFundraisersByCreatorQuery({
+    variables: {
+      creatorId: user?.id || '',
+      limit: 50,
+      offset: 0,
+    },
+    skip: !user?.id,
+    fetchPolicy: 'cache-and-network',
+  });
+
+  // Transform campaigns data
+  const campaigns = campaignsData?.fundraisersByCreator?.items?.map(fundraiser => ({
+    id: fundraiser.id,
+    title: fundraiser.name,
+    imageUrl: fundraiser.images?.[0] || '',
+    donorsCount: fundraiser.stats.donorsCount,
+    amountRaised: parseFloat(fundraiser.raisedAmount),
+    targetAmount: parseFloat(fundraiser.goalAmount),
+    currency: fundraiser.currency,
+    endDate: new Date(fundraiser.deadline),
+  })) || [];
 
   // Handle publishing a new post
   const handlePublish = (data: PublishData) => {
@@ -93,6 +89,28 @@ export default function ProfilePage() {
     }
     setIsCreatePostOpen(false);
   };
+
+  // Transform user data for ProfileHeader
+  const userData = user ? {
+    id: user.id,
+    name: user.displayName || user.username || "Anonymous",
+    username: user.username || "",
+    country: "", // TODO: Add country field to GraphQL
+    countryFlag: "", // TODO: Add country flag
+    points: 0, // TODO: Calculate points
+    bio: user.bio || "",
+    followers: user.stats.followersCount || 0,
+    following: user.stats.followingCount || 0,
+    memberSince: user.createdAt,
+    isCurrentUser: false, // TODO: Check if current user
+    isFollowing: false, // TODO: Implement follow status check
+    socialLinks: {
+      linkedin: "",
+      instagram: "",
+      twitter: "",
+      facebook: "",
+    },
+  } : null;
 
   // Handle create post button click with GSAP animation
   const handleCreatePostClick = useCallback(() => {
@@ -112,6 +130,38 @@ export default function ProfilePage() {
     }
     setIsCreatePostOpen(true);
   }, []);
+
+  // Loading state
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-r-transparent mb-4"></div>
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (userError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Error Loading Profile</h1>
+          <p className="text-muted-foreground mb-6">
+            {userError}
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="px-6 py-2 bg-primary text-white rounded-full hover:bg-primary/80 transition-colors"
+          >
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // If user not found, show not found page
   if (!user) {
@@ -148,12 +198,18 @@ export default function ProfilePage() {
             <div className="px-6 flex justify-between items-end">
               {/* Avatar */}
               <div className="relative w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] rounded-full border-4 border-background overflow-hidden bg-surface-sunken">
-                <Image
-                  src={user.avatar}
-                  alt={user.name}
-                  fill
-                  className="object-cover"
-                />
+                {user.avatarUrl ? (
+                  <Image
+                    src={user.avatarUrl}
+                    alt={user.displayName || user.username || "User"}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-primary/20 text-primary text-4xl font-bold">
+                    {(user.displayName || user.username || "U").charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -171,7 +227,7 @@ export default function ProfilePage() {
 
             {/* Profile Details */}
             <div className="px-6 mt-4">
-              <ProfileHeader user={user} />
+              {userData && <ProfileHeader user={userData} />}
             </div>
           </div>
 
@@ -183,19 +239,28 @@ export default function ProfilePage() {
           {/* Tab Content */}
           <div className="px-6 py-8">
             {activeTab === "campaigns" && (
-              <CampaignsTab campaigns={mockCampaigns} />
+              <>
+                {campaignsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-r-transparent"></div>
+                    <p className="text-muted-foreground mt-2">Loading campaigns...</p>
+                  </div>
+                ) : (
+                  <CampaignsTab campaigns={campaigns} />
+                )}
+              </>
             )}
 
             {activeTab === "posts" && <PostsTab />}
 
             {activeTab === "donations" && (
-              <DonationsTab donations={MOCK_DONATIONS} />
+              <DonationsTab donations={[]} />
             )}
 
-            {activeTab === "likes" && <LikesTab likes={MOCK_LIKES} />}
+            {activeTab === "likes" && <LikesTab likes={[]} />}
 
             {activeTab === "comments" && (
-              <CommentsTab comments={MOCK_COMMENTS} />
+              <CommentsTab comments={[]} />
             )}
           </div>
         </div>

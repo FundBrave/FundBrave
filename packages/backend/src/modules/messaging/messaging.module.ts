@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MessagingService } from './messaging.service';
 import { MessagingResolver } from './messaging.resolver';
+import { MessagingController } from './messaging.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { WebSocketsModule } from '../websockets/websockets.module';
 
@@ -12,9 +13,11 @@ import { WebSocketsModule } from '../websockets/websockets.module';
  * - Read receipts and typing indicators
  * - Real-time message delivery via WebSockets
  * - GraphQL subscriptions for real-time updates
+ * - REST API endpoints for frontend integration
  */
 @Module({
   imports: [PrismaModule, WebSocketsModule],
+  controllers: [MessagingController],
   providers: [MessagingService, MessagingResolver],
   exports: [MessagingService],
 })

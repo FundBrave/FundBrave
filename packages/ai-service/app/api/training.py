@@ -12,7 +12,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, status
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, Request, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from loguru import logger
@@ -132,7 +132,8 @@ _training_jobs: dict[str, dict[str, Any]] = {}
 @router.post("/start", response_model=TrainingJobResponse)
 @limiter.limit("2/hour")
 async def start_training(
-    request: StartTrainingRequest,
+    request: Request,
+    body: StartTrainingRequest,
     background_tasks: BackgroundTasks,
 ):
     """
@@ -144,11 +145,11 @@ async def start_training(
     service = get_training_service()
 
     # Validate dataset path
-    dataset_path = Path(request.dataset_path)
+    dataset_path = Path(body.dataset_path)
     if not dataset_path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Dataset file not found: {request.dataset_path}",
+            detail=f"Dataset file not found: {body.dataset_path}",
         )
 
     # Generate job ID
@@ -156,23 +157,23 @@ async def start_training(
 
     # Convert config
     config = None
-    if request.config:
+    if body.config:
         config = TrainingConfig(
-            num_epochs=request.config.num_epochs,
-            learning_rate=request.config.learning_rate,
-            batch_size=request.config.batch_size,
-            max_seq_length=request.config.max_seq_length,
-            lora_r=request.config.lora_r,
-            lora_alpha=request.config.lora_alpha,
-            lora_dropout=request.config.lora_dropout,
-            warmup_ratio=request.config.warmup_ratio,
-            save_steps=request.config.save_steps,
-            use_4bit=request.config.use_4bit,
-            gradient_accumulation_steps=request.config.gradient_accumulation_steps,
+            num_epochs=body.config.num_epochs,
+            learning_rate=body.config.learning_rate,
+            batch_size=body.config.batch_size,
+            max_seq_length=body.config.max_seq_length,
+            lora_r=body.config.lora_r,
+            lora_alpha=body.config.lora_alpha,
+            lora_dropout=body.config.lora_dropout,
+            warmup_ratio=body.config.warmup_ratio,
+            save_steps=body.config.save_steps,
+            use_4bit=body.config.use_4bit,
+            gradient_accumulation_steps=body.config.gradient_accumulation_steps,
         )
 
     # Base adapter path
-    base_adapter = Path(request.base_adapter_path) if request.base_adapter_path else None
+    base_adapter = Path(body.base_adapter_path) if body.base_adapter_path else None
 
     # Initialize job tracking
     _training_jobs[job_id] = {
@@ -294,7 +295,7 @@ async def cancel_training_job(job_id: str):
 
 @router.post("/dataset/create", response_model=dict[str, Any])
 @limiter.limit("10/hour")
-async def create_training_dataset(request: CreateDatasetRequest):
+async def create_training_dataset(request: Request, body: CreateDatasetRequest):
     """
     Create a training dataset file from examples.
 
@@ -310,24 +311,24 @@ async def create_training_dataset(request: CreateDatasetRequest):
             output=ex.output,
             system_prompt=ex.system_prompt,
         )
-        for ex in request.examples
+        for ex in body.examples
     ]
 
     # Add FundBrave data if requested
-    if request.include_fundbrave_data:
+    if body.include_fundbrave_data:
         fundbrave_examples = service.create_fundbrave_training_data()
         examples.extend(fundbrave_examples)
 
     # Create dataset
-    output_path = settings.training_data_dir / request.output_filename
+    output_path = settings.training_data_dir / body.output_filename
     count = await service.create_training_dataset(examples, output_path)
 
     return {
         "success": True,
         "output_path": str(output_path),
         "total_examples": count,
-        "custom_examples": len(request.examples),
-        "fundbrave_examples": count - len(request.examples) if request.include_fundbrave_data else 0,
+        "custom_examples": len(body.examples),
+        "fundbrave_examples": count - len(body.examples) if body.include_fundbrave_data else 0,
     }
 
 

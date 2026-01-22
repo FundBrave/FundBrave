@@ -77,13 +77,9 @@ export function CreatePostInline({
     try {
       if (data.type === "post") {
         // Determine post type based on content
-        let postType = "TEXT";
+        let postType: 'TEXT' | 'MEDIA' = 'TEXT';
         if (data.mediaUrls && data.mediaUrls.length > 0) {
-          // Check if any URL is a video
-          const hasVideo = data.mediaUrls.some(url =>
-            url.includes('.mp4') || url.includes('.webm') || url.includes('.mov')
-          );
-          postType = hasVideo ? "VIDEO" : "IMAGE";
+          postType = 'MEDIA';
         }
 
         // Create a regular post

@@ -246,6 +246,49 @@ export class UserSearchResult {
   total: number;
 }
 
+/**
+ * Dashboard stats for the current user
+ * Used by GET /users/me/stats endpoint
+ */
+@ObjectType()
+export class UserDashboardStats {
+  @Field(() => Int)
+  @ApiProperty({ description: 'Number of campaigns created by user' })
+  campaignsCreated: number;
+
+  @Field()
+  @ApiProperty({ description: 'Total amount raised across all campaigns (in USD)' })
+  totalRaised: string;
+
+  @Field(() => Int)
+  @ApiProperty({ description: 'Number of donations made by user' })
+  donationsMade: number;
+
+  @Field()
+  @ApiProperty({ description: 'Total amount donated by user (in USD)' })
+  totalDonated: string;
+
+  @Field()
+  @ApiProperty({ description: 'Total amount currently staked by user' })
+  stakingAmount: string;
+
+  @Field(() => Int)
+  @ApiProperty({ description: 'Number of active stakes' })
+  activeStakes: number;
+
+  @Field()
+  @ApiProperty({ description: 'FBT token balance' })
+  fbtBalance: string;
+
+  @Field(() => Int)
+  @ApiProperty({ description: 'Number of followers' })
+  followersCount: number;
+
+  @Field(() => Int)
+  @ApiProperty({ description: 'Number of users following' })
+  followingCount: number;
+}
+
 // ==================== Input DTOs ====================
 
 @InputType()
