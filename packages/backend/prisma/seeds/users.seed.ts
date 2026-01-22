@@ -10,8 +10,65 @@ export interface SeededUser {
   walletAddress: string;
   username: string;
   displayName: string;
-  type: 'activist' | 'entrepreneur' | 'artist' | 'donor';
+  type: 'activist' | 'entrepreneur' | 'artist' | 'donor' | 'test';
 }
+
+/**
+ * Pre-defined test users for development and testing
+ * These users have known credentials for easy testing
+ */
+const TEST_USERS = [
+  {
+    email: 'okwuosahpaschal@gmail.com',
+    password: '84316860p*A',
+    displayName: 'Paschal Okwuosah',
+    username: 'paschal_okwuosah',
+    type: 'activist' as const,
+    bio: 'Platform founder and test user. Building the future of decentralized fundraising.',
+    isVerifiedCreator: true,
+    verificationBadge: VerificationBadge.GOLD,
+  },
+  {
+    email: 'test@fundbrave.com',
+    password: 'TestUser123!',
+    displayName: 'Test User',
+    username: 'testuser',
+    type: 'donor' as const,
+    bio: 'Test account for platform development and QA testing.',
+    isVerifiedCreator: false,
+    verificationBadge: VerificationBadge.NONE,
+  },
+  {
+    email: 'admin@fundbrave.com',
+    password: 'AdminPass123!',
+    displayName: 'FundBrave Admin',
+    username: 'fundbrave_admin',
+    type: 'entrepreneur' as const,
+    bio: 'Platform administrator account.',
+    isVerifiedCreator: true,
+    verificationBadge: VerificationBadge.OFFICIAL,
+  },
+  {
+    email: 'creator@fundbrave.com',
+    password: 'Creator123!',
+    displayName: 'Demo Creator',
+    username: 'demo_creator',
+    type: 'artist' as const,
+    bio: 'Demo creator account for showcasing platform features.',
+    isVerifiedCreator: true,
+    verificationBadge: VerificationBadge.VERIFIED_CREATOR,
+  },
+  {
+    email: 'donor@fundbrave.com',
+    password: 'Donor123!',
+    displayName: 'Demo Donor',
+    username: 'demo_donor',
+    type: 'donor' as const,
+    bio: 'Demo donor account for testing donation flows.',
+    isVerifiedCreator: false,
+    verificationBadge: VerificationBadge.NONE,
+  },
+];
 
 /**
  * Generate realistic user data based on user type
@@ -112,12 +169,93 @@ function generateUserData(
 }
 
 /**
- * Seed 20 diverse users
+ * Create pre-defined test users with known credentials
+ */
+async function seedTestUsers(): Promise<SeededUser[]> {
+  console.log('🧪 Seeding test users with known credentials...');
+
+  const seededUsers: SeededUser[] = [];
+
+  for (const testUser of TEST_USERS) {
+    const wallet = Wallet.createRandom();
+    const passwordHash = await bcrypt.hash(testUser.password, 14);
+
+    const userData = {
+      walletAddress: wallet.address.toLowerCase(),
+      username: testUser.username,
+      displayName: testUser.displayName,
+      email: testUser.email.toLowerCase(),
+      emailVerified: true, // Test users have verified emails
+      passwordHash,
+      bio: testUser.bio,
+      avatarUrl: `https://api.dicebear.com/7.x/avataaars/png?seed=${testUser.username}`,
+      location: 'San Francisco, USA',
+      isVerifiedCreator: testUser.isVerifiedCreator,
+      verificationBadge: testUser.verificationBadge,
+      reputationScore: faker.number.int({ min: 500, max: 1000 }),
+      followersCount: faker.number.int({ min: 100, max: 5000 }),
+      followingCount: faker.number.int({ min: 50, max: 500 }),
+      interests: ['web3', 'defi', 'social-impact', 'community'],
+      goals: ['raise-funds', 'support-causes', 'build-community'],
+      onboardingCompleted: true,
+      birthdate: faker.date.birthdate({ min: 25, max: 45, mode: 'age' }),
+      createdAt: new Date('2024-01-01'),
+      lastSeenAt: new Date(),
+    };
+
+    try {
+      // Check if user already exists
+      const existingUser = await prisma.user.findFirst({
+        where: { email: testUser.email.toLowerCase() },
+      });
+
+      if (existingUser) {
+        console.log(`  ⏭️  Test user ${testUser.email} already exists, skipping...`);
+        seededUsers.push({
+          id: existingUser.id,
+          walletAddress: existingUser.walletAddress,
+          username: existingUser.username!,
+          displayName: existingUser.displayName!,
+          type: testUser.type,
+        });
+        continue;
+      }
+
+      const user = await prisma.user.create({
+        data: userData,
+      });
+
+      seededUsers.push({
+        id: user.id,
+        walletAddress: user.walletAddress,
+        username: user.username!,
+        displayName: user.displayName!,
+        type: testUser.type,
+      });
+
+      console.log(`  ✓ Created test user: ${testUser.email} / ${testUser.password}`);
+    } catch (error) {
+      console.error(`  ✗ Failed to create test user ${testUser.email}:`, error);
+    }
+  }
+
+  return seededUsers;
+}
+
+/**
+ * Seed 20 diverse users + 5 test users
  */
 export async function seedUsers(): Promise<SeededUser[]> {
   console.log('🌱 Seeding users...');
 
   const seededUsers: SeededUser[] = [];
+
+  // First, create test users with known credentials
+  const testUsers = await seedTestUsers();
+  seededUsers.push(...testUsers);
+
+  console.log('\n🎭 Seeding random users...');
+
   const userTypes: Array<'activist' | 'entrepreneur' | 'artist' | 'donor'> = [
     ...Array(5).fill('activist'),
     ...Array(5).fill('entrepreneur'),
@@ -126,7 +264,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
   ];
 
   // Hash default password for hybrid users
-  const defaultPasswordHash = await bcrypt.hash('Password123!', 10);
+  const defaultPasswordHash = await bcrypt.hash('Password123!', 14);
 
   for (let i = 0; i < userTypes.length; i++) {
     const type = userTypes[i];
@@ -156,7 +294,18 @@ export async function seedUsers(): Promise<SeededUser[]> {
     }
   }
 
-  console.log(`✅ Created ${seededUsers.length} users\n`);
+  console.log(`\n✅ Created ${seededUsers.length} total users (${testUsers.length} test + ${seededUsers.length - testUsers.length} random)\n`);
+
+  // Print test credentials summary
+  console.log('📋 Test User Credentials:');
+  console.log('='.repeat(60));
+  for (const testUser of TEST_USERS) {
+    console.log(`  Email: ${testUser.email}`);
+    console.log(`  Password: ${testUser.password}`);
+    console.log('-'.repeat(60));
+  }
+  console.log('');
+
   return seededUsers;
 }
 

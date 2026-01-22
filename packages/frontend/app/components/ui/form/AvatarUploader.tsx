@@ -3,14 +3,14 @@
 import React, { useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
-const CameraIcon = ({ className }) => (
+const CameraIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
     <circle cx="12" cy="13" r="4"/>
   </svg>
 );
 
-const UploadCloudIcon = ({ className }) => (
+const UploadCloudIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="16 16 12 12 8 16"/>
     <line x1="12" y1="12" x2="12" y2="21"/>
@@ -18,27 +18,27 @@ const UploadCloudIcon = ({ className }) => (
   </svg>
 );
 
-const TrashIcon = ({ className }) => (
+const TrashIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="3 6 5 6 21 6"/>
     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
   </svg>
 );
 
-const XIcon = ({ className }) => (
+const XIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="6" x2="6" y2="18"/>
     <line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
 );
 
-const CheckIcon = ({ className }) => (
+const CheckIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12"/>
   </svg>
 );
 
-const ZoomInIcon = ({ className }) => (
+const ZoomInIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8"/>
     <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -47,7 +47,7 @@ const ZoomInIcon = ({ className }) => (
   </svg>
 );
 
-const ZoomOutIcon = ({ className }) => (
+const ZoomOutIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8"/>
     <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -55,10 +55,25 @@ const ZoomOutIcon = ({ className }) => (
   </svg>
 );
 
+interface AvatarUploaderHorizontalProps {
+  avatarPreview: string | null;
+  initials: string;
+  onFileSelect: (file: File) => void;
+  onRemove: () => void;
+  error?: string;
+  acceptedFormats?: string;
+  animationDelay?: number;
+  enableCrop?: boolean;
+  isLoading?: boolean;
+  disabled?: boolean;
+  title?: string;
+  subtitle?: string;
+}
+
 /**
  * Horizontal layout avatar uploader with modern UX patterns.
  * Features: drag-drop, hover overlay, image cropping, loading states.
- * 
+ *
  * Props:
  * - avatarPreview: string | null
  * - initials: string
@@ -73,7 +88,7 @@ const ZoomOutIcon = ({ className }) => (
  * - title?: string
  * - subtitle?: string
  */
-const AvatarUploaderHorizontal = ({
+const AvatarUploaderHorizontal: React.FC<AvatarUploaderHorizontalProps> = ({
   avatarPreview,
   initials,
   onFileSelect,
@@ -87,43 +102,43 @@ const AvatarUploaderHorizontal = ({
   title = "Profile photo",
   subtitle = "PNG, JPG or WebP up to 5MB",
 }) => {
-  const fileInputRef = useRef(null);
-  const dropZoneRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showCropModal, setShowCropModal] = useState(false);
-  const [tempImage, setTempImage] = useState(null);
+  const [tempImage, setTempImage] = useState<string | null>(null);
   const [cropPosition, setCropPosition] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
 
-  const handleDragOver = useCallback((e) => {
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (!disabled) setIsDragging(true);
   }, [disabled]);
 
-  const handleDragLeave = useCallback((e) => {
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!dropZoneRef.current?.contains(e.relatedTarget)) {
+    if (!dropZoneRef.current?.contains(e.relatedTarget as Node)) {
       setIsDragging(false);
     }
   }, []);
 
-  const handleDrop = useCallback((e) => {
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     if (disabled) return;
-    
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       processFile(files[0]);
     }
   }, [disabled]);
 
-  const processFile = (file) => {
+  const processFile = (file: File) => {
     if (!file.type.match(/^image\/(png|jpeg|jpg|webp)$/)) {
       return;
     }
@@ -131,7 +146,7 @@ const AvatarUploaderHorizontal = ({
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result;
-      if (enableCrop) {
+      if (enableCrop && typeof result === 'string') {
         setTempImage(result);
         setCropPosition({ x: 0, y: 0 });
         setZoom(1);
@@ -143,7 +158,7 @@ const AvatarUploaderHorizontal = ({
     reader.readAsDataURL(file);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) processFile(file);
     e.target.value = "";
@@ -193,12 +208,12 @@ const AvatarUploaderHorizontal = ({
     setZoom(1);
   };
 
-  const handleCropDrag = (e) => {
+  const handleCropDrag = (e: React.MouseEvent) => {
     const startX = e.clientX;
     const startY = e.clientY;
     const startPos = { ...cropPosition };
 
-    const handleMouseMove = (moveEvent) => {
+    const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = (moveEvent.clientX - startX) / 3;
       const deltaY = (moveEvent.clientY - startY) / 3;
       setCropPosition({

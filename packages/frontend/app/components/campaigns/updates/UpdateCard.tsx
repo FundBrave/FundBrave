@@ -83,18 +83,24 @@ export function UpdateCard({
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-soft-purple-500 p-[2px]">
             <div className="w-full h-full rounded-full overflow-hidden border-2 border-background">
-              <img
-                src={update.author.avatarUrl}
-                alt=""
-                aria-hidden="true"
-                className="w-full h-full object-cover"
-              />
+              {update.author?.avatarUrl ? (
+                <img
+                  src={update.author.avatarUrl}
+                  alt=""
+                  aria-hidden="true"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary-500/20 to-soft-purple-500/20 flex items-center justify-center text-foreground font-bold text-sm">
+                  {update.author?.name?.charAt(0)?.toUpperCase() || "?"}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="font-bold text-foreground text-sm">
-                {update.author.name}
+                {update.author?.name || "Unknown"}
               </span>
               <button
                 type="button"
@@ -104,7 +110,7 @@ export function UpdateCard({
               </button>
             </div>
             <div className="flex items-center gap-2 text-xs text-text-tertiary">
-              <span>{update.author.handle}</span>
+              <span>{update.author?.handle || "@unknown"}</span>
               <span aria-hidden="true">•</span>
               <time>{update.createdAt}</time>
             </div>

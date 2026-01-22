@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "create-test-user": "ts-node scripts/create-test-user.ts"
   },
   "dependencies": {
     "@apollo/server": "^5.2.0",
@@ -61,11 +62,13 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
+    "qrcode": "^1.5.4",
     "redis": "^5.10.0",
     "reflect-metadata": "^0.2.2",
     "resend": "^6.7.0",
     "rxjs": "^7.8.1",
     "siwe": "^3.0.0",
+    "speakeasy": "^2.0.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
@@ -81,6 +84,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^22.19.1",
     "@types/passport-jwt": "^4.0.1",
+    "@types/qrcode": "^1.5.6",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -100,22 +104,5 @@
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   }
 }

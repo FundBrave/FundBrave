@@ -1,0 +1,238 @@
+# Fundraisers Query - Get list of fundraisers with pagination and filtering
+
+query GetFundraisers(
+  $limit: Int = 20
+  $offset: Int = 0
+  $filter: FundraiserFilterInput
+  $sort: FundraiserSortInput
+) {
+  fundraisers(limit: $limit, offset: $offset, filter: $filter, sort: $sort) {
+    items {
+      id
+      name
+      description
+      goalAmount
+      raisedAmount
+      currency
+      deadline
+      images
+      categories
+      region
+      createdAt
+      updatedAt
+      isActive
+      isFeatured
+      goalReached
+      onChainId
+      txHash
+      stakingPoolAddr
+      endowmentEnabled
+      creator {
+        id
+        walletAddress
+        username
+        displayName
+        avatarUrl
+        isVerifiedCreator
+      }
+      stats {
+        donorsCount
+        totalDonations
+        avgDonation
+        percentageRaised
+        daysLeft
+        stakersCount
+        totalStaked
+        updatesCount
+        endowmentPrincipal
+        endowmentYield
+      }
+      milestones {
+        id
+        title
+        description
+        targetAmount
+        isReached
+        reachedAt
+        createdAt
+      }
+    }
+    total
+    hasMore
+  }
+}
+
+# Single Fundraiser Query - Get detailed fundraiser information
+query GetFundraiser($id: ID!) {
+  fundraiser(id: $id) {
+    id
+    name
+    description
+    goalAmount
+    raisedAmount
+    currency
+    deadline
+    images
+    categories
+    region
+    createdAt
+    updatedAt
+    isActive
+    isFeatured
+    goalReached
+    onChainId
+    txHash
+    stakingPoolAddr
+    endowmentEnabled
+    creator {
+      id
+      walletAddress
+      username
+      displayName
+      avatarUrl
+      isVerifiedCreator
+    }
+    stats {
+      donorsCount
+      totalDonations
+      avgDonation
+      percentageRaised
+      daysLeft
+      stakersCount
+      totalStaked
+      updatesCount
+      endowmentPrincipal
+      endowmentYield
+    }
+    milestones {
+      id
+      title
+      description
+      targetAmount
+      isReached
+      reachedAt
+      createdAt
+    }
+    updates {
+      id
+      title
+      content
+      mediaUrls
+      createdAt
+    }
+  }
+}
+
+# Fundraiser by Creator - Get fundraisers created by a specific user
+query GetFundraisersByCreator(
+  $creatorId: ID!
+  $limit: Int = 20
+  $offset: Int = 0
+) {
+  fundraisersByCreator(creatorId: $creatorId, limit: $limit, offset: $offset) {
+    items {
+      id
+      name
+      description
+      goalAmount
+      raisedAmount
+      currency
+      deadline
+      images
+      categories
+      region
+      createdAt
+      isActive
+      isFeatured
+      goalReached
+      onChainId
+      creator {
+        id
+        walletAddress
+        username
+        displayName
+        avatarUrl
+        isVerifiedCreator
+      }
+      stats {
+        donorsCount
+        totalDonations
+        avgDonation
+        percentageRaised
+        daysLeft
+        stakersCount
+        totalStaked
+        updatesCount
+      }
+    }
+    total
+    hasMore
+  }
+}
+
+# Create Fundraiser Mutation
+mutation CreateFundraiser(
+  $input: CreateFundraiserInput!
+  $onChainId: Int!
+  $txHash: String!
+) {
+  createFundraiser(input: $input, onChainId: $onChainId, txHash: $txHash) {
+    id
+    name
+    description
+    goalAmount
+    currency
+    deadline
+    images
+    categories
+    region
+    onChainId
+    txHash
+    creator {
+      id
+      walletAddress
+      username
+      displayName
+    }
+  }
+}
+
+# Add Fundraiser Update Mutation
+mutation AddFundraiserUpdate(
+  $fundraiserId: ID!
+  $input: CreateFundraiserUpdateInput!
+) {
+  addFundraiserUpdate(fundraiserId: $fundraiserId, input: $input) {
+    id
+    title
+    content
+    mediaUrls
+    createdAt
+  }
+}
+
+# Record Donation Mutation
+mutation RecordDonation($input: RecordDonationInput!) {
+  recordDonation(input: $input) {
+    id
+    donor {
+      id
+      displayName
+      walletAddress
+    }
+    fundraiser {
+      id
+      name
+      onChainId
+    }
+    amount
+    amountUSD
+    token
+    txHash
+    chainId
+    sourceChain
+    isAnonymous
+    message
+    createdAt
+  }
+}

@@ -15,6 +15,8 @@ interface OnboardingNavButtonsProps {
   animationDelay?: number;
   /** Show arrow icon on next button */
   showArrow?: boolean;
+  /** Disable the next button */
+  disabled?: boolean;
 }
 
 // Spring transition for snappy tactile feedback
@@ -107,6 +109,7 @@ const OnboardingNavButtons: React.FC<OnboardingNavButtonsProps> = ({
   backLabel = "Back",
   animationDelay = 0.6,
   showArrow = false,
+  disabled = false,
 }) => {
   const prefersReducedMotion = useReducedMotion();
 
@@ -162,16 +165,16 @@ const OnboardingNavButtons: React.FC<OnboardingNavButtonsProps> = ({
       {onNext && (
         <motion.button
           onClick={onNext}
-          disabled={isLoading}
+          disabled={isLoading || disabled}
           className="relative w-full sm:w-auto sm:min-w-[180px] min-h-[44px] h-14 px-8 py-4 rounded-[20px] text-white font-semibold text-lg tracking-wide disabled:cursor-not-allowed flex items-center justify-center gap-2 overflow-hidden"
           style={{
-            background: isLoading
+            background: (isLoading || disabled)
               ? "linear-gradient(97deg, #3d0ad6 0%, #b76ef0 100%)"
               : "linear-gradient(97deg, #450CF0 0%, #CD82FF 100%)",
             boxShadow: "0px 3px 3px 0px rgba(254,254,254,0.25)",
           }}
-          whileHover={isLoading ? {} : getHoverAnimation(true)}
-          whileTap={isLoading ? {} : getTapAnimation()}
+          whileHover={(isLoading || disabled) ? {} : getHoverAnimation(true)}
+          whileTap={(isLoading || disabled) ? {} : getTapAnimation()}
           transition={buttonSpring}
           animate={{
             opacity: isLoading ? 0.85 : 1,

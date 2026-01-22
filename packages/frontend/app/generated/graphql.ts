@@ -2906,6 +2906,56 @@ export interface YieldSplitInput {
   stakerShare: Scalars['Int']['input'];
 }
 
+export type GetFundraisersQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  filter?: InputMaybe<FundraiserFilterInput>;
+  sort?: InputMaybe<FundraiserSortInput>;
+}>;
+
+
+export type GetFundraisersQuery = { __typename?: 'Query', fundraisers: { __typename?: 'PaginatedFundraisers', total: number, hasMore: boolean, items: Array<{ __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, raisedAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, createdAt: string, updatedAt: string, isActive: boolean, isFeatured: boolean, goalReached: boolean, onChainId: number, txHash: string, stakingPoolAddr?: string | null, endowmentEnabled: boolean, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, isVerifiedCreator: boolean }, stats: { __typename?: 'FundraiserStats', donorsCount: number, totalDonations: string, avgDonation: string, percentageRaised: number, daysLeft: number, stakersCount: number, totalStaked: string, updatesCount: number, endowmentPrincipal?: string | null, endowmentYield?: string | null }, milestones?: Array<{ __typename?: 'FundraiserMilestone', id: string, title: string, description?: string | null, targetAmount: string, isReached: boolean, reachedAt?: string | null, createdAt: string }> | null }> } };
+
+export type GetFundraiserQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetFundraiserQuery = { __typename?: 'Query', fundraiser: { __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, raisedAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, createdAt: string, updatedAt: string, isActive: boolean, isFeatured: boolean, goalReached: boolean, onChainId: number, txHash: string, stakingPoolAddr?: string | null, endowmentEnabled: boolean, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, isVerifiedCreator: boolean }, stats: { __typename?: 'FundraiserStats', donorsCount: number, totalDonations: string, avgDonation: string, percentageRaised: number, daysLeft: number, stakersCount: number, totalStaked: string, updatesCount: number, endowmentPrincipal?: string | null, endowmentYield?: string | null }, milestones?: Array<{ __typename?: 'FundraiserMilestone', id: string, title: string, description?: string | null, targetAmount: string, isReached: boolean, reachedAt?: string | null, createdAt: string }> | null, updates?: Array<{ __typename?: 'FundraiserUpdate', id: string, title: string, content: string, mediaUrls: Array<string>, createdAt: string }> | null } };
+
+export type GetFundraisersByCreatorQueryVariables = Exact<{
+  creatorId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetFundraisersByCreatorQuery = { __typename?: 'Query', fundraisersByCreator: { __typename?: 'PaginatedFundraisers', total: number, hasMore: boolean, items: Array<{ __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, raisedAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, createdAt: string, isActive: boolean, isFeatured: boolean, goalReached: boolean, onChainId: number, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, isVerifiedCreator: boolean }, stats: { __typename?: 'FundraiserStats', donorsCount: number, totalDonations: string, avgDonation: string, percentageRaised: number, daysLeft: number, stakersCount: number, totalStaked: string, updatesCount: number } }> } };
+
+export type CreateFundraiserMutationVariables = Exact<{
+  input: CreateFundraiserInput;
+  onChainId: Scalars['Int']['input'];
+  txHash: Scalars['String']['input'];
+}>;
+
+
+export type CreateFundraiserMutation = { __typename?: 'Mutation', createFundraiser: { __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, onChainId: number, txHash: string, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null } } };
+
+export type AddFundraiserUpdateMutationVariables = Exact<{
+  fundraiserId: Scalars['ID']['input'];
+  input: CreateFundraiserUpdateInput;
+}>;
+
+
+export type AddFundraiserUpdateMutation = { __typename?: 'Mutation', addFundraiserUpdate: { __typename?: 'FundraiserUpdate', id: string, title: string, content: string, mediaUrls: Array<string>, createdAt: string } };
+
+export type RecordDonationMutationVariables = Exact<{
+  input: RecordDonationInput;
+}>;
+
+
+export type RecordDonationMutation = { __typename?: 'Mutation', recordDonation: { __typename?: 'Donation', id: string, amount: string, amountUSD: string, token: string, txHash: string, chainId: number, sourceChain: string, isAnonymous: boolean, message?: string | null, createdAt: string, donor: { __typename?: 'DonorInfo', id?: string | null, displayName?: string | null, walletAddress: string }, fundraiser: { __typename?: 'FundraiserBasicInfo', id: string, name: string, onChainId: number } } };
+
 export type DonationLeaderboardEntryFieldsFragment = { __typename?: 'DonationLeaderboardEntry', rank: number, totalDonated: string, donationsCount: number, donor: { __typename?: 'DonorInfo', id?: string | null, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isAnonymous: boolean } };
 
 export type GetDonationLeaderboardQueryVariables = Exact<{
@@ -3103,6 +3153,137 @@ export type UnlikeCommentMutationVariables = Exact<{
 
 
 export type UnlikeCommentMutation = { __typename?: 'Mutation', unlikeComment: boolean };
+
+export type StakeFieldsFragment = { __typename?: 'Stake', id: string, amount: string, shares: string, chainId: number, poolAddress: string, isActive: boolean, isGlobal: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string, blockNumber?: number | null, updatedAt: string, staker: { __typename?: 'StakerInfo', id?: string | null, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string }, fundraiser?: { __typename?: 'FundraiserStakingInfo', id: string, name: string, onChainId: number, stakingPoolAddr?: string | null } | null };
+
+export type FbtStakeFieldsFragment = { __typename?: 'FBTStake', id: string, stakerAddress: string, amount: string, pendingYield: string, claimedYield: string, shareOfTreasury: string, isActive: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string };
+
+export type ImpactDaoStakeFieldsFragment = { __typename?: 'ImpactDAOStake', id: string, stakerAddress: string, principal: string, pendingUSDCYield: string, claimedUSDCYield: string, pendingFBTReward: string, claimedFBTReward: string, isActive: boolean, stakedAt: string, unstakedAt?: string | null };
+
+export type GetFundraiserStakesQueryVariables = Exact<{
+  fundraiserId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetFundraiserStakesQuery = { __typename?: 'Query', fundraiserStakes: { __typename?: 'PaginatedStakes', total: number, hasMore: boolean, items: Array<{ __typename?: 'Stake', id: string, amount: string, shares: string, chainId: number, poolAddress: string, isActive: boolean, isGlobal: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string, blockNumber?: number | null, updatedAt: string, staker: { __typename?: 'StakerInfo', id?: string | null, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string }, fundraiser?: { __typename?: 'FundraiserStakingInfo', id: string, name: string, onChainId: number, stakingPoolAddr?: string | null } | null }> } };
+
+export type GetStakeQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetStakeQuery = { __typename?: 'Query', stake: { __typename?: 'Stake', id: string, amount: string, shares: string, chainId: number, poolAddress: string, isActive: boolean, isGlobal: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string, blockNumber?: number | null, updatedAt: string, staker: { __typename?: 'StakerInfo', id?: string | null, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string }, fundraiser?: { __typename?: 'FundraiserStakingInfo', id: string, name: string, onChainId: number, stakingPoolAddr?: string | null } | null } };
+
+export type GetMyStakesQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetMyStakesQuery = { __typename?: 'Query', myStakes: { __typename?: 'PaginatedStakes', total: number, hasMore: boolean, items: Array<{ __typename?: 'Stake', id: string, amount: string, shares: string, chainId: number, poolAddress: string, isActive: boolean, isGlobal: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string, blockNumber?: number | null, updatedAt: string, staker: { __typename?: 'StakerInfo', id?: string | null, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string }, fundraiser?: { __typename?: 'FundraiserStakingInfo', id: string, name: string, onChainId: number, stakingPoolAddr?: string | null } | null }> } };
+
+export type GetUserStakesQueryVariables = Exact<{
+  userId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetUserStakesQuery = { __typename?: 'Query', userStakes: { __typename?: 'PaginatedStakes', total: number, hasMore: boolean, items: Array<{ __typename?: 'Stake', id: string, amount: string, shares: string, chainId: number, poolAddress: string, isActive: boolean, isGlobal: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string, blockNumber?: number | null, updatedAt: string, staker: { __typename?: 'StakerInfo', id?: string | null, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string }, fundraiser?: { __typename?: 'FundraiserStakingInfo', id: string, name: string, onChainId: number, stakingPoolAddr?: string | null } | null }> } };
+
+export type GetGlobalPoolStakesQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetGlobalPoolStakesQuery = { __typename?: 'Query', globalPoolStakes: { __typename?: 'PaginatedStakes', total: number, hasMore: boolean, items: Array<{ __typename?: 'Stake', id: string, amount: string, shares: string, chainId: number, poolAddress: string, isActive: boolean, isGlobal: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string, blockNumber?: number | null, updatedAt: string, staker: { __typename?: 'StakerInfo', id?: string | null, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string }, fundraiser?: { __typename?: 'FundraiserStakingInfo', id: string, name: string, onChainId: number, stakingPoolAddr?: string | null } | null }> } };
+
+export type GetMyFbtStakeQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMyFbtStakeQuery = { __typename?: 'Query', myFBTStake?: { __typename?: 'FBTStake', id: string, stakerAddress: string, amount: string, pendingYield: string, claimedYield: string, shareOfTreasury: string, isActive: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string } | null };
+
+export type GetFbtStakeByAddressQueryVariables = Exact<{
+  address: Scalars['String']['input'];
+}>;
+
+
+export type GetFbtStakeByAddressQuery = { __typename?: 'Query', fbtStakeByAddress?: { __typename?: 'FBTStake', id: string, stakerAddress: string, amount: string, pendingYield: string, claimedYield: string, shareOfTreasury: string, isActive: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string } | null };
+
+export type GetFbtStakersQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetFbtStakersQuery = { __typename?: 'Query', fbtStakers: { __typename?: 'PaginatedFBTStakers', total: number, hasMore: boolean, items: Array<{ __typename?: 'FBTStaker', address: string, amount: string, pendingYield: string, shareOfTreasury: string, username?: string | null, avatarUrl?: string | null }> } };
+
+export type GetMyImpactDaoStakeQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMyImpactDaoStakeQuery = { __typename?: 'Query', myImpactDAOStake?: { __typename?: 'ImpactDAOStake', id: string, stakerAddress: string, principal: string, pendingUSDCYield: string, claimedUSDCYield: string, pendingFBTReward: string, claimedFBTReward: string, isActive: boolean, stakedAt: string, unstakedAt?: string | null } | null };
+
+export type GetImpactDaoStakeByAddressQueryVariables = Exact<{
+  address: Scalars['String']['input'];
+}>;
+
+
+export type GetImpactDaoStakeByAddressQuery = { __typename?: 'Query', impactDAOStakeByAddress?: { __typename?: 'ImpactDAOStake', id: string, stakerAddress: string, principal: string, pendingUSDCYield: string, claimedUSDCYield: string, pendingFBTReward: string, claimedFBTReward: string, isActive: boolean, stakedAt: string, unstakedAt?: string | null } | null };
+
+export type GetImpactDaoStakersQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetImpactDaoStakersQuery = { __typename?: 'Query', impactDAOStakers: { __typename?: 'PaginatedImpactDAOStakers', total: number, hasMore: boolean, items: Array<{ __typename?: 'ImpactDAOStaker', address: string, principal: string, pendingYield: string, pendingFBTReward: string, username?: string | null, avatarUrl?: string | null, yieldSplit: { __typename?: 'YieldSplit', stakerShare: number, platformShare: number, daoShare: number } }> } };
+
+export type GetImpactDaoYieldHarvestsQueryVariables = Exact<{
+  stakeId: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetImpactDaoYieldHarvestsQuery = { __typename?: 'Query', impactDAOYieldHarvests: { __typename?: 'PaginatedYieldHarvests', total: number, hasMore: boolean, items: Array<{ __typename?: 'ImpactDAOYieldHarvest', id: string, stakeId: string, totalYield: string, stakerAmount: string, daoAmount: string, platformAmount: string, harvestedAt: string, txHash: string, blockNumber?: number | null }> } };
+
+export type RecordStakeMutationVariables = Exact<{
+  input: RecordStakeInput;
+}>;
+
+
+export type RecordStakeMutation = { __typename?: 'Mutation', recordStake: { __typename?: 'Stake', id: string, amount: string, shares: string, chainId: number, poolAddress: string, isActive: boolean, isGlobal: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string, blockNumber?: number | null, updatedAt: string, staker: { __typename?: 'StakerInfo', id?: string | null, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string }, fundraiser?: { __typename?: 'FundraiserStakingInfo', id: string, name: string, onChainId: number, stakingPoolAddr?: string | null } | null } };
+
+export type ProcessUnstakeMutationVariables = Exact<{
+  input: UnstakeInput;
+}>;
+
+
+export type ProcessUnstakeMutation = { __typename?: 'Mutation', processUnstake: boolean };
+
+export type RecordImpactDaoStakeMutationVariables = Exact<{
+  input: ImpactDaoRecordStakeInput;
+}>;
+
+
+export type RecordImpactDaoStakeMutation = { __typename?: 'Mutation', recordImpactDAOStake: boolean };
+
+export type OnFbtStakeUpdateSubscriptionVariables = Exact<{
+  address?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type OnFbtStakeUpdateSubscription = { __typename?: 'Subscription', fbtStakeUpdated: { __typename?: 'FBTStakeUpdatedPayload', eventType: string, stake: { __typename?: 'FBTStake', id: string, stakerAddress: string, amount: string, pendingYield: string, claimedYield: string, shareOfTreasury: string, isActive: boolean, stakedAt: string, unstakedAt?: string | null, txHash: string } } };
+
+export type OnImpactDaoStakeUpdateSubscriptionVariables = Exact<{
+  address?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type OnImpactDaoStakeUpdateSubscription = { __typename?: 'Subscription', impactDAOStakeUpdated: { __typename?: 'ImpactDAOStakeUpdatedPayload', eventType: string, stake: { __typename?: 'ImpactDAOStake', id: string, stakerAddress: string, principal: string, pendingUSDCYield: string, claimedUSDCYield: string, pendingFBTReward: string, claimedFBTReward: string, isActive: boolean, stakedAt: string, unstakedAt?: string | null } } };
 
 export type UserMinimalFieldsFragment = { __typename?: 'UserMinimal', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null };
 
@@ -3389,6 +3570,63 @@ export const CommentFieldsFragmentDoc = gql`
   }
 }
     ${PostAuthorFieldsFragmentDoc}`;
+export const StakeFieldsFragmentDoc = gql`
+    fragment StakeFields on Stake {
+  id
+  amount
+  shares
+  chainId
+  poolAddress
+  isActive
+  isGlobal
+  stakedAt
+  unstakedAt
+  txHash
+  blockNumber
+  updatedAt
+  staker {
+    id
+    username
+    displayName
+    avatarUrl
+    walletAddress
+  }
+  fundraiser {
+    id
+    name
+    onChainId
+    stakingPoolAddr
+  }
+}
+    `;
+export const FbtStakeFieldsFragmentDoc = gql`
+    fragment FBTStakeFields on FBTStake {
+  id
+  stakerAddress
+  amount
+  pendingYield
+  claimedYield
+  shareOfTreasury
+  isActive
+  stakedAt
+  unstakedAt
+  txHash
+}
+    `;
+export const ImpactDaoStakeFieldsFragmentDoc = gql`
+    fragment ImpactDAOStakeFields on ImpactDAOStake {
+  id
+  stakerAddress
+  principal
+  pendingUSDCYield
+  claimedUSDCYield
+  pendingFBTReward
+  claimedFBTReward
+  isActive
+  stakedAt
+  unstakedAt
+}
+    `;
 export const UserStatsFieldsFragmentDoc = gql`
     fragment UserStatsFields on UserStats {
   followersCount
@@ -3456,6 +3694,419 @@ export const FollowRelationFieldsFragmentDoc = gql`
   }
 }
     ${UserMinimalFieldsFragmentDoc}`;
+export const GetFundraisersDocument = gql`
+    query GetFundraisers($limit: Int = 20, $offset: Int = 0, $filter: FundraiserFilterInput, $sort: FundraiserSortInput) {
+  fundraisers(limit: $limit, offset: $offset, filter: $filter, sort: $sort) {
+    items {
+      id
+      name
+      description
+      goalAmount
+      raisedAmount
+      currency
+      deadline
+      images
+      categories
+      region
+      createdAt
+      updatedAt
+      isActive
+      isFeatured
+      goalReached
+      onChainId
+      txHash
+      stakingPoolAddr
+      endowmentEnabled
+      creator {
+        id
+        walletAddress
+        username
+        displayName
+        avatarUrl
+        isVerifiedCreator
+      }
+      stats {
+        donorsCount
+        totalDonations
+        avgDonation
+        percentageRaised
+        daysLeft
+        stakersCount
+        totalStaked
+        updatesCount
+        endowmentPrincipal
+        endowmentYield
+      }
+      milestones {
+        id
+        title
+        description
+        targetAmount
+        isReached
+        reachedAt
+        createdAt
+      }
+    }
+    total
+    hasMore
+  }
+}
+    `;
+
+/**
+ * __useGetFundraisersQuery__
+ *
+ * To run a query within a React component, call `useGetFundraisersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFundraisersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFundraisersQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *      filter: // value for 'filter'
+ *      sort: // value for 'sort'
+ *   },
+ * });
+ */
+export function useGetFundraisersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GetFundraisersQuery, GetFundraisersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetFundraisersQuery, GetFundraisersQueryVariables>(GetFundraisersDocument, options);
+      }
+export function useGetFundraisersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetFundraisersQuery, GetFundraisersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetFundraisersQuery, GetFundraisersQueryVariables>(GetFundraisersDocument, options);
+        }
+// @ts-ignore
+export function useGetFundraisersSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetFundraisersQuery, GetFundraisersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFundraisersQuery, GetFundraisersQueryVariables>;
+export function useGetFundraisersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFundraisersQuery, GetFundraisersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFundraisersQuery | undefined, GetFundraisersQueryVariables>;
+export function useGetFundraisersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFundraisersQuery, GetFundraisersQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetFundraisersQuery, GetFundraisersQueryVariables>(GetFundraisersDocument, options);
+        }
+export type GetFundraisersQueryHookResult = ReturnType<typeof useGetFundraisersQuery>;
+export type GetFundraisersLazyQueryHookResult = ReturnType<typeof useGetFundraisersLazyQuery>;
+export type GetFundraisersSuspenseQueryHookResult = ReturnType<typeof useGetFundraisersSuspenseQuery>;
+export type GetFundraisersQueryResult = ApolloReactCommon.QueryResult<GetFundraisersQuery, GetFundraisersQueryVariables>;
+export const GetFundraiserDocument = gql`
+    query GetFundraiser($id: ID!) {
+  fundraiser(id: $id) {
+    id
+    name
+    description
+    goalAmount
+    raisedAmount
+    currency
+    deadline
+    images
+    categories
+    region
+    createdAt
+    updatedAt
+    isActive
+    isFeatured
+    goalReached
+    onChainId
+    txHash
+    stakingPoolAddr
+    endowmentEnabled
+    creator {
+      id
+      walletAddress
+      username
+      displayName
+      avatarUrl
+      isVerifiedCreator
+    }
+    stats {
+      donorsCount
+      totalDonations
+      avgDonation
+      percentageRaised
+      daysLeft
+      stakersCount
+      totalStaked
+      updatesCount
+      endowmentPrincipal
+      endowmentYield
+    }
+    milestones {
+      id
+      title
+      description
+      targetAmount
+      isReached
+      reachedAt
+      createdAt
+    }
+    updates {
+      id
+      title
+      content
+      mediaUrls
+      createdAt
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetFundraiserQuery__
+ *
+ * To run a query within a React component, call `useGetFundraiserQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFundraiserQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFundraiserQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetFundraiserQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetFundraiserQuery, GetFundraiserQueryVariables> & ({ variables: GetFundraiserQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetFundraiserQuery, GetFundraiserQueryVariables>(GetFundraiserDocument, options);
+      }
+export function useGetFundraiserLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetFundraiserQuery, GetFundraiserQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetFundraiserQuery, GetFundraiserQueryVariables>(GetFundraiserDocument, options);
+        }
+// @ts-ignore
+export function useGetFundraiserSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetFundraiserQuery, GetFundraiserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFundraiserQuery, GetFundraiserQueryVariables>;
+export function useGetFundraiserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFundraiserQuery, GetFundraiserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFundraiserQuery | undefined, GetFundraiserQueryVariables>;
+export function useGetFundraiserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFundraiserQuery, GetFundraiserQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetFundraiserQuery, GetFundraiserQueryVariables>(GetFundraiserDocument, options);
+        }
+export type GetFundraiserQueryHookResult = ReturnType<typeof useGetFundraiserQuery>;
+export type GetFundraiserLazyQueryHookResult = ReturnType<typeof useGetFundraiserLazyQuery>;
+export type GetFundraiserSuspenseQueryHookResult = ReturnType<typeof useGetFundraiserSuspenseQuery>;
+export type GetFundraiserQueryResult = ApolloReactCommon.QueryResult<GetFundraiserQuery, GetFundraiserQueryVariables>;
+export const GetFundraisersByCreatorDocument = gql`
+    query GetFundraisersByCreator($creatorId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  fundraisersByCreator(creatorId: $creatorId, limit: $limit, offset: $offset) {
+    items {
+      id
+      name
+      description
+      goalAmount
+      raisedAmount
+      currency
+      deadline
+      images
+      categories
+      region
+      createdAt
+      isActive
+      isFeatured
+      goalReached
+      onChainId
+      creator {
+        id
+        walletAddress
+        username
+        displayName
+        avatarUrl
+        isVerifiedCreator
+      }
+      stats {
+        donorsCount
+        totalDonations
+        avgDonation
+        percentageRaised
+        daysLeft
+        stakersCount
+        totalStaked
+        updatesCount
+      }
+    }
+    total
+    hasMore
+  }
+}
+    `;
+
+/**
+ * __useGetFundraisersByCreatorQuery__
+ *
+ * To run a query within a React component, call `useGetFundraisersByCreatorQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFundraisersByCreatorQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFundraisersByCreatorQuery({
+ *   variables: {
+ *      creatorId: // value for 'creatorId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetFundraisersByCreatorQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables> & ({ variables: GetFundraisersByCreatorQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>(GetFundraisersByCreatorDocument, options);
+      }
+export function useGetFundraisersByCreatorLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>(GetFundraisersByCreatorDocument, options);
+        }
+// @ts-ignore
+export function useGetFundraisersByCreatorSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>;
+export function useGetFundraisersByCreatorSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFundraisersByCreatorQuery | undefined, GetFundraisersByCreatorQueryVariables>;
+export function useGetFundraisersByCreatorSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>(GetFundraisersByCreatorDocument, options);
+        }
+export type GetFundraisersByCreatorQueryHookResult = ReturnType<typeof useGetFundraisersByCreatorQuery>;
+export type GetFundraisersByCreatorLazyQueryHookResult = ReturnType<typeof useGetFundraisersByCreatorLazyQuery>;
+export type GetFundraisersByCreatorSuspenseQueryHookResult = ReturnType<typeof useGetFundraisersByCreatorSuspenseQuery>;
+export type GetFundraisersByCreatorQueryResult = ApolloReactCommon.QueryResult<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>;
+export const CreateFundraiserDocument = gql`
+    mutation CreateFundraiser($input: CreateFundraiserInput!, $onChainId: Int!, $txHash: String!) {
+  createFundraiser(input: $input, onChainId: $onChainId, txHash: $txHash) {
+    id
+    name
+    description
+    goalAmount
+    currency
+    deadline
+    images
+    categories
+    region
+    onChainId
+    txHash
+    creator {
+      id
+      walletAddress
+      username
+      displayName
+    }
+  }
+}
+    `;
+
+/**
+ * __useCreateFundraiserMutation__
+ *
+ * To run a mutation, you first call `useCreateFundraiserMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateFundraiserMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createFundraiserMutation, { data, loading, error }] = useCreateFundraiserMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *      onChainId: // value for 'onChainId'
+ *      txHash: // value for 'txHash'
+ *   },
+ * });
+ */
+export function useCreateFundraiserMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateFundraiserMutation, CreateFundraiserMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateFundraiserMutation, CreateFundraiserMutationVariables>(CreateFundraiserDocument, options);
+      }
+export type CreateFundraiserMutationHookResult = ReturnType<typeof useCreateFundraiserMutation>;
+export type CreateFundraiserMutationResult = ApolloReactCommon.MutationResult<CreateFundraiserMutation>;
+export type CreateFundraiserMutationOptions = ApolloReactCommon.BaseMutationOptions<CreateFundraiserMutation, CreateFundraiserMutationVariables>;
+export const AddFundraiserUpdateDocument = gql`
+    mutation AddFundraiserUpdate($fundraiserId: ID!, $input: CreateFundraiserUpdateInput!) {
+  addFundraiserUpdate(fundraiserId: $fundraiserId, input: $input) {
+    id
+    title
+    content
+    mediaUrls
+    createdAt
+  }
+}
+    `;
+
+/**
+ * __useAddFundraiserUpdateMutation__
+ *
+ * To run a mutation, you first call `useAddFundraiserUpdateMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddFundraiserUpdateMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addFundraiserUpdateMutation, { data, loading, error }] = useAddFundraiserUpdateMutation({
+ *   variables: {
+ *      fundraiserId: // value for 'fundraiserId'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddFundraiserUpdateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<AddFundraiserUpdateMutation, AddFundraiserUpdateMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<AddFundraiserUpdateMutation, AddFundraiserUpdateMutationVariables>(AddFundraiserUpdateDocument, options);
+      }
+export type AddFundraiserUpdateMutationHookResult = ReturnType<typeof useAddFundraiserUpdateMutation>;
+export type AddFundraiserUpdateMutationResult = ApolloReactCommon.MutationResult<AddFundraiserUpdateMutation>;
+export type AddFundraiserUpdateMutationOptions = ApolloReactCommon.BaseMutationOptions<AddFundraiserUpdateMutation, AddFundraiserUpdateMutationVariables>;
+export const RecordDonationDocument = gql`
+    mutation RecordDonation($input: RecordDonationInput!) {
+  recordDonation(input: $input) {
+    id
+    donor {
+      id
+      displayName
+      walletAddress
+    }
+    fundraiser {
+      id
+      name
+      onChainId
+    }
+    amount
+    amountUSD
+    token
+    txHash
+    chainId
+    sourceChain
+    isAnonymous
+    message
+    createdAt
+  }
+}
+    `;
+
+/**
+ * __useRecordDonationMutation__
+ *
+ * To run a mutation, you first call `useRecordDonationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRecordDonationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [recordDonationMutation, { data, loading, error }] = useRecordDonationMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRecordDonationMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<RecordDonationMutation, RecordDonationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<RecordDonationMutation, RecordDonationMutationVariables>(RecordDonationDocument, options);
+      }
+export type RecordDonationMutationHookResult = ReturnType<typeof useRecordDonationMutation>;
+export type RecordDonationMutationResult = ApolloReactCommon.MutationResult<RecordDonationMutation>;
+export type RecordDonationMutationOptions = ApolloReactCommon.BaseMutationOptions<RecordDonationMutation, RecordDonationMutationVariables>;
 export const GetDonationLeaderboardDocument = gql`
     query GetDonationLeaderboard($period: LeaderboardPeriod = ALL, $limit: Int = 6) {
   donationLeaderboard(period: $period, limit: $limit) {
@@ -4400,6 +5051,739 @@ export function useUnlikeCommentMutation(baseOptions?: ApolloReactHooks.Mutation
 export type UnlikeCommentMutationHookResult = ReturnType<typeof useUnlikeCommentMutation>;
 export type UnlikeCommentMutationResult = ApolloReactCommon.MutationResult<UnlikeCommentMutation>;
 export type UnlikeCommentMutationOptions = ApolloReactCommon.BaseMutationOptions<UnlikeCommentMutation, UnlikeCommentMutationVariables>;
+export const GetFundraiserStakesDocument = gql`
+    query GetFundraiserStakes($fundraiserId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  fundraiserStakes(fundraiserId: $fundraiserId, limit: $limit, offset: $offset) {
+    items {
+      ...StakeFields
+    }
+    total
+    hasMore
+  }
+}
+    ${StakeFieldsFragmentDoc}`;
+
+/**
+ * __useGetFundraiserStakesQuery__
+ *
+ * To run a query within a React component, call `useGetFundraiserStakesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFundraiserStakesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFundraiserStakesQuery({
+ *   variables: {
+ *      fundraiserId: // value for 'fundraiserId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetFundraiserStakesQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetFundraiserStakesQuery, GetFundraiserStakesQueryVariables> & ({ variables: GetFundraiserStakesQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetFundraiserStakesQuery, GetFundraiserStakesQueryVariables>(GetFundraiserStakesDocument, options);
+      }
+export function useGetFundraiserStakesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetFundraiserStakesQuery, GetFundraiserStakesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetFundraiserStakesQuery, GetFundraiserStakesQueryVariables>(GetFundraiserStakesDocument, options);
+        }
+// @ts-ignore
+export function useGetFundraiserStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetFundraiserStakesQuery, GetFundraiserStakesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFundraiserStakesQuery, GetFundraiserStakesQueryVariables>;
+export function useGetFundraiserStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFundraiserStakesQuery, GetFundraiserStakesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFundraiserStakesQuery | undefined, GetFundraiserStakesQueryVariables>;
+export function useGetFundraiserStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFundraiserStakesQuery, GetFundraiserStakesQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetFundraiserStakesQuery, GetFundraiserStakesQueryVariables>(GetFundraiserStakesDocument, options);
+        }
+export type GetFundraiserStakesQueryHookResult = ReturnType<typeof useGetFundraiserStakesQuery>;
+export type GetFundraiserStakesLazyQueryHookResult = ReturnType<typeof useGetFundraiserStakesLazyQuery>;
+export type GetFundraiserStakesSuspenseQueryHookResult = ReturnType<typeof useGetFundraiserStakesSuspenseQuery>;
+export type GetFundraiserStakesQueryResult = ApolloReactCommon.QueryResult<GetFundraiserStakesQuery, GetFundraiserStakesQueryVariables>;
+export const GetStakeDocument = gql`
+    query GetStake($id: ID!) {
+  stake(id: $id) {
+    ...StakeFields
+  }
+}
+    ${StakeFieldsFragmentDoc}`;
+
+/**
+ * __useGetStakeQuery__
+ *
+ * To run a query within a React component, call `useGetStakeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetStakeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetStakeQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetStakeQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetStakeQuery, GetStakeQueryVariables> & ({ variables: GetStakeQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetStakeQuery, GetStakeQueryVariables>(GetStakeDocument, options);
+      }
+export function useGetStakeLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetStakeQuery, GetStakeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetStakeQuery, GetStakeQueryVariables>(GetStakeDocument, options);
+        }
+// @ts-ignore
+export function useGetStakeSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetStakeQuery, GetStakeQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetStakeQuery, GetStakeQueryVariables>;
+export function useGetStakeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetStakeQuery, GetStakeQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetStakeQuery | undefined, GetStakeQueryVariables>;
+export function useGetStakeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetStakeQuery, GetStakeQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetStakeQuery, GetStakeQueryVariables>(GetStakeDocument, options);
+        }
+export type GetStakeQueryHookResult = ReturnType<typeof useGetStakeQuery>;
+export type GetStakeLazyQueryHookResult = ReturnType<typeof useGetStakeLazyQuery>;
+export type GetStakeSuspenseQueryHookResult = ReturnType<typeof useGetStakeSuspenseQuery>;
+export type GetStakeQueryResult = ApolloReactCommon.QueryResult<GetStakeQuery, GetStakeQueryVariables>;
+export const GetMyStakesDocument = gql`
+    query GetMyStakes($limit: Int = 20, $offset: Int = 0) {
+  myStakes(limit: $limit, offset: $offset) {
+    items {
+      ...StakeFields
+    }
+    total
+    hasMore
+  }
+}
+    ${StakeFieldsFragmentDoc}`;
+
+/**
+ * __useGetMyStakesQuery__
+ *
+ * To run a query within a React component, call `useGetMyStakesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetMyStakesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetMyStakesQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetMyStakesQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GetMyStakesQuery, GetMyStakesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetMyStakesQuery, GetMyStakesQueryVariables>(GetMyStakesDocument, options);
+      }
+export function useGetMyStakesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetMyStakesQuery, GetMyStakesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetMyStakesQuery, GetMyStakesQueryVariables>(GetMyStakesDocument, options);
+        }
+// @ts-ignore
+export function useGetMyStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetMyStakesQuery, GetMyStakesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetMyStakesQuery, GetMyStakesQueryVariables>;
+export function useGetMyStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetMyStakesQuery, GetMyStakesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetMyStakesQuery | undefined, GetMyStakesQueryVariables>;
+export function useGetMyStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetMyStakesQuery, GetMyStakesQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetMyStakesQuery, GetMyStakesQueryVariables>(GetMyStakesDocument, options);
+        }
+export type GetMyStakesQueryHookResult = ReturnType<typeof useGetMyStakesQuery>;
+export type GetMyStakesLazyQueryHookResult = ReturnType<typeof useGetMyStakesLazyQuery>;
+export type GetMyStakesSuspenseQueryHookResult = ReturnType<typeof useGetMyStakesSuspenseQuery>;
+export type GetMyStakesQueryResult = ApolloReactCommon.QueryResult<GetMyStakesQuery, GetMyStakesQueryVariables>;
+export const GetUserStakesDocument = gql`
+    query GetUserStakes($userId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  userStakes(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      ...StakeFields
+    }
+    total
+    hasMore
+  }
+}
+    ${StakeFieldsFragmentDoc}`;
+
+/**
+ * __useGetUserStakesQuery__
+ *
+ * To run a query within a React component, call `useGetUserStakesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUserStakesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUserStakesQuery({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetUserStakesQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetUserStakesQuery, GetUserStakesQueryVariables> & ({ variables: GetUserStakesQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetUserStakesQuery, GetUserStakesQueryVariables>(GetUserStakesDocument, options);
+      }
+export function useGetUserStakesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUserStakesQuery, GetUserStakesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetUserStakesQuery, GetUserStakesQueryVariables>(GetUserStakesDocument, options);
+        }
+// @ts-ignore
+export function useGetUserStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUserStakesQuery, GetUserStakesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserStakesQuery, GetUserStakesQueryVariables>;
+export function useGetUserStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserStakesQuery, GetUserStakesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserStakesQuery | undefined, GetUserStakesQueryVariables>;
+export function useGetUserStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserStakesQuery, GetUserStakesQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetUserStakesQuery, GetUserStakesQueryVariables>(GetUserStakesDocument, options);
+        }
+export type GetUserStakesQueryHookResult = ReturnType<typeof useGetUserStakesQuery>;
+export type GetUserStakesLazyQueryHookResult = ReturnType<typeof useGetUserStakesLazyQuery>;
+export type GetUserStakesSuspenseQueryHookResult = ReturnType<typeof useGetUserStakesSuspenseQuery>;
+export type GetUserStakesQueryResult = ApolloReactCommon.QueryResult<GetUserStakesQuery, GetUserStakesQueryVariables>;
+export const GetGlobalPoolStakesDocument = gql`
+    query GetGlobalPoolStakes($limit: Int = 20, $offset: Int = 0) {
+  globalPoolStakes(limit: $limit, offset: $offset) {
+    items {
+      ...StakeFields
+    }
+    total
+    hasMore
+  }
+}
+    ${StakeFieldsFragmentDoc}`;
+
+/**
+ * __useGetGlobalPoolStakesQuery__
+ *
+ * To run a query within a React component, call `useGetGlobalPoolStakesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetGlobalPoolStakesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetGlobalPoolStakesQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetGlobalPoolStakesQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GetGlobalPoolStakesQuery, GetGlobalPoolStakesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetGlobalPoolStakesQuery, GetGlobalPoolStakesQueryVariables>(GetGlobalPoolStakesDocument, options);
+      }
+export function useGetGlobalPoolStakesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetGlobalPoolStakesQuery, GetGlobalPoolStakesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetGlobalPoolStakesQuery, GetGlobalPoolStakesQueryVariables>(GetGlobalPoolStakesDocument, options);
+        }
+// @ts-ignore
+export function useGetGlobalPoolStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetGlobalPoolStakesQuery, GetGlobalPoolStakesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetGlobalPoolStakesQuery, GetGlobalPoolStakesQueryVariables>;
+export function useGetGlobalPoolStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetGlobalPoolStakesQuery, GetGlobalPoolStakesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetGlobalPoolStakesQuery | undefined, GetGlobalPoolStakesQueryVariables>;
+export function useGetGlobalPoolStakesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetGlobalPoolStakesQuery, GetGlobalPoolStakesQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetGlobalPoolStakesQuery, GetGlobalPoolStakesQueryVariables>(GetGlobalPoolStakesDocument, options);
+        }
+export type GetGlobalPoolStakesQueryHookResult = ReturnType<typeof useGetGlobalPoolStakesQuery>;
+export type GetGlobalPoolStakesLazyQueryHookResult = ReturnType<typeof useGetGlobalPoolStakesLazyQuery>;
+export type GetGlobalPoolStakesSuspenseQueryHookResult = ReturnType<typeof useGetGlobalPoolStakesSuspenseQuery>;
+export type GetGlobalPoolStakesQueryResult = ApolloReactCommon.QueryResult<GetGlobalPoolStakesQuery, GetGlobalPoolStakesQueryVariables>;
+export const GetMyFbtStakeDocument = gql`
+    query GetMyFBTStake {
+  myFBTStake {
+    ...FBTStakeFields
+  }
+}
+    ${FbtStakeFieldsFragmentDoc}`;
+
+/**
+ * __useGetMyFbtStakeQuery__
+ *
+ * To run a query within a React component, call `useGetMyFbtStakeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetMyFbtStakeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetMyFbtStakeQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetMyFbtStakeQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GetMyFbtStakeQuery, GetMyFbtStakeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetMyFbtStakeQuery, GetMyFbtStakeQueryVariables>(GetMyFbtStakeDocument, options);
+      }
+export function useGetMyFbtStakeLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetMyFbtStakeQuery, GetMyFbtStakeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetMyFbtStakeQuery, GetMyFbtStakeQueryVariables>(GetMyFbtStakeDocument, options);
+        }
+// @ts-ignore
+export function useGetMyFbtStakeSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetMyFbtStakeQuery, GetMyFbtStakeQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetMyFbtStakeQuery, GetMyFbtStakeQueryVariables>;
+export function useGetMyFbtStakeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetMyFbtStakeQuery, GetMyFbtStakeQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetMyFbtStakeQuery | undefined, GetMyFbtStakeQueryVariables>;
+export function useGetMyFbtStakeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetMyFbtStakeQuery, GetMyFbtStakeQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetMyFbtStakeQuery, GetMyFbtStakeQueryVariables>(GetMyFbtStakeDocument, options);
+        }
+export type GetMyFbtStakeQueryHookResult = ReturnType<typeof useGetMyFbtStakeQuery>;
+export type GetMyFbtStakeLazyQueryHookResult = ReturnType<typeof useGetMyFbtStakeLazyQuery>;
+export type GetMyFbtStakeSuspenseQueryHookResult = ReturnType<typeof useGetMyFbtStakeSuspenseQuery>;
+export type GetMyFbtStakeQueryResult = ApolloReactCommon.QueryResult<GetMyFbtStakeQuery, GetMyFbtStakeQueryVariables>;
+export const GetFbtStakeByAddressDocument = gql`
+    query GetFBTStakeByAddress($address: String!) {
+  fbtStakeByAddress(address: $address) {
+    ...FBTStakeFields
+  }
+}
+    ${FbtStakeFieldsFragmentDoc}`;
+
+/**
+ * __useGetFbtStakeByAddressQuery__
+ *
+ * To run a query within a React component, call `useGetFbtStakeByAddressQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFbtStakeByAddressQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFbtStakeByAddressQuery({
+ *   variables: {
+ *      address: // value for 'address'
+ *   },
+ * });
+ */
+export function useGetFbtStakeByAddressQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetFbtStakeByAddressQuery, GetFbtStakeByAddressQueryVariables> & ({ variables: GetFbtStakeByAddressQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetFbtStakeByAddressQuery, GetFbtStakeByAddressQueryVariables>(GetFbtStakeByAddressDocument, options);
+      }
+export function useGetFbtStakeByAddressLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetFbtStakeByAddressQuery, GetFbtStakeByAddressQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetFbtStakeByAddressQuery, GetFbtStakeByAddressQueryVariables>(GetFbtStakeByAddressDocument, options);
+        }
+// @ts-ignore
+export function useGetFbtStakeByAddressSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetFbtStakeByAddressQuery, GetFbtStakeByAddressQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFbtStakeByAddressQuery, GetFbtStakeByAddressQueryVariables>;
+export function useGetFbtStakeByAddressSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFbtStakeByAddressQuery, GetFbtStakeByAddressQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFbtStakeByAddressQuery | undefined, GetFbtStakeByAddressQueryVariables>;
+export function useGetFbtStakeByAddressSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFbtStakeByAddressQuery, GetFbtStakeByAddressQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetFbtStakeByAddressQuery, GetFbtStakeByAddressQueryVariables>(GetFbtStakeByAddressDocument, options);
+        }
+export type GetFbtStakeByAddressQueryHookResult = ReturnType<typeof useGetFbtStakeByAddressQuery>;
+export type GetFbtStakeByAddressLazyQueryHookResult = ReturnType<typeof useGetFbtStakeByAddressLazyQuery>;
+export type GetFbtStakeByAddressSuspenseQueryHookResult = ReturnType<typeof useGetFbtStakeByAddressSuspenseQuery>;
+export type GetFbtStakeByAddressQueryResult = ApolloReactCommon.QueryResult<GetFbtStakeByAddressQuery, GetFbtStakeByAddressQueryVariables>;
+export const GetFbtStakersDocument = gql`
+    query GetFBTStakers($limit: Int = 20, $offset: Int = 0) {
+  fbtStakers(limit: $limit, offset: $offset) {
+    items {
+      address
+      amount
+      pendingYield
+      shareOfTreasury
+      username
+      avatarUrl
+    }
+    total
+    hasMore
+  }
+}
+    `;
+
+/**
+ * __useGetFbtStakersQuery__
+ *
+ * To run a query within a React component, call `useGetFbtStakersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFbtStakersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFbtStakersQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetFbtStakersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GetFbtStakersQuery, GetFbtStakersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetFbtStakersQuery, GetFbtStakersQueryVariables>(GetFbtStakersDocument, options);
+      }
+export function useGetFbtStakersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetFbtStakersQuery, GetFbtStakersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetFbtStakersQuery, GetFbtStakersQueryVariables>(GetFbtStakersDocument, options);
+        }
+// @ts-ignore
+export function useGetFbtStakersSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetFbtStakersQuery, GetFbtStakersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFbtStakersQuery, GetFbtStakersQueryVariables>;
+export function useGetFbtStakersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFbtStakersQuery, GetFbtStakersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFbtStakersQuery | undefined, GetFbtStakersQueryVariables>;
+export function useGetFbtStakersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFbtStakersQuery, GetFbtStakersQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetFbtStakersQuery, GetFbtStakersQueryVariables>(GetFbtStakersDocument, options);
+        }
+export type GetFbtStakersQueryHookResult = ReturnType<typeof useGetFbtStakersQuery>;
+export type GetFbtStakersLazyQueryHookResult = ReturnType<typeof useGetFbtStakersLazyQuery>;
+export type GetFbtStakersSuspenseQueryHookResult = ReturnType<typeof useGetFbtStakersSuspenseQuery>;
+export type GetFbtStakersQueryResult = ApolloReactCommon.QueryResult<GetFbtStakersQuery, GetFbtStakersQueryVariables>;
+export const GetMyImpactDaoStakeDocument = gql`
+    query GetMyImpactDAOStake {
+  myImpactDAOStake {
+    ...ImpactDAOStakeFields
+  }
+}
+    ${ImpactDaoStakeFieldsFragmentDoc}`;
+
+/**
+ * __useGetMyImpactDaoStakeQuery__
+ *
+ * To run a query within a React component, call `useGetMyImpactDaoStakeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetMyImpactDaoStakeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetMyImpactDaoStakeQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetMyImpactDaoStakeQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GetMyImpactDaoStakeQuery, GetMyImpactDaoStakeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetMyImpactDaoStakeQuery, GetMyImpactDaoStakeQueryVariables>(GetMyImpactDaoStakeDocument, options);
+      }
+export function useGetMyImpactDaoStakeLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetMyImpactDaoStakeQuery, GetMyImpactDaoStakeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetMyImpactDaoStakeQuery, GetMyImpactDaoStakeQueryVariables>(GetMyImpactDaoStakeDocument, options);
+        }
+// @ts-ignore
+export function useGetMyImpactDaoStakeSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetMyImpactDaoStakeQuery, GetMyImpactDaoStakeQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetMyImpactDaoStakeQuery, GetMyImpactDaoStakeQueryVariables>;
+export function useGetMyImpactDaoStakeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetMyImpactDaoStakeQuery, GetMyImpactDaoStakeQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetMyImpactDaoStakeQuery | undefined, GetMyImpactDaoStakeQueryVariables>;
+export function useGetMyImpactDaoStakeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetMyImpactDaoStakeQuery, GetMyImpactDaoStakeQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetMyImpactDaoStakeQuery, GetMyImpactDaoStakeQueryVariables>(GetMyImpactDaoStakeDocument, options);
+        }
+export type GetMyImpactDaoStakeQueryHookResult = ReturnType<typeof useGetMyImpactDaoStakeQuery>;
+export type GetMyImpactDaoStakeLazyQueryHookResult = ReturnType<typeof useGetMyImpactDaoStakeLazyQuery>;
+export type GetMyImpactDaoStakeSuspenseQueryHookResult = ReturnType<typeof useGetMyImpactDaoStakeSuspenseQuery>;
+export type GetMyImpactDaoStakeQueryResult = ApolloReactCommon.QueryResult<GetMyImpactDaoStakeQuery, GetMyImpactDaoStakeQueryVariables>;
+export const GetImpactDaoStakeByAddressDocument = gql`
+    query GetImpactDAOStakeByAddress($address: String!) {
+  impactDAOStakeByAddress(address: $address) {
+    ...ImpactDAOStakeFields
+  }
+}
+    ${ImpactDaoStakeFieldsFragmentDoc}`;
+
+/**
+ * __useGetImpactDaoStakeByAddressQuery__
+ *
+ * To run a query within a React component, call `useGetImpactDaoStakeByAddressQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetImpactDaoStakeByAddressQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetImpactDaoStakeByAddressQuery({
+ *   variables: {
+ *      address: // value for 'address'
+ *   },
+ * });
+ */
+export function useGetImpactDaoStakeByAddressQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetImpactDaoStakeByAddressQuery, GetImpactDaoStakeByAddressQueryVariables> & ({ variables: GetImpactDaoStakeByAddressQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetImpactDaoStakeByAddressQuery, GetImpactDaoStakeByAddressQueryVariables>(GetImpactDaoStakeByAddressDocument, options);
+      }
+export function useGetImpactDaoStakeByAddressLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetImpactDaoStakeByAddressQuery, GetImpactDaoStakeByAddressQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetImpactDaoStakeByAddressQuery, GetImpactDaoStakeByAddressQueryVariables>(GetImpactDaoStakeByAddressDocument, options);
+        }
+// @ts-ignore
+export function useGetImpactDaoStakeByAddressSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetImpactDaoStakeByAddressQuery, GetImpactDaoStakeByAddressQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetImpactDaoStakeByAddressQuery, GetImpactDaoStakeByAddressQueryVariables>;
+export function useGetImpactDaoStakeByAddressSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetImpactDaoStakeByAddressQuery, GetImpactDaoStakeByAddressQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetImpactDaoStakeByAddressQuery | undefined, GetImpactDaoStakeByAddressQueryVariables>;
+export function useGetImpactDaoStakeByAddressSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetImpactDaoStakeByAddressQuery, GetImpactDaoStakeByAddressQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetImpactDaoStakeByAddressQuery, GetImpactDaoStakeByAddressQueryVariables>(GetImpactDaoStakeByAddressDocument, options);
+        }
+export type GetImpactDaoStakeByAddressQueryHookResult = ReturnType<typeof useGetImpactDaoStakeByAddressQuery>;
+export type GetImpactDaoStakeByAddressLazyQueryHookResult = ReturnType<typeof useGetImpactDaoStakeByAddressLazyQuery>;
+export type GetImpactDaoStakeByAddressSuspenseQueryHookResult = ReturnType<typeof useGetImpactDaoStakeByAddressSuspenseQuery>;
+export type GetImpactDaoStakeByAddressQueryResult = ApolloReactCommon.QueryResult<GetImpactDaoStakeByAddressQuery, GetImpactDaoStakeByAddressQueryVariables>;
+export const GetImpactDaoStakersDocument = gql`
+    query GetImpactDAOStakers($limit: Int = 20, $offset: Int = 0) {
+  impactDAOStakers(limit: $limit, offset: $offset) {
+    items {
+      address
+      principal
+      pendingYield
+      pendingFBTReward
+      username
+      avatarUrl
+      yieldSplit {
+        stakerShare
+        platformShare
+        daoShare
+      }
+    }
+    total
+    hasMore
+  }
+}
+    `;
+
+/**
+ * __useGetImpactDaoStakersQuery__
+ *
+ * To run a query within a React component, call `useGetImpactDaoStakersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetImpactDaoStakersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetImpactDaoStakersQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetImpactDaoStakersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GetImpactDaoStakersQuery, GetImpactDaoStakersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetImpactDaoStakersQuery, GetImpactDaoStakersQueryVariables>(GetImpactDaoStakersDocument, options);
+      }
+export function useGetImpactDaoStakersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetImpactDaoStakersQuery, GetImpactDaoStakersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetImpactDaoStakersQuery, GetImpactDaoStakersQueryVariables>(GetImpactDaoStakersDocument, options);
+        }
+// @ts-ignore
+export function useGetImpactDaoStakersSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetImpactDaoStakersQuery, GetImpactDaoStakersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetImpactDaoStakersQuery, GetImpactDaoStakersQueryVariables>;
+export function useGetImpactDaoStakersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetImpactDaoStakersQuery, GetImpactDaoStakersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetImpactDaoStakersQuery | undefined, GetImpactDaoStakersQueryVariables>;
+export function useGetImpactDaoStakersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetImpactDaoStakersQuery, GetImpactDaoStakersQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetImpactDaoStakersQuery, GetImpactDaoStakersQueryVariables>(GetImpactDaoStakersDocument, options);
+        }
+export type GetImpactDaoStakersQueryHookResult = ReturnType<typeof useGetImpactDaoStakersQuery>;
+export type GetImpactDaoStakersLazyQueryHookResult = ReturnType<typeof useGetImpactDaoStakersLazyQuery>;
+export type GetImpactDaoStakersSuspenseQueryHookResult = ReturnType<typeof useGetImpactDaoStakersSuspenseQuery>;
+export type GetImpactDaoStakersQueryResult = ApolloReactCommon.QueryResult<GetImpactDaoStakersQuery, GetImpactDaoStakersQueryVariables>;
+export const GetImpactDaoYieldHarvestsDocument = gql`
+    query GetImpactDAOYieldHarvests($stakeId: String!, $limit: Int = 20, $offset: Int = 0) {
+  impactDAOYieldHarvests(stakeId: $stakeId, limit: $limit, offset: $offset) {
+    items {
+      id
+      stakeId
+      totalYield
+      stakerAmount
+      daoAmount
+      platformAmount
+      harvestedAt
+      txHash
+      blockNumber
+    }
+    total
+    hasMore
+  }
+}
+    `;
+
+/**
+ * __useGetImpactDaoYieldHarvestsQuery__
+ *
+ * To run a query within a React component, call `useGetImpactDaoYieldHarvestsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetImpactDaoYieldHarvestsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetImpactDaoYieldHarvestsQuery({
+ *   variables: {
+ *      stakeId: // value for 'stakeId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetImpactDaoYieldHarvestsQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetImpactDaoYieldHarvestsQuery, GetImpactDaoYieldHarvestsQueryVariables> & ({ variables: GetImpactDaoYieldHarvestsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetImpactDaoYieldHarvestsQuery, GetImpactDaoYieldHarvestsQueryVariables>(GetImpactDaoYieldHarvestsDocument, options);
+      }
+export function useGetImpactDaoYieldHarvestsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetImpactDaoYieldHarvestsQuery, GetImpactDaoYieldHarvestsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetImpactDaoYieldHarvestsQuery, GetImpactDaoYieldHarvestsQueryVariables>(GetImpactDaoYieldHarvestsDocument, options);
+        }
+// @ts-ignore
+export function useGetImpactDaoYieldHarvestsSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetImpactDaoYieldHarvestsQuery, GetImpactDaoYieldHarvestsQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetImpactDaoYieldHarvestsQuery, GetImpactDaoYieldHarvestsQueryVariables>;
+export function useGetImpactDaoYieldHarvestsSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetImpactDaoYieldHarvestsQuery, GetImpactDaoYieldHarvestsQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetImpactDaoYieldHarvestsQuery | undefined, GetImpactDaoYieldHarvestsQueryVariables>;
+export function useGetImpactDaoYieldHarvestsSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetImpactDaoYieldHarvestsQuery, GetImpactDaoYieldHarvestsQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetImpactDaoYieldHarvestsQuery, GetImpactDaoYieldHarvestsQueryVariables>(GetImpactDaoYieldHarvestsDocument, options);
+        }
+export type GetImpactDaoYieldHarvestsQueryHookResult = ReturnType<typeof useGetImpactDaoYieldHarvestsQuery>;
+export type GetImpactDaoYieldHarvestsLazyQueryHookResult = ReturnType<typeof useGetImpactDaoYieldHarvestsLazyQuery>;
+export type GetImpactDaoYieldHarvestsSuspenseQueryHookResult = ReturnType<typeof useGetImpactDaoYieldHarvestsSuspenseQuery>;
+export type GetImpactDaoYieldHarvestsQueryResult = ApolloReactCommon.QueryResult<GetImpactDaoYieldHarvestsQuery, GetImpactDaoYieldHarvestsQueryVariables>;
+export const RecordStakeDocument = gql`
+    mutation RecordStake($input: RecordStakeInput!) {
+  recordStake(input: $input) {
+    ...StakeFields
+  }
+}
+    ${StakeFieldsFragmentDoc}`;
+
+/**
+ * __useRecordStakeMutation__
+ *
+ * To run a mutation, you first call `useRecordStakeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRecordStakeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [recordStakeMutation, { data, loading, error }] = useRecordStakeMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRecordStakeMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<RecordStakeMutation, RecordStakeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<RecordStakeMutation, RecordStakeMutationVariables>(RecordStakeDocument, options);
+      }
+export type RecordStakeMutationHookResult = ReturnType<typeof useRecordStakeMutation>;
+export type RecordStakeMutationResult = ApolloReactCommon.MutationResult<RecordStakeMutation>;
+export type RecordStakeMutationOptions = ApolloReactCommon.BaseMutationOptions<RecordStakeMutation, RecordStakeMutationVariables>;
+export const ProcessUnstakeDocument = gql`
+    mutation ProcessUnstake($input: UnstakeInput!) {
+  processUnstake(input: $input)
+}
+    `;
+
+/**
+ * __useProcessUnstakeMutation__
+ *
+ * To run a mutation, you first call `useProcessUnstakeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useProcessUnstakeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [processUnstakeMutation, { data, loading, error }] = useProcessUnstakeMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useProcessUnstakeMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ProcessUnstakeMutation, ProcessUnstakeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<ProcessUnstakeMutation, ProcessUnstakeMutationVariables>(ProcessUnstakeDocument, options);
+      }
+export type ProcessUnstakeMutationHookResult = ReturnType<typeof useProcessUnstakeMutation>;
+export type ProcessUnstakeMutationResult = ApolloReactCommon.MutationResult<ProcessUnstakeMutation>;
+export type ProcessUnstakeMutationOptions = ApolloReactCommon.BaseMutationOptions<ProcessUnstakeMutation, ProcessUnstakeMutationVariables>;
+export const RecordImpactDaoStakeDocument = gql`
+    mutation RecordImpactDAOStake($input: ImpactDAORecordStakeInput!) {
+  recordImpactDAOStake(input: $input)
+}
+    `;
+
+/**
+ * __useRecordImpactDaoStakeMutation__
+ *
+ * To run a mutation, you first call `useRecordImpactDaoStakeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRecordImpactDaoStakeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [recordImpactDaoStakeMutation, { data, loading, error }] = useRecordImpactDaoStakeMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRecordImpactDaoStakeMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<RecordImpactDaoStakeMutation, RecordImpactDaoStakeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<RecordImpactDaoStakeMutation, RecordImpactDaoStakeMutationVariables>(RecordImpactDaoStakeDocument, options);
+      }
+export type RecordImpactDaoStakeMutationHookResult = ReturnType<typeof useRecordImpactDaoStakeMutation>;
+export type RecordImpactDaoStakeMutationResult = ApolloReactCommon.MutationResult<RecordImpactDaoStakeMutation>;
+export type RecordImpactDaoStakeMutationOptions = ApolloReactCommon.BaseMutationOptions<RecordImpactDaoStakeMutation, RecordImpactDaoStakeMutationVariables>;
+export const OnFbtStakeUpdateDocument = gql`
+    subscription OnFBTStakeUpdate($address: String) {
+  fbtStakeUpdated(address: $address) {
+    eventType
+    stake {
+      ...FBTStakeFields
+    }
+  }
+}
+    ${FbtStakeFieldsFragmentDoc}`;
+
+/**
+ * __useOnFbtStakeUpdateSubscription__
+ *
+ * To run a query within a React component, call `useOnFbtStakeUpdateSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useOnFbtStakeUpdateSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOnFbtStakeUpdateSubscription({
+ *   variables: {
+ *      address: // value for 'address'
+ *   },
+ * });
+ */
+export function useOnFbtStakeUpdateSubscription(baseOptions?: ApolloReactHooks.SubscriptionHookOptions<OnFbtStakeUpdateSubscription, OnFbtStakeUpdateSubscriptionVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useSubscription<OnFbtStakeUpdateSubscription, OnFbtStakeUpdateSubscriptionVariables>(OnFbtStakeUpdateDocument, options);
+      }
+export type OnFbtStakeUpdateSubscriptionHookResult = ReturnType<typeof useOnFbtStakeUpdateSubscription>;
+export type OnFbtStakeUpdateSubscriptionResult = ApolloReactCommon.SubscriptionResult<OnFbtStakeUpdateSubscription>;
+export const OnImpactDaoStakeUpdateDocument = gql`
+    subscription OnImpactDAOStakeUpdate($address: String) {
+  impactDAOStakeUpdated(address: $address) {
+    eventType
+    stake {
+      ...ImpactDAOStakeFields
+    }
+  }
+}
+    ${ImpactDaoStakeFieldsFragmentDoc}`;
+
+/**
+ * __useOnImpactDaoStakeUpdateSubscription__
+ *
+ * To run a query within a React component, call `useOnImpactDaoStakeUpdateSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useOnImpactDaoStakeUpdateSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOnImpactDaoStakeUpdateSubscription({
+ *   variables: {
+ *      address: // value for 'address'
+ *   },
+ * });
+ */
+export function useOnImpactDaoStakeUpdateSubscription(baseOptions?: ApolloReactHooks.SubscriptionHookOptions<OnImpactDaoStakeUpdateSubscription, OnImpactDaoStakeUpdateSubscriptionVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useSubscription<OnImpactDaoStakeUpdateSubscription, OnImpactDaoStakeUpdateSubscriptionVariables>(OnImpactDaoStakeUpdateDocument, options);
+      }
+export type OnImpactDaoStakeUpdateSubscriptionHookResult = ReturnType<typeof useOnImpactDaoStakeUpdateSubscription>;
+export type OnImpactDaoStakeUpdateSubscriptionResult = ApolloReactCommon.SubscriptionResult<OnImpactDaoStakeUpdateSubscription>;
 export const GetMeDocument = gql`
     query GetMe {
   me {

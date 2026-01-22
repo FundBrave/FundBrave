@@ -186,25 +186,21 @@ export default function CampaignUpdates({
       {/* Updates List or Empty State */}
       {updates.length === 0 ? (
         <EmptyState
-          icon={<FileText size={24} className="text-text-tertiary" />}
+          icon={FileText}
           title="No updates yet"
-          message={
+          description={
             isCreator
               ? "Keep your donors informed! Post your first update to share progress and thank your supporters."
               : "The campaign creator hasn't posted any updates yet. Check back later for news and progress."
           }
           action={
-            isCreator ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenModal}
-                className="gap-2"
-              >
-                <Plus size={16} aria-hidden="true" />
-                Post Your First Update
-              </Button>
-            ) : null
+            isCreator
+              ? {
+                  label: "Post Your First Update",
+                  onClick: handleOpenModal,
+                  variant: "outline" as const,
+                }
+              : undefined
           }
           className="py-8"
         />

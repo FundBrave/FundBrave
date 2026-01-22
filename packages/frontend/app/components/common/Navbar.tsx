@@ -19,6 +19,9 @@ import {
   ChevronDown,
 } from "@/app/components/ui/icons";
 import { NotificationBell, NotificationPanel } from "@/app/components/notifications";
+import { useUnreadCount } from "@/app/hooks/useMessaging";
+import { useAuth } from "@/app/provider/AuthProvider";
+import { useRouter } from "next/navigation";
 
 /**
  * Navigation link configuration
@@ -52,12 +55,22 @@ export default function Navbar({ className }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { theme } = useTheme();
   const { openSearch } = useSearch();
+  const { user, isAuthenticated, logout } = useAuth();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navContainerRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const linkRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
+
+  // Fetch unread message count
+  const { count: unreadMessageCount } = useUnreadCount();
+
+  // Get user display name and avatar
+  const userName = user?.username || user?.email || "Anonymous";
+  const userAvatar = undefined; // TODO: Add avatar URL to user object
+  const userFallback = userName.charAt(0).toUpperCase();
 
   // Theme-aware logo: light logo for dark mode, dark logo for light mode
   const logoSrc =
@@ -130,6 +143,17 @@ export default function Navbar({ className }: NavbarProps) {
   // Toggle user dropdown
   const toggleUserDropdown = () => {
     setUserDropdownOpen(!userDropdownOpen);
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setUserDropdownOpen(false);
+      router.push("/auth");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
@@ -231,20 +255,27 @@ export default function Navbar({ className }: NavbarProps) {
             {/* Icon Buttons Group */}
             <div className="flex gap-1.5 items-center">
               {/* Settings Icon Button - 44px min touch target */}
-              <button
+              <Link
+                href="/settings"
                 className="min-h-[44px] min-w-[44px] size-9 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-overlay active:bg-surface-overlay active:scale-[0.98] transition-colors"
                 aria-label="Settings"
               >
                 <Settings size={18} className="text-foreground/80" />
-              </button>
+              </Link>
 
               {/* Messages Icon Button - 44px min touch target */}
               <Link
                 href="/messenger"
-                className="min-h-[44px] min-w-[44px] size-9 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-overlay active:bg-surface-overlay active:scale-[0.98] transition-colors"
-                aria-label="Messages"
+                className="relative min-h-[44px] min-w-[44px] size-9 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-overlay active:bg-surface-overlay active:scale-[0.98] transition-colors"
+                aria-label={`Messages${unreadMessageCount > 0 ? ` (${unreadMessageCount} unread)` : ""}`}
               >
                 <MessageCircle size={18} className="text-foreground/80" />
+                {/* Unread Badge */}
+                {unreadMessageCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-primary text-white text-[10px] font-bold rounded-full border-2 border-background">
+                    {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                  </span>
+                )}
               </Link>
 
               {/* Notifications Bell with Panel */}
@@ -263,9 +294,9 @@ export default function Navbar({ className }: NavbarProps) {
                 >
                   {/* Avatar - 36px */}
                   <Avatar
-                    src="/image.png"
-                    alt="Anna Doe"
-                    fallback="AD"
+                    src={userAvatar}
+                    alt={userName}
+                    fallback={userFallback}
                     size="sm"
                     className="size-9"
                   />
@@ -274,7 +305,7 @@ export default function Navbar({ className }: NavbarProps) {
                   <div className="flex flex-col items-start">
                     <div className="flex gap-1 items-center">
                       <span className="text-foreground text-xs font-medium">
-                        Anna Doe
+                        {userName}
                       </span>
                       <ChevronDown
                         size={14}
@@ -284,7 +315,7 @@ export default function Navbar({ className }: NavbarProps) {
                         )}
                       />
                     </div>
-                    {/* Connect Wallet - Gradient text */}
+                    {/* Wallet Address or Connect Wallet */}
                     <span
                       className="text-[10px] font-semibold bg-clip-text text-transparent"
                       style={{
@@ -293,7 +324,10 @@ export default function Navbar({ className }: NavbarProps) {
                         WebkitBackgroundClip: "text",
                       }}
                     >
-                      Connect Wallet
+                      {user?.walletAddress
+                        ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}`
+                        : "Connect Wallet"
+                      }
                     </span>
                   </div>
                 </button>
@@ -336,10 +370,7 @@ export default function Navbar({ className }: NavbarProps) {
                       <hr className="border-border-default my-1" />
                       <button
                         className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-surface-overlay active:bg-surface-overlay hover:text-red-300 transition-colors"
-                        onClick={() => {
-                          // Handle logout
-                          setUserDropdownOpen(false);
-                        }}
+                        onClick={handleLogout}
                       >
                         Sign Out
                       </button>
@@ -385,9 +416,9 @@ export default function Navbar({ className }: NavbarProps) {
 
             {/* User Avatar (Mobile) */}
             <Avatar
-              src="/image.png"
-              alt="Anna Doe"
-              fallback="AD"
+              src={userAvatar}
+              alt={userName}
+              fallback={userFallback}
               size="sm"
               className="size-10"
             />
@@ -494,9 +525,17 @@ export default function Navbar({ className }: NavbarProps) {
               <Link
                 href="/messenger"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex flex-col items-center gap-2 p-4 min-h-[44px] rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated active:bg-surface-elevated active:scale-[0.98] transition-colors"
+                className="relative flex flex-col items-center gap-2 p-4 min-h-[44px] rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated active:bg-surface-elevated active:scale-[0.98] transition-colors"
               >
-                <MessageCircle size={24} className="text-foreground/80" />
+                <div className="relative">
+                  <MessageCircle size={24} className="text-foreground/80" />
+                  {/* Unread Badge */}
+                  {unreadMessageCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-primary text-white text-[9px] font-bold rounded-full border-2 border-background">
+                      {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs text-text-secondary">Messages</span>
               </Link>
               <Link
@@ -505,9 +544,9 @@ export default function Navbar({ className }: NavbarProps) {
                 className="flex flex-col items-center gap-2 p-4 min-h-[44px] rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated active:bg-surface-elevated active:scale-[0.98] transition-colors"
               >
                 <Avatar
-                  src="/image.png"
+                  src={userAvatar}
                   alt="Profile"
-                  fallback="AD"
+                  fallback={userFallback}
                   size="sm"
                   className="size-6"
                 />

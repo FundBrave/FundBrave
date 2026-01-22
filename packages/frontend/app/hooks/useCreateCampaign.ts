@@ -1,13 +1,13 @@
 /**
  * useCreateCampaign Hook
- * Hook for creating campaigns via FundraiserFactory contract
+ * Hook for creating campaigns via FundraiserFactory contract and GraphQL
  */
 
 import { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { FUNDRAISER_FACTORY_ABI } from '@/app/lib/contracts/abis';
 import { CONTRACT_ADDRESSES, CHAIN_ID } from '@/app/lib/contracts/config';
-import { apiClient } from '@/app/lib/api/client';
+import { useCreateFundraiserMutation } from '@/app/generated/graphql';
 import type { CampaignCreateInput } from '@/app/types/campaign';
 
 export function useCreateCampaign() {
@@ -25,6 +25,8 @@ export function useCreateCampaign() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
+
+  const [createFundraiserMutation] = useCreateFundraiserMutation();
 
   const createCampaign = async (input: CampaignCreateInput) => {
     if (!address) {
@@ -67,7 +69,7 @@ export function useCreateCampaign() {
   };
 
   const saveCampaignToBackend = async (
-    contractAddress: string,
+    onChainId: number,
     input: CampaignCreateInput,
     transactionHash: string
   ) => {
@@ -77,23 +79,31 @@ export function useCreateCampaign() {
       const deadline = new Date();
       deadline.setDate(deadline.getDate() + input.duration);
 
-      const response = await apiClient.createCampaign({
-        contractAddress,
-        title: input.title,
-        description: input.description,
-        goal: input.goal.toString(),
-        deadline: deadline.toISOString(),
-        category: input.category,
-        creator: address,
-        transactionHash,
+      const result = await createFundraiserMutation({
+        variables: {
+          input: {
+            name: input.title,
+            description: input.description,
+            goalAmount: input.goal.toString(),
+            deadline: deadline.toISOString(),
+            categories: [input.category],
+            beneficiary: address,
+            currency: 'USDC',
+            images: input.imageUrl ? [input.imageUrl] : [],
+            region: undefined,
+            milestones: [],
+          },
+          onChainId,
+          txHash: transactionHash,
+        },
       });
 
-      if (!response.success) {
-        throw new Error(response.error || 'Failed to save campaign to backend');
+      if (!result.data?.createFundraiser) {
+        throw new Error('Failed to save campaign to backend');
       }
 
       setIsProcessing(false);
-      return response.data;
+      return result.data.createFundraiser;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save campaign';
       setError(errorMessage);

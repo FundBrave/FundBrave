@@ -9,7 +9,7 @@ export { default as ShareCampaignModal } from "./ShareCampaignModal";
 export { Avatar, type AvatarProps, type AvatarSize } from "./Avatar";
 
 // EmptyState component
-export { EmptyState, type EmptyStateProps } from "./EmptyState";
+export { EmptyState } from "./EmptyState";
 
 // Toggle component
 export { Toggle, type ToggleProps } from "./Toggle";

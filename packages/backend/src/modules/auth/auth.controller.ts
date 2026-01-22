@@ -582,6 +582,85 @@ export class AuthController {
     return req.user;
   }
 
+  // ==================== DEBUG ENDPOINT (DEVELOPMENT ONLY) ====================
+
+  /**
+   * Debug auth status - useful for testing cookie and token setup
+   * GET /api/auth/debug
+   *
+   * Returns information about the current request's auth state
+   * Only available in development mode
+   */
+  @Get('debug')
+  @ApiOperation({ summary: 'Debug authentication status (development only)' })
+  @ApiResponse({ status: 200, description: 'Returns auth debug information' })
+  async debugAuth(@Request() req: ExpressRequest) {
+    const isProduction =
+      this.configService.get<string>('NODE_ENV') === 'production';
+
+    if (isProduction) {
+      return { error: 'Debug endpoint disabled in production' };
+    }
+
+    const cookies = req.cookies || {};
+    const hasAccessToken = !!cookies.access_token;
+    const hasRefreshToken = !!cookies.refresh_token;
+    const authHeader = req.headers.authorization;
+    const hasBearerToken = !!authHeader?.startsWith('Bearer ');
+
+    return {
+      timestamp: new Date().toISOString(),
+      environment: this.configService.get<string>('NODE_ENV'),
+      authentication: {
+        hasAccessTokenCookie: hasAccessToken,
+        hasRefreshTokenCookie: hasRefreshToken,
+        hasBearerToken,
+        accessTokenPreview: hasAccessToken
+          ? `${cookies.access_token.substring(0, 20)}...`
+          : null,
+      },
+      cookies: {
+        received: Object.keys(cookies),
+        cookieHeader: req.headers.cookie ? 'present' : 'missing',
+      },
+      headers: {
+        origin: req.headers.origin,
+        host: req.headers.host,
+        contentType: req.headers['content-type'],
+        userAgent: req.headers['user-agent']?.substring(0, 50),
+      },
+      cors: {
+        frontendUrl: this.configService.get<string>('FRONTEND_URL'),
+        allowedOrigins: this.configService.get<string>('ALLOWED_ORIGINS'),
+      },
+    };
+  }
+
+  /**
+   * Verify test user exists and credentials are correct
+   * GET /api/auth/verify-test-user
+   *
+   * Only available in development mode
+   */
+  @Get('verify-test-user')
+  @ApiOperation({
+    summary: 'Verify test user credentials (development only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns test user verification status',
+  })
+  async verifyTestUser() {
+    const isProduction =
+      this.configService.get<string>('NODE_ENV') === 'production';
+
+    if (isProduction) {
+      return { error: 'Debug endpoint disabled in production' };
+    }
+
+    return this.authService.verifyTestUserCredentials();
+  }
+
   // ==================== PASSWORD RESET ====================
 
   /**

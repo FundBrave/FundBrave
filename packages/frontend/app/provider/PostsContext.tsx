@@ -166,7 +166,7 @@ export function PostsProvider({ children }: PostsProviderProps) {
             id: cache.identify({ __typename: 'Post', id: postId }),
             fields: {
               isLiked: () => true, // GraphQL schema uses isLiked, not isLikedByMe
-              likesCount: (prev) => prev + 1,
+              likesCount: (prev: number) => prev + 1,
             },
           });
         },
@@ -189,7 +189,7 @@ export function PostsProvider({ children }: PostsProviderProps) {
             id: cache.identify({ __typename: 'Post', id: postId }),
             fields: {
               isLiked: () => false, // GraphQL schema uses isLiked, not isLikedByMe
-              likesCount: (prev) => Math.max(0, prev - 1),
+              likesCount: (prev: number) => Math.max(0, prev - 1),
             },
           });
         },
@@ -209,7 +209,7 @@ export function PostsProvider({ children }: PostsProviderProps) {
           cache.modify({
             id: cache.identify({ __typename: 'Post', id: postId }),
             fields: {
-              repostsCount: (prev) => prev + 1, // GraphQL schema uses repostsCount
+              repostsCount: (prev: number) => prev + 1, // GraphQL schema uses repostsCount
             },
           });
         },
@@ -279,7 +279,7 @@ export function PostsProvider({ children }: PostsProviderProps) {
           cache.modify({
             id: cache.identify({ __typename: 'Post', id: postId }),
             fields: {
-              replyCount: (prev) => prev + 1, // GraphQL schema uses replyCount for comments
+              replyCount: (prev: number) => prev + 1, // GraphQL schema uses replyCount for comments
             },
           });
         },
@@ -303,7 +303,7 @@ export function PostsProvider({ children }: PostsProviderProps) {
             id: cache.identify({ __typename: 'Comment', id: commentId }),
             fields: {
               isLiked: () => true,
-              likesCount: (prev) => prev + 1,
+              likesCount: (prev: number) => prev + 1,
             },
           });
         },
@@ -326,7 +326,7 @@ export function PostsProvider({ children }: PostsProviderProps) {
             id: cache.identify({ __typename: 'Comment', id: commentId }),
             fields: {
               isLiked: () => false,
-              likesCount: (prev) => Math.max(0, prev - 1),
+              likesCount: (prev: number) => Math.max(0, prev - 1),
             },
           });
         },
@@ -353,7 +353,7 @@ export function PostsProvider({ children }: PostsProviderProps) {
           cache.modify({
             id: cache.identify({ __typename: 'Post', id: postId }),
             fields: {
-              replyCount: (prev) => prev + 1, // GraphQL schema uses replyCount
+              replyCount: (prev: number) => prev + 1, // GraphQL schema uses replyCount
             },
           });
 
@@ -380,7 +380,7 @@ export function PostsProvider({ children }: PostsProviderProps) {
           cache.modify({
             id: cache.identify({ __typename: 'Post', id: postId }),
             fields: {
-              replyCount: (prev) => Math.max(0, prev - 1), // GraphQL schema uses replyCount
+              replyCount: (prev: number) => Math.max(0, prev - 1), // GraphQL schema uses replyCount
             },
           });
 

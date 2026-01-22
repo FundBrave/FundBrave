@@ -9,6 +9,7 @@ export {
 } from "./MessageBubble";
 export { ChatArea, type ChatAreaProps } from "./ChatArea";
 export { SharedFilesSidebar } from "./SharedFilesSidebar";
+export { UserSearchModal } from "./UserSearchModal";
 
 // Re-export types from the centralized types file
 export type {

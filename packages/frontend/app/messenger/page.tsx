@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import {
   ChatSidebar,
@@ -8,278 +8,206 @@ import {
   MobileChatToggle,
   ChatArea,
   SharedFilesSidebar,
+  UserSearchModal,
   type Chat,
-  type Message,
+  type Message as ChatMessage,
   type SharedFile,
 } from "@/app/components/messenger";
 import { BackHeader } from "@/app/components/common/BackHeader";
+import {
+  useConversations,
+  useMessages,
+  useSendMessage,
+  useMarkAsRead,
+  type Message,
+  type Conversation,
+} from "@/app/hooks/useMessaging";
+import { useWebSocket } from "@/app/hooks/useWebSocket";
+import { useAuth } from "@/app/provider/AuthProvider";
+import { Loader2 } from "@/app/components/ui/icons";
 
-// Mock data for chats
-const mockChats: Chat[] = [
-  {
-    id: "1",
-    user: {
-      id: "user1",
-      name: "FundBrave AI",
-      username: "FundBraveAI",
-      avatar:
-        "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=100&h=100&fit=crop",
-      isOnline: true,
-    },
-    lastMessage: "Hello! How can I help you today?",
-    lastMessageTime: "2024-01-15T10:30:00Z",
-    unreadCount: 2,
-  },
-  {
-    id: "2",
-    user: {
-      id: "user2",
-      name: "Sarah Johnson",
-      username: "sarahjohnson",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-      isOnline: true,
-    },
-    lastMessage: "Thank you for your donation!",
-    lastMessageTime: "2024-01-15T09:15:00Z",
-  },
-  {
-    id: "3",
-    user: {
-      id: "user3",
-      name: "Michael Chen",
-      username: "michaelchen",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
-      isOnline: false,
-    },
-    lastMessage: "The campaign is doing great!",
-    lastMessageTime: "2024-01-14T16:45:00Z",
-  },
-  {
-    id: "4",
-    user: {
-      id: "user4",
-      name: "Emily Davis",
-      username: "emilydavis",
-      avatar:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
-      isOnline: true,
-    },
-    lastMessage: "Can you share the latest updates?",
-    lastMessageTime: "2024-01-14T14:20:00Z",
-    unreadCount: 1,
-  },
-  {
-    id: "5",
-    user: {
-      id: "user5",
-      name: "David Wilson",
-      username: "davidwilson",
-      avatar:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop",
-      isOnline: false,
-    },
-    lastMessage: "Looking forward to the event!",
-    lastMessageTime: "2024-01-13T11:00:00Z",
-  },
-  {
-    id: "group1",
-    user: {
-      id: "group1",
-      name: "Tech Innovators",
-      username: "techinnovators",
-      avatar:
-        "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&h=100&fit=crop",
-      isOnline: false,
-    },
-    lastMessage: "Meeting scheduled for tomorrow",
-    lastMessageTime: "2024-01-12T08:30:00Z",
-    isGroup: true,
-    groupName: "Tech Innovators",
-    groupAvatar:
-      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&h=100&fit=crop",
-  },
-];
-
-// Mock messages for the FundBrave AI chat
-const mockMessages: Message[] = [
-  {
-    id: "msg1",
-    senderId: "user1",
-    content:
-      "Hello! Welcome to FundBrave. I'm your AI assistant, here to help you navigate the platform and answer any questions you might have.",
-    timestamp: "2024-01-15T10:00:00Z",
-    isRead: true,
-  },
-  {
-    id: "msg2",
-    senderId: "currentUser",
-    content: "Hi! I'm interested in starting a campaign for my charity project.",
-    timestamp: "2024-01-15T10:05:00Z",
-    isRead: true,
-  },
-  {
-    id: "msg3",
-    senderId: "user1",
-    content:
-      "That's wonderful! FundBrave makes it easy to create and manage fundraising campaigns. You can accept donations in cryptocurrency and reach a global audience of supporters.",
-    timestamp: "2024-01-15T10:06:00Z",
-    isRead: true,
-  },
-  {
-    id: "msg4",
-    senderId: "currentUser",
-    content: "What are the fees for running a campaign?",
-    timestamp: "2024-01-15T10:10:00Z",
-    isRead: true,
-  },
-  {
-    id: "msg5",
-    senderId: "user1",
-    content:
-      "FundBrave charges a minimal platform fee of just 2.5% on successful donations. This helps us maintain the platform and provide you with the best fundraising experience. There are no hidden fees!",
-    timestamp: "2024-01-15T10:12:00Z",
-    isRead: true,
-  },
-  {
-    id: "msg6",
-    senderId: "currentUser",
-    content: "That sounds great! How do I get started?",
-    timestamp: "2024-01-15T10:20:00Z",
-    isRead: true,
-  },
-  {
-    id: "msg7",
-    senderId: "user1",
-    content:
-      "Getting started is easy! Just click the \"Create Campaign\" button in your dashboard. You'll be guided through setting up your campaign with a title, description, goal amount, and images. Would you like me to walk you through the process?",
-    timestamp: "2024-01-15T10:25:00Z",
-    isRead: true,
-  },
-  {
-    id: "msg8",
-    senderId: "user1",
-    content: "Hello! How can I help you today?",
-    timestamp: "2024-01-15T10:30:00Z",
-    isRead: false,
-  },
-];
-
-// Mock shared files
-const mockSharedFiles: SharedFile[] = [
-  {
-    id: "file1",
-    type: "video",
-    name: "Campaign Introduction",
-    url: "https://example.com/video1.mp4",
-    thumbnail:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200&h=200&fit=crop",
-    uploadedAt: "2024-01-14T12:00:00Z",
-  },
-  {
-    id: "file2",
-    type: "video",
-    name: "Success Story",
-    url: "https://example.com/video2.mp4",
-    thumbnail:
-      "https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=200&h=200&fit=crop",
-    uploadedAt: "2024-01-13T15:30:00Z",
-  },
-  {
-    id: "file3",
-    type: "video",
-    name: "Platform Demo",
-    url: "https://example.com/video3.mp4",
-    thumbnail:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&h=200&fit=crop",
-    uploadedAt: "2024-01-12T09:00:00Z",
-  },
-  {
-    id: "file4",
-    type: "video",
-    name: "Thank You Message",
-    url: "https://example.com/video4.mp4",
-    thumbnail:
-      "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=200&h=200&fit=crop",
-    uploadedAt: "2024-01-11T18:45:00Z",
-  },
-  {
-    id: "file5",
-    type: "image",
-    name: "Campaign Banner",
-    url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&h=300&fit=crop",
-    thumbnail:
-      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=200&h=200&fit=crop",
-    uploadedAt: "2024-01-10T11:00:00Z",
-  },
-  {
-    id: "file6",
-    type: "image",
-    name: "Team Photo",
-    url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop",
-    thumbnail:
-      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&h=200&fit=crop",
-    uploadedAt: "2024-01-09T14:20:00Z",
-  },
-  {
-    id: "file7",
-    type: "document",
-    name: "Campaign Report.pdf",
-    url: "https://example.com/report.pdf",
-    uploadedAt: "2024-01-08T10:00:00Z",
-  },
-  {
-    id: "file8",
-    type: "audio",
-    name: "Podcast Episode 1.mp3",
-    url: "https://example.com/podcast.mp3",
-    uploadedAt: "2024-01-07T16:30:00Z",
-  },
-];
-
-const CURRENT_USER_ID = "currentUser";
+// Mock shared files (backend doesn't have this yet)
+const mockSharedFiles: SharedFile[] = [];
 
 export default function MessengerPage() {
-  const [selectedChatId, setSelectedChatId] = useState<string>("1");
+  const { user } = useAuth();
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [isSharedFilesCollapsed, setIsSharedFilesCollapsed] = useState(false);
+  const [isUserSearchOpen, setIsUserSearchOpen] = useState(false);
+  const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
+
+  // Fetch conversations from backend
+  const {
+    conversations,
+    isLoading: conversationsLoading,
+    error: conversationsError,
+    refetch: refetchConversations,
+  } = useConversations(20, 0);
+
+  // Fetch messages for selected conversation
+  const {
+    messages: apiMessages,
+    isLoading: messagesLoading,
+    refetch: refetchMessages,
+  } = useMessages(selectedConversationId, 50, 0);
+
+  // Send message hook
+  const { sendMessage, isSending } = useSendMessage();
+
+  // Mark as read hook
+  const { markAsRead } = useMarkAsRead();
+
+  // Convert API messages to ChatMessage format
+  useEffect(() => {
+    if (apiMessages && apiMessages.length > 0) {
+      const converted: ChatMessage[] = apiMessages.map((msg) => ({
+        id: msg.id,
+        senderId: msg.senderId,
+        content: msg.content,
+        timestamp: msg.createdAt,
+        isRead: msg.isRead,
+        mediaUrl: msg.mediaUrl,
+      }));
+      setLocalMessages(converted);
+    } else {
+      setLocalMessages([]);
+    }
+  }, [apiMessages]);
+
+  // Convert API conversations to Chat format
+  const chats: Chat[] = (conversations || []).map((conv) => {
+    // Get the other participant (not current user)
+    const otherParticipant = conv.participants.find((p) => p.user.id !== user?.id);
+    const otherUser = otherParticipant?.user;
+
+    return {
+      id: conv.id,
+      user: {
+        id: otherUser?.id || "",
+        name: otherUser?.displayName || otherUser?.username || "Unknown",
+        username: otherUser?.username || "unknown",
+        avatar: otherUser?.avatarUrl || "",
+        isOnline: otherUser?.isOnline || false,
+      },
+      lastMessage: conv.lastMessage?.content || "",
+      lastMessageTime: conv.lastMessage?.createdAt || conv.createdAt,
+      unreadCount: conv.unreadCount,
+    };
+  });
+
+  // WebSocket for real-time updates
+  const { isConnected, sendTypingIndicator, joinConversation, leaveConversation } = useWebSocket({
+    onNewMessage: (event) => {
+      // If message is for current conversation, add it
+      if (event.conversationId === selectedConversationId) {
+        const newMessage: ChatMessage = {
+          id: event.message.id,
+          senderId: event.message.senderId,
+          content: event.message.content,
+          timestamp: event.message.createdAt,
+          isRead: event.message.isRead,
+          mediaUrl: event.message.mediaUrl,
+        };
+        setLocalMessages((prev) => [...prev, newMessage]);
+
+        // Mark as read if viewing this conversation
+        if (selectedConversationId && event.message.senderId !== user?.id) {
+          markAsRead(selectedConversationId, event.message.id);
+        }
+      }
+
+      // Refetch conversations to update last message
+      refetchConversations();
+    },
+    onMessageRead: (event) => {
+      // Update read status of messages
+      if (event.conversationId === selectedConversationId) {
+        setLocalMessages((prev) =>
+          prev.map((msg) =>
+            event.messageIds.includes(msg.id) ? { ...msg, isRead: true } : msg
+          )
+        );
+      }
+    },
+    onTypingIndicator: (event) => {
+      // Handle typing indicator (could show in UI)
+      console.log("Typing:", event);
+    },
+  });
+
+  // Join conversation room when selected
+  useEffect(() => {
+    if (selectedConversationId) {
+      joinConversation(selectedConversationId);
+      return () => {
+        leaveConversation(selectedConversationId);
+      };
+    }
+  }, [selectedConversationId, joinConversation, leaveConversation]);
+
+  // Mark messages as read when viewing conversation
+  useEffect(() => {
+    if (selectedConversationId && localMessages.length > 0) {
+      const lastMessage = localMessages[localMessages.length - 1];
+      if (lastMessage && !lastMessage.isRead && lastMessage.senderId !== user?.id) {
+        markAsRead(selectedConversationId, lastMessage.id);
+      }
+    }
+  }, [selectedConversationId, localMessages, markAsRead, user?.id]);
 
   const handleSelectChat = (chatId: string) => {
-    setSelectedChatId(chatId);
+    setSelectedConversationId(chatId);
     setIsMobileDrawerOpen(false);
-    // In a real app, this would fetch the messages for the selected chat
   };
 
   const handleNewChat = () => {
-    // Handle creating a new chat
-    console.log("New chat clicked");
+    setIsUserSearchOpen(true);
   };
 
-  const handleSendMessage = (content: string) => {
-    const newMessage: Message = {
-      id: `msg${Date.now()}`,
-      senderId: CURRENT_USER_ID,
+  const handleConversationCreated = (conversationId: string) => {
+    setSelectedConversationId(conversationId);
+    refetchConversations();
+  };
+
+  const handleSendMessage = async (content: string) => {
+    if (!selectedConversationId || !content.trim()) return;
+
+    // Optimistically add message to UI
+    const optimisticMessage: ChatMessage = {
+      id: `temp-${Date.now()}`,
+      senderId: user?.id || "current-user",
       content,
       timestamp: new Date().toISOString(),
       isRead: false,
     };
-    setMessages((prev) => [...prev, newMessage]);
+    setLocalMessages((prev) => [...prev, optimisticMessage]);
 
-    // Simulate AI response after a short delay
-    if (selectedChatId === "1") {
-      setTimeout(() => {
-        const aiResponse: Message = {
-          id: `msg${Date.now() + 1}`,
-          senderId: "user1",
-          content:
-            "Thank you for your message! Is there anything specific you'd like to know about FundBrave?",
-          timestamp: new Date().toISOString(),
-          isRead: false,
-        };
-        setMessages((prev) => [...prev, aiResponse]);
-      }, 1500);
+    // Send to backend
+    const message = await sendMessage(selectedConversationId, content);
+
+    if (message) {
+      // Replace optimistic message with real one
+      setLocalMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === optimisticMessage.id
+            ? {
+                id: message.id,
+                senderId: message.senderId,
+                content: message.content,
+                timestamp: message.createdAt,
+                isRead: message.isRead,
+                mediaUrl: message.mediaUrl,
+              }
+            : msg
+        )
+      );
+
+      // Refetch conversations to update last message
+      refetchConversations();
+    } else {
+      // Remove optimistic message on error
+      setLocalMessages((prev) => prev.filter((msg) => msg.id !== optimisticMessage.id));
     }
   };
 
@@ -293,7 +221,6 @@ export default function MessengerPage() {
 
   const handleFileClick = (fileId: string) => {
     console.log("File clicked:", fileId);
-    // File click is handled by SharedFilesSidebar which triggers onToggleCollapse
   };
 
   const handleToggleSharedFiles = () => {
@@ -305,92 +232,159 @@ export default function MessengerPage() {
   };
 
   // Get selected chat data
-  const selectedChat = mockChats.find((c) => c.id === selectedChatId);
+  const selectedChat = chats.find((c) => c.id === selectedConversationId);
+
+  // Loading state
+  if (conversationsLoading && chats.length === 0) {
+    return (
+      <div className="flex h-screen flex-col bg-background">
+        <BackHeader title="Messages" fallbackHref="/" />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (conversationsError) {
+    return (
+      <div className="flex h-screen flex-col bg-background">
+        <BackHeader title="Messages" fallbackHref="/" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-error mb-4">Failed to load conversations</p>
+            <button
+              onClick={() => refetchConversations()}
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen flex-col bg-background">
       <BackHeader title="Messages" fallbackHref="/" />
       <div className="flex flex-1 w-full flex-col overflow-hidden md:flex-row">
-      {/* Mobile Chat Selector */}
-      <div className="border-b border-border-default p-4 md:hidden">
-        <MobileChatToggle
-          onClick={() => setIsMobileDrawerOpen(true)}
-          selectedChatName={
-            selectedChat?.isGroup
-              ? selectedChat.groupName
-              : selectedChat?.user.name
-          }
-        />
-      </div>
-
-      {/* Left Sidebar - Chats List (280px) */}
-      <aside className="hidden w-[280px] flex-shrink-0 md:block">
-        <ChatSidebar
-          chats={mockChats}
-          selectedChatId={selectedChatId}
-          onSelectChat={handleSelectChat}
-          onNewChat={handleNewChat}
-        />
-      </aside>
-
-      {/* Mobile Drawer */}
-      <MobileChatDrawer
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-      >
-        <ChatSidebar
-          chats={mockChats}
-          selectedChatId={selectedChatId}
-          onSelectChat={handleSelectChat}
-          onNewChat={handleNewChat}
-        />
-      </MobileChatDrawer>
-
-      {/* Main Chat Area (flexible center) */}
-      <main className="min-h-0 min-w-0 flex-1">
-        {selectedChat ? (
-          <ChatArea
-            chatUser={selectedChat.user}
-            messages={messages}
-            currentUserId={CURRENT_USER_ID}
-            onSendMessage={handleSendMessage}
-            onEmojiClick={handleEmojiClick}
-            onAttachmentClick={handleAttachmentClick}
-            isSharedFilesVisible={!isSharedFilesCollapsed}
-            onToggleSharedFiles={handleToggleSharedFiles}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-neutral-dark-200">Select a chat to start messaging</p>
-          </div>
-        )}
-      </main>
-
-      {/* Right Sidebar - Shared Files with collapsible animation */}
-      <aside
-        className={cn(
-          "hidden flex-shrink-0 transition-all duration-300 ease-out lg:block",
-          isSharedFilesCollapsed ? "w-0 overflow-hidden p-0" : "w-[280px] p-4"
-        )}
-      >
-        <div
-          className={cn(
-            "h-full transition-all duration-300 ease-out",
-            isSharedFilesCollapsed
-              ? "scale-95 opacity-0"
-              : "scale-100 opacity-100"
-          )}
-        >
-          <SharedFilesSidebar
-            files={mockSharedFiles}
-            onFileClick={handleFileClick}
-            onSeeMore={handleSeeMoreFiles}
-            isCollapsed={isSharedFilesCollapsed}
-            onToggleCollapse={handleToggleSharedFiles}
+        {/* Mobile Chat Selector */}
+        <div className="border-b border-border-default p-4 md:hidden">
+          <MobileChatToggle
+            onClick={() => setIsMobileDrawerOpen(true)}
+            selectedChatName={
+              selectedChat?.isGroup
+                ? selectedChat.groupName
+                : selectedChat?.user.name
+            }
           />
         </div>
-      </aside>
+
+        {/* Left Sidebar - Chats List (280px) */}
+        <aside className="hidden w-[280px] flex-shrink-0 md:block">
+          <ChatSidebar
+            chats={chats}
+            selectedChatId={selectedConversationId || ""}
+            onSelectChat={handleSelectChat}
+            onNewChat={handleNewChat}
+          />
+        </aside>
+
+        {/* Mobile Drawer */}
+        <MobileChatDrawer
+          isOpen={isMobileDrawerOpen}
+          onClose={() => setIsMobileDrawerOpen(false)}
+        >
+          <ChatSidebar
+            chats={chats}
+            selectedChatId={selectedConversationId || ""}
+            onSelectChat={handleSelectChat}
+            onNewChat={handleNewChat}
+          />
+        </MobileChatDrawer>
+
+        {/* Main Chat Area (flexible center) */}
+        <main className="min-h-0 min-w-0 flex-1">
+          {selectedChat ? (
+            messagesLoading && localMessages.length === 0 ? (
+              <div className="flex h-full items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <ChatArea
+                chatUser={selectedChat.user}
+                messages={localMessages}
+                currentUserId={user?.id || ""}
+                onSendMessage={handleSendMessage}
+                onEmojiClick={handleEmojiClick}
+                onAttachmentClick={handleAttachmentClick}
+                isSharedFilesVisible={!isSharedFilesCollapsed}
+                onToggleSharedFiles={handleToggleSharedFiles}
+              />
+            )
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center">
+                <p className="text-neutral-dark-200 mb-4">
+                  Select a chat to start messaging
+                </p>
+                {chats.length === 0 && (
+                  <p className="text-text-tertiary text-sm">
+                    No conversations yet. Start a new chat!
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </main>
+
+        {/* Right Sidebar - Shared Files with collapsible animation */}
+        <aside
+          className={cn(
+            "hidden flex-shrink-0 transition-all duration-300 ease-out lg:block",
+            isSharedFilesCollapsed ? "w-0 overflow-hidden p-0" : "w-[280px] p-4"
+          )}
+        >
+          <div
+            className={cn(
+              "h-full transition-all duration-300 ease-out",
+              isSharedFilesCollapsed
+                ? "scale-95 opacity-0"
+                : "scale-100 opacity-100"
+            )}
+          >
+            <SharedFilesSidebar
+              files={mockSharedFiles}
+              onFileClick={handleFileClick}
+              onSeeMore={handleSeeMoreFiles}
+              isCollapsed={isSharedFilesCollapsed}
+              onToggleCollapse={handleToggleSharedFiles}
+            />
+          </div>
+        </aside>
       </div>
+
+      {/* WebSocket connection indicator (dev only) */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed bottom-4 right-4 px-3 py-1 bg-surface-elevated border border-border-subtle rounded-full text-xs">
+          <span
+            className={cn(
+              "inline-block w-2 h-2 rounded-full mr-2",
+              isConnected ? "bg-success" : "bg-error"
+            )}
+          />
+          {isConnected ? "Connected" : "Disconnected"}
+        </div>
+      )}
+
+      {/* User Search Modal */}
+      <UserSearchModal
+        isOpen={isUserSearchOpen}
+        onClose={() => setIsUserSearchOpen(false)}
+        onConversationCreated={handleConversationCreated}
+      />
     </div>
   );
 }

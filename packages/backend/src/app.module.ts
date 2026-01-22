@@ -41,6 +41,8 @@ import { TrendingModule } from './modules/trending/trending.module';
 import { QueueModule } from './modules/queue/queue.module';
 import { EmailModule } from './modules/email/email.module';
 import { HealthModule } from './modules/health/health.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { SearchModule } from './modules/search/search.module';
 
 @Module({
   imports: [
@@ -108,6 +110,8 @@ import { HealthModule } from './modules/health/health.module';
     QueueModule, // Bull/Redis background job queue
     EmailModule, // Email service with templates (global module)
     HealthModule, // Health check endpoints for monitoring
+    SettingsModule, // User settings, notifications, privacy, security
+    SearchModule, // Unified search across campaigns, users, posts
   ],
   controllers: [AppController],
   providers: [AppService],

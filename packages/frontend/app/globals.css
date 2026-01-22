@@ -970,6 +970,16 @@ a,
   }
 }
 
+/* Skeleton Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Progress bar shimmer effect */
 .campaign-progress-shimmer {
   position: relative;
@@ -1259,6 +1269,10 @@ textarea:focus {
 
 .animate-page-fade-in {
   animation: page-fade-in 300ms ease-out forwards;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
 }
 
 /* Search Modal Animations */

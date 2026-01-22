@@ -30,7 +30,7 @@ export function useLikeComment(): UseLikeCommentReturn {
             id: cache.identify({ __typename: 'Comment', id: commentId }),
             fields: {
               isLiked: () => true,
-              likesCount: (prev) => prev + 1,
+              likesCount: (prev: number) => prev + 1,
             },
           });
         },
@@ -56,7 +56,7 @@ export function useLikeComment(): UseLikeCommentReturn {
             id: cache.identify({ __typename: 'Comment', id: commentId }),
             fields: {
               isLiked: () => false,
-              likesCount: (prev) => Math.max(0, prev - 1),
+              likesCount: (prev: number) => Math.max(0, prev - 1),
             },
           });
         },

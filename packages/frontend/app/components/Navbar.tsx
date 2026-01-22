@@ -9,6 +9,7 @@ import { useTheme } from "./theme/theme-provider";
 import { Button } from "./ui/button";
 import { useAuth } from "@/app/provider/AuthProvider";
 import { useRouter } from "next/navigation";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -54,38 +55,49 @@ export default function Navbar() {
         <div className="hidden md:flex items-center space-x-4 cursor-pointer">
           <div className="flex items-center space-x-6">
             <Link
-              href="#"
+              href="/campaigns"
               className="text-primary-900 dark:text-white hover:text-primary transition-colors"
             >
               Explore
             </Link>
             <Link
-              href="#"
+              href="/campaigns/create"
               className="text-primary-900 dark:text-white hover:text-primary transition-colors"
             >
               Start a Campaign
             </Link>
             <Link
-              href="#"
+              href="/community"
               className="text-primary-900 dark:text-white hover:text-primary transition-colors"
             >
-              About
+              Community
             </Link>
           </div>
           <ThemeToggle />
-          {isAuthenticated ? (
-            <Button variant="secondary" size="sm" onClick={handleLogout}>
-              Sign Out
-            </Button>
-          ) : (
-            <Button variant="primary" size="sm" onClick={() => router.push("/auth")}>
-              Sign In
-            </Button>
-          )}
+          <div className="flex items-center gap-3">
+            <ConnectButton
+              showBalance={false}
+              chainStatus="icon"
+            />
+            {isAuthenticated ? (
+              <Button variant="secondary" size="sm" onClick={handleLogout}>
+                Sign Out
+              </Button>
+            ) : (
+              <Button variant="primary" size="sm" onClick={() => router.push("/auth")}>
+                Sign In
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Mobile Menu Button */}
-        <div className="flex md:hidden items-center space-x-3">
+        <div className="flex md:hidden items-center space-x-2">
+          <ConnectButton
+            showBalance={false}
+            chainStatus="icon"
+            accountStatus="avatar"
+          />
           <ThemeToggle />
           <button
             onClick={toggleMobileMenu}
@@ -106,25 +118,25 @@ export default function Navbar() {
         <div className="md:hidden bg-white dark:bg-background border-t border-border">
           <div className="max-w-[1400px] mx-auto px-4 py-3 space-y-4">
             <Link
-              href="#"
+              href="/campaigns"
               className="block py-2 text-primary-900 dark:text-white hover:text-primary transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Explore
             </Link>
             <Link
-              href="#"
+              href="/campaigns/create"
               className="block py-2 text-primary-900 dark:text-white hover:text-primary transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Start a Campaign
             </Link>
             <Link
-              href="#"
+              href="/community"
               className="block py-2 text-primary-900 dark:text-white hover:text-primary transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              About
+              Community
             </Link>
             <div className="pt-2">
               {isAuthenticated ? (

@@ -1,20 +1,23 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useCallback } from "react";
 import { getCampaignById } from "../data";
 import CampaignHeader from "@/app/components/campaigns/view/CampaignHeader";
 import CampaignStatsCard from "@/app/components/campaigns/view/CampaignStatsCard";
 import CampaignStory from "@/app/components/campaigns/view/CampaignStory";
 import CampaignComments from "@/app/components/campaigns/view/CampaignComments";
 import CampaignUpdates from "@/app/components/campaigns/view/CampaignUpdates";
-import { CampaignActionBar } from "@/app/components/campaigns";
+import { CampaignActionBar, CampaignStakingInterface } from "@/app/components/campaigns";
 import { BackHeader } from "@/app/components/common/BackHeader";
 import { ArrowLeft, Loader2 } from "@/app/components/ui/icons";
 import Link from "next/link";
 import Image from "next/image";
 import { useCampaign } from "@/app/hooks/useCampaigns";
+import { useFraudDetection } from "@/app/hooks/useFraudDetection";
 import { USDC_DECIMALS } from "@/app/lib/contracts/config";
 import { Button } from "@/app/components/ui/button";
+import { FraudDetectionAlert, FraudRiskBadge } from "@/app/components/ai/FraudDetectionAlert";
 
 export default function CampaignViewPage() {
   const params = useParams();
@@ -28,6 +31,38 @@ export default function CampaignViewPage() {
   const mockCampaign = getCampaignById(id);
   const campaign = apiCampaign || mockCampaign;
 
+  // Fraud detection hook
+  const {
+    analyzeCampaign,
+    isChecking: isFraudChecking,
+    result: fraudResult,
+    error: fraudError,
+  } = useFraudDetection();
+
+  // Run fraud check when campaign data is available
+  const runFraudCheck = useCallback(async () => {
+    if (!campaign) return;
+
+    try {
+      await analyzeCampaign({
+        campaign_id: campaign.id,
+        name: apiCampaign?.title || campaign.title,
+        description: apiCampaign?.description || ('description' in campaign ? campaign.description : ''),
+        creator_id: apiCampaign?.creator || ('creator' in campaign && campaign.creator.handle ? campaign.creator.handle : 'unknown'),
+        goal_amount: apiCampaign ? parseFloat(apiCampaign.goal) / Math.pow(10, USDC_DECIMALS) : ('goal' in campaign ? (typeof campaign.goal === 'string' ? parseFloat(campaign.goal) : campaign.goal) : 1000),
+        category: campaign.categories?.[0] || 'general',
+      });
+    } catch (err) {
+      console.error('Fraud check failed:', err);
+    }
+  }, [campaign, apiCampaign, analyzeCampaign]);
+
+  useEffect(() => {
+    if (campaign && !fraudResult && !isFraudChecking) {
+      runFraudCheck();
+    }
+  }, [campaign, fraudResult, isFraudChecking, runFraudCheck]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center text-foreground">
@@ -39,11 +74,26 @@ export default function CampaignViewPage() {
     );
   }
 
-  if (!campaign) {
+  if (error || !campaign) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center text-foreground">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Campaign Not Found</h1>
+        <div className="text-center max-w-md px-4">
+          <h1 className="text-2xl font-bold mb-4">
+            {error ? 'Campaign Loading Error' : 'Campaign Not Found'}
+          </h1>
+          <p className="text-text-secondary mb-6">
+            {error
+              ? "We couldn't load the campaign data. This might be a temporary issue."
+              : "The campaign you're looking for doesn't exist or has been removed."}
+          </p>
+          {error && (
+            <Button
+              onClick={() => window.location.reload()}
+              className="mb-4"
+            >
+              Try Again
+            </Button>
+          )}
           <Link
             href="/campaigns"
             className="text-primary-400 hover:text-primary-300 flex items-center justify-center gap-2"
@@ -59,23 +109,42 @@ export default function CampaignViewPage() {
   // Parse API campaign data
   const amountRaised = apiCampaign
     ? parseFloat(apiCampaign.amountRaised) / Math.pow(10, USDC_DECIMALS)
-    : campaign.amountRaised;
+    : 'amountRaised' in campaign
+      ? (typeof campaign.amountRaised === 'string' ? parseFloat(campaign.amountRaised) : campaign.amountRaised)
+      : 0;
   const targetAmount = apiCampaign
     ? parseFloat(apiCampaign.goal) / Math.pow(10, USDC_DECIMALS)
-    : campaign.targetAmount;
+    : 'goal' in campaign
+      ? (typeof campaign.goal === 'string' ? parseFloat(campaign.goal) : campaign.goal)
+      : 1000;
   const daysLeft = apiCampaign && apiCampaign.deadline
     ? Math.max(0, Math.ceil((new Date(apiCampaign.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : campaign.daysLeft;
+    : 30; // Default to 30 days if no deadline
 
   // Campaign data for action bar
   const campaignData = {
     id: campaign.id,
     title: apiCampaign?.title || campaign.title,
     url: `https://fundbrave.com/campaigns/${campaign.id}`,
-    endDate: apiCampaign?.deadline || campaign.endDate,
-    description: apiCampaign?.description || campaign.story,
-    contractAddress: apiCampaign?.contractAddress,
+    endDate: apiCampaign?.deadline
+      ? new Date(apiCampaign.deadline)
+      : ('deadline' in campaign ? new Date(campaign.deadline) : new Date()),
+    description: apiCampaign?.description || ('description' in campaign ? campaign.description : ''),
+    contractAddress: undefined as string | undefined,
   };
+
+  // Extract creator info safely with fallbacks
+  const creator = 'creator' in campaign && campaign.creator
+    ? {
+        avatarUrl: campaign.creator.avatarUrl || '/placeholder-avatar.png',
+        name: campaign.creator.name || 'Anonymous',
+        handle: campaign.creator.handle || '@anonymous'
+      }
+    : {
+        avatarUrl: '/placeholder-avatar.png',
+        name: 'Anonymous',
+        handle: '@anonymous'
+      };
 
   return (
     <div className="min-h-screen bg-background text-foreground font-[family-name:var(--font-family-montserrat)]">
@@ -100,8 +169,8 @@ export default function CampaignViewPage() {
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-primary-500 to-soft-purple-500 p-[2px]">
                   <div className="w-full h-full rounded-full overflow-hidden border-2 border-background relative">
                     <Image
-                      src={campaign.creator.avatarUrl}
-                      alt={campaign.creator.name}
+                      src={creator.avatarUrl}
+                      alt={creator.name}
                       fill
                       className="object-cover"
                     />
@@ -110,21 +179,21 @@ export default function CampaignViewPage() {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-foreground text-base">
-                      {campaign.creator.name}
+                      {creator.name}
                     </span>
                     <button className="text-xs font-bold text-primary-400 hover:text-primary-300 uppercase tracking-wide">
                       Follow
                     </button>
                   </div>
                   <span className="text-text-tertiary text-sm">
-                    {campaign.creator.handle}
+                    {creator.handle}
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Story Section */}
-            <CampaignStory story={campaign.story} />
+            <CampaignStory story={'story' in campaign ? campaign.story : ''} />
 
             {/* Action Buttons (Left Column) - Using CampaignActionBar */}
             <div className="pt-2 pb-6 sm:pb-8 border-b border-border-subtle">
@@ -136,22 +205,40 @@ export default function CampaignViewPage() {
             </div>
 
             {/* Comments Section */}
-            <CampaignComments comments={campaign.comments} />
+            <CampaignComments comments={'comments' in campaign ? (campaign.comments || []) : []} />
 
             {/* Updates Section */}
-            <CampaignUpdates updates={campaign.updates} />
+            <CampaignUpdates updates={('updates' in campaign ? (campaign.updates || []) : []) as any} />
           </div>
 
           {/* Right Column - Stats & Actions */}
           <div className="lg:col-span-4 lg:pl-4">
             <div className="sticky top-6 sm:top-10 space-y-4">
+              {/* Fraud Risk Badge - Compact */}
+              {(fraudResult || isFraudChecking) && (
+                <div className="flex items-center justify-end mb-2">
+                  <FraudRiskBadge result={fraudResult} isChecking={isFraudChecking} />
+                </div>
+              )}
+
               <CampaignStatsCard
                 amountRaised={amountRaised}
                 targetAmount={targetAmount}
-                supportersCount={apiCampaign?.donorsCount || campaign.supportersCount}
+                supportersCount={apiCampaign?.donorsCount || ('supportersCount' in campaign ? campaign.supportersCount : 0)}
                 daysLeft={daysLeft}
                 campaign={campaignData}
               />
+
+              {/* Fraud Detection Alert - Show if not low risk */}
+              {fraudResult && fraudResult.risk_level !== 'low' && (
+                <FraudDetectionAlert
+                  result={fraudResult}
+                  isChecking={isFraudChecking}
+                  error={fraudError}
+                  onRetry={runFraudCheck}
+                  inCampaignCard={false}
+                />
+              )}
 
               {/* Donate & Stake Buttons */}
               {apiCampaign && (
@@ -162,15 +249,15 @@ export default function CampaignViewPage() {
                   >
                     Donate Now
                   </Button>
-                  <Button
-                    onClick={() => router.push(`/campaigns/${id}/stake`)}
-                    variant="outline"
-                    className="w-full py-3"
-                  >
-                    Stake to Earn Yield
-                  </Button>
                 </div>
               )}
+
+              {/* Campaign Staking Interface */}
+              <CampaignStakingInterface
+                campaignId={id}
+                stakingPoolAddress={apiCampaign?.stakingPoolAddr}
+                className="mt-6"
+              />
             </div>
           </div>
         </div>

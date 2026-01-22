@@ -9,6 +9,8 @@ import {
   UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,6 +21,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { FundraisersService } from './fundraisers.service';
+import { StakingService } from '../staking/staking.service';
 import {
   Fundraiser,
   PaginatedFundraisers,
@@ -29,8 +32,15 @@ import {
   FundraiserFilterInput,
   FundraiserSortBy,
   SortOrder,
+  CampaignStakingInfo,
+  PaginatedCampaignStakes,
+  CampaignStakeResult,
+  CampaignUnstakeResult,
+  StakeToCampaignInput,
+  UnstakeFromCampaignInput,
+  UserCampaignStake,
 } from './dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 /**
@@ -59,7 +69,10 @@ const FRONTEND_SORT_MAPPINGS: Record<FrontendSortOption, SortMapping> = {
 @ApiTags('Fundraisers')
 @Controller('fundraisers')
 export class FundraisersController {
-  constructor(private readonly fundraisersService: FundraisersService) {}
+  constructor(
+    private readonly fundraisersService: FundraisersService,
+    private readonly stakingService: StakingService,
+  ) {}
 
   /**
    * Maps frontend-friendly sort values to backend enum values.
@@ -331,6 +344,275 @@ export class FundraisersController {
       user.id,
       input,
     );
+  }
+
+  // ==================== Campaign Staking Endpoints ====================
+
+  @Get(':id/staking')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Get staking information for a campaign' })
+  @ApiParam({ name: 'id', type: String, description: 'Fundraiser ID' })
+  @ApiResponse({ status: 200, description: 'Returns campaign staking info' })
+  @ApiResponse({ status: 404, description: 'Fundraiser not found' })
+  async getCampaignStakingInfo(
+    @Param('id') id: string,
+    @CurrentUser() user?: { id: string },
+  ): Promise<CampaignStakingInfo> {
+    // Get fundraiser details
+    const fundraiser = await this.fundraisersService.getFundraiserById(id);
+
+    // Get staking stats for this fundraiser
+    const stakes = await this.stakingService.getFundraiserStakes(id, 1000, 0);
+
+    // Calculate total staked
+    const totalStaked = stakes.items.reduce(
+      (sum, stake) => sum + BigInt(stake.amount),
+      BigInt(0),
+    );
+
+    // Get unique active stakers count
+    const activeStakers = new Set(
+      stakes.items.filter((s) => s.isActive).map((s) => s.staker.walletAddress),
+    );
+
+    // Get user's stake if authenticated
+    let userStakedAmount: string | undefined;
+    let userPendingYield: string | undefined;
+
+    if (user) {
+      const userStakes = await this.stakingService.getUserStakes(user.id, 100, 0);
+      const userCampaignStake = userStakes.items.find(
+        (s) => s.fundraiser?.id === id && s.isActive,
+      );
+      if (userCampaignStake) {
+        userStakedAmount = userCampaignStake.amount;
+        // TODO: Calculate actual pending yield from contract
+        userPendingYield = '0';
+      }
+    }
+
+    return {
+      fundraiserId: fundraiser.id,
+      fundraiserName: fundraiser.name,
+      stakingPoolAddr: fundraiser.stakingPoolAddr,
+      totalStaked: totalStaked.toString(),
+      stakersCount: activeStakers.size,
+      estimatedApy: '5.0', // TODO: Calculate actual APY
+      totalYieldGenerated: '0', // TODO: Calculate from yield harvests
+      userStakedAmount,
+      userPendingYield,
+      isStakingActive: fundraiser.isActive && !!fundraiser.stakingPoolAddr,
+    };
+  }
+
+  @Get(':id/stakers')
+  @ApiOperation({ summary: 'Get list of stakers for a campaign' })
+  @ApiParam({ name: 'id', type: String, description: 'Fundraiser ID' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Returns paginated stakers list' })
+  @ApiResponse({ status: 404, description: 'Fundraiser not found' })
+  async getCampaignStakers(
+    @Param('id') id: string,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
+  ): Promise<PaginatedCampaignStakes> {
+    // Verify fundraiser exists
+    await this.fundraisersService.getFundraiserById(id);
+
+    // Get stakes for this fundraiser
+    const stakes = await this.stakingService.getFundraiserStakes(id, limit, offset);
+
+    return {
+      items: stakes.items.map((stake) => ({
+        id: stake.id,
+        txHash: stake.txHash,
+        amount: stake.amount,
+        shares: stake.shares,
+        staker: {
+          id: stake.staker.id,
+          walletAddress: stake.staker.walletAddress,
+          username: stake.staker.username,
+          displayName: stake.staker.displayName,
+          avatarUrl: stake.staker.avatarUrl,
+        },
+        isActive: stake.isActive,
+        stakedAt: stake.stakedAt,
+        unstakedAt: stake.unstakedAt,
+      })),
+      total: stakes.total,
+      hasMore: stakes.hasMore,
+    };
+  }
+
+  @Get(':id/staking/my')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user stake for a campaign' })
+  @ApiParam({ name: 'id', type: String, description: 'Fundraiser ID' })
+  @ApiResponse({ status: 200, description: 'Returns user stake info' })
+  @ApiResponse({ status: 404, description: 'Fundraiser not found or no stake' })
+  async getMyStakeForCampaign(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string },
+  ): Promise<UserCampaignStake | null> {
+    // Verify fundraiser exists
+    const fundraiser = await this.fundraisersService.getFundraiserById(id);
+
+    // Get user's stakes
+    const userStakes = await this.stakingService.getUserStakes(user.id, 100, 0);
+    const userCampaignStake = userStakes.items.find(
+      (s) => s.fundraiser?.id === id && s.isActive,
+    );
+
+    if (!userCampaignStake) {
+      return null;
+    }
+
+    return {
+      stakeId: userCampaignStake.id,
+      fundraiserId: id,
+      fundraiserName: fundraiser.name,
+      amount: userCampaignStake.amount,
+      shares: userCampaignStake.shares,
+      pendingYield: '0', // TODO: Calculate from contract
+      totalYieldEarned: '0', // TODO: Calculate from yield harvests
+      stakedAt: userCampaignStake.stakedAt,
+    };
+  }
+
+  @Post(':id/stake')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Stake to a specific campaign' })
+  @ApiParam({ name: 'id', type: String, description: 'Fundraiser ID' })
+  @ApiResponse({ status: 201, description: 'Stake recorded successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Fundraiser not found' })
+  async stakeToCampaign(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string; walletAddress: string },
+    @Body() input: StakeToCampaignInput,
+  ): Promise<CampaignStakeResult> {
+    try {
+      // Verify fundraiser exists and has staking pool
+      const fundraiser = await this.fundraisersService.getFundraiserById(id);
+
+      if (!fundraiser.stakingPoolAddr) {
+        return {
+          success: false,
+          message: 'This campaign does not have a staking pool',
+        };
+      }
+
+      if (!fundraiser.isActive) {
+        return {
+          success: false,
+          message: 'This campaign is no longer active',
+        };
+      }
+
+      // Record the stake
+      const stake = await this.stakingService.recordStake(
+        user.id,
+        user.walletAddress,
+        {
+          txHash: input.txHash,
+          poolAddress: fundraiser.stakingPoolAddr,
+          amount: input.amount,
+          shares: input.shares,
+          fundraiserId: id,
+          chainId: input.chainId,
+          isGlobal: false,
+          yieldSplit:
+            input.causeShare !== undefined
+              ? {
+                  causeShare: input.causeShare,
+                  stakerShare: input.stakerShare!,
+                  platformShare: input.platformShare!,
+                }
+              : undefined,
+        },
+      );
+
+      return {
+        success: true,
+        stake: {
+          id: stake.id,
+          txHash: stake.txHash,
+          amount: stake.amount,
+          shares: stake.shares,
+          staker: {
+            id: stake.staker.id,
+            walletAddress: stake.staker.walletAddress,
+            username: stake.staker.username,
+            displayName: stake.staker.displayName,
+            avatarUrl: stake.staker.avatarUrl,
+          },
+          isActive: stake.isActive,
+          stakedAt: stake.stakedAt,
+          unstakedAt: stake.unstakedAt,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : 'Failed to record stake',
+      };
+    }
+  }
+
+  @Post(':id/unstake')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Unstake from a specific campaign' })
+  @ApiParam({ name: 'id', type: String, description: 'Fundraiser ID' })
+  @ApiResponse({ status: 200, description: 'Unstake processed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Fundraiser or stake not found' })
+  async unstakeFromCampaign(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string },
+    @Body() input: UnstakeFromCampaignInput,
+  ): Promise<CampaignUnstakeResult> {
+    try {
+      // Verify fundraiser exists
+      await this.fundraisersService.getFundraiserById(id);
+
+      // Find user's active stake for this campaign
+      const userStakes = await this.stakingService.getUserStakes(user.id, 100, 0);
+      const userCampaignStake = userStakes.items.find(
+        (s) => s.fundraiser?.id === id && s.isActive,
+      );
+
+      if (!userCampaignStake) {
+        return {
+          success: false,
+          message: 'No active stake found for this campaign',
+        };
+      }
+
+      // Process unstake
+      await this.stakingService.processUnstake({
+        stakeId: userCampaignStake.id,
+        txHash: input.txHash,
+        amount: input.amount,
+      });
+
+      return {
+        success: true,
+        amountUnstaked: input.amount || userCampaignStake.amount,
+        yieldClaimed: '0', // TODO: Calculate from transaction
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : 'Failed to process unstake',
+      };
+    }
   }
 
   // ==================== Helper Methods ====================
