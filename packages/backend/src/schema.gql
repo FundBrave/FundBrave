@@ -777,10 +777,12 @@ type Mutation {
   markNotificationsAsRead(input: MarkNotificationsReadInput!): NotificationOperationResult!
   processUnstake(input: UnstakeInput!): Boolean!
   recordDonation(input: RecordDonationInput!): Donation!
+  recordDonationPublic(input: RecordDonationPublicInput!): RecordDonationResponse!
 
   """Record a stake transaction hash for tracking"""
   recordImpactDAOStake(input: ImpactDAORecordStakeInput!): Boolean!
   recordStake(input: RecordStakeInput!): Stake!
+  recordStakePublic(input: RecordStakePublicInput!): RecordStakeResponse!
   removeBookmark(postId: ID!): Boolean!
   removeRepost(postId: ID!): Boolean!
   repost(input: RepostInput!): Boolean!
@@ -1233,6 +1235,7 @@ type Query {
   daoVotingStats: DAOVotingStats!
   donation(id: ID!): Donation!
   donationByTxHash(txHash: String!): Donation!
+  donationExistsByTxHash(txHash: String!): Boolean!
   donationLeaderboard(limit: Int! = 10, period: LeaderboardPeriod! = ALL): DonationLeaderboard!
   donations(filter: DonationFilterInput, limit: Int! = 20, offset: Int! = 0, order: SortOrder! = DESC, sortBy: DonationSortBy! = CREATED_AT): PaginatedDonations!
   donationsByAddress(address: String!, limit: Int! = 20, offset: Int! = 0): PaginatedDonations!
@@ -1266,6 +1269,7 @@ type Query {
   fundraiserEndowments(fundraiserId: String!, limit: Int! = 20, offset: Int! = 0): PaginatedWealthBuildingDonations!
   fundraiserRegions: [RegionCount!]!
   fundraiserStakes(fundraiserId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedStakes!
+  fundraiserStakingStats(fundraiserId: ID!): StakingStats!
   fundraisers(filter: FundraiserFilterInput, limit: Int! = 20, offset: Int! = 0, sort: FundraiserSortInput): PaginatedFundraisers!
   fundraisersByCreator(creatorId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedFundraisers!
   fundraisersMinimal(filter: FundraiserFilterInput, limit: Int! = 50, offset: Int! = 0): FundraisersMinimalResponse!
@@ -1364,6 +1368,7 @@ type Query {
 
   """Get platform fees filtered by source type"""
   platformFeesBySource(limit: Int! = 20, offset: Int! = 0, sourceType: FeeSourceType!): PaginatedPlatformFees!
+  platformStakingStats: StakingStats!
   poolStats(poolAddress: String!): StakingPoolStats!
   post(id: ID!): Post!
   postComments(limit: Int! = 20, offset: Int! = 0, postId: ID!): PaginatedComments!
@@ -1374,6 +1379,7 @@ type Query {
   """Get proposal results breakdown"""
   proposalResults(proposalId: String!): ProposalResults!
   recentDonations(limit: Int! = 20): [RecentDonationActivity!]!
+  recentStakingActivity(fundraiserId: ID, limit: Int! = 20): [RecentStakingActivity!]!
   report(id: ID!): Report
   reportedContent(entityId: String!, entityType: String!): PaginatedReports!
   reports(input: GetReportsInput): PaginatedReports!
@@ -1381,6 +1387,7 @@ type Query {
   searchFundraisers(limit: Int! = 20, offset: Int! = 0, query: String!): PaginatedFundraisers!
   searchUsers(limit: Int! = 10, query: String!): UserSearchResult!
   stake(id: ID!): Stake!
+  stakeExistsByTxHash(txHash: String!): Boolean!
   stakes(filter: StakeFilterInput, limit: Int! = 20, offset: Int! = 0, order: SortOrder! = DESC, sortBy: StakeSortBy! = STAKED_AT): PaginatedStakes!
   stakingLeaderboard(limit: Int! = 10): [StakingLeaderboardEntry!]!
 
@@ -1450,6 +1457,16 @@ type RecentDonationActivity {
   id: ID!
 }
 
+type RecentStakingActivity {
+  amount: String!
+  fundraiserId: String
+  fundraiserName: String
+  id: ID!
+  stakedAt: DateTime!
+  stakerAddress: String!
+  stakerUsername: String
+}
+
 input RecordDonationInput {
   amount: String!
   chainId: Int!
@@ -1458,6 +1475,24 @@ input RecordDonationInput {
   message: String
   token: String!
   txHash: String!
+}
+
+input RecordDonationPublicInput {
+  amount: String!
+  blockNumber: Float
+  chainId: Int!
+  donorAddress: String!
+  fundraiserId: String!
+  isAnonymous: Boolean
+  message: String
+  token: String!
+  txHash: String!
+}
+
+type RecordDonationResponse {
+  donation: Donation!
+  verificationMessage: String
+  verified: Boolean!
 }
 
 input RecordStakeInput {
@@ -1469,6 +1504,25 @@ input RecordStakeInput {
   shares: String!
   txHash: String!
   yieldSplit: YieldSplitInput
+}
+
+input RecordStakePublicInput {
+  amount: String!
+  blockNumber: Float
+  chainId: Int!
+  fundraiserId: String
+  isGlobal: Boolean
+  poolAddress: String!
+  shares: String!
+  stakerAddress: String!
+  txHash: String!
+  yieldSplit: YieldSplitInput
+}
+
+type RecordStakeResponse {
+  stake: Stake!
+  verificationMessage: String
+  verified: Boolean!
 }
 
 type RegionCount {
@@ -1640,6 +1694,16 @@ type StakingPoolStats {
   stakersCount: Int!
   totalStaked: String!
   totalYieldGenerated: String!
+}
+
+type StakingStats {
+  apy: String!
+  averageStake: String!
+  largestStake: String!
+  lastStakeAt: DateTime
+  stakesCount: Int!
+  totalStaked: String!
+  uniqueStakersCount: Int!
 }
 
 input StartConversationInput {

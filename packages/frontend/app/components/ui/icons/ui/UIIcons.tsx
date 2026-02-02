@@ -618,3 +618,48 @@ export const Info = forwardRef<SVGSVGElement, IconProps>(
   )
 );
 Info.displayName = 'Info';
+
+export const CheckCircle2 = forwardRef<SVGSVGElement, IconProps>(
+  ({ size = 24, className, ...props }, ref) => (
+    <svg
+      ref={ref}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  )
+);
+CheckCircle2.displayName = 'CheckCircle2';
+
+export const ExternalLink = forwardRef<SVGSVGElement, IconProps>(
+  ({ size = 24, className, ...props }, ref) => (
+    <svg
+      ref={ref}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <path d="M15 3h6v6" />
+      <path d="M10 14 21 3" />
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </svg>
+  )
+);
+ExternalLink.displayName = 'ExternalLink';

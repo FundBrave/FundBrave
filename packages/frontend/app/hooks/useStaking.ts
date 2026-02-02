@@ -91,6 +91,7 @@ export function useStake(poolAddress: Address) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsApproval, setNeedsApproval] = useState(false);
+  const [txStatus, setTxStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
 
   const [recordStakeMutation] = useRecordStakeMutation();
 
@@ -134,12 +135,14 @@ export function useStake(poolAddress: Address) {
 
   const approveUSDC = async (amount: bigint) => {
     if (!address) {
-      setError('Wallet not connected');
+      const errorMsg = 'Please connect your wallet before approving USDC.';
+      setError(errorMsg);
       return false;
     }
 
     setIsProcessing(true);
     setError(null);
+    setTxStatus("pending");
 
     try {
       writeContract({
@@ -151,8 +154,11 @@ export function useStake(poolAddress: Address) {
 
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to approve USDC';
+      const errorMessage = err instanceof Error
+        ? `Unable to approve USDC: ${err.message}. Please try again.`
+        : 'Failed to approve USDC. This is needed to allow the staking contract to access your tokens.';
       setError(errorMessage);
+      setTxStatus("error");
       setIsProcessing(false);
       return false;
     }
@@ -160,23 +166,29 @@ export function useStake(poolAddress: Address) {
 
   const stake = async (amount: bigint, fundraiserId?: string) => {
     if (!address) {
-      setError('Wallet not connected');
+      const errorMsg = 'Please connect your wallet to stake USDC.';
+      setError(errorMsg);
       return null;
     }
 
     if (usdcBalance && amount > usdcBalance) {
-      setError('Insufficient USDC balance');
+      const balanceFormatted = Number(usdcBalance) / 1e6;
+      const amountFormatted = Number(amount) / 1e6;
+      setError(
+        `Insufficient USDC balance. You need ${amountFormatted} USDC but only have ${balanceFormatted.toFixed(2)} USDC.`
+      );
       return null;
     }
 
     const hasAllowance = await checkAllowance(amount);
     if (!hasAllowance) {
-      setError('Please approve USDC first');
+      setError('Please approve USDC first by clicking the "Approve USDC" button.');
       return null;
     }
 
     setIsProcessing(true);
     setError(null);
+    setTxStatus("pending");
 
     try {
       writeContract({
@@ -188,8 +200,11 @@ export function useStake(poolAddress: Address) {
 
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to stake';
+      const errorMessage = err instanceof Error
+        ? `Unable to stake: ${err.message}. Please check your wallet and try again.`
+        : 'Failed to stake. Please ensure you have sufficient USDC and approved the contract.';
       setError(errorMessage);
+      setTxStatus("error");
       setIsProcessing(false);
       return null;
     }
@@ -231,6 +246,35 @@ export function useStake(poolAddress: Address) {
     }
   };
 
+  // Handle transaction success
+  useState(() => {
+    if (isSuccess) {
+      setTxStatus("success");
+      setIsProcessing(false);
+      setError(null);
+    }
+  });
+
+  // Handle write errors
+  useState(() => {
+    if (writeError) {
+      setTxStatus("error");
+      setIsProcessing(false);
+
+      // Parse common error messages for better UX
+      let errorMsg = writeError.message;
+      if (errorMsg.includes("user rejected")) {
+        errorMsg = "Transaction was rejected. Please try again when you're ready.";
+      } else if (errorMsg.includes("insufficient funds")) {
+        errorMsg = "Insufficient funds to complete this transaction. Please check your wallet balance.";
+      } else if (errorMsg.includes("gas")) {
+        errorMsg = "Network fee (gas) estimation failed. Please try again or increase gas limit.";
+      }
+
+      setError(errorMsg);
+    }
+  });
+
   return {
     stake,
     approveUSDC,
@@ -243,5 +287,6 @@ export function useStake(poolAddress: Address) {
     needsApproval,
     error: error || (writeError?.message ?? null),
     refetchAllowance,
+    txStatus,
   };
 }

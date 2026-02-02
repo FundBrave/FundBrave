@@ -108,6 +108,17 @@ module.exports = {
       chainId: 10,
     },
 
+    // Base Sepolia
+    baseSepolia: {
+      url: ALCHEMY_API_KEY
+        ? `https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+        : "https://sepolia.base.org",
+      accounts: [PRIVATE_KEY],
+      chainId: 84532,
+      gasPrice: "auto",
+      timeout: 120000,
+    },
+
     // StatusL2 Testnet
     statusL2Testnet: {
       url: "https://public.sepolia.rpc.status.network",
@@ -130,9 +141,18 @@ module.exports = {
       arbitrumSepolia: ETHERSCAN_API_KEY,
       optimisticEthereum: ETHERSCAN_API_KEY,
       optimisticSepolia: ETHERSCAN_API_KEY,
+      baseSepolia: ETHERSCAN_API_KEY,
       statusL2Testnet: "placeholder", // StatusL2 explorer may not require API key
     },
     customChains: [
+      {
+        network: "baseSepolia",
+        chainId: 84532,
+        urls: {
+          apiURL: "https://api-sepolia.basescan.org/api",
+          browserURL: "https://sepolia.basescan.org",
+        },
+      },
       {
         network: "statusL2Testnet",
         chainId: 1660990954,

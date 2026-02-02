@@ -28,6 +28,17 @@ const networkConfigs = {
     stakingPoolType: 0,
   },
 
+  // Base Sepolia
+  baseSepolia: {
+    usdc: "0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f", // USDC on Base Sepolia (Aave)
+    weth: "0x4200000000000000000000000000000000000006", // WETH on Base Sepolia
+    aavePool: "0x8bAB6d1b75f19e9eD9fCe8b9BD338844fF79aE27", // Aave V3 Pool (Base Sepolia)
+    aUsdc: "0x10F1A9D11CDf50041f3f8cB7191CBE2f31750ACC", // aUSDC (Aave Base Sepolia)
+    morphoVault: "0x0000000000000000000000000000000000000000",
+    swapAdapter: "0x0000000000000000000000000000000000000000",
+    stakingPoolType: 0,
+  },
+
   // StatusL2 Testnet
   statusL2Testnet: {
     // Note: These are placeholder addresses - update with actual StatusL2 deployed addresses

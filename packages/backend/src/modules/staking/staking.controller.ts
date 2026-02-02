@@ -29,6 +29,10 @@ import {
   GlobalPoolEpoch,
   UserGlobalPoolVotes,
   RecordStakeInput,
+  RecordStakePublicInput,
+  RecordStakeResponse,
+  StakingStats,
+  RecentStakingActivity,
   UnstakeInput,
   GlobalPoolVoteInput,
   StakeSortBy,
@@ -222,6 +226,59 @@ export class StakingController {
     return this.stakingService.getUserEpochVotes(user.id, epochNumber);
   }
 
+  @Get('stats/platform')
+  @ApiOperation({ summary: 'Get platform-wide staking statistics' })
+  @ApiResponse({ status: 200, description: 'Returns platform staking stats' })
+  async getPlatformStats(): Promise<StakingStats> {
+    return this.stakingService.getPlatformStakingStats();
+  }
+
+  @Get('fundraiser/:fundraiserId/stats')
+  @ApiOperation({ summary: 'Get staking stats for a fundraiser' })
+  @ApiParam({ name: 'fundraiserId', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns fundraiser staking stats',
+  })
+  async getFundraiserStakingStats(
+    @Param('fundraiserId') fundraiserId: string,
+  ): Promise<StakingStats> {
+    return this.stakingService.getFundraiserStakingStats(fundraiserId);
+  }
+
+  @Get('fundraiser/:fundraiserId/recent-stakers')
+  @ApiOperation({ summary: 'Get recent stakers for a fundraiser (social proof)' })
+  @ApiParam({ name: 'fundraiserId', type: String })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Returns recent stakers' })
+  async getRecentStakers(
+    @Param('fundraiserId') fundraiserId: string,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ): Promise<RecentStakingActivity[]> {
+    return this.stakingService.getRecentStakingActivity(limit, fundraiserId);
+  }
+
+  @Get('recent')
+  @ApiOperation({ summary: 'Get recent staking activity platform-wide' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Returns recent staking activity' })
+  async getRecentStakingActivity(
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ): Promise<RecentStakingActivity[]> {
+    return this.stakingService.getRecentStakingActivity(limit);
+  }
+
+  @Get('exists/:txHash')
+  @ApiOperation({ summary: 'Check if a stake exists by transaction hash' })
+  @ApiParam({ name: 'txHash', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns true if stake exists, false otherwise',
+  })
+  async stakeExists(@Param('txHash') txHash: string): Promise<boolean> {
+    return this.stakingService.stakeExistsByTxHash(txHash);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get stake by ID' })
   @ApiParam({ name: 'id', type: String })
@@ -236,14 +293,39 @@ export class StakingController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Record a new stake' })
+  @ApiOperation({ summary: 'Record a new stake (authenticated)' })
   @ApiResponse({ status: 201, description: 'Stake recorded successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 409, description: 'Duplicate transaction' })
   async recordStake(
     @CurrentUser() user: { id: string; walletAddress: string },
     @Body() input: RecordStakeInput,
   ): Promise<Stake> {
     return this.stakingService.recordStake(user.id, user.walletAddress, input);
+  }
+
+  @Post('public')
+  @ApiOperation({
+    summary: 'Record a stake without authentication (for Web3 wallets)',
+    description:
+      'Records a stake after on-chain transaction confirmation. ' +
+      'Supports idempotent calls - returns existing stake if already recorded. ' +
+      'Use this when the user completed a stake on-chain but is not logged in.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Stake recorded successfully',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Stake already exists (idempotent response)',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({ status: 404, description: 'Fundraiser not found' })
+  async recordStakePublic(
+    @Body() input: RecordStakePublicInput,
+  ): Promise<RecordStakeResponse> {
+    return this.stakingService.recordStakePublic(input);
   }
 
   @Post('unstake')

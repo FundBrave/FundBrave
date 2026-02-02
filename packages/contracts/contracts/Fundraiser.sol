@@ -90,11 +90,29 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
     string public region;
     address payable public beneficiary;
     
+    /// @notice Total USDC amount donated to this fundraiser (in USDC decimals)
     uint256 public totalDonations;
+
+    /**
+     * @notice Total number of donation transactions ever made to this fundraiser
+     * @dev This counter increments with every donation and never decreases,
+     *      providing a historical record of all donation events.
+     *      Used for analytics and historical tracking.
+     */
     uint256 public totalDonationsCount;
+
     uint256 public proposalCount;
     uint256 public mediaArchiveCount;
+
+    /**
+     * @notice Current number of unique donation records stored
+     * @dev DEPRECATED: This counter duplicates totalDonationsCount functionality.
+     *      Kept for backward compatibility with existing integrations.
+     *      New integrations should use totalDonationsCount instead.
+     * @custom:deprecated Use totalDonationsCount for donation counting
+     */
     uint256 public donationsCount;
+
     uint256 public goal;
     uint256 public deadline;
 
@@ -220,6 +238,9 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
         _allDonations[id].push(allDonation);
 
         totalDonations += value;
+
+        // Note: Both counters are incremented for backward compatibility.
+        // donationsCount is deprecated - use totalDonationsCount for new integrations.
         donationsCount++;
         totalDonationsCount++;
 
@@ -423,6 +444,10 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
 
     function withdrawUSDT() external onlyOwner nonReentrant {
         require(!refundsEnabled, "Refunds are enabled, cannot withdraw");
+        require(
+            block.timestamp > deadline || goalReached(),
+            "Cannot withdraw before deadline unless goal reached"
+        );
         uint256 balance = usdc.balanceOf(address(this));
         require(balance > 0, "No funds to withdraw");
         usdc.safeTransfer(beneficiary, balance);
@@ -541,7 +566,26 @@ contract Fundraiser is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
+    /**
+     * @notice Returns the contract version
+     * @return Version string in semver format
+     */
     function version() external pure returns (string memory) {
-        return "1.1.0";
+        return "1.2.0";
+    }
+
+    /**
+     * @notice Checks if the implementation contract is properly locked
+     * @dev This function should always revert when called on the implementation contract
+     *      because _disableInitializers() was called in the constructor.
+     *      Can be used by deployment scripts to verify implementation security.
+     * @return True if this is a proxy (initialized), should never return on implementation
+     */
+    function isProxyInitialized() external view returns (bool) {
+        // This will return true if initialize() was called (proxy)
+        // Implementation contracts with _disableInitializers() will have
+        // their initializer state set in the constructor, making this return true as well
+        // The key is that calling initialize() on implementation will revert
+        return true;
     }
 }

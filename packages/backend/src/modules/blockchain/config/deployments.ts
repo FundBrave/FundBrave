@@ -13,6 +13,9 @@ export interface ContractAddresses {
   aUsdc: string;
   aavePool: string;
   receiptOFT?: string;
+  // Implementation contracts (for proxy patterns)
+  fundraiserImplementation?: string;
+  stakingPoolImplementation?: string;
 }
 
 export interface NetworkConfig {
@@ -240,21 +243,116 @@ export const LOCALHOST: NetworkConfig = {
   blockConfirmations: 1,
 };
 
+/**
+ * Base Sepolia Testnet Configuration
+ * Primary testnet for FundBrave deployed contracts
+ */
+export const BASE_SEPOLIA_TESTNET: NetworkConfig = {
+  chainId: 84532,
+  name: 'Base Sepolia',
+  rpcUrl: process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
+  explorerUrl: 'https://sepolia.basescan.org',
+  nativeCurrency: {
+    name: 'Ethereum',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  contracts: {
+    fundraiserFactory:
+      process.env.BASE_SEPOLIA_FUNDRAISER_FACTORY ||
+      '0x7253b4E79cc708873b83Bb3C3F50F3e81b21819c',
+    fundBraveToken:
+      process.env.BASE_SEPOLIA_FBT ||
+      '0xE42A6ff84160Ac399607667C32392378Bbb270E0',
+    impactDAOPool:
+      process.env.BASE_SEPOLIA_IMPACT_DAO_POOL ||
+      '0x0000000000000000000000000000000000000000', // Not deployed yet
+    wealthBuildingDonation:
+      process.env.BASE_SEPOLIA_WEALTH_BUILDING ||
+      '0x8DcC63E7Df76ece01c186568E269a2cF3aC8A886',
+    platformTreasury:
+      process.env.BASE_SEPOLIA_PLATFORM_TREASURY ||
+      '0x664AbB27C9c3d287117676c77B6A1c88B831D836',
+    usdc:
+      process.env.BASE_SEPOLIA_USDC ||
+      '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Circle's USDC on Base Sepolia
+    aUsdc:
+      process.env.BASE_SEPOLIA_AUSDC ||
+      '0x0000000000000000000000000000000000000000', // Aave aUSDC (if available on Base Sepolia)
+    aavePool:
+      process.env.BASE_SEPOLIA_AAVE_POOL ||
+      '0x0000000000000000000000000000000000000000', // Aave Pool (if available on Base Sepolia)
+    // Implementation contracts
+    fundraiserImplementation:
+      process.env.BASE_SEPOLIA_FUNDRAISER_IMPL ||
+      '0xf79732B4D25521F2C8d8619c568C065fBf69bc9e',
+    stakingPoolImplementation:
+      process.env.BASE_SEPOLIA_STAKING_POOL_IMPL ||
+      '0x51A41B4F07a7b5b6D2eF72E3AaD97aDE1e3E86F8',
+  },
+  isTestnet: true,
+  blockConfirmations: 2,
+};
+
+/**
+ * Base Mainnet Configuration
+ * Production network for FundBrave on Base
+ */
+export const BASE_MAINNET: NetworkConfig = {
+  chainId: 8453,
+  name: 'Base',
+  rpcUrl: process.env.BASE_RPC_URL || 'https://mainnet.base.org',
+  explorerUrl: 'https://basescan.org',
+  nativeCurrency: {
+    name: 'Ethereum',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  contracts: {
+    fundraiserFactory:
+      process.env.BASE_FUNDRAISER_FACTORY ||
+      '0x0000000000000000000000000000000000000000',
+    fundBraveToken:
+      process.env.BASE_FBT || '0x0000000000000000000000000000000000000000',
+    impactDAOPool:
+      process.env.BASE_IMPACT_DAO_POOL ||
+      '0x0000000000000000000000000000000000000000',
+    wealthBuildingDonation:
+      process.env.BASE_WEALTH_BUILDING ||
+      '0x0000000000000000000000000000000000000000',
+    platformTreasury:
+      process.env.BASE_PLATFORM_TREASURY ||
+      '0x0000000000000000000000000000000000000000',
+    usdc:
+      process.env.BASE_USDC || '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Circle's USDC on Base
+    aUsdc:
+      process.env.BASE_AUSDC || '0x0000000000000000000000000000000000000000',
+    aavePool:
+      process.env.BASE_AAVE_POOL ||
+      '0xA238Dd80C259a72e81d7e4664a9801593F98d1c5', // Aave V3 Pool on Base
+  },
+  isTestnet: false,
+  blockConfirmations: 12,
+};
+
 // ==================== Network Registry ====================
 
 export const SUPPORTED_NETWORKS: Record<number, NetworkConfig> = {
-  31337: LOCALHOST,
+  // 31337: LOCALHOST,  // Commented out - not running local Hardhat node
   11155111: SEPOLIA_TESTNET,
   137: POLYGON_MAINNET,
   42161: ARBITRUM_ONE,
+  84532: BASE_SEPOLIA_TESTNET,
+  8453: BASE_MAINNET,
 };
 
 // Default network for the application
+// Changed default from 31337 (localhost) to 84532 (Base Sepolia) where contracts are deployed
 export const DEFAULT_CHAIN_ID = parseInt(
-  process.env.DEFAULT_CHAIN_ID || '31337',
+  process.env.DEFAULT_CHAIN_ID || '84532',
 );
 export const DEFAULT_NETWORK =
-  SUPPORTED_NETWORKS[DEFAULT_CHAIN_ID] || STATUS_L2_TESTNET;
+  SUPPORTED_NETWORKS[DEFAULT_CHAIN_ID] || BASE_SEPOLIA_TESTNET;
 
 /**
  * Get network configuration by chain ID
@@ -302,4 +400,6 @@ export const CONTRACT_NAMES: ContractName[] = [
   'aUsdc',
   'aavePool',
   'receiptOFT',
+  'fundraiserImplementation',
+  'stakingPoolImplementation',
 ];

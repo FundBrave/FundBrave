@@ -69,7 +69,7 @@ const NotificationContext = createContext<NotificationContextState | undefined>(
  * Group notifications by time period
  */
 function groupNotificationsByTime(
-  notifications: Notification[]
+  notifications: Notification[] | undefined | null
 ): GroupedNotifications {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -84,6 +84,11 @@ function groupNotificationsByTime(
     this_week: [],
     earlier: [],
   };
+
+  // Defensive check: ensure notifications is an array
+  if (!Array.isArray(notifications)) {
+    return groups;
+  }
 
   for (const notification of notifications) {
     const createdAt = new Date(notification.createdAt);
@@ -287,40 +292,51 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   /**
    * Fetch notifications from API
    */
-  const fetchNotifications = useCallback(async (reset = false) => {
-    if (isLoading) return;
+  const fetchNotifications = useCallback(
+    async (reset = false) => {
+      if (isLoading) return;
 
-    setIsLoading(true);
+      setIsLoading(true);
 
-    try {
-      const offset = reset ? 0 : notifications.length;
-      const data = await notificationsApi.getNotifications(20, offset);
+      try {
+        // Use state updater to get current length
+        let offset = 0;
+        if (!reset) {
+          setNotifications((prev) => {
+            offset = (prev || []).length;
+            return prev;
+          });
+        }
 
-      if (reset) {
-        setNotifications(data.notifications);
-        setCursor(null);
-      } else {
-        setNotifications((prev) => [...prev, ...data.notifications]);
+        const data = await notificationsApi.getNotifications(20, offset);
+
+        if (reset) {
+          setNotifications(data.notifications);
+          setCursor(null);
+        } else {
+          setNotifications((prev) => [...(prev || []), ...data.notifications]);
+        }
+
+        setHasMore(data.hasMore);
+        setUnreadCount(data.unreadCount);
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+        // Fallback to mock data on error
+        const mockData = generateMockNotifications();
+        if (reset) {
+          setNotifications(mockData);
+          setCursor(null);
+        } else {
+          setNotifications((prev) => [...(prev || []), ...mockData]);
+        }
+        setHasMore(false);
+        setUnreadCount(mockData.filter((n) => !n.isRead).length);
+      } finally {
+        setIsLoading(false);
       }
-
-      setHasMore(data.hasMore);
-      setUnreadCount(data.unreadCount);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-      // Fallback to mock data on error
-      const mockData = generateMockNotifications();
-      if (reset) {
-        setNotifications(mockData);
-        setCursor(null);
-      } else {
-        setNotifications((prev) => [...prev, ...mockData]);
-      }
-      setHasMore(false);
-      setUnreadCount(mockData.filter((n) => !n.isRead).length);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoading, notifications.length]);
+    },
+    [isLoading]
+  );
 
   /**
    * Mark a single notification as read
@@ -328,7 +344,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const markAsRead = useCallback(async (id: string) => {
     // Optimistic update
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      (prev || []).map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
     setUnreadCount((prev) => Math.max(0, prev - 1));
 
@@ -337,7 +353,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       // Revert on error
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: false } : n))
+        (prev || []).map((n) => (n.id === id ? { ...n, isRead: false } : n))
       );
       setUnreadCount((prev) => prev + 1);
       console.error("Failed to mark notification as read:", error);
@@ -352,7 +368,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const previousNotifications = notifications;
     const previousCount = unreadCount;
 
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setNotifications((prev) => (prev || []).map((n) => ({ ...n, isRead: true })));
     setUnreadCount(0);
 
     try {
@@ -372,7 +388,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const previousNotifications = notifications;
 
     // Optimistic update
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications((prev) => (prev || []).filter((n) => n.id !== id));
 
     try {
       await notificationsApi.deleteNotification(id);
@@ -420,7 +436,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       createdAt: Date.now(),
     };
 
-    setToasts((prev) => [...prev, toast]);
+    setToasts((prev) => [...(prev || []), toast]);
 
     // Auto-dismiss after 5 seconds
     setTimeout(() => {
@@ -432,7 +448,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
    * Dismiss a toast notification
    */
   const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((prev) => (prev || []).filter((t) => t.id !== id));
   }, []);
 
   /**

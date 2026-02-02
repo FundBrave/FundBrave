@@ -367,7 +367,83 @@ export class BlockchainController {
     });
   }
 
-  // ==================== Network Info ====================
+  // ==================== Health & Network Info ====================
+
+  /**
+   * Get blockchain connection health status
+   */
+  @Get('health')
+  @ApiOperation({
+    summary: 'Get blockchain connection health',
+    description:
+      'Returns health status of all blockchain provider connections. ' +
+      'Use this endpoint to verify RPC connectivity and diagnose connection issues.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Health status retrieved',
+    schema: {
+      type: 'object',
+      properties: {
+        isHealthy: { type: 'boolean', description: 'Whether any provider is connected' },
+        defaultChainConnected: { type: 'boolean', description: 'Whether default chain is connected' },
+        timestamp: { type: 'string', format: 'date-time' },
+        providers: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              chainId: { type: 'number' },
+              networkName: { type: 'string' },
+              isConnected: { type: 'boolean' },
+              blockNumber: { type: 'number', nullable: true },
+              latency: { type: 'number', nullable: true, description: 'Latency in ms' },
+              endpoint: { type: 'string', description: 'Masked RPC endpoint' },
+              error: { type: 'string', nullable: true },
+            },
+          },
+        },
+      },
+    },
+  })
+  getBlockchainHealth() {
+    return this.contractsService.getBlockchainHealth();
+  }
+
+  /**
+   * Get health status for a specific chain
+   */
+  @Get('health/:chainId')
+  @ApiOperation({
+    summary: 'Get blockchain health for specific chain',
+    description: 'Returns connection status for a specific blockchain network',
+  })
+  @ApiParam({ name: 'chainId', description: 'Chain ID to check', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Chain health status',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Chain not supported',
+  })
+  getChainHealth(@Param('chainId') chainIdParam: string) {
+    const chainId = parseInt(chainIdParam, 10);
+    const status = this.contractsService.getChainConnectionStatus(chainId);
+
+    if (!status) {
+      return {
+        chainId,
+        supported: false,
+        message: `Chain ${chainId} is not configured`,
+      };
+    }
+
+    return {
+      supported: true,
+      ...status,
+    };
+  }
 
   /**
    * Get supported networks
@@ -380,6 +456,7 @@ export class BlockchainController {
   async getSupportedNetworks() {
     const defaultChainId = DEFAULT_CHAIN_ID;
     const defaultNetwork = this.contractsService.getNetworkConfig(defaultChainId);
+    const health = this.contractsService.getBlockchainHealth();
 
     return {
       defaultChainId,
@@ -389,9 +466,13 @@ export class BlockchainController {
             name: defaultNetwork.name,
             isTestnet: defaultNetwork.isTestnet,
             explorerUrl: defaultNetwork.explorerUrl,
+            isConnected: health.defaultChainConnected,
           }
         : null,
-      supportedChainIds: [31337, 11155111, 137, 42161], // From deployments config
+      supportedChainIds: [31337, 11155111, 137, 42161, 84532, 8453], // Updated with Base chains
+      connectedChains: health.providers
+        .filter(p => p.isConnected)
+        .map(p => ({ chainId: p.chainId, name: p.networkName })),
     };
   }
 

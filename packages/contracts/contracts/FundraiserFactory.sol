@@ -42,6 +42,8 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
     error MorphoNotConfigured();
     error NoStakingPool();
     error WealthBuildingNotConfigured();
+    error MessageAlreadyProcessed();
+    error InvalidMessageHash();
 
 
     // ============ Implementations for Clones ============
@@ -56,6 +58,9 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
     mapping(address => bool) public verifiedCreators;
     mapping(uint256 => bool) public activeFundraisers;
     mapping(uint256 => address) public stakingPools;
+
+    /// @notice Tracks processed cross-chain message hashes to prevent replay attacks
+    mapping(bytes32 => bool) public processedMessages;
 
     string[] public availableCategories;
     mapping(string => bool) private _categoryExists;
@@ -601,10 +606,38 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
     // ============ Cross-Chain Functions ============
 
     /**
-     * @notice Handles cross-chain donation from bridge
+     * @notice Handles cross-chain donation from bridge with replay attack protection
      * @dev Only callable by the configured bridge contract
+     * @param donor Address of the donor on the source chain
+     * @param fundraiserId ID of the fundraiser to donate to
+     * @param usdcAmount Amount of USDC to donate
+     * @param messageHash Unique hash of the cross-chain message for replay protection
+     * @param sourceChainId Chain ID of the source chain
      */
-    function handleCrossChainDonation(address donor, uint256 fundraiserId, uint256 usdcAmount) external nonReentrant whenNotPaused onlyBridge {
+    function handleCrossChainDonation(
+        address donor,
+        uint256 fundraiserId,
+        uint256 usdcAmount,
+        bytes32 messageHash,
+        uint32 sourceChainId
+    ) external nonReentrant whenNotPaused onlyBridge {
+        // Replay attack protection
+        if (processedMessages[messageHash]) revert MessageAlreadyProcessed();
+
+        // Verify message hash matches expected parameters
+        bytes32 expectedHash = keccak256(abi.encodePacked(
+            donor,
+            fundraiserId,
+            usdcAmount,
+            sourceChainId,
+            block.chainid,
+            uint8(0) // 0 = donation type
+        ));
+        if (messageHash != expectedHash) revert InvalidMessageHash();
+
+        // Mark message as processed before external calls (CEI pattern)
+        processedMessages[messageHash] = true;
+
         if (fundraiserId >= _fundraisers.length) revert InvalidFundraiserId();
         Fundraiser fundraiser = _fundraisers[fundraiserId];
         IERC20(USDC).safeTransfer(address(fundraiser), usdcAmount);
@@ -613,14 +646,136 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
     }
 
     /**
-     * @notice Handles cross-chain stake from bridge
+     * @notice Handles cross-chain stake from bridge with replay attack protection
      * @dev Only callable by the configured bridge contract
+     * @param donor Address of the staker on the source chain
+     * @param fundraiserId ID of the fundraiser's staking pool
+     * @param usdcAmount Amount of USDC to stake
+     * @param messageHash Unique hash of the cross-chain message for replay protection
+     * @param sourceChainId Chain ID of the source chain
      */
-    function handleCrossChainStake(address donor, uint256 fundraiserId, uint256 usdcAmount) external nonReentrant whenNotPaused onlyBridge {
+    function handleCrossChainStake(
+        address donor,
+        uint256 fundraiserId,
+        uint256 usdcAmount,
+        bytes32 messageHash,
+        uint32 sourceChainId
+    ) external nonReentrant whenNotPaused onlyBridge {
+        // Replay attack protection
+        if (processedMessages[messageHash]) revert MessageAlreadyProcessed();
+
+        // Verify message hash matches expected parameters
+        bytes32 expectedHash = keccak256(abi.encodePacked(
+            donor,
+            fundraiserId,
+            usdcAmount,
+            sourceChainId,
+            block.chainid,
+            uint8(1) // 1 = stake type
+        ));
+        if (messageHash != expectedHash) revert InvalidMessageHash();
+
+        // Mark message as processed before external calls (CEI pattern)
+        processedMessages[messageHash] = true;
+
         address poolAddress = stakingPools[fundraiserId];
         if (poolAddress == address(0)) revert NoStakingPool();
         IERC20(USDC).safeTransfer(poolAddress, usdcAmount);
         _depositToPool(poolAddress, donor, usdcAmount);
+    }
+
+    /**
+     * @notice Legacy handler for backwards compatibility (DEPRECATED)
+     * @dev Only callable by the configured bridge contract. Use new version with message hash for security.
+     * @param donor Address of the donor on the source chain
+     * @param fundraiserId ID of the fundraiser to donate to
+     * @param usdcAmount Amount of USDC to donate
+     */
+    function handleCrossChainDonationLegacy(
+        address donor,
+        uint256 fundraiserId,
+        uint256 usdcAmount
+    ) external nonReentrant whenNotPaused onlyBridge {
+        if (fundraiserId >= _fundraisers.length) revert InvalidFundraiserId();
+        Fundraiser fundraiser = _fundraisers[fundraiserId];
+        IERC20(USDC).safeTransfer(address(fundraiser), usdcAmount);
+        fundraiser.creditDonation(donor, usdcAmount, "cross-chain-legacy");
+        totalFundsRaised += usdcAmount;
+    }
+
+    /**
+     * @notice Legacy handler for backwards compatibility (DEPRECATED)
+     * @dev Only callable by the configured bridge contract. Use new version with message hash for security.
+     * @param donor Address of the staker on the source chain
+     * @param fundraiserId ID of the fundraiser's staking pool
+     * @param usdcAmount Amount of USDC to stake
+     */
+    function handleCrossChainStakeLegacy(
+        address donor,
+        uint256 fundraiserId,
+        uint256 usdcAmount
+    ) external nonReentrant whenNotPaused onlyBridge {
+        address poolAddress = stakingPools[fundraiserId];
+        if (poolAddress == address(0)) revert NoStakingPool();
+        IERC20(USDC).safeTransfer(poolAddress, usdcAmount);
+        _depositToPool(poolAddress, donor, usdcAmount);
+    }
+
+    /**
+     * @notice Check if a cross-chain message has already been processed
+     * @param messageHash The hash of the message to check
+     * @return True if the message has been processed
+     */
+    function isMessageProcessed(bytes32 messageHash) external view returns (bool) {
+        return processedMessages[messageHash];
+    }
+
+    /**
+     * @notice Compute the expected message hash for a cross-chain donation
+     * @param donor Address of the donor
+     * @param fundraiserId ID of the fundraiser
+     * @param usdcAmount Amount of USDC
+     * @param sourceChainId Source chain ID
+     * @return The computed message hash
+     */
+    function computeDonationMessageHash(
+        address donor,
+        uint256 fundraiserId,
+        uint256 usdcAmount,
+        uint32 sourceChainId
+    ) external view returns (bytes32) {
+        return keccak256(abi.encodePacked(
+            donor,
+            fundraiserId,
+            usdcAmount,
+            sourceChainId,
+            block.chainid,
+            uint8(0)
+        ));
+    }
+
+    /**
+     * @notice Compute the expected message hash for a cross-chain stake
+     * @param donor Address of the staker
+     * @param fundraiserId ID of the fundraiser
+     * @param usdcAmount Amount of USDC
+     * @param sourceChainId Source chain ID
+     * @return The computed message hash
+     */
+    function computeStakeMessageHash(
+        address donor,
+        uint256 fundraiserId,
+        uint256 usdcAmount,
+        uint32 sourceChainId
+    ) external view returns (bytes32) {
+        return keccak256(abi.encodePacked(
+            donor,
+            fundraiserId,
+            usdcAmount,
+            sourceChainId,
+            block.chainid,
+            uint8(1)
+        ));
     }
 
     // ============ Internal Swap Functions ============

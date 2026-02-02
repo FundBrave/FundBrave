@@ -1,0 +1,171 @@
+- generic [active] [ref=e11]:
+  - button "Open Next.js Dev Tools" [ref=e6] [cursor=pointer]:
+    - img [ref=e7]
+  - alert [ref=e10]
+  - generic [ref=e12]:
+    - link "Skip to main content" [ref=e13] [cursor=pointer]:
+      - /url: "#main-content"
+    - region "Notifications"
+    - generic [ref=e16]:
+      - navigation [ref=e17]:
+        - link "Skip to main content" [ref=e18] [cursor=pointer]:
+          - /url: "#main-content"
+        - generic [ref=e20]:
+          - link "FundBrave Logo" [ref=e21] [cursor=pointer]:
+            - /url: /
+            - img "FundBrave Logo" [ref=e23]
+          - button "Search (Cmd+K)" [ref=e24] [cursor=pointer]:
+            - img [ref=e25]
+          - generic [ref=e28]:
+            - link "Feed" [ref=e30] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e31]: Feed
+            - link "Campaigns" [ref=e32] [cursor=pointer]:
+              - /url: /campaigns
+              - generic [ref=e33]: Campaigns
+            - link "Leaderboard" [ref=e34] [cursor=pointer]:
+              - /url: /leaderboard
+              - generic [ref=e35]: Leaderboard
+            - link "Community" [ref=e36] [cursor=pointer]:
+              - /url: /community
+              - generic [ref=e37]: Community
+          - generic [ref=e38]:
+            - link "Add Campaign" [ref=e39] [cursor=pointer]:
+              - /url: /campaigns/create
+              - button "Add Campaign" [ref=e40]
+            - generic [ref=e41]:
+              - link "Settings" [ref=e42] [cursor=pointer]:
+                - /url: /settings
+                - img [ref=e43]
+              - link "Messages" [ref=e46] [cursor=pointer]:
+                - /url: /messenger
+                - img [ref=e47]
+              - button "Notifications" [ref=e50]:
+                - img [ref=e52]
+              - button "paschal_okwuosah paschal_okwuosah 0xd147...482b" [ref=e56] [cursor=pointer]:
+                - img "paschal_okwuosah" [ref=e57]:
+                  - generic [ref=e58]: P
+                - generic [ref=e59]:
+                  - generic [ref=e60]:
+                    - generic [ref=e61]: paschal_okwuosah
+                    - img [ref=e62]
+                  - generic [ref=e64]: 0xd147...482b
+      - generic [ref=e66]:
+        - complementary [ref=e67]:
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - heading "Browse Categories" [level=2] [ref=e70]
+              - button "Collapse sidebar" [ref=e71]:
+                - img [ref=e72]
+            - generic [ref=e74]:
+              - button "All" [ref=e76]:
+                - img [ref=e78]
+                - generic [ref=e81]: All
+              - button "Health and Medical" [ref=e83]:
+                - img [ref=e85]
+                - generic [ref=e87]: Health and Medical
+              - button "Education" [ref=e89]:
+                - img [ref=e91]
+                - generic [ref=e94]: Education
+              - button "Environment" [ref=e96]:
+                - img [ref=e98]
+                - generic [ref=e100]: Environment
+              - button "Emergency" [ref=e102]:
+                - img [ref=e104]
+                - generic [ref=e106]: Emergency
+              - button "Animal" [ref=e108]:
+                - img [ref=e110]
+                - generic [ref=e112]: Animal
+              - button "Community" [ref=e114]:
+                - img [ref=e116]
+                - generic [ref=e118]: Community
+              - button "Business" [ref=e120]:
+                - img [ref=e122]
+                - generic [ref=e125]: Business
+              - button "Competition" [ref=e127]:
+                - img [ref=e129]
+                - generic [ref=e133]: Competition
+              - button "Creative" [ref=e135]:
+                - img [ref=e137]
+                - generic [ref=e139]: Creative
+              - button "Event" [ref=e141]:
+                - img [ref=e143]
+                - generic [ref=e147]: Event
+              - button "Religion" [ref=e149]:
+                - img [ref=e151]
+                - generic [ref=e156]: Religion
+              - button "Memorial" [ref=e158]:
+                - img [ref=e160]
+                - generic [ref=e163]: Memorial
+              - button "Disaster" [ref=e165]:
+                - img [ref=e167]
+                - generic [ref=e171]: Disaster
+              - button "Family" [ref=e173]:
+                - img [ref=e175]
+                - generic [ref=e177]: Family
+              - button "Sports" [ref=e179]:
+                - img [ref=e181]
+                - generic [ref=e183]: Sports
+              - button "Travel" [ref=e185]:
+                - img [ref=e187]
+                - generic [ref=e189]: Travel
+              - button "Volunteer" [ref=e191]:
+                - img [ref=e193]
+                - generic [ref=e195]: Volunteer
+              - button "Tech Startups" [ref=e197]:
+                - img [ref=e199]
+                - generic [ref=e201]: Tech Startups
+        - generic [ref=e202]:
+          - 'button "Sort by: Oldest" [ref=e205]':
+            - generic [ref=e206]: "Sort by: Oldest"
+            - img [ref=e207]
+          - generic [ref=e210]:
+            - article "Tech Skills Bootcamp for Youth" [ref=e211]:
+              - img "Tech Skills Bootcamp for Youth" [ref=e213]
+              - generic [ref=e214]:
+                - heading "Tech Skills Bootcamp for Youth" [level=3] [ref=e215]
+                - generic [ref=e216]:
+                  - paragraph [ref=e217]: 0 members donated
+                  - progressbar "0% funded" [ref=e218]
+                  - paragraph [ref=e219]:
+                    - generic [ref=e220]: 0 USD
+                    - text: raised of 0.045 USD target
+                - link "View Campaign" [ref=e221] [cursor=pointer]:
+                  - /url: /campaigns/dc00361e-ed36-49ec-b7d2-407de58f3457
+                  - generic [ref=e222]:
+                    - generic [ref=e223]: View Campaign
+                    - img [ref=e224]
+            - article "AI-Powered Precision Agriculture" [ref=e226]:
+              - generic [ref=e227]:
+                - generic [ref=e229]:
+                  - img [ref=e230]
+                  - generic [ref=e232]: Verified
+                - img "AI-Powered Precision Agriculture" [ref=e233]
+              - generic [ref=e234]:
+                - heading "AI-Powered Precision Agriculture" [level=3] [ref=e235]
+                - generic [ref=e236]:
+                  - paragraph [ref=e237]: 0 members donated
+                  - progressbar "0% funded" [ref=e238]
+                  - paragraph [ref=e239]:
+                    - generic [ref=e240]: 0 USD
+                    - text: raised of 0.055 USD target
+                - link "View Campaign" [ref=e241] [cursor=pointer]:
+                  - /url: /campaigns/15dbd28b-b905-42fb-bbe9-6208555aa3a9
+                  - generic [ref=e242]:
+                    - generic [ref=e243]: View Campaign
+                    - img [ref=e244]
+            - article "Decentralized Health Records Platform" [ref=e246]:
+              - img "Decentralized Health Records Platform" [ref=e248]
+              - generic [ref=e249]:
+                - heading "Decentralized Health Records Platform" [level=3] [ref=e250]
+                - generic [ref=e251]:
+                  - paragraph [ref=e252]: 0 members donated
+                  - progressbar "0% funded" [ref=e253]
+                  - paragraph [ref=e254]:
+                    - generic [ref=e255]: 0 USD
+                    - text: raised of 0.05 USD target
+                - link "View Campaign" [ref=e256] [cursor=pointer]:
+                  - /url: /campaigns/47589912-b1b1-43cb-ba0c-53f612c05285
+                  - generic [ref=e257]:
+                    - generic [ref=e258]: View Campaign
+                    - img [ref=e259]

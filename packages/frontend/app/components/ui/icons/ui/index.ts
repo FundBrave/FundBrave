@@ -26,4 +26,6 @@ export {
   Star,
   AlertCircle,
   Info,
+  CheckCircle2,
+  ExternalLink,
 } from './UIIcons';

@@ -429,15 +429,16 @@ describe("FundBrave Comprehensive System Tests", () => {
             const { factory, creator, beneficiary, donor, usdcToken } = await loadFixture(deploySystemFixture);
             const { fundraiser } = await createFundraiser(factory, creator, beneficiary);
 
-            await usdcToken.mint(donor.address, usdc("1000"));
-            await usdcToken.connect(donor).approve(await factory.getAddress(), usdc("1000"));
-            await factory.connect(donor).donateERC20(0, await usdcToken.getAddress(), usdc("1000"));
+            // Donate the full goal amount to allow immediate withdrawal
+            await usdcToken.mint(donor.address, usdc("10000"));
+            await usdcToken.connect(donor).approve(await factory.getAddress(), usdc("10000"));
+            await factory.connect(donor).donateERC20(0, await usdcToken.getAddress(), usdc("10000"));
 
             const prevBal = await usdcToken.balanceOf(beneficiary.address);
             await fundraiser.connect(creator).withdrawUSDT();
             const newBal = await usdcToken.balanceOf(beneficiary.address);
 
-            expect(newBal - prevBal).to.equal(usdc("1000"));
+            expect(newBal - prevBal).to.equal(usdc("10000"));
         });
 
         it("should track voting power and allow proposals", async () => {
@@ -877,8 +878,9 @@ describe("FundBrave Comprehensive System Tests", () => {
         it("should prevent non-bridge from bridge functions", async () => {
             const { factory, creator } = await loadFixture(deploySystemFixture);
 
+            // Use the legacy handler which maintains the original signature
             await expect(
-                factory.connect(creator).handleCrossChainDonation(
+                factory.connect(creator).handleCrossChainDonationLegacy(
                     creator.address, 0, usdc("100")
                 )
             ).to.be.revertedWithCustomError(factory, "NotBridge");

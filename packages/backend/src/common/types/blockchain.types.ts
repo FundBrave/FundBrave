@@ -17,6 +17,8 @@ export enum ChainId {
   ARBITRUM_SEPOLIA = 421614,
   OPTIMISM = 10,
   OPTIMISM_SEPOLIA = 11155420,
+  BASE = 8453,
+  BASE_SEPOLIA = 84532,
 }
 
 /**
@@ -30,6 +32,9 @@ export enum ContractName {
   STAKING_POOL = 'StakingPool',
   FUNDRAISER_FACTORY = 'FundraiserFactory',
   YIELD_DISTRIBUTOR = 'YieldDistributor',
+  // Implementation contracts (for proxy patterns)
+  FUNDRAISER_IMPLEMENTATION = 'FundraiserImplementation',
+  STAKING_POOL_IMPLEMENTATION = 'StakingPoolImplementation',
 }
 
 /**

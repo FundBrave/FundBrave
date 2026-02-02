@@ -12,6 +12,10 @@ import {
   GlobalPoolEpoch,
   UserGlobalPoolVotes,
   RecordStakeInput,
+  RecordStakePublicInput,
+  RecordStakeResponse,
+  StakingStats,
+  RecentStakingActivity,
   UnstakeInput,
   StakeFilterInput,
   GlobalPoolVoteInput,
@@ -150,6 +154,42 @@ export class StakingResolver {
     return this.stakingService.getUserEpochVotes(user.id, epochNumber);
   }
 
+  // ==================== Statistics Queries ====================
+
+  @Query(() => StakingStats, { name: 'fundraiserStakingStats' })
+  async getFundraiserStakingStats(
+    @Args('fundraiserId', { type: () => ID }) fundraiserId: string,
+  ): Promise<StakingStats> {
+    return this.stakingService.getFundraiserStakingStats(fundraiserId);
+  }
+
+  @Query(() => StakingStats, { name: 'platformStakingStats' })
+  async getPlatformStakingStats(): Promise<StakingStats> {
+    return this.stakingService.getPlatformStakingStats();
+  }
+
+  @Query(() => [RecentStakingActivity], { name: 'recentStakingActivity' })
+  async getRecentStakingActivity(
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('fundraiserId', { type: () => ID, nullable: true })
+    fundraiserId?: string,
+  ): Promise<RecentStakingActivity[]> {
+    return this.stakingService.getRecentStakingActivity(limit, fundraiserId);
+  }
+
+  // ==================== Utility Queries ====================
+
+  /**
+   * Check if a stake with the given transaction hash already exists
+   * Useful for frontend to avoid duplicate submissions
+   */
+  @Query(() => Boolean, { name: 'stakeExistsByTxHash' })
+  async stakeExistsByTxHash(
+    @Args('txHash') txHash: string,
+  ): Promise<boolean> {
+    return this.stakingService.stakeExistsByTxHash(txHash);
+  }
+
   // ==================== Mutations ====================
 
   @Mutation(() => Stake)
@@ -159,6 +199,18 @@ export class StakingResolver {
     @Args('input') input: RecordStakeInput,
   ): Promise<Stake> {
     return this.stakingService.recordStake(user.id, user.walletAddress, input);
+  }
+
+  /**
+   * Record a stake without authentication
+   * For Web3 wallets that have completed on-chain staking
+   * Supports idempotent calls - returns existing stake if already recorded
+   */
+  @Mutation(() => RecordStakeResponse, { name: 'recordStakePublic' })
+  async recordStakePublic(
+    @Args('input') input: RecordStakePublicInput,
+  ): Promise<RecordStakeResponse> {
+    return this.stakingService.recordStakePublic(input);
   }
 
   @Mutation(() => Boolean)

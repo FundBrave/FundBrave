@@ -120,6 +120,13 @@ contract FundBraveBridge is OApp, ReentrancyGuard, Pausable {
 
     // --- Internal LayerZero Handler ---
 
+    /**
+     * @notice Handles incoming cross-chain messages from LayerZero
+     * @dev Computes a secure message hash including source chain ID to prevent replay attacks.
+     *      The message hash is verified by the factory to ensure message integrity.
+     * @param _origin Origin information containing source endpoint ID
+     * @param _payload Encoded message containing donor, fundraiserId, action, and amount
+     */
     function _lzReceive(
         Origin calldata _origin,
         bytes32 /*_guid*/,
@@ -127,7 +134,7 @@ contract FundBraveBridge is OApp, ReentrancyGuard, Pausable {
         address /*_executor*/,
         bytes calldata /*_extraData*/
     ) internal override whenNotPaused {
-        (address donor, uint256 fundraiserId, uint8 action, uint256 amount) = 
+        (address donor, uint256 fundraiserId, uint8 action, uint256 amount) =
             abi.decode(_payload, (address, uint256, uint8, uint256));
 
         uint256 balance = usdcToken.balanceOf(address(this));
@@ -135,17 +142,36 @@ contract FundBraveBridge is OApp, ReentrancyGuard, Pausable {
 
         usdcToken.safeTransfer(localFundraiserFactory, amount);
 
+        // Compute message hash for replay attack protection
+        // Includes source chain ID (srcEid) and destination chain ID (block.chainid)
+        bytes32 messageHash = keccak256(abi.encodePacked(
+            donor,
+            fundraiserId,
+            amount,
+            _origin.srcEid,
+            block.chainid,
+            action
+        ));
+
         bool success;
         if (action == 0) {
+            // Call secure donation handler with message hash
             (success, ) = localFundraiserFactory.call(
-                abi.encodeWithSignature("handleCrossChainDonation(address,uint256,uint256)", donor, fundraiserId, amount)
+                abi.encodeWithSignature(
+                    "handleCrossChainDonation(address,uint256,uint256,bytes32,uint32)",
+                    donor, fundraiserId, amount, messageHash, _origin.srcEid
+                )
             );
         } else {
+            // Call secure stake handler with message hash
             (success, ) = localFundraiserFactory.call(
-                abi.encodeWithSignature("handleCrossChainStake(address,uint256,uint256)", donor, fundraiserId, amount)
+                abi.encodeWithSignature(
+                    "handleCrossChainStake(address,uint256,uint256,bytes32,uint32)",
+                    donor, fundraiserId, amount, messageHash, _origin.srcEid
+                )
             );
         }
-        
+
         require(success, "Factory execution failed");
         emit CrossChainActionReceived(_origin.srcEid, donor, amount);
     }

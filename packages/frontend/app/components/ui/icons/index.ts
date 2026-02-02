@@ -60,6 +60,8 @@ export {
   Clock,
   Star,
   Info,
+  CheckCircle2,
+  ExternalLink,
 } from './ui';
 
 // Form Icons (mail, lock, user, upload)

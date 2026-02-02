@@ -36,6 +36,9 @@ export interface DonationState {
   isDonating: boolean;
   donationSuccess: boolean;
   error: string;
+  txHash?: string;
+  needsApproval?: boolean;
+  isWealthBuilding?: boolean;
 }
 
 // Calculated values derived from donation state
@@ -57,6 +60,8 @@ export interface DonationHandlers {
   handleConnectWallet: () => Promise<void>;
   handleDisconnect: () => void;
   handleDonate: () => Promise<void>;
+  approveUSDC?: () => Promise<boolean>;
+  toggleWealthBuilding?: () => void;
 }
 
 // Props for DonationPresetAmounts component
@@ -121,6 +126,12 @@ export interface WalletConnectionProps {
   onDisconnect: () => void;
   onDonate: () => Promise<void>;
   formatAmount: (num: number, decimals?: number) => string;
+  needsApproval?: boolean;
+  onApprove?: () => Promise<boolean>;
+  txHash?: string;
+  selectedCrypto?: CryptoType;
+  isWealthBuilding?: boolean;
+  onToggleWealthBuilding?: () => void;
 }
 
 // Props for CampaignInfoHeader component

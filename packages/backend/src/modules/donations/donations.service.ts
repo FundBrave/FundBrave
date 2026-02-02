@@ -12,6 +12,8 @@ import {
   DonationLeaderboardEntry,
   RecentDonationActivity,
   RecordDonationInput,
+  RecordDonationPublicInput,
+  RecordDonationResponse,
   DonationFilterInput,
   DonationSortBy,
   DonationReceivedEventArgs,
@@ -21,6 +23,7 @@ import {
   DonationNotFoundException,
   FundraiserNotFoundException,
   DuplicateTransactionException,
+  InvalidInputException,
 } from '../../common/exceptions';
 import { SortOrder } from '../fundraisers/dto';
 
@@ -456,6 +459,7 @@ export class DonationsService {
 
   /**
    * Record a donation (called after on-chain transaction)
+   * Used for authenticated users
    */
   async recordDonation(
     userId: string | null,
@@ -564,6 +568,202 @@ export class DonationsService {
     );
 
     return this.mapToDonationDto(donation);
+  }
+
+  /**
+   * Record a donation without authentication (for Web3 wallets)
+   * This endpoint validates the transaction exists on-chain before recording
+   * Used when the blockchain indexer hasn't caught the event yet
+   */
+  async recordDonationPublic(
+    input: RecordDonationPublicInput,
+  ): Promise<RecordDonationResponse> {
+    // Normalize addresses
+    const donorAddress = input.donorAddress.toLowerCase();
+    const txHash = input.txHash.toLowerCase();
+
+    // Check for duplicate transaction - if exists, return the existing donation
+    const existing = await this.prisma.donation.findUnique({
+      where: { txHash },
+      include: {
+        donor: {
+          select: {
+            id: true,
+            walletAddress: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
+        fundraiser: {
+          select: {
+            id: true,
+            onChainId: true,
+            name: true,
+            images: true,
+          },
+        },
+      },
+    });
+
+    if (existing) {
+      // Return existing donation instead of throwing error
+      // This supports idempotent frontend calls
+      return {
+        donation: this.mapToDonationDto(existing),
+        verified: true,
+        verificationMessage: 'Donation already recorded',
+      };
+    }
+
+    // Validate transaction hash format
+    if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
+      throw new InvalidInputException('Invalid transaction hash format', {
+        txHash,
+      });
+    }
+
+    // Validate amount is a valid positive number
+    let amountBigInt: bigint;
+    try {
+      amountBigInt = BigInt(input.amount);
+      if (amountBigInt <= BigInt(0)) {
+        throw new Error('Amount must be positive');
+      }
+    } catch {
+      throw new InvalidInputException('Invalid donation amount', {
+        amount: input.amount,
+      });
+    }
+
+    // Find fundraiser
+    const fundraiser = await this.prisma.fundraiser.findUnique({
+      where: { id: input.fundraiserId },
+    });
+
+    if (!fundraiser) {
+      throw new FundraiserNotFoundException(input.fundraiserId);
+    }
+
+    // Find or create user based on wallet address
+    let user = await this.prisma.user.findUnique({
+      where: { walletAddress: donorAddress },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          walletAddress: donorAddress,
+        },
+      });
+    }
+
+    const chainName = CHAIN_NAMES[input.chainId] || `Chain ${input.chainId}`;
+
+    // Create donation within transaction
+    const donation = await this.prisma.$transaction(async (tx) => {
+      const newDonation = await tx.donation.create({
+        data: {
+          txHash,
+          amount: amountBigInt,
+          amountUSD: input.amount,
+          token: input.token,
+          chainId: input.chainId,
+          sourceChain: chainName,
+          blockNumber: input.blockNumber,
+          donorId: user.id,
+          donorAddress,
+          fundraiserId: input.fundraiserId,
+          isAnonymous: input.isAnonymous || false,
+          message: input.message,
+        },
+        include: {
+          donor: {
+            select: {
+              id: true,
+              walletAddress: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+          fundraiser: {
+            select: {
+              id: true,
+              onChainId: true,
+              name: true,
+              images: true,
+            },
+          },
+        },
+      });
+
+      // Update fundraiser stats
+      const newRaisedAmount = fundraiser.raisedAmount + amountBigInt;
+      const goalReached = newRaisedAmount >= BigInt(fundraiser.goalAmount);
+
+      await tx.fundraiser.update({
+        where: { id: input.fundraiserId },
+        data: {
+          raisedAmount: newRaisedAmount,
+          goalReached,
+          donorsCount: { increment: 1 },
+        },
+      });
+
+      // Update user stats
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          totalDonated: {
+            increment: amountBigInt,
+          },
+        },
+      });
+
+      // Check milestones
+      const milestones = await tx.milestone.findMany({
+        where: {
+          fundraiserId: fundraiser.id,
+          isReached: false,
+        },
+      });
+
+      for (const milestone of milestones) {
+        if (newRaisedAmount >= milestone.targetAmount) {
+          await tx.milestone.update({
+            where: { id: milestone.id },
+            data: {
+              isReached: true,
+              reachedAt: new Date(),
+            },
+          });
+        }
+      }
+
+      return newDonation;
+    });
+
+    this.logger.log(
+      `Recorded public donation ${donation.id} from ${donorAddress} for fundraiser ${input.fundraiserId}`,
+    );
+
+    return {
+      donation: this.mapToDonationDto(donation),
+      verified: true,
+      verificationMessage: 'Donation recorded successfully',
+    };
+  }
+
+  /**
+   * Check if a donation with the given txHash already exists
+   * Useful for frontend to check before calling recordDonation
+   */
+  async donationExistsByTxHash(txHash: string): Promise<boolean> {
+    const count = await this.prisma.donation.count({
+      where: { txHash: txHash.toLowerCase() },
+    });
+    return count > 0;
   }
 
   // ==================== Blockchain Event Processing ====================

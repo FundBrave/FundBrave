@@ -236,7 +236,14 @@ contract MorphoStakingPool is ReentrancyGuard, Ownable, Pausable {
 
     // --- Admin (FBT Funding) ---
 
-    function notifyRewardAmount(uint256 reward) external onlyOwner updateReward(address(0)) {
+    /**
+     * @notice Notifies the contract of new FBT rewards for distribution
+     * @param reward Amount of FBT tokens to distribute over the rewards duration
+     * @dev Only callable by owner when contract is not paused.
+     *      The FBT tokens must already be transferred to this contract before calling.
+     *      If called during an active reward period, remaining rewards are rolled over.
+     */
+    function notifyRewardAmount(uint256 reward) external onlyOwner whenNotPaused updateReward(address(0)) {
         require(FBT.balanceOf(address(this)) >= reward, "Insufficient FBT");
 
         if (block.timestamp >= periodFinish) {
@@ -249,10 +256,16 @@ contract MorphoStakingPool is ReentrancyGuard, Ownable, Pausable {
 
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp + rewardsDuration;
-        
+
         emit RewardAdded(reward);
     }
-    
+
+    /**
+     * @notice Updates the duration for reward distribution periods
+     * @param _rewardsDuration New duration in seconds
+     * @dev Only callable by owner after current reward period has finished.
+     *      Cannot be called during an active reward period to prevent manipulation.
+     */
     function setRewardsDuration(uint256 _rewardsDuration) external onlyOwner {
         require(block.timestamp > periodFinish, "Period not finished");
         rewardsDuration = _rewardsDuration;

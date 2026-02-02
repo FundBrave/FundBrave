@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/app/components/common";
-import { Button } from "@/app/components/ui/button/Button";
+import { Button } from "@/app/components/ui/button";
 import { Spinner } from "@/app/components/ui/Spinner";
 import { useMyStakes, useMyFBTStake, useMyImpactDAOStake } from "@/app/hooks/useStaking";
 import { useAccount } from "wagmi";

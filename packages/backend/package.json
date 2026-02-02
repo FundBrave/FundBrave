@@ -19,6 +19,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "seed": "ts-node prisma/seed.ts",
+    "seed:blockchain": "ts-node prisma/seeds/blockchain.seed.ts",
+    "seed:campaigns": "ts-node prisma/seeds/campaigns-onchain.seed.ts",
+    "seed:campaigns:only": "ts-node prisma/seeds/campaigns-onchain.seed.ts",
     "create-test-user": "ts-node scripts/create-test-user.ts"
   },
   "dependencies": {
