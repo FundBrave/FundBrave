@@ -3,8 +3,42 @@ import { seedUsers } from './seeds/users.seed';
 import { seedCampaigns } from './seeds/campaigns.seed';
 import { seedPosts, seedReposts } from './seeds/posts.seed';
 import { seedInteractions } from './seeds/interactions.seed';
+import { seedBaseSepolia, seedAllChains } from './seeds/blockchain.seed';
+import { seedOnChainCampaigns } from './seeds/campaigns-onchain.seed';
 
 const prisma = new PrismaClient();
+
+/**
+ * Check if on-chain campaign seeding is enabled
+ * Enable via:
+ *   - Environment variable: SEED_ONCHAIN_CAMPAIGNS=true
+ *   - Command line argument: --onchain
+ *
+ * Requirements for on-chain seeding:
+ *   - BACKEND_WALLET_PK must be set with a funded wallet
+ *   - RPC connection to Base Sepolia must be working
+ */
+function isOnChainSeedingEnabled(): boolean {
+  // Check environment variable
+  if (process.env.SEED_ONCHAIN_CAMPAIGNS === 'true') {
+    return true;
+  }
+
+  // Check command line arguments
+  if (process.argv.includes('--onchain')) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Check if wallet is configured for on-chain operations
+ */
+function isWalletConfigured(): boolean {
+  const pk = process.env.BACKEND_WALLET_PK;
+  return !!pk && pk.length >= 64;
+}
 
 /**
  * Clear existing data (development only)
@@ -57,6 +91,13 @@ async function clearDatabase(): Promise<void> {
       // Device tokens and notification settings
       prisma.deviceToken.deleteMany(),
       prisma.notificationSetting.deleteMany(),
+
+      // Blockchain-related (keep chain configs, clear sync data)
+      prisma.blockchainEvent.deleteMany(),
+      prisma.blockchainSync.deleteMany(),
+      prisma.contractRegistry.deleteMany(),
+      prisma.supportedToken.deleteMany(),
+      prisma.supportedChain.deleteMany(),
 
       // Users (cascade will handle remaining relations)
       prisma.user.deleteMany(),
@@ -183,6 +224,11 @@ async function main(): Promise<void> {
     // Step 1: Clear existing data
     await clearDatabase();
 
+    // Step 1.5: Seed blockchain configuration (chains, contracts, tokens)
+    console.log('Step 1.5: Seeding blockchain configuration...\n');
+    await seedAllChains();
+    await seedBaseSepolia();
+
     // Step 2: Seed users
     const users = await seedUsers();
 
@@ -190,8 +236,37 @@ async function main(): Promise<void> {
       throw new Error('Failed to seed users. Cannot continue.');
     }
 
-    // Step 3: Seed campaigns
-    const campaigns = await seedCampaigns(users);
+    // Step 3: Seed campaigns (on-chain or offline based on configuration)
+    let campaigns;
+
+    if (isOnChainSeedingEnabled()) {
+      console.log('\n');
+      console.log('================================================================');
+      console.log('  ON-CHAIN CAMPAIGN SEEDING ENABLED');
+      console.log('================================================================');
+
+      if (!isWalletConfigured()) {
+        console.warn('  WARNING: BACKEND_WALLET_PK is not configured.');
+        console.warn('  On-chain seeding requires a funded wallet.');
+        console.warn('  Falling back to offline seeding...\n');
+        campaigns = await seedCampaigns(users);
+      } else {
+        console.log('  Creating campaigns on Base Sepolia blockchain...');
+        console.log('  This may take several minutes due to transaction confirmations.\n');
+
+        try {
+          campaigns = await seedOnChainCampaigns(users);
+          console.log('  ON-CHAIN SEEDING COMPLETE\n');
+        } catch (error) {
+          console.error('\n  ON-CHAIN SEEDING FAILED:', error);
+          console.warn('  Falling back to offline seeding...\n');
+          campaigns = await seedCampaigns(users);
+        }
+      }
+    } else {
+      // Standard offline seeding (fake tx hashes, not on-chain)
+      campaigns = await seedCampaigns(users);
+    }
 
     if (campaigns.length === 0) {
       throw new Error('Failed to seed campaigns. Cannot continue.');
@@ -226,6 +301,15 @@ async function main(): Promise<void> {
     console.log('   - Login with any seeded user wallet address');
     console.log('   - Default password for hybrid users: Password123!');
     console.log('');
+
+    if (!isOnChainSeedingEnabled()) {
+      console.log('💡 On-chain seeding options:');
+      console.log('   - Run with --onchain flag: npm run seed -- --onchain');
+      console.log('   - Set SEED_ONCHAIN_CAMPAIGNS=true in .env');
+      console.log('   - Run separately: npm run seed:campaigns');
+      console.log('   - Requires BACKEND_WALLET_PK to be set with a funded wallet');
+      console.log('');
+    }
   } catch (error) {
     console.error('');
     console.error('❌ Seed failed with error:');

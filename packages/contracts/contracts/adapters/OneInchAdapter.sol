@@ -33,6 +33,7 @@ contract OneInchAdapter is ISwapAdapter, Ownable {
     address public immutable WETH;
     bytes public nextSwapData;
     address public nextExecutor;
+    uint256 public nextMinReturnAmount;
 
     constructor(address _router, address _usdc, address _weth, address _owner) Ownable(_owner) {
         ONE_INCH_ROUTER = _router;
@@ -43,15 +44,22 @@ contract OneInchAdapter is ISwapAdapter, Ownable {
     /**
      * @dev Call this BEFORE triggering the Bridge or Factory action.
      * Pass the 'tx.data' you get from the 1inch API response.
+     * @param _executor The executor address from 1inch API
+     * @param _data The swap data from 1inch API
+     * @param _minReturnAmount Minimum acceptable output amount (with slippage tolerance applied)
+     *                        Calculate as: expectedOutput * (100 - slippageBps) / 10000
      */
-    function setSwapData(address _executor, bytes calldata _data) external onlyOwner {
+    function setSwapData(address _executor, bytes calldata _data, uint256 _minReturnAmount) external onlyOwner {
+        require(_minReturnAmount > 0, "MinReturn must be > 0");
         nextExecutor = _executor;
         nextSwapData = _data;
+        nextMinReturnAmount = _minReturnAmount;
     }
 
     function swapToUSDT(address tokenIn, uint256 amountIn) external override returns (uint256 amountOut) {
         if (tokenIn == USDC) return amountIn;
         require(nextSwapData.length > 0, "1inch: No swap data set");
+        require(nextMinReturnAmount > 0, "1inch: Min return not set");
 
         IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
 
@@ -60,13 +68,13 @@ contract OneInchAdapter is ISwapAdapter, Ownable {
         SwapDescription memory desc = SwapDescription({
             srcToken: tokenIn,
             dstToken: USDC,
-            srcReceiver: payable(address(this)), 
+            srcReceiver: payable(address(this)),
             dstReceiver: payable(address(this)),
             amount: amountIn,
-            minReturnAmount: 1,
+            minReturnAmount: nextMinReturnAmount,
             flags: 0
         });
-        
+
         try IAggregationRouterV5(ONE_INCH_ROUTER).swap(
             nextExecutor,
             desc,
@@ -78,15 +86,23 @@ contract OneInchAdapter is ISwapAdapter, Ownable {
             revert("1inch Swap Failed");
         }
 
+        // Clear swap data after use
         delete nextSwapData;
         delete nextExecutor;
+        delete nextMinReturnAmount;
 
         IERC20(USDC).safeTransfer(msg.sender, amountOut);
 
         return amountOut;
     }
 
-    function swapNativeToUSDT() external payable override returns (uint256 amountOut) {
-        return 0;
+    /**
+     * @notice Native ETH to USDC swaps are not supported via 1inch adapter
+     * @dev This function is intentionally not implemented because 1inch swaps require
+     *      pre-computed swap data from the 1inch API which cannot be generated on-chain.
+     *      Use the UniswapAdapter for native ETH swaps instead.
+     */
+    function swapNativeToUSDT() external payable override returns (uint256) {
+        revert("1inch: Native swaps not supported. Use UniswapAdapter for ETH swaps");
     }
 }

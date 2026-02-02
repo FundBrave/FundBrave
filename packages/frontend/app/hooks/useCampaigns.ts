@@ -89,6 +89,7 @@ export function useCampaign(id: string) {
     isVerified: data.fundraiser.creator.isVerifiedCreator,
     createdAt: data.fundraiser.createdAt,
     onChainId: data.fundraiser.onChainId,
+    stakingPoolAddr: data.fundraiser.stakingPoolAddr,
     // Add creator object with proper structure
     creator: {
       avatarUrl: data.fundraiser.creator.avatarUrl || '/placeholder-avatar.png',

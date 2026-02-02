@@ -26,6 +26,52 @@ export const FUNDRAISER_FACTORY_ABI = [
     type: 'function',
   },
   {
+    inputs: [{ internalType: 'uint256', name: 'fundraiserId', type: 'uint256' }],
+    name: 'donateNative',
+    outputs: [],
+    stateMutability: 'payable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'fundraiserId', type: 'uint256' },
+      { internalType: 'address', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'amount', type: 'uint256' },
+    ],
+    name: 'donateERC20',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'fundraiserId', type: 'uint256' }],
+    name: 'donateWealthBuildingNative',
+    outputs: [],
+    stateMutability: 'payable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'fundraiserId', type: 'uint256' },
+      { internalType: 'uint256', name: 'amount', type: 'uint256' },
+    ],
+    name: 'donateWealthBuilding',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'fundraiserId', type: 'uint256' },
+      { internalType: 'address', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'amount', type: 'uint256' },
+    ],
+    name: 'donateWealthBuildingERC20',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
     anonymous: false,
     inputs: [
       { indexed: true, internalType: 'address', name: 'fundraiser', type: 'address' },
@@ -34,6 +80,18 @@ export const FUNDRAISER_FACTORY_ABI = [
       { indexed: false, internalType: 'uint256', name: 'goal', type: 'uint256' },
     ],
     name: 'FundraiserCreated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'address', name: 'donor', type: 'address' },
+      { indexed: true, internalType: 'uint256', name: 'fundraiserId', type: 'uint256' },
+      { indexed: false, internalType: 'uint256', name: 'totalAmount', type: 'uint256' },
+      { indexed: false, internalType: 'uint256', name: 'directAmount', type: 'uint256' },
+      { indexed: false, internalType: 'uint256', name: 'endowmentAmount', type: 'uint256' },
+    ],
+    name: 'WealthBuildingDonationMade',
     type: 'event',
   },
 ] as const;

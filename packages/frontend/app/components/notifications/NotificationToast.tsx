@@ -159,7 +159,7 @@ export function NotificationToast() {
   const { toasts, dismissToast } = useNotificationToast();
 
   // Only show the most recent 3 toasts
-  const visibleToasts = toasts.slice(-3);
+  const visibleToasts = (toasts || []).slice(-3);
 
   return (
     <div
@@ -185,7 +185,7 @@ export function NotificationToast() {
 
       {/* Screen reader announcement */}
       <div className="sr-only">
-        {toasts.length > 0 && (
+        {toasts && toasts.length > 0 && (
           <span>
             New notification: {toasts[toasts.length - 1]?.notification.message}
           </span>

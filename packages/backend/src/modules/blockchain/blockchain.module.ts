@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 // Import blockchain services
+import { ProviderService } from './provider.service';
 import { BlockchainIndexerService } from './indexer.service';
 import { EventsService } from './events.service';
 import { ContractsService } from './contracts.service';
@@ -55,7 +56,10 @@ import { FBTVestingModule } from '../fbt-vesting/fbt-vesting.module';
   ],
   controllers: [BlockchainController],
   providers: [
-    // Core contract service - must be initialized first
+    // Provider service - manages RPC connections (must be initialized first)
+    ProviderService,
+
+    // Core contract service - depends on ProviderService
     ContractsService,
 
     // Domain-specific blockchain services
@@ -69,6 +73,7 @@ import { FBTVestingModule } from '../fbt-vesting/fbt-vesting.module';
   ],
   exports: [
     // Export all services for use in other modules
+    ProviderService,
     ContractsService,
     FundraiserBlockchainService,
     DonationBlockchainService,

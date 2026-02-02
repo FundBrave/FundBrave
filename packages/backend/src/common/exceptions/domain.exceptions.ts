@@ -76,6 +76,32 @@ export class NoYieldAvailableException extends BadRequestException {
   }
 }
 
+/**
+ * Thrown when a stake is already inactive and cannot be unstaked
+ */
+export class StakeAlreadyInactiveException extends BadRequestException {
+  constructor(stakeId: string) {
+    super({
+      code: 'STAKE_ALREADY_INACTIVE',
+      message: `Stake ${stakeId} is already inactive`,
+      details: { stakeId },
+    });
+  }
+}
+
+/**
+ * Thrown when a stake amount is invalid (e.g., zero or negative)
+ */
+export class InvalidStakeAmountException extends BadRequestException {
+  constructor(amount: string) {
+    super({
+      code: 'INVALID_STAKE_AMOUNT',
+      message: `Invalid stake amount: ${amount}. Amount must be a positive value.`,
+      details: { amount },
+    });
+  }
+}
+
 // ==================== WEALTH BUILDING EXCEPTIONS ====================
 
 /**
@@ -296,6 +322,56 @@ export class ContractNotRegisteredException extends NotFoundException {
       message: `Contract ${contractName} not registered for chain ${chainId}`,
       details: { contractName, chainId },
     });
+  }
+}
+
+/**
+ * Thrown when blockchain provider connection fails
+ */
+export class BlockchainConnectionException extends HttpException {
+  constructor(chainId: number, error: string) {
+    super(
+      {
+        code: 'BLOCKCHAIN_CONNECTION_FAILED',
+        message: `Failed to connect to blockchain (chain ${chainId}): ${error}`,
+        details: { chainId, error },
+      },
+      HttpStatus.SERVICE_UNAVAILABLE,
+    );
+  }
+}
+
+/**
+ * Thrown when RPC endpoint is unavailable or rate-limited
+ */
+export class RpcEndpointUnavailableException extends HttpException {
+  constructor(endpoint: string, chainId: number, error?: string) {
+    super(
+      {
+        code: 'RPC_ENDPOINT_UNAVAILABLE',
+        message: `RPC endpoint unavailable for chain ${chainId}: ${error || 'Connection failed'}`,
+        details: { endpoint, chainId, error },
+      },
+      HttpStatus.SERVICE_UNAVAILABLE,
+    );
+  }
+}
+
+/**
+ * Thrown when no healthy providers are available
+ */
+export class NoHealthyProvidersException extends HttpException {
+  constructor(chainId?: number) {
+    super(
+      {
+        code: 'NO_HEALTHY_PROVIDERS',
+        message: chainId
+          ? `No healthy blockchain providers available for chain ${chainId}`
+          : 'No healthy blockchain providers available',
+        details: { chainId },
+      },
+      HttpStatus.SERVICE_UNAVAILABLE,
+    );
   }
 }
 

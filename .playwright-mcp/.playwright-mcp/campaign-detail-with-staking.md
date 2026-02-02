@@ -1,0 +1,86 @@
+- generic [active] [ref=e11]:
+  - generic [ref=e5] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e6]:
+      - img [ref=e7]
+    - generic [ref=e261]:
+      - button "Open issues overlay" [ref=e262]:
+        - generic [ref=e263]:
+          - generic [ref=e264]: "0"
+          - generic [ref=e265]: "1"
+        - generic [ref=e266]: Issue
+      - button "Collapse issues badge" [ref=e267]:
+        - img [ref=e268]
+  - alert [ref=e10]
+  - generic [ref=e12]:
+    - link "Skip to main content" [ref=e13] [cursor=pointer]:
+      - /url: "#main-content"
+    - region "Notifications"
+    - generic [ref=e271]:
+      - banner [ref=e272]:
+        - button "Go back" [ref=e273]:
+          - img [ref=e274]
+        - heading "Campaign" [level=1] [ref=e277]
+      - generic [ref=e279]:
+        - generic [ref=e280]:
+          - generic [ref=e281]:
+            - heading "Tech Skills Bootcamp for Youth" [level=1] [ref=e282]
+            - img "Tech Skills Bootcamp for Youth" [ref=e284]
+            - generic [ref=e286]:
+              - img [ref=e287]
+              - generic [ref=e290]: Education
+          - generic [ref=e291]:
+            - heading "Campaign Creator" [level=3] [ref=e292]
+            - generic [ref=e293]:
+              - img "Test User" [ref=e296]
+              - generic [ref=e297]:
+                - generic [ref=e298]:
+                  - generic [ref=e299]: Test User
+                  - button "Follow" [ref=e300]
+                - generic [ref=e301]: "@testuser"
+          - heading "Story" [level=3] [ref=e303]
+          - generic [ref=e305]:
+            - link "Donate" [ref=e306] [cursor=pointer]:
+              - /url: /campaigns/dc00361e-ed36-49ec-b7d2-407de58f3457/donate
+            - button "Share" [ref=e307] [cursor=pointer]:
+              - img [ref=e308]
+              - text: Share
+          - generic [ref=e314]:
+            - heading "Comments (0)" [level=3] [ref=e315]
+            - generic [ref=e316]:
+              - img "Current User" [ref=e318]
+              - paragraph [ref=e320]: Write your comment...
+          - region "Updates" [ref=e321]:
+            - heading "Updates" [level=3] [ref=e323]
+            - generic [ref=e324]:
+              - img [ref=e328]
+              - heading "No updates yet" [level=3] [ref=e331]
+              - paragraph [ref=e332]: The campaign creator hasn't posted any updates yet. Check back later for news and progress.
+        - generic [ref=e334]:
+          - generic [ref=e368]:
+            - img [ref=e369]
+            - text: Checking
+          - generic [ref=e335]:
+            - generic [ref=e336]:
+              - generic [ref=e337]:
+                - img [ref=e338]
+                - generic [ref=e342]: 0%
+              - generic [ref=e343]:
+                - heading "0 USD" [level=3] [ref=e344]
+                - generic [ref=e345]:
+                  - paragraph [ref=e346]:
+                    - text: Raised of
+                    - generic [ref=e347]: 0.045 USD
+                    - text: target by
+                  - paragraph [ref=e348]: 0 supporters
+                - paragraph [ref=e349]: Campaign ending in 90 weeks
+              - generic [ref=e350]:
+                - link "Donate Now" [ref=e351] [cursor=pointer]:
+                  - /url: /campaigns/dc00361e-ed36-49ec-b7d2-407de58f3457/donate
+                - button "Share" [ref=e352] [cursor=pointer]:
+                  - img [ref=e353]
+                  - text: Share
+            - generic [ref=e359]:
+              - img [ref=e361]
+              - paragraph [ref=e363]: Can't donate right now?
+              - button "Set up a reminder" [ref=e364]
+          - button "Donate Now" [ref=e366] [cursor=pointer]

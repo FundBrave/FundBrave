@@ -532,9 +532,69 @@ export class EventsService {
     blockNumber: number,
     chainId: number,
   ): Promise<void> {
-    // This would handle FundraiserCreated, etc.
-    // Implementation depends on existing fundraisers service
-    this.logger.log(`Processing FundraiserFactory.${eventName}`);
+    const iface = new ethers.Interface(FUNDRAISER_FACTORY_ABI);
+    const parsedLog = iface.parseLog(eventData);
+
+    if (!parsedLog) {
+      this.logger.warn(`Failed to parse FundraiserFactory.${eventName} event`);
+      return;
+    }
+
+    switch (eventName) {
+      case 'FundraiserCreated':
+        // Process new fundraiser creation
+        this.logger.log(
+          `FundraiserCreated: ID ${parsedLog.args.fundraiserId}, creator ${parsedLog.args.creator}`,
+        );
+        // Convert to FundraiserCreatedEventArgs format expected by the service
+        await this.fundraisersService.processFundraiserCreatedEvent(
+          {
+            fundraiserId: parsedLog.args.fundraiserId,
+            fundraiserAddress: eventData.address, // Contract address that emitted the event
+            owner: parsedLog.args.creator,
+            beneficiary: parsedLog.args.beneficiary,
+            name: '', // Name not available in this event, will be updated later
+            goalAmount: parsedLog.args.goalAmount,
+            deadline: parsedLog.args.deadline,
+          },
+          txHash,
+          blockNumber,
+          chainId,
+        );
+        break;
+
+      case 'DonationReceived':
+        // Process donation event from FundraiserFactory
+        this.logger.log(
+          `DonationReceived: Fundraiser ${parsedLog.args.fundraiserId}, donor ${parsedLog.args.donor}, amount ${parsedLog.args.amount}`,
+        );
+        await this.donationsService.processDonationReceivedEvent(
+          {
+            fundraiserId: parsedLog.args.fundraiserId,
+            donor: parsedLog.args.donor,
+            amount: parsedLog.args.amount,
+            token: parsedLog.args.token || 'USDC',
+            message: parsedLog.args.message,
+          },
+          txHash,
+          blockNumber,
+          chainId,
+        );
+        break;
+
+      case 'FundsWithdrawn':
+        // Process funds withdrawal - just log for now
+        // The fundraiser service doesn't track withdrawals separately
+        this.logger.log(
+          `FundsWithdrawn: Fundraiser ${parsedLog.args.fundraiserId}, amount ${parsedLog.args.amount}, recipient ${parsedLog.args.recipient}`,
+        );
+        // Note: Withdrawals don't affect the donation records
+        // They are a separate operation between beneficiary and raised funds
+        break;
+
+      default:
+        this.logger.warn(`Unknown FundraiserFactory event: ${eventName}`);
+    }
   }
 
   // ==================== Helper Methods ====================
@@ -622,4 +682,10 @@ const STAKING_POOL_ABI = [
   'event Unstaked(uint256 indexed fundraiserId, address indexed staker, uint256 amount)',
   'event YieldSplitSet(uint256 indexed fundraiserId, address indexed staker, uint16 causeShare, uint16 stakerShare, uint16 platformShare)',
   'event YieldHarvested(uint256 indexed fundraiserId, uint256 totalYield, uint256 causeAmount, uint256 stakerAmount, uint256 platformAmount)',
+];
+
+const FUNDRAISER_FACTORY_ABI = [
+  'event FundraiserCreated(uint256 indexed fundraiserId, address indexed creator, address beneficiary, uint256 goalAmount, uint256 deadline)',
+  'event DonationReceived(uint256 indexed fundraiserId, address indexed donor, uint256 amount, address token, string message)',
+  'event FundsWithdrawn(uint256 indexed fundraiserId, address indexed recipient, uint256 amount)',
 ];

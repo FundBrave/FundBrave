@@ -4,17 +4,33 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { formatEther, parseUnits } from "viem";
 import { BackHeader } from "@/app/components/common/BackHeader";
-import { Button } from "@/app/components/ui/button/Button";
-import { Input } from "@/app/components/ui/inputs/Input";
 import { Spinner } from "@/app/components/ui/Spinner";
 import { useGetFundraiserQuery } from "@/app/generated/graphql";
 import { useFundraiserStakes, useStake } from "@/app/hooks/useStaking";
 import { useAccount } from "wagmi";
-import { cn } from "@/lib/utils";
+
+// Import staking components
+import {
+  StakingAmountInput,
+  StakingStats,
+  StakingUserPosition,
+  StakingTabs,
+  StakingActionButtons,
+  StakingInfoPanel,
+  RecentStakersList,
+  TransactionStatus,
+} from "@/app/components/campaigns/stake";
 
 /**
  * StakePage - Per-campaign staking pool interface
  * Allows users to stake USDC to earn yield + support a campaign
+ *
+ * Following DeFi UX best practices:
+ * - Clear transaction status with meaningful feedback
+ * - Tooltips explaining APY, lock periods, and rewards
+ * - Error messages that explain WHY
+ * - Transaction preview before actions
+ * - Mobile-first responsive design
  */
 export default function StakePage() {
   const params = useParams();
@@ -33,7 +49,12 @@ export default function StakePage() {
   });
 
   // Fetch stakes for this campaign
-  const { stakes, total: totalStakers, isLoading: stakesLoading, refetch: refetchStakes } = useFundraiserStakes(fundraiserId);
+  const {
+    stakes,
+    total: totalStakers,
+    isLoading: stakesLoading,
+    refetch: refetchStakes,
+  } = useFundraiserStakes(fundraiserId);
 
   // Staking hook
   const poolAddress = campaignData?.fundraiser?.stakingPoolAddr as `0x${string}` | undefined;
@@ -50,11 +71,17 @@ export default function StakePage() {
     needsApproval,
     error: stakeError,
     refetchAllowance,
+    txStatus,
   } = useStake(poolAddress || "0x0");
 
   // Calculate pool stats
-  const totalValueLocked = stakes.reduce((sum, stake) => sum + parseFloat(stake.amount), 0);
-  const userStake = stakes.find(s => s.staker.walletAddress.toLowerCase() === address?.toLowerCase());
+  const totalValueLocked = stakes.reduce(
+    (sum, stake) => sum + parseFloat(stake.amount),
+    0
+  );
+  const userStake = stakes.find(
+    (s) => s.staker.walletAddress.toLowerCase() === address?.toLowerCase()
+  );
   const userStakedAmount = userStake ? parseFloat(userStake.amount) : 0;
 
   // APY calculation (mock for now - would come from contract or backend)
@@ -79,11 +106,11 @@ export default function StakePage() {
 
   // Check if amount needs approval
   useEffect(() => {
-    if (stakeAmount && poolAddress) {
+    if (stakeAmount && poolAddress && activeTab === "stake") {
       const amount = parseUnits(stakeAmount, 6); // USDC has 6 decimals
       checkAllowance(amount);
     }
-  }, [stakeAmount, poolAddress, checkAllowance]);
+  }, [stakeAmount, poolAddress, activeTab, checkAllowance]);
 
   // Handle approve
   const handleApprove = async () => {
@@ -117,6 +144,11 @@ export default function StakePage() {
     console.log("Unstake not yet implemented");
   };
 
+  // Handle connect wallet
+  const handleConnectWallet = () => {
+    router.push("/auth");
+  };
+
   // Loading state
   if (campaignLoading || stakesLoading) {
     return (
@@ -132,13 +164,21 @@ export default function StakePage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Campaign not found</h2>
-          <Button onClick={() => router.push("/campaigns")}>Back to Campaigns</Button>
+          <button
+            onClick={() => router.push("/campaigns")}
+            className="text-primary hover:underline"
+          >
+            Back to Campaigns
+          </button>
         </div>
       </div>
     );
   }
 
   const campaign = campaignData.fundraiser;
+  const formattedBalance = usdcBalance
+    ? parseFloat(formatEther(usdcBalance)).toFixed(2)
+    : "0.00";
 
   return (
     <div className="min-h-screen bg-background">
@@ -148,215 +188,82 @@ export default function StakePage() {
         fallbackHref={`/campaigns/${fundraiserId}`}
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Pool Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {/* Total Value Locked */}
-          <div className="bg-surface-elevated border border-border-subtle rounded-xl p-6">
-            <div className="text-sm text-text-tertiary mb-1">Total Value Locked</div>
-            <div className="text-3xl font-bold text-foreground">${totalValueLocked.toLocaleString()}</div>
-            <div className="text-xs text-text-secondary mt-1">USDC</div>
-          </div>
-
-          {/* Estimated APY */}
-          <div className="bg-surface-elevated border border-border-subtle rounded-xl p-6">
-            <div className="text-sm text-text-tertiary mb-1">Estimated APY</div>
-            <div className="text-3xl font-bold text-primary">{estimatedAPY}%</div>
-            <div className="text-xs text-text-secondary mt-1">Annual yield</div>
-          </div>
-
-          {/* Total Stakers */}
-          <div className="bg-surface-elevated border border-border-subtle rounded-xl p-6">
-            <div className="text-sm text-text-tertiary mb-1">Total Stakers</div>
-            <div className="text-3xl font-bold text-foreground">{totalStakers}</div>
-            <div className="text-xs text-text-secondary mt-1">Participants</div>
-          </div>
-        </div>
+        <StakingStats
+          totalValueLocked={totalValueLocked}
+          estimatedAPY={estimatedAPY}
+          totalStakers={totalStakers}
+        />
 
         {/* User's Position */}
         {userStake && (
-          <div className="bg-surface-elevated border border-border-subtle rounded-xl p-6 mb-8">
-            <h3 className="text-lg font-semibold mb-4">Your Position</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <div className="text-sm text-text-tertiary">Staked Amount</div>
-                <div className="text-2xl font-bold text-foreground">${userStakedAmount.toLocaleString()}</div>
-              </div>
-              <div>
-                <div className="text-sm text-text-tertiary">Estimated Yield</div>
-                <div className="text-2xl font-bold text-primary">${(userStakedAmount * estimatedAPY / 100).toFixed(2)}</div>
-              </div>
-              <div>
-                <div className="text-sm text-text-tertiary">Staked Since</div>
-                <div className="text-lg font-medium text-foreground">
-                  {new Date(userStake.stakedAt).toLocaleDateString()}
-                </div>
-              </div>
-            </div>
-          </div>
+          <StakingUserPosition
+            stakedAmount={userStakedAmount}
+            estimatedAPY={estimatedAPY}
+            stakedDate={new Date(userStake.stakedAt)}
+          />
         )}
 
         {/* Stake/Unstake Interface */}
-        <div className="bg-surface-elevated border border-border-subtle rounded-xl p-6">
+        <div className="bg-surface-elevated border border-white/10 rounded-xl p-6">
           {/* Tabs */}
-          <div className="flex gap-2 mb-6">
-            <button
-              onClick={() => setActiveTab("stake")}
-              className={cn(
-                "flex-1 py-2 px-4 rounded-lg font-medium transition-colors",
-                activeTab === "stake"
-                  ? "bg-primary text-white"
-                  : "bg-surface-overlay text-text-secondary hover:bg-surface-sunken"
-              )}
-            >
-              Stake
-            </button>
-            <button
-              onClick={() => setActiveTab("unstake")}
-              disabled={!userStake}
-              className={cn(
-                "flex-1 py-2 px-4 rounded-lg font-medium transition-colors",
-                activeTab === "unstake"
-                  ? "bg-primary text-white"
-                  : "bg-surface-overlay text-text-secondary hover:bg-surface-sunken",
-                !userStake && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              Unstake
-            </button>
-          </div>
+          <StakingTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            hasStake={!!userStake}
+          />
+
+          {/* Transaction Status */}
+          {(txStatus !== "idle" || stakeError) && (
+            <div className="mb-6">
+              <TransactionStatus
+                status={txStatus}
+                message={
+                  txStatus === "pending"
+                    ? "Waiting for wallet confirmation..."
+                    : txStatus === "success"
+                    ? "Your stake has been processed successfully!"
+                    : stakeError || undefined
+                }
+                txHash={hash}
+              />
+            </div>
+          )}
 
           {/* Amount Input */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Amount (USDC)
-            </label>
-            <div className="relative">
-              <Input
-                type="text"
-                value={stakeAmount}
-                onChange={handleAmountChange}
-                placeholder="0.00"
-                className="pr-20 text-lg"
-              />
-              <button
-                onClick={handleMaxClick}
-                className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1 bg-primary/20 hover:bg-primary/30 text-primary text-sm font-medium rounded"
-              >
-                MAX
-              </button>
-            </div>
-            {usdcBalance && activeTab === "stake" && (
-              <div className="text-xs text-text-tertiary mt-1">
-                Balance: {parseFloat(formatEther(usdcBalance)).toFixed(2)} USDC
-              </div>
-            )}
-          </div>
-
-          {/* Error Message */}
-          {stakeError && (
-            <div className="mb-4 p-3 bg-error/10 border border-error/20 rounded-lg text-error text-sm">
-              {stakeError}
-            </div>
-          )}
-
-          {/* Success Message */}
-          {isSuccess && (
-            <div className="mb-4 p-3 bg-success/10 border border-success/20 rounded-lg text-success text-sm">
-              Transaction successful! {hash && (
-                <a
-                  href={`https://etherscan.io/tx/${hash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline ml-1"
-                >
-                  View on Etherscan
-                </a>
-              )}
-            </div>
-          )}
+          <StakingAmountInput
+            value={stakeAmount}
+            onChange={handleAmountChange}
+            onMaxClick={handleMaxClick}
+            balance={activeTab === "stake" ? formattedBalance : undefined}
+            label={`Amount to ${activeTab === "stake" ? "Stake" : "Unstake"} (USDC)`}
+            placeholder="0.00"
+            error={stakeError}
+            disabled={isProcessing}
+          />
 
           {/* Action Buttons */}
-          {!isConnected ? (
-            <Button fullWidth size="lg" onClick={() => router.push("/auth")}>
-              Connect Wallet to Stake
-            </Button>
-          ) : activeTab === "stake" ? (
-            <div className="space-y-3">
-              {needsApproval && (
-                <Button
-                  fullWidth
-                  size="lg"
-                  onClick={handleApprove}
-                  disabled={!stakeAmount || isProcessing}
-                >
-                  {isProcessing ? "Approving..." : "Approve USDC"}
-                </Button>
-              )}
-              <Button
-                fullWidth
-                size="lg"
-                onClick={handleStake}
-                disabled={!stakeAmount || needsApproval || isProcessing}
-              >
-                {isProcessing ? <Spinner size="sm" /> : "Stake USDC"}
-              </Button>
-            </div>
-          ) : (
-            <Button
-              fullWidth
-              size="lg"
-              onClick={handleUnstake}
-              disabled={!stakeAmount || isProcessing}
-              variant="secondary"
-            >
-              {isProcessing ? <Spinner size="sm" /> : "Unstake & Claim Yield"}
-            </Button>
-          )}
-
-          {/* Info Text */}
-          <div className="mt-6 text-xs text-text-tertiary space-y-1">
-            <p>• Your USDC will be staked to earn {estimatedAPY}% annual yield</p>
-            <p>• You can unstake at any time with no lockup period</p>
-            <p>• Yield is automatically compounded</p>
-            <p>• A portion of yield supports the campaign creator</p>
+          <div className="mt-6">
+            <StakingActionButtons
+              activeTab={activeTab}
+              isConnected={isConnected}
+              amount={stakeAmount}
+              needsApproval={needsApproval}
+              isProcessing={isProcessing}
+              onConnectWallet={handleConnectWallet}
+              onApprove={handleApprove}
+              onStake={handleStake}
+              onUnstake={handleUnstake}
+            />
           </div>
         </div>
 
+        {/* Info Panel */}
+        <StakingInfoPanel estimatedAPY={estimatedAPY} />
+
         {/* Recent Stakes List */}
-        {stakes.length > 0 && (
-          <div className="mt-8 bg-surface-elevated border border-border-subtle rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">Recent Stakers</h3>
-            <div className="space-y-3">
-              {stakes.slice(0, 10).map((stake) => (
-                <div
-                  key={stake.id}
-                  className="flex items-center justify-between py-2 border-b border-border-subtle last:border-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                      {stake.staker.displayName?.[0] || stake.staker.username?.[0] || "?"}
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm">
-                        {stake.staker.displayName || stake.staker.username || "Anonymous"}
-                      </div>
-                      <div className="text-xs text-text-tertiary">
-                        {new Date(stake.stakedAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-foreground">
-                      ${parseFloat(stake.amount).toLocaleString()}
-                    </div>
-                    <div className="text-xs text-text-secondary">USDC</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <RecentStakersList stakes={stakes} />
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 export * from './blockchain.module';
 
 // Services
+export * from './provider.service';
 export * from './contracts.service';
 export * from './fundraiser-blockchain.service';
 export * from './donation-blockchain.service';

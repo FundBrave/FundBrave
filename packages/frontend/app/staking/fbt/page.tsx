@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatEther } from "viem";
 import { Navbar } from "@/app/components/common";
-import { Button } from "@/app/components/ui/button/Button";
-import { Input } from "@/app/components/ui/inputs/Input";
+import { Button } from "@/app/components/ui/button";
 import { Spinner } from "@/app/components/ui/Spinner";
 import { useMyFBTStake } from "@/app/hooks/useStaking";
 import { useAccount } from "wagmi";
@@ -233,12 +232,12 @@ export default function FBTStakingPage() {
                 Amount (FBT)
               </label>
               <div className="relative">
-                <Input
+                <input
                   type="text"
                   value={stakeAmount}
                   onChange={handleAmountChange}
                   placeholder="0.00"
-                  className="pr-20 text-lg"
+                  className="w-full pr-20 text-lg px-4 py-3 bg-background border border-white/10 rounded-lg text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <button
                   onClick={handleMaxClick}

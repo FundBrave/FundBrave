@@ -6,7 +6,7 @@ This directory contains seed scripts to populate the FundBrave database with rea
 
 The seed scripts create a comprehensive dataset including:
 
-- **20 diverse users** across 4 user types (activists, entrepreneurs, artists, donors)
+- **25 diverse users** (5 test users + 20 random) across 4 types (activists, entrepreneurs, artists, donors)
 - **10 fundraising campaigns** with various statuses and realistic goals
 - **50-100 posts** with varied content (announcements, updates, questions, media)
 - **100-200 comments** including nested replies
@@ -16,6 +16,16 @@ The seed scripts create a comprehensive dataset including:
 - **50-80 follow relationships** creating a realistic social graph
 - **Hashtags** extracted from post content
 - **Campaign updates and milestones** for each fundraiser
+
+## Seeding Modes
+
+The system supports two modes for campaign seeding:
+
+### 1. Offline Seeding (Default)
+Creates campaign records with fake transaction hashes. Fast and doesn't require blockchain connection.
+
+### 2. On-Chain Seeding
+Creates actual fundraiser contracts on Base Sepolia blockchain, then stores the real blockchain data in the database.
 
 ## Quick Start
 
@@ -28,11 +38,24 @@ The seed scripts create a comprehensive dataset including:
 ### Running the Seed
 
 ```bash
-# From the backend directory
+# Standard offline seeding
 npm run seed
 
 # Or using Prisma directly
 npx prisma db seed
+```
+
+### On-Chain Campaign Seeding
+
+```bash
+# Option 1: Run on-chain seeding only
+npm run seed:campaigns
+
+# Option 2: Run full seed with on-chain campaigns
+npm run seed -- --onchain
+
+# Option 3: Set environment variable
+SEED_ONCHAIN_CAMPAIGNS=true npm run seed
 ```
 
 ### Full Reset & Seed
@@ -44,6 +67,54 @@ npx prisma migrate reset
 # This will automatically run the seed script
 ```
 
+## On-Chain Seeding Requirements
+
+To use on-chain seeding, you need:
+
+1. **Backend Wallet**: Set `BACKEND_WALLET_PK` in your `.env` file with a funded wallet private key.
+
+2. **ETH for Gas**: The wallet needs ETH on Base Sepolia for transaction fees. Get free testnet ETH from:
+   - https://www.alchemy.com/faucets/base-sepolia
+   - https://faucet.quicknode.com/base/sepolia
+
+3. **RPC Connection**: Optionally set `ALCHEMY_API_KEY` for more reliable RPC connections.
+
+### Environment Variables for On-Chain Seeding
+
+```env
+# Required for on-chain seeding
+BACKEND_WALLET_PK=0x...your-private-key...
+
+# Optional: Enable on-chain seeding by default
+SEED_ONCHAIN_CAMPAIGNS=true
+
+# Optional: Better RPC reliability (recommended)
+ALCHEMY_API_KEY=your-alchemy-key
+
+# Optional: Custom RPC URL
+BASE_SEPOLIA_RPC_URL=https://your-rpc-endpoint
+```
+
+### Gas Cost Estimates
+
+Approximate gas costs for on-chain seeding on Base Sepolia:
+- Per campaign creation: ~0.001-0.005 ETH
+- Total for 10 campaigns: ~0.01-0.05 ETH
+
+## Test User Credentials
+
+After seeding, these users are available for testing:
+
+| Email | Password | Role |
+|-------|----------|------|
+| `okwuosahpaschal@gmail.com` | `84316860p*A` | Activist (Gold) |
+| `test@fundbrave.com` | `TestUser123!` | Donor |
+| `admin@fundbrave.com` | `AdminPass123!` | Admin (Official) |
+| `creator@fundbrave.com` | `Creator123!` | Artist (Verified) |
+| `donor@fundbrave.com` | `Donor123!` | Donor |
+
+Hybrid users (with email) can also use password: `Password123!`
+
 ## Seed Script Architecture
 
 ### Main Orchestrator: `seed.ts`
@@ -51,14 +122,24 @@ npx prisma migrate reset
 The main seed script coordinates the entire seeding process:
 
 1. **Clear Database**: Removes existing data in correct order to avoid FK violations
-2. **Seed Users**: Creates 20 users with diverse profiles
-3. **Seed Campaigns**: Creates 10 fundraising campaigns
-4. **Seed Posts**: Creates 50-100 posts with varied content
-5. **Seed Reposts**: Creates posts that reference other posts
-6. **Seed Interactions**: Creates likes, comments, follows, bookmarks
-7. **Validate Data**: Confirms all data was seeded correctly
+2. **Seed Blockchain Config**: Seeds supported chains, contracts, and tokens
+3. **Seed Users**: Creates 25 users (5 test + 20 random)
+4. **Seed Campaigns**: Creates 10 fundraising campaigns (offline OR on-chain)
+5. **Seed Posts**: Creates 50-100 posts with varied content
+6. **Seed Reposts**: Creates posts that reference other posts
+7. **Seed Interactions**: Creates likes, comments, follows, bookmarks
+8. **Validate Data**: Confirms all data was seeded correctly
 
 ### Individual Seed Files
+
+| File | Description |
+|------|-------------|
+| `users.seed.ts` | Creates test users with known credentials and random users |
+| `campaigns.seed.ts` | Creates campaigns with fake tx hashes (offline mode) |
+| `campaigns-onchain.seed.ts` | Creates campaigns on blockchain with real tx hashes |
+| `posts.seed.ts` | Creates social posts and reposts |
+| `interactions.seed.ts` | Creates follows, likes, comments, bookmarks |
+| `blockchain.seed.ts` | Seeds supported chains, contracts, and tokens |
 
 #### `users.seed.ts`
 
@@ -77,9 +158,9 @@ Creates 20 users distributed across 4 types:
 - Default password for hybrid users: `Password123!`
 - Onboarding completed for all users
 
-#### `campaigns.seed.ts`
+#### `campaigns.seed.ts` (Offline Mode)
 
-Creates 10 fundraising campaigns with realistic content:
+Creates 10 fundraising campaigns with realistic content and fake blockchain data:
 
 **Status Distribution:**
 - 3 Active campaigns (30-85% funded)
@@ -95,7 +176,35 @@ Creates 10 fundraising campaigns with realistic content:
 - 2-5 updates with optional images
 - Milestones at 25%, 50%, 75%, 100%
 - Realistic goal amounts ($1,000 - $50,000)
-- On-chain IDs and transaction hashes
+- Fake on-chain IDs and transaction hashes
+
+#### `campaigns-onchain.seed.ts` (Blockchain Mode)
+
+Creates 10 fundraising campaigns by calling the FundraiserFactory smart contract on Base Sepolia:
+
+**Campaign Templates:**
+1. Clean Water for Rural Villages - Healthcare, Kenya ($25K)
+2. Tech Skills Bootcamp for Youth - Education, Nigeria ($45K)
+3. AI-Powered Precision Agriculture - Technology, India ($55K)
+4. Mental Health Support Network - Healthcare, Global ($40K)
+5. Voices of the Amazon Documentary - Arts & Culture, Brazil ($48K)
+6. Community Art Space Revival - Arts & Culture, USA ($42K)
+7. Emergency Flood Relief Fund - Emergency Relief, Bangladesh ($35K)
+8. Women Entrepreneur Microloan Fund - Economic Development, Kenya ($32K)
+9. Decentralized Health Records Platform - Technology, USA ($50K)
+10. Youth Music Production Studio - Arts & Culture, USA ($38K)
+
+**Process:**
+1. Call `createFundraiser()` on FundraiserFactory
+2. Wait for transaction confirmation (2 blocks)
+3. Parse `FundraiserCreated` event for on-chain data
+4. Create database record with real blockchain references
+
+**Each Campaign Gets:**
+- Real on-chain ID from FundraiserFactory
+- Real transaction hash
+- Real fundraiser contract address
+- Real deadline from blockchain
 
 #### `posts.seed.ts`
 
@@ -309,9 +418,36 @@ Add new campaigns to the `campaignTemplates` array in `campaigns.seed.ts`.
 
 ### Performance Issues
 
-- Seeding takes 30-60 seconds typically
+- Offline seeding takes 30-60 seconds typically
+- On-chain seeding takes 2-5 minutes (blockchain confirmations)
 - For large datasets, consider batching creates
 - Check database connection pool settings
+
+### On-Chain Seeding Issues
+
+#### "No BACKEND_WALLET_PK configured"
+
+Set the private key in your `.env`:
+```env
+BACKEND_WALLET_PK=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+```
+
+#### "Insufficient ETH for gas"
+
+Fund your wallet with testnet ETH from the faucets listed above.
+
+#### "Failed to connect to RPC"
+
+1. Check your internet connection
+2. Set `ALCHEMY_API_KEY` for more reliable connections
+3. Try a different RPC endpoint
+
+#### "Transaction reverted"
+
+Check the contract parameters. Common issues:
+- Goal amount too low (< minimum configured in contract)
+- Duration too short (< 7 days)
+- Invalid beneficiary address
 
 ## Advanced Usage
 

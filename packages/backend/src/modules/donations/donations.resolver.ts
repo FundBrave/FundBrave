@@ -10,6 +10,8 @@ import {
   DonationLeaderboardEntry,
   RecentDonationActivity,
   RecordDonationInput,
+  RecordDonationPublicInput,
+  RecordDonationResponse,
   DonationFilterInput,
   DonationSortBy,
 } from './dto';
@@ -179,5 +181,30 @@ export class DonationsResolver {
       user.walletAddress,
       input,
     );
+  }
+
+  /**
+   * Record a donation without authentication
+   * For Web3 wallets that have completed on-chain donation
+   * Supports idempotent calls - returns existing donation if already recorded
+   */
+  @Mutation(() => RecordDonationResponse, { name: 'recordDonationPublic' })
+  async recordDonationPublic(
+    @Args('input') input: RecordDonationPublicInput,
+  ): Promise<RecordDonationResponse> {
+    return this.donationsService.recordDonationPublic(input);
+  }
+
+  // ==================== Utility Queries ====================
+
+  /**
+   * Check if a donation with the given transaction hash already exists
+   * Useful for frontend to avoid duplicate submissions
+   */
+  @Query(() => Boolean, { name: 'donationExistsByTxHash' })
+  async donationExistsByTxHash(
+    @Args('txHash') txHash: string,
+  ): Promise<boolean> {
+    return this.donationsService.donationExistsByTxHash(txHash);
   }
 }

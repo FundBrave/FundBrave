@@ -21,6 +21,10 @@ import {
   GlobalPoolVoteAllocation,
   UserGlobalPoolVotes,
   RecordStakeInput,
+  RecordStakePublicInput,
+  RecordStakeResponse,
+  StakingStats,
+  RecentStakingActivity,
   UnstakeInput,
   StakeFilterInput,
   GlobalPoolVoteInput,
@@ -34,6 +38,8 @@ import {
   StakeNotFoundException,
   FundraiserNotFoundException,
   InvalidInputException,
+  InvalidStakeAmountException,
+  StakeAlreadyInactiveException,
   DuplicateTransactionException,
 } from '../../common/exceptions';
 import { SortOrder } from '../fundraisers/dto';
@@ -850,6 +856,318 @@ export class StakingService {
     this.logger.log(
       `Processed Unstaked event: ${stakerAddress} unstaked ${args.amount}`,
     );
+  }
+
+  // ==================== Public Staking Methods ====================
+
+  /**
+   * Record a stake without authentication (for Web3 wallets)
+   * Supports idempotent calls - returns existing stake if already recorded
+   * Mirrors recordDonationPublic for consistency
+   */
+  async recordStakePublic(
+    input: RecordStakePublicInput,
+  ): Promise<RecordStakeResponse> {
+    // Normalize addresses
+    const stakerAddress = input.stakerAddress.toLowerCase();
+    const poolAddress = input.poolAddress.toLowerCase();
+    const txHash = input.txHash.toLowerCase();
+
+    // Check for duplicate transaction - return existing if found (idempotent)
+    const existing = await this.prisma.stake.findUnique({
+      where: { txHash },
+      include: {
+        staker: {
+          select: {
+            id: true,
+            walletAddress: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
+        fundraiser: {
+          select: {
+            id: true,
+            onChainId: true,
+            name: true,
+            stakingPoolAddr: true,
+          },
+        },
+      },
+    });
+
+    if (existing) {
+      return {
+        stake: this.mapToStakeDto(existing),
+        verified: true,
+        verificationMessage: 'Stake already recorded',
+      };
+    }
+
+    // Validate transaction hash format
+    if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
+      throw new InvalidInputException('Invalid transaction hash format', {
+        txHash,
+      });
+    }
+
+    // Validate amount is a valid positive number
+    let amountBigInt: bigint;
+    try {
+      amountBigInt = BigInt(input.amount);
+      if (amountBigInt <= BigInt(0)) {
+        throw new Error('Amount must be positive');
+      }
+    } catch {
+      throw new InvalidStakeAmountException(input.amount);
+    }
+
+    let sharesBigInt: bigint;
+    try {
+      sharesBigInt = BigInt(input.shares);
+      if (sharesBigInt <= BigInt(0)) {
+        throw new Error('Shares must be positive');
+      }
+    } catch {
+      throw new InvalidInputException('Invalid shares amount', {
+        shares: input.shares,
+      });
+    }
+
+    // Validate fundraiser if provided
+    let fundraiser: PrismaFundraiser | null = null;
+    if (input.fundraiserId) {
+      fundraiser = await this.prisma.fundraiser.findUnique({
+        where: { id: input.fundraiserId },
+      });
+
+      if (!fundraiser) {
+        throw new FundraiserNotFoundException(input.fundraiserId);
+      }
+    }
+
+    // Find or create user based on wallet address
+    let user = await this.prisma.user.findUnique({
+      where: { walletAddress: stakerAddress },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          walletAddress: stakerAddress,
+        },
+      });
+    }
+
+    // Create stake within transaction
+    const stake = await this.prisma.$transaction(async (tx) => {
+      const newStake = await tx.stake.create({
+        data: {
+          txHash,
+          poolAddress,
+          amount: amountBigInt,
+          shares: sharesBigInt,
+          fundraiserId: fundraiser?.id,
+          stakerId: user.id,
+          stakerAddress,
+          causeShare: input.yieldSplit?.causeShare,
+          stakerShare: input.yieldSplit?.stakerShare,
+          platformShare: input.yieldSplit?.platformShare,
+          chainId: input.chainId,
+          blockNumber: input.blockNumber,
+          isGlobal: input.isGlobal || false,
+        },
+        include: {
+          staker: {
+            select: {
+              id: true,
+              walletAddress: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+          fundraiser: {
+            select: {
+              id: true,
+              onChainId: true,
+              name: true,
+              stakingPoolAddr: true,
+            },
+          },
+        },
+      });
+
+      // Update user stats
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          totalStaked: {
+            increment: amountBigInt,
+          },
+        },
+      });
+
+      // Update fundraiser stats if applicable
+      if (fundraiser) {
+        await tx.fundraiser.update({
+          where: { id: fundraiser.id },
+          data: {
+            stakersCount: { increment: 1 },
+          },
+        });
+      }
+
+      return newStake;
+    });
+
+    this.logger.log(
+      `Recorded public stake ${stake.id} from ${stakerAddress} for pool ${poolAddress}`,
+    );
+
+    return {
+      stake: this.mapToStakeDto(stake),
+      verified: true,
+      verificationMessage: 'Stake recorded successfully',
+    };
+  }
+
+  /**
+   * Check if a stake with the given txHash already exists
+   * Useful for frontend to check before calling recordStake
+   */
+  async stakeExistsByTxHash(txHash: string): Promise<boolean> {
+    const count = await this.prisma.stake.count({
+      where: { txHash: txHash.toLowerCase() },
+    });
+    return count > 0;
+  }
+
+  // ==================== Staking Statistics ====================
+
+  /**
+   * Get staking statistics for a fundraiser
+   */
+  async getFundraiserStakingStats(fundraiserId: string): Promise<StakingStats> {
+    const stakes = await this.prisma.stake.findMany({
+      where: { fundraiserId, isActive: true },
+      select: {
+        amount: true,
+        stakedAt: true,
+      },
+      orderBy: { amount: 'desc' },
+    });
+
+    const uniqueStakers = await this.prisma.stake.groupBy({
+      by: ['stakerAddress'],
+      where: { fundraiserId, isActive: true },
+    });
+
+    const totalStaked = stakes.reduce(
+      (sum, s) => sum + s.amount,
+      BigInt(0),
+    );
+
+    const averageStake =
+      stakes.length > 0
+        ? (totalStaked / BigInt(stakes.length)).toString()
+        : '0';
+
+    const largestStake =
+      stakes.length > 0 ? stakes[0].amount.toString() : '0';
+
+    const lastStake =
+      stakes.length > 0
+        ? stakes.reduce((latest, s) =>
+            s.stakedAt > latest.stakedAt ? s : latest,
+          )
+        : null;
+
+    return {
+      totalStaked: totalStaked.toString(),
+      stakesCount: stakes.length,
+      uniqueStakersCount: uniqueStakers.length,
+      averageStake,
+      largestStake,
+      lastStakeAt: lastStake?.stakedAt,
+      apy: '5.0', // TODO: Calculate actual APY from contract or yield data
+    };
+  }
+
+  /**
+   * Get platform-wide staking statistics
+   */
+  async getPlatformStakingStats(): Promise<StakingStats> {
+    const result = await this.prisma.stake.aggregate({
+      where: { isActive: true },
+      _sum: { amount: true },
+      _count: { id: true },
+      _max: { amount: true, stakedAt: true },
+    });
+
+    const uniqueStakers = await this.prisma.stake.groupBy({
+      by: ['stakerAddress'],
+      where: { isActive: true },
+    });
+
+    const totalStaked = result._sum?.amount ?? BigInt(0);
+    const stakesCount = result._count?.id ?? 0;
+    const averageStake =
+      stakesCount > 0
+        ? (totalStaked / BigInt(stakesCount)).toString()
+        : '0';
+
+    return {
+      totalStaked: totalStaked.toString(),
+      stakesCount,
+      uniqueStakersCount: uniqueStakers.length,
+      averageStake,
+      largestStake: result._max?.amount?.toString() ?? '0',
+      lastStakeAt: result._max?.stakedAt ?? undefined,
+      apy: '5.0', // TODO: Calculate actual APY
+    };
+  }
+
+  /**
+   * Get recent staking activity (for social proof / live feed)
+   */
+  async getRecentStakingActivity(
+    limit: number = 20,
+    fundraiserId?: string,
+  ): Promise<RecentStakingActivity[]> {
+    const where: Prisma.StakeWhereInput = {};
+    if (fundraiserId) {
+      where.fundraiserId = fundraiserId;
+    }
+
+    const stakes = await this.prisma.stake.findMany({
+      where,
+      select: {
+        id: true,
+        stakerAddress: true,
+        amount: true,
+        stakedAt: true,
+        staker: {
+          select: { username: true },
+        },
+        fundraiser: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { stakedAt: 'desc' },
+      take: limit,
+    });
+
+    return stakes.map((s) => ({
+      id: s.id,
+      stakerAddress: s.stakerAddress,
+      stakerUsername: s.staker?.username ?? undefined,
+      amount: s.amount.toString(),
+      fundraiserName: s.fundraiser?.name ?? undefined,
+      fundraiserId: s.fundraiser?.id ?? undefined,
+      stakedAt: s.stakedAt,
+    }));
   }
 
   // ==================== Helper Methods ====================

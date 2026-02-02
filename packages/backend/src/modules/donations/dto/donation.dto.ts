@@ -256,6 +256,70 @@ export class RecordDonationInput {
   message?: string;
 }
 
+/**
+ * Input for recording a donation without authentication
+ * Used for Web3 wallets that have completed on-chain donation
+ * Requires transaction verification on-chain before recording
+ */
+@InputType()
+export class RecordDonationPublicInput {
+  @Field()
+  @IsString()
+  txHash: string;
+
+  @Field()
+  @IsString()
+  @IsEthereumAddress()
+  donorAddress: string;
+
+  @Field()
+  @IsString()
+  amount: string;
+
+  @Field()
+  @IsString()
+  token: string;
+
+  @Field(() => Int)
+  @IsNumber()
+  chainId: number;
+
+  @Field()
+  @IsString()
+  fundraiserId: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  isAnonymous?: boolean;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  message?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsNumber()
+  blockNumber?: number;
+}
+
+/**
+ * Response for donation recording with verification status
+ */
+@ObjectType()
+export class RecordDonationResponse {
+  @Field(() => Donation)
+  donation: Donation;
+
+  @Field()
+  verified: boolean;
+
+  @Field({ nullable: true })
+  verificationMessage?: string;
+}
+
 @InputType()
 export class DonationFilterInput {
   @Field({ nullable: true })

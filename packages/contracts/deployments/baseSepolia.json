@@ -1,0 +1,85 @@
+{
+  "network": "baseSepolia",
+  "chainId": null,
+  "deployedAt": null,
+  "contracts": {
+    "FundBraveToken": {
+      "address": "0xE42A6ff84160Ac399607667C32392378Bbb270E0",
+      "txHash": "0x33edb0efea5af4f030543cf34e7584dc7f23bdd281a6abc669098efa247aa2e7",
+      "constructorArgs": [
+        "0x396E931faD8c43c7200D70BbDE91e962CfaCCa5e"
+      ],
+      "isProxy": true,
+      "implementationAddress": "0xcc8eC10b641d581c8D6ecA58287155bed3546a57",
+      "deployedAt": "2026-01-23T15:42:27.517Z"
+    },
+    "FundraiserImplementation": {
+      "address": "0xf79732B4D25521F2C8d8619c568C065fBf69bc9e",
+      "txHash": "0x2ac0d59d3cd2abe9ea1dca289ef3da345b988c2d0e327a27aee78022a8a59a1a",
+      "constructorArgs": [],
+      "isProxy": false,
+      "implementationAddress": null,
+      "deployedAt": "2026-01-23T15:43:07.189Z"
+    },
+    "StakingPoolImplementation": {
+      "address": "0x51A41B4F07a7b5b6D2eF72E3AaD97aDE1e3E86F8",
+      "txHash": "0x81cb11b401a67edd4d9eabfb6327cb1c6d301927471410cfab9e919df5df64f6",
+      "constructorArgs": [],
+      "isProxy": false,
+      "implementationAddress": null,
+      "deployedAt": "2026-01-23T15:43:46.781Z"
+    },
+    "WealthBuildingDonation": {
+      "address": "0x8DcC63E7Df76ece01c186568E269a2cF3aC8A886",
+      "txHash": "manual-deployment",
+      "constructorArgs": [],
+      "isProxy": true,
+      "implementationAddress": "0x4dcD124a2AE64897de915EC130B177Ebf4c2808C",
+      "deployedAt": "2026-01-23T16:04:22.575Z"
+    },
+    "WealthBuildingDonationImplementation": {
+      "address": "0x4dcD124a2AE64897de915EC130B177Ebf4c2808C",
+      "txHash": "manual-deployment",
+      "constructorArgs": [],
+      "isProxy": false,
+      "implementationAddress": null,
+      "deployedAt": "2026-01-23T16:04:22.575Z"
+    },
+    "PlatformTreasury": {
+      "address": "0x664AbB27C9c3d287117676c77B6A1c88B831D836",
+      "txHash": "manual-deployment",
+      "constructorArgs": [],
+      "isProxy": true,
+      "implementationAddress": "0xCb8B017BFF56CA374fb2F6718A4E21DED9D5E665",
+      "deployedAt": "2026-01-23T16:04:22.575Z"
+    },
+    "PlatformTreasuryImplementation": {
+      "address": "0xCb8B017BFF56CA374fb2F6718A4E21DED9D5E665",
+      "txHash": "manual-deployment",
+      "constructorArgs": [],
+      "isProxy": false,
+      "implementationAddress": null,
+      "deployedAt": "2026-01-23T16:04:22.575Z"
+    },
+    "FundraiserFactory": {
+      "address": "0x7253b4E79cc708873b83Bb3C3F50F3e81b21819c",
+      "txHash": "manual-deployment",
+      "constructorArgs": [
+        "0xf79732B4D25521F2C8d8619c568C065fBf69bc9e",
+        "0x51A41B4F07a7b5b6D2eF72E3AaD97aDE1e3E86F8",
+        "0x0000000000000000000000000000000000000000",
+        "0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f",
+        "0x4200000000000000000000000000000000000006",
+        "0x664AbB27C9c3d287117676c77B6A1c88B831D836",
+        "0x8bAB6d1b75f19e9eD9fCe8b9BD338844fF79aE27",
+        "0x10F1A9D11CDf50041f3f8cB7191CBE2f31750ACC",
+        "0x0000000000000000000000000000000000000000",
+        0
+      ],
+      "isProxy": false,
+      "implementationAddress": null,
+      "deployedAt": "2026-01-23T16:04:22.576Z"
+    }
+  },
+  "lastUpdated": "2026-01-23T16:04:22.576Z"
+}

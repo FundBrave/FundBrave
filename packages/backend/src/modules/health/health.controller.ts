@@ -1,12 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject, Optional } from '@nestjs/common';
 import {
   HealthCheck,
   HealthCheckService,
   PrismaHealthIndicator,
   MemoryHealthIndicator,
   DiskHealthIndicator,
+  HealthIndicatorResult,
 } from '@nestjs/terminus';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ContractsService } from '../blockchain/contracts.service';
 
 /**
  * Health check controller
@@ -20,6 +22,7 @@ export class HealthController {
     private readonly memory: MemoryHealthIndicator,
     private readonly disk: DiskHealthIndicator,
     private readonly prisma: PrismaService,
+    @Optional() @Inject(ContractsService) private readonly contractsService?: ContractsService,
   ) {}
 
   /**
@@ -82,6 +85,73 @@ export class HealthController {
             redis: {
               status: 'down' as const,
               message: String(error),
+            },
+          };
+        }
+      },
+    ]);
+  }
+
+  /**
+   * Blockchain health check
+   * GET /health/blockchain
+   */
+  @Get('blockchain')
+  @HealthCheck()
+  async checkBlockchain() {
+    return this.health.check([
+      async (): Promise<HealthIndicatorResult> => {
+        try {
+          if (!this.contractsService) {
+            return {
+              blockchain: {
+                status: 'down' as const,
+                message: 'ContractsService not available',
+              },
+            };
+          }
+
+          const healthStatus = this.contractsService.getBlockchainHealth();
+
+          if (!healthStatus.isHealthy) {
+            return {
+              blockchain: {
+                status: 'down' as const,
+                message: 'No blockchain providers connected',
+                details: {
+                  providers: healthStatus.providers.map(p => ({
+                    chainId: p.chainId,
+                    network: p.networkName,
+                    connected: p.isConnected,
+                    error: p.error,
+                  })),
+                },
+              },
+            };
+          }
+
+          const connectedProviders = healthStatus.providers.filter(p => p.isConnected);
+
+          return {
+            blockchain: {
+              status: 'up' as const,
+              message: `${connectedProviders.length}/${healthStatus.providers.length} chains connected`,
+              details: {
+                defaultChainConnected: healthStatus.defaultChainConnected,
+                connectedChains: connectedProviders.map(p => ({
+                  chainId: p.chainId,
+                  network: p.networkName,
+                  blockNumber: p.blockNumber,
+                  latency: p.latency,
+                })),
+              },
+            },
+          };
+        } catch (error) {
+          return {
+            blockchain: {
+              status: 'down' as const,
+              message: error instanceof Error ? error.message : 'Unknown error',
             },
           };
         }

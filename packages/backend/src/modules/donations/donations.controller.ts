@@ -27,6 +27,8 @@ import {
   DonationLeaderboardEntry,
   RecentDonationActivity,
   RecordDonationInput,
+  RecordDonationPublicInput,
+  RecordDonationResponse,
   DonationSortBy,
 } from './dto';
 import { SortOrder } from '../fundraisers/dto';
@@ -242,7 +244,7 @@ export class DonationsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Record a new donation' })
+  @ApiOperation({ summary: 'Record a new donation (authenticated)' })
   @ApiResponse({ status: 201, description: 'Donation recorded successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 409, description: 'Duplicate transaction' })
@@ -255,5 +257,40 @@ export class DonationsController {
       user.walletAddress,
       input,
     );
+  }
+
+  @Post('public')
+  @ApiOperation({
+    summary: 'Record a donation without authentication (for Web3 wallets)',
+    description:
+      'Records a donation after on-chain transaction confirmation. ' +
+      'Supports idempotent calls - returns existing donation if already recorded. ' +
+      'Use this when the user completed a donation on-chain but is not logged in.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Donation recorded successfully',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Donation already exists (idempotent response)',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({ status: 404, description: 'Fundraiser not found' })
+  async recordDonationPublic(
+    @Body() input: RecordDonationPublicInput,
+  ): Promise<RecordDonationResponse> {
+    return this.donationsService.recordDonationPublic(input);
+  }
+
+  @Get('exists/:txHash')
+  @ApiOperation({ summary: 'Check if a donation exists by transaction hash' })
+  @ApiParam({ name: 'txHash', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns true if donation exists, false otherwise',
+  })
+  async donationExists(@Param('txHash') txHash: string): Promise<boolean> {
+    return this.donationsService.donationExistsByTxHash(txHash);
   }
 }

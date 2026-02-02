@@ -422,6 +422,128 @@ export class VoteAllocationInput {
   weight: string;
 }
 
+// ==================== Public Staking DTOs ====================
+
+/**
+ * Input for recording a stake without authentication (for Web3 wallets)
+ * Mirrors RecordDonationPublicInput for consistency
+ */
+@InputType()
+export class RecordStakePublicInput {
+  @Field()
+  @IsString()
+  txHash: string;
+
+  @Field()
+  @IsEthereumAddress()
+  stakerAddress: string;
+
+  @Field()
+  @IsEthereumAddress()
+  poolAddress: string;
+
+  @Field()
+  @IsString()
+  amount: string;
+
+  @Field()
+  @IsString()
+  shares: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  fundraiserId?: string;
+
+  @Field(() => Int)
+  @IsNumber()
+  chainId: number;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  isGlobal?: boolean;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsNumber()
+  blockNumber?: number;
+
+  @Field(() => YieldSplitInput, { nullable: true })
+  @IsOptional()
+  yieldSplit?: YieldSplitInput;
+}
+
+/**
+ * Response for stake recording with verification status
+ * Mirrors RecordDonationResponse for consistency
+ */
+@ObjectType()
+export class RecordStakeResponse {
+  @Field(() => Stake)
+  stake: Stake;
+
+  @Field()
+  verified: boolean;
+
+  @Field({ nullable: true })
+  verificationMessage?: string;
+}
+
+/**
+ * Staking statistics for a fundraiser or platform
+ */
+@ObjectType()
+export class StakingStats {
+  @Field()
+  totalStaked: string;
+
+  @Field(() => Int)
+  stakesCount: number;
+
+  @Field(() => Int)
+  uniqueStakersCount: number;
+
+  @Field()
+  averageStake: string;
+
+  @Field()
+  largestStake: string;
+
+  @Field({ nullable: true })
+  lastStakeAt?: Date;
+
+  @Field()
+  apy: string;
+}
+
+/**
+ * Recent staking activity entry (for social proof / live feed)
+ */
+@ObjectType()
+export class RecentStakingActivity {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  stakerAddress: string;
+
+  @Field({ nullable: true })
+  stakerUsername?: string;
+
+  @Field()
+  amount: string;
+
+  @Field({ nullable: true })
+  fundraiserName?: string;
+
+  @Field({ nullable: true })
+  fundraiserId?: string;
+
+  @Field()
+  stakedAt: Date;
+}
+
 // ==================== Blockchain Event Types ====================
 
 export interface StakedEventArgs {

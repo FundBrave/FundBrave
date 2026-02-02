@@ -1,8 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ethers } from 'ethers';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EventsService } from './events.service';
+import { ProviderService } from './provider.service';
 import {
   ChainId,
   ContractName,
@@ -12,6 +13,7 @@ import {
   FundBraveTokenEvent,
   StakingPoolEvent,
 } from '../../common/types';
+import { DEFAULT_CHAIN_ID, SUPPORTED_NETWORKS } from './config/deployments';
 
 /**
  * Configuration for blockchain indexing
@@ -30,6 +32,7 @@ interface IndexerConfig {
 /**
  * Service for indexing blockchain events
  * Continuously monitors smart contracts and processes events
+ * Uses ProviderService for reliable blockchain connections
  */
 @Injectable()
 export class BlockchainIndexerService implements OnModuleInit {
@@ -41,6 +44,7 @@ export class BlockchainIndexerService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventsService: EventsService,
+    @Optional() private readonly providerService?: ProviderService,
   ) {}
 
   async onModuleInit() {
@@ -75,8 +79,55 @@ export class BlockchainIndexerService implements OnModuleInit {
 
   /**
    * Initialize blockchain providers for each supported chain
+   * Leverages ProviderService for reliable connections with fallback support
    */
   private async initializeProviders(): Promise<void> {
+    // First, try to use providers from ProviderService (which has FallbackProvider support)
+    if (this.providerService) {
+      this.logger.log('Using ProviderService for blockchain connections...');
+
+      // Map supported network chain IDs to ChainId enum
+      const chainIdMapping: Record<number, ChainId> = {
+        1: ChainId.ETHEREUM,
+        11155111: ChainId.SEPOLIA,
+        137: ChainId.POLYGON,
+        80001: ChainId.MUMBAI,
+        43114: ChainId.AVALANCHE,
+        43113: ChainId.FUJI,
+        42161: ChainId.ARBITRUM,
+        421614: ChainId.ARBITRUM_SEPOLIA,
+        10: ChainId.OPTIMISM,
+        11155420: ChainId.OPTIMISM_SEPOLIA,
+        8453: ChainId.BASE,
+        84532: ChainId.BASE_SEPOLIA,
+      };
+
+      for (const [numericChainId, networkConfig] of Object.entries(SUPPORTED_NETWORKS)) {
+        const chainId = chainIdMapping[parseInt(numericChainId)];
+        if (!chainId) continue;
+
+        try {
+          if (this.providerService.hasProvider(parseInt(numericChainId))) {
+            const provider = this.providerService.getProvider(parseInt(numericChainId));
+            this.providers.set(chainId, provider as ethers.Provider);
+            this.logger.log(`Connected to ${networkConfig.name} via ProviderService`);
+          }
+        } catch (error) {
+          this.logger.warn(
+            `Failed to get provider for ${networkConfig.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          );
+        }
+      }
+
+      if (this.providers.size > 0) {
+        this.logger.log(`Initialized ${this.providers.size} blockchain providers via ProviderService`);
+        return;
+      }
+    }
+
+    // Fallback: Initialize providers directly (legacy behavior)
+    this.logger.log('Falling back to direct provider initialization...');
+
     const providerConfigs = [
       {
         chainId: ChainId.ETHEREUM,
@@ -118,6 +169,16 @@ export class BlockchainIndexerService implements OnModuleInit {
         rpc: process.env.OPTIMISM_RPC,
         name: 'Optimism Mainnet',
       },
+      {
+        chainId: ChainId.BASE,
+        rpc: process.env.BASE_RPC_URL,
+        name: 'Base Mainnet',
+      },
+      {
+        chainId: ChainId.BASE_SEPOLIA,
+        rpc: process.env.BASE_SEPOLIA_RPC_URL,
+        name: 'Base Sepolia',
+      },
     ];
 
     for (const { chainId, rpc, name } of providerConfigs) {
@@ -139,9 +200,9 @@ export class BlockchainIndexerService implements OnModuleInit {
         // Test connection by getting network
         await provider.getNetwork();
         this.providers.set(chainId, provider);
-        this.logger.log(`✓ Connected to ${name}`);
+        this.logger.log(`Connected to ${name}`);
       } catch (error) {
-        this.logger.warn(`✗ Failed to connect to ${name}: ${error.message}`);
+        this.logger.warn(`Failed to connect to ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
 
@@ -498,6 +559,8 @@ export class BlockchainIndexerService implements OnModuleInit {
       [ChainId.ARBITRUM_SEPOLIA]: process.env.ARBITRUM_SEPOLIA_RPC,
       [ChainId.OPTIMISM]: process.env.OPTIMISM_RPC,
       [ChainId.OPTIMISM_SEPOLIA]: process.env.OPTIMISM_SEPOLIA_RPC,
+      [ChainId.BASE]: process.env.BASE_RPC_URL,
+      [ChainId.BASE_SEPOLIA]: process.env.BASE_SEPOLIA_RPC_URL,
     };
     return rpcUrls[chainId] || '';
   }

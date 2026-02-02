@@ -39,6 +39,11 @@ TESTING_QUICKSTART.md
 *.mcp.json
 .cache/
 
+
+CAMPAIGN_SYSTEM_IMPLEMENTATION.md
+CAMPAIGN_SYSTEM_README.md
+
+
 # Internal docs (plans, specs)
 packages/frontend/docs/
 
@@ -75,3 +80,10 @@ next-env.d.ts
 # Build artifacts
 .next/
 coverage/tmpclaude-*
+
+# Video production files
+video-production/*.mp4
+video-production/*.webm
+video-production/video-scenes/
+video-production/title-cards/
+video-production/audio/

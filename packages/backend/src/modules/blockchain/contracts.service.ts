@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   Contract,
@@ -14,6 +14,7 @@ import {
   isError,
   parseUnits,
   formatUnits,
+  AbstractProvider,
 } from 'ethers';
 import {
   FUNDRAISER_FACTORY_ABI,
@@ -39,7 +40,9 @@ import {
 import {
   ContractNotRegisteredException,
   BlockchainTransactionException,
+  BlockchainConnectionException,
 } from '../../common/exceptions';
+import { ProviderService, BlockchainHealthStatus, ProviderStatus } from './provider.service';
 
 /**
  * Configuration for retry logic on blockchain calls
@@ -74,18 +77,16 @@ interface ContractInstance {
 /**
  * ContractsService manages ethers.js contract instances for all FundBrave smart contracts.
  * Provides:
- * - Multi-chain support
+ * - Multi-chain support with robust provider management
  * - Contract instance caching
  * - Retry logic for failed calls
  * - Transaction confirmation waiting
  * - Event log parsing
+ * - Health check integration
  */
 @Injectable()
 export class ContractsService implements OnModuleInit {
   private readonly logger = new Logger(ContractsService.name);
-
-  // Providers per chain
-  private providers: Map<number, JsonRpcProvider> = new Map();
 
   // Cached contract instances: Map<chainId, Map<contractName, ContractInstance>>
   private contracts: Map<number, Map<string, ContractInstance>> = new Map();
@@ -113,32 +114,23 @@ export class ContractsService implements OnModuleInit {
     fundraiser: FUNDRAISER_ABI,
   };
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly providerService: ProviderService,
+  ) {}
 
   /**
-   * Initialize providers and contracts on module start
+   * Initialize contracts on module start
+   * Provider initialization is handled by ProviderService
    */
   async onModuleInit(): Promise<void> {
     this.logger.log('Initializing ContractsService...');
 
-    // Initialize providers for all supported networks
-    await this.initializeProviders();
+    // Validate provider service is ready
+    await this.validateProviderConnection();
 
     // Initialize signer if private key is provided
-    const privateKey = this.configService.get<string>('BACKEND_WALLET_PK');
-    if (privateKey) {
-      const defaultProvider = this.providers.get(DEFAULT_CHAIN_ID);
-      if (defaultProvider) {
-        this.signer = new Wallet(privateKey, defaultProvider);
-        this.logger.log(
-          `Backend wallet initialized: ${this.signer.address.slice(0, 10)}...`,
-        );
-      }
-    } else {
-      this.logger.warn(
-        'No backend wallet configured - write operations will not be available',
-      );
-    }
+    await this.initializeSigner();
 
     // Pre-load contracts for default chain
     await this.initializeContractsForChain(DEFAULT_CHAIN_ID);
@@ -146,46 +138,117 @@ export class ContractsService implements OnModuleInit {
     this.logger.log('ContractsService initialized successfully');
   }
 
-  // ==================== Provider Management ====================
-
   /**
-   * Initialize JSON-RPC providers for all supported networks
+   * Validate that the provider service has working connections
+   * Note: This is lenient during initialization - providers may still be connecting
    */
-  private async initializeProviders(): Promise<void> {
-    for (const [chainIdStr, networkConfig] of Object.entries(
-      SUPPORTED_NETWORKS,
-    )) {
-      const chainId = parseInt(chainIdStr);
-      try {
-        const provider = new JsonRpcProvider(networkConfig.rpcUrl, {
-          chainId,
-          name: networkConfig.name,
-        });
+  private async validateProviderConnection(): Promise<void> {
+    const healthStatus = this.providerService.getHealthStatus();
 
-        // Test the connection
-        await provider.getBlockNumber();
+    if (!healthStatus.isHealthy) {
+      this.logger.warn(
+        '⚠️ No blockchain providers are connected yet. They may still be initializing. Health checks will continue retrying.',
+      );
+      this.logger.warn(
+        '💡 To improve reliability, set ALCHEMY_API_KEY in your .env file',
+      );
+    } else {
+      this.logger.log(
+        `✅ Provider validation complete: ${healthStatus.providers.filter(p => p.isConnected).length}/${healthStatus.providers.length} chains connected`,
+      );
+    }
 
-        this.providers.set(chainId, provider);
-        this.logger.log(
-          `Provider initialized for ${networkConfig.name} (chainId: ${chainId})`,
-        );
-      } catch (error) {
-        this.logger.warn(
-          `Failed to initialize provider for ${networkConfig.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        );
-      }
+    if (!healthStatus.defaultChainConnected) {
+      this.logger.warn(
+        `⚠️ Default chain (${DEFAULT_CHAIN_ID}) is not connected yet. Will retry via health checks.`,
+      );
     }
   }
 
   /**
-   * Get provider for a specific chain
+   * Initialize backend wallet signer
    */
-  getProvider(chainId: number = DEFAULT_CHAIN_ID): JsonRpcProvider {
-    const provider = this.providers.get(chainId);
-    if (!provider) {
-      throw new Error(`No provider available for chain ${chainId}`);
+  private async initializeSigner(): Promise<void> {
+    const privateKey = this.configService.get<string>('BACKEND_WALLET_PK');
+
+    if (!privateKey) {
+      this.logger.warn(
+        'No BACKEND_WALLET_PK configured - write operations will not be available. ' +
+        'Set BACKEND_WALLET_PK in .env for blockchain write operations.',
+      );
+      return;
     }
-    return provider;
+
+    // Validate private key format
+    if (!this.isValidPrivateKey(privateKey)) {
+      this.logger.error(
+        'BACKEND_WALLET_PK is invalid. Must be a 64-character hex string (with or without 0x prefix).',
+      );
+      return;
+    }
+
+    try {
+      // Get provider for default chain
+      if (!this.providerService.hasProvider(DEFAULT_CHAIN_ID)) {
+        this.logger.warn(
+          `Cannot initialize signer: No provider for default chain ${DEFAULT_CHAIN_ID}`,
+        );
+        return;
+      }
+
+      const provider = this.providerService.getProvider(DEFAULT_CHAIN_ID);
+      const normalizedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
+      this.signer = new Wallet(normalizedKey, provider);
+
+      this.logger.log(
+        `Backend wallet initialized: ${this.signer.address.slice(0, 10)}...${this.signer.address.slice(-4)}`,
+      );
+
+      // Log wallet balance for debugging
+      try {
+        const balance = await provider.getBalance(this.signer.address);
+        this.logger.debug(
+          `Backend wallet balance: ${formatUnits(balance, 18)} ETH`,
+        );
+      } catch (balanceError) {
+        this.logger.debug('Could not fetch wallet balance');
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to initialize backend wallet: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  /**
+   * Validate private key format
+   */
+  private isValidPrivateKey(key: string): boolean {
+    const cleanKey = key.startsWith('0x') ? key.slice(2) : key;
+    return /^[a-fA-F0-9]{64}$/.test(cleanKey);
+  }
+
+  // ==================== Provider Management ====================
+
+  /**
+   * Get provider for a specific chain
+   * Delegates to ProviderService for robust connection handling
+   */
+  getProvider(chainId: number = DEFAULT_CHAIN_ID): AbstractProvider {
+    if (!this.providerService.hasProvider(chainId)) {
+      throw new BlockchainConnectionException(
+        chainId,
+        `No provider available for chain ${chainId}. Ensure RPC endpoints are configured.`,
+      );
+    }
+    return this.providerService.getProvider(chainId);
+  }
+
+  /**
+   * Get JsonRpcProvider for operations that require it specifically
+   */
+  getJsonRpcProvider(chainId: number = DEFAULT_CHAIN_ID): JsonRpcProvider {
+    return this.providerService.getJsonRpcProvider(chainId);
   }
 
   /**
@@ -193,6 +256,27 @@ export class ContractsService implements OnModuleInit {
    */
   getSigner(): Wallet | null {
     return this.signer;
+  }
+
+  /**
+   * Check if blockchain connection is healthy
+   */
+  isConnectionHealthy(chainId: number = DEFAULT_CHAIN_ID): boolean {
+    return this.providerService.isConnected(chainId);
+  }
+
+  /**
+   * Get blockchain health status
+   */
+  getBlockchainHealth(): BlockchainHealthStatus {
+    return this.providerService.getHealthStatus();
+  }
+
+  /**
+   * Get connection status for a specific chain
+   */
+  getChainConnectionStatus(chainId: number): ProviderStatus | undefined {
+    return this.providerService.getChainStatus(chainId);
   }
 
   // ==================== Contract Instance Management ====================
@@ -207,9 +291,19 @@ export class ContractsService implements OnModuleInit {
       return;
     }
 
-    const provider = this.providers.get(chainId);
-    if (!provider) {
-      this.logger.warn(`No provider available for chain ${chainId}`);
+    // Use providerService instead of local providers map
+    if (!this.providerService.hasProvider(chainId)) {
+      this.logger.warn(`No provider available for chain ${chainId} yet. Will initialize contracts later.`);
+      return;
+    }
+
+    let provider;
+    try {
+      provider = this.providerService.getProvider(chainId);
+    } catch (error) {
+      this.logger.warn(
+        `Provider for chain ${chainId} not ready yet: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       return;
     }
 
@@ -219,6 +313,7 @@ export class ContractsService implements OnModuleInit {
     }
 
     const chainContracts = this.contracts.get(chainId)!;
+    let initializedCount = 0;
 
     // Initialize each contract
     for (const [name, address] of Object.entries(addresses)) {
@@ -239,8 +334,9 @@ export class ContractsService implements OnModuleInit {
           chainId,
           name,
         });
+        initializedCount++;
         this.logger.debug(
-          `Contract ${name} initialized at ${address.slice(0, 10)}... on chain ${chainId}`,
+          `Contract ${name} initialized at ${address.slice(0, 10)}...${address.slice(-4)} on chain ${chainId}`,
         );
       } catch (error) {
         this.logger.warn(
@@ -248,6 +344,10 @@ export class ContractsService implements OnModuleInit {
         );
       }
     }
+
+    this.logger.log(
+      `Initialized ${initializedCount} contracts for chain ${chainId}`,
+    );
   }
 
   /**

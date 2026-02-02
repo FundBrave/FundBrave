@@ -2,16 +2,17 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, SlidersHorizontal, Sparkles, Search } from "lucide-react";
+import { ArrowLeft, SlidersHorizontal, Sparkles, Search, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/app/components/search/SearchInput";
 import { SearchFilters, SearchFiltersState } from "@/app/components/search/SearchFilters";
 import { SearchFilterSheet } from "@/app/components/search/SearchFilterSheet";
 import { SearchSortDropdown, SortOption } from "@/app/components/search/SearchSortDropdown";
 import { SearchResults } from "@/app/components/search/SearchResults";
-import { MOCK_CAMPAIGNS } from "@/app/components/search/mockData";
 import { addRecentSearch } from "@/app/components/search/RecentSearches";
 import { RAGSearchPanel } from "@/app/components/ai/RAGSearchPanel";
+import { searchApi, SearchCampaign } from "@/lib/api/search";
+import { searchCampaignToCampaignCard } from "@/lib/utils/search";
 import Link from "next/link";
 
 type SearchMode = "campaigns" | "ai";
@@ -42,6 +43,54 @@ export default function SearchPage() {
   const [sort, setSort] = useState<SortOption>(sortParam);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [searchResults, setSearchResults] = useState<SearchCampaign[]>([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+
+  // Fetch search results from API
+  useEffect(() => {
+    if (!searchQuery.trim() || searchMode !== 'campaigns') {
+      setSearchResults([]);
+      setTotalResults(0);
+      setSearchError(null);
+      return;
+    }
+
+    const fetchResults = async () => {
+      try {
+        setIsLoading(true);
+        setSearchError(null);
+
+        const limit = 12;
+        const offset = (page - 1) * limit;
+
+        const results = await searchApi.searchCampaigns(searchQuery, limit, offset);
+        setSearchResults(results);
+        setTotalResults(results.length);
+        setHasMore(results.length === limit);
+
+        if (searchQuery) {
+          addRecentSearch(searchQuery);
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchError(
+          error instanceof Error
+            ? error.message
+            : 'Unable to search at the moment. Please try again later.'
+        );
+        setSearchResults([]);
+        setTotalResults(0);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const debounceTimeout = setTimeout(fetchResults, 300);
+    return () => clearTimeout(debounceTimeout);
+  }, [searchQuery, page, searchMode]);
 
   // Sync with URL params (only when URL changes externally, not from our own updates)
   useEffect(() => {
@@ -53,6 +102,7 @@ export default function SearchPage() {
         status: statusParam,
       }));
       setSort(sortParam);
+      setPage(1); // Reset page when URL changes
     }
     isUpdatingURL.current = false;
   }, [queryParam, categoriesParam.join(','), statusParam, sortParam]);
@@ -73,20 +123,9 @@ export default function SearchPage() {
     router.push(`/search?${params.toString()}`);
   };
 
-  // Filter and sort campaigns
+  // Filter and sort campaigns locally (client-side filtering on API results)
   const filteredCampaigns = useMemo(() => {
-    let results = MOCK_CAMPAIGNS;
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      results = results.filter(
-        (campaign) =>
-          campaign.title.toLowerCase().includes(query) ||
-          campaign.category?.toLowerCase().includes(query)
-      );
-      addRecentSearch(searchQuery);
-    }
+    let results = searchResults;
 
     // Filter by categories
     if (filters.categories.length > 0) {
@@ -100,7 +139,7 @@ export default function SearchPage() {
       results = results.filter((campaign) => {
         if (filters.status === "active") return campaign.status?.includes("trending");
         if (filters.status === "ending_soon") return campaign.status?.includes("endingSoon");
-        if (filters.status === "completed") return false; // No completed campaigns in mock data
+        if (filters.status === "completed") return false;
         return true;
       });
     }
@@ -112,10 +151,10 @@ export default function SearchPage() {
 
     // Filter by funding range
     if (filters.fundingRange.min !== undefined) {
-      results = results.filter((campaign) => campaign.amountRaised >= filters.fundingRange.min!);
+      results = results.filter((campaign) => parseFloat(campaign.amountRaised) >= filters.fundingRange.min!);
     }
     if (filters.fundingRange.max !== undefined) {
-      results = results.filter((campaign) => campaign.amountRaised <= filters.fundingRange.max!);
+      results = results.filter((campaign) => parseFloat(campaign.amountRaised) <= filters.fundingRange.max!);
     }
 
     // Sort
@@ -124,18 +163,18 @@ export default function SearchPage() {
         case "recent":
           return 0; // Would sort by date in real implementation
         case "popular":
-          return b.donorsCount - a.donorsCount;
+          return 0; // Popularity not available in search results
         case "ending_soon":
           return 0; // Would sort by end date in real implementation
         case "most_raised":
-          return b.amountRaised - a.amountRaised;
+          return parseFloat(b.amountRaised) - parseFloat(a.amountRaised);
         default:
-          return 0; // Relevance - would use search score in real implementation
+          return 0; // Relevance - backend already sorted by relevance
       }
     });
 
-    return results;
-  }, [searchQuery, filters, sort]);
+    return results.map(searchCampaignToCampaignCard);
+  }, [searchResults, filters, sort]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -153,6 +192,11 @@ export default function SearchPage() {
   const handleSortChange = (newSort: SortOption) => {
     setSort(newSort);
     updateURL(searchQuery, filters, newSort);
+  };
+
+  const handleLoadMore = async () => {
+    if (!hasMore || isLoading) return;
+    setPage((prev) => prev + 1);
   };
 
   const activeFilterCount = useMemo(() => {
@@ -254,7 +298,14 @@ export default function SearchPage() {
                 {/* Sort */}
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-text-secondary">
-                    {filteredCampaigns.length} {filteredCampaigns.length === 1 ? "result" : "results"}
+                    {isLoading ? (
+                      "Searching..."
+                    ) : (
+                      <>
+                        {filteredCampaigns.length} {filteredCampaigns.length === 1 ? "result" : "results"}
+                        {totalResults > filteredCampaigns.length && ` (showing ${filteredCampaigns.length})`}
+                      </>
+                    )}
                   </p>
                   <SearchSortDropdown value={sort} onChange={handleSortChange} />
                 </div>
@@ -286,7 +337,27 @@ export default function SearchPage() {
 
             {/* Results */}
             <main className="flex-1 min-w-0">
-              <SearchResults campaigns={filteredCampaigns} totalCount={filteredCampaigns.length} />
+              {/* Error State */}
+              {searchError && !isLoading && (
+                <div className="p-6 rounded-lg bg-destructive/10 border border-destructive/20 mb-6">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-destructive mb-1">Search Error</h3>
+                      <p className="text-sm text-destructive/80">{searchError}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Results */}
+              <SearchResults
+                campaigns={filteredCampaigns}
+                isLoading={isLoading}
+                totalCount={totalResults}
+                hasMore={hasMore}
+                onLoadMore={handleLoadMore}
+              />
             </main>
           </div>
         )}

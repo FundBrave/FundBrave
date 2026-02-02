@@ -189,6 +189,12 @@ export default function DonatePage() {
             onDisconnect={handlers.handleDisconnect}
             onDonate={handlers.handleDonate}
             formatAmount={formatAmount}
+            needsApproval={state.needsApproval}
+            onApprove={handlers.approveUSDC}
+            txHash={state.txHash}
+            selectedCrypto={state.selectedCrypto}
+            isWealthBuilding={state.isWealthBuilding}
+            onToggleWealthBuilding={handlers.toggleWealthBuilding}
           />
 
           {/* Security Badge */}

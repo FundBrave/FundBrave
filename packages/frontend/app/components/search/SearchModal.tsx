@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { X, Shield, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,8 +8,6 @@ import { SearchInput } from "./SearchInput";
 import { RecentSearches, addRecentSearch } from "./RecentSearches";
 import { TrendingCampaigns } from "./TrendingCampaigns";
 import { CategoryChips } from "./CategoryChips";
-import { MOCK_CAMPAIGNS, MOCK_USERS, MockUser } from "./mockData";
-import { CampaignCardProps } from "@/app/components/campaigns/CampaignCard";
 import Link from "next/link";
 import { searchApi, SearchResults } from "@/lib/api/search";
 
@@ -21,45 +19,57 @@ export interface SearchModalProps {
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchResults, setSearchResults] = useState<SearchResults>({
     campaigns: [],
     users: [],
     posts: [],
     total: 0,
+    totalCampaigns: 0,
+    totalUsers: 0,
+    totalPosts: 0,
   });
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Fetch search results from API
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setSearchResults({ campaigns: [], users: [], posts: [], total: 0 });
+      setSearchResults({
+        campaigns: [],
+        users: [],
+        posts: [],
+        total: 0,
+        totalCampaigns: 0,
+        totalUsers: 0,
+        totalPosts: 0,
+      });
+      setSearchError(null);
       return;
     }
 
     const searchTimeout = setTimeout(async () => {
       try {
         setIsSearching(true);
+        setSearchError(null);
         const results = await searchApi.search(searchQuery, 'all', 10);
         setSearchResults(results);
       } catch (error) {
         console.error('Search failed:', error);
-        // Fallback to mock data on error
-        const query = searchQuery.toLowerCase();
-        const campaigns = MOCK_CAMPAIGNS.filter((campaign) =>
-          campaign.title.toLowerCase().includes(query)
-        ).slice(0, 3);
-        const users = MOCK_USERS.filter((user) =>
-          user.name.toLowerCase().includes(query) ||
-          user.username.toLowerCase().includes(query)
-        ).slice(0, 2);
+        setSearchError(
+          error instanceof Error
+            ? error.message
+            : 'Unable to search at the moment. Please try again later.'
+        );
         setSearchResults({
-          campaigns: campaigns as any,
-          users: users as any,
+          campaigns: [],
+          users: [],
           posts: [],
-          total: campaigns.length + users.length,
+          total: 0,
+          totalCampaigns: 0,
+          totalUsers: 0,
+          totalPosts: 0,
         });
       } finally {
         setIsSearching(false);
@@ -80,7 +90,6 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       document.body.style.overflow = "";
       setSearchQuery("");
       setSelectedCategories([]);
-      setSelectedIndex(0);
     }
 
     return () => {
@@ -102,13 +111,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, totalResults - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedIndex((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === "Enter" && searchQuery.trim()) {
+    if (e.key === "Enter" && searchQuery.trim()) {
       e.preventDefault();
       handleSearch();
     }
@@ -244,23 +247,51 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           {searchQuery.trim() ? (
             // Search Results
             <div className="space-y-6">
-              {searchResults.campaigns.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">Campaigns</h3>
-                    <Link
-                      href={`/search?q=${encodeURIComponent(searchQuery)}`}
-                      onClick={() => {
-                        addRecentSearch(searchQuery);
-                        onClose();
-                      }}
-                      className="text-xs text-primary hover:text-primary/80 transition-colors"
-                    >
-                      See all
-                    </Link>
+              {/* Loading State */}
+              {isSearching && (
+                <div className="py-8 text-center">
+                  <div className="inline-flex items-center gap-3">
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm text-text-secondary">Searching...</p>
                   </div>
-                  <div className="space-y-2">
-                    {searchResults.campaigns.map((campaign, index) => (
+                </div>
+              )}
+
+              {/* Error State */}
+              {searchError && !isSearching && (
+                <div className="py-8 px-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <p className="text-sm text-destructive text-center">{searchError}</p>
+                </div>
+              )}
+
+              {/* Results */}
+              {!isSearching && !searchError && (
+                <>
+                  {searchResults.campaigns.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-foreground">
+                          Campaigns
+                          {searchResults.totalCampaigns !== undefined &&
+                            searchResults.totalCampaigns > searchResults.campaigns.length && (
+                              <span className="ml-2 text-text-secondary font-normal">
+                                ({searchResults.totalCampaigns} total)
+                              </span>
+                            )}
+                        </h3>
+                        <Link
+                          href={`/search?q=${encodeURIComponent(searchQuery)}`}
+                          onClick={() => {
+                            addRecentSearch(searchQuery);
+                            onClose();
+                          }}
+                          className="text-xs text-primary hover:text-primary/80 transition-colors"
+                        >
+                          See all
+                        </Link>
+                      </div>
+                      <div className="space-y-2">
+                        {searchResults.campaigns.map((campaign) => (
                       <button
                         key={campaign.id}
                         type="button"
@@ -287,7 +318,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                             )}
                           </div>
                           <p className="text-xs text-text-secondary mt-1">
-                            ${campaign.amountRaised.toLocaleString()} raised of $
+                            ${parseFloat(campaign.amountRaised).toLocaleString()} raised of $
                             {campaign.targetAmount.toLocaleString()}
                           </p>
                         </div>
@@ -300,7 +331,15 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
               {searchResults.users.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground">Users</h3>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Users
+                    {searchResults.totalUsers !== undefined &&
+                      searchResults.totalUsers > searchResults.users.length && (
+                        <span className="ml-2 text-text-secondary font-normal">
+                          ({searchResults.totalUsers} total)
+                        </span>
+                      )}
+                  </h3>
                   <div className="space-y-2">
                     {searchResults.users.map((user) => (
                       <button
@@ -315,7 +354,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         )}
                       >
                         <img
-                          src={user.avatar}
+                          src={user.avatar || user.avatarUrl || '/images/placeholder-avatar.jpg'}
                           alt={user.name}
                           className="w-10 h-10 rounded-full flex-shrink-0"
                         />
@@ -337,10 +376,55 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 </div>
               )}
 
+              {searchResults.posts.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Posts
+                    {searchResults.totalPosts !== undefined &&
+                      searchResults.totalPosts > searchResults.posts.length && (
+                        <span className="ml-2 text-text-secondary font-normal">
+                          ({searchResults.totalPosts} total)
+                        </span>
+                      )}
+                  </h3>
+                  <div className="space-y-2">
+                    {searchResults.posts.map((post) => (
+                      <div
+                        key={post.id}
+                        className={cn(
+                          "w-full p-3 rounded-lg",
+                          "bg-muted/50 border border-border-default"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <img
+                            src={post.author.avatarUrl || '/images/placeholder-avatar.jpg'}
+                            alt={post.author.displayName || post.author.username}
+                            className="w-6 h-6 rounded-full"
+                          />
+                          <p className="text-xs font-medium text-foreground">
+                            {post.author.displayName || post.author.username}
+                          </p>
+                        </div>
+                        <p className="text-sm text-text-secondary line-clamp-2">{post.content}</p>
+                        {(post.likesCount !== undefined || post.commentsCount !== undefined) && (
+                          <div className="flex items-center gap-3 mt-2 text-xs text-text-secondary">
+                            {post.likesCount !== undefined && <span>{post.likesCount} likes</span>}
+                            {post.commentsCount !== undefined && <span>{post.commentsCount} comments</span>}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {totalResults === 0 && (
                 <div className="py-8 text-center">
                   <p className="text-sm text-text-secondary">No results found</p>
                 </div>
+              )}
+                </>
               )}
             </div>
           ) : (
