@@ -34,7 +34,7 @@ type Comment {
   isLiked: Boolean
   likesCount: Int!
   parentId: ID
-  postId: ID!
+  postId: ID
   replies: [Comment!]!
   updatedAt: DateTime!
 }
@@ -1372,6 +1372,7 @@ type Query {
   poolStats(poolAddress: String!): StakingPoolStats!
   post(id: ID!): Post!
   postComments(limit: Int! = 20, offset: Int! = 0, postId: ID!): PaginatedComments!
+  fundraiserComments(fundraiserId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedComments!
   postReplies(limit: Int! = 20, offset: Int! = 0, postId: ID!): PaginatedPosts!
   posts(filter: PostFilterInput, limit: Int! = 20, offset: Int! = 0, order: SortOrder! = DESC, sortBy: PostSortBy! = CREATED_AT): PaginatedPosts!
   postsByHashtag(limit: Int! = 20, offset: Int! = 0, tag: String!): PaginatedPosts!
