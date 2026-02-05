@@ -731,18 +731,103 @@ export class SocialService {
   }
 
   /**
+   * Get comments for a fundraiser
+   */
+  async getFundraiserComments(
+    fundraiserId: string,
+    limit: number,
+    offset: number,
+    viewerId?: string,
+  ): Promise<PaginatedComments> {
+    const [comments, total] = await Promise.all([
+      this.prisma.comment.findMany({
+        where: { fundraiserId, parentId: null },
+        include: {
+          author: {
+            select: {
+              id: true,
+              walletAddress: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+              isVerifiedCreator: true,
+            },
+          },
+          replies: {
+            include: {
+              author: {
+                select: {
+                  id: true,
+                  walletAddress: true,
+                  username: true,
+                  displayName: true,
+                  avatarUrl: true,
+                  isVerifiedCreator: true,
+                },
+              },
+            },
+            take: 3,
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.comment.count({ where: { fundraiserId, parentId: null } }),
+    ]);
+
+    const items = await Promise.all(
+      comments.map((c) =>
+        this.mapToCommentDto(c as CommentWithRelations, viewerId),
+      ),
+    );
+
+    return {
+      items,
+      total,
+      hasMore: offset + limit < total,
+    };
+  }
+
+  /**
    * Create a comment
    */
   async createComment(
     userId: string,
     input: CreateCommentInput,
   ): Promise<Comment> {
-    const post = await this.prisma.post.findUnique({
-      where: { id: input.postId },
-    });
+    // Validate that either postId or fundraiserId is provided
+    if (!input.postId && !input.fundraiserId) {
+      throw new InvalidInputException(
+        'Either postId or fundraiserId must be provided',
+      );
+    }
 
-    if (!post) {
-      throw new PostNotFoundException(input.postId);
+    if (input.postId && input.fundraiserId) {
+      throw new InvalidInputException(
+        'Cannot provide both postId and fundraiserId',
+      );
+    }
+
+    // Validate post if provided
+    if (input.postId) {
+      const post = await this.prisma.post.findUnique({
+        where: { id: input.postId },
+      });
+      if (!post) {
+        throw new PostNotFoundException(input.postId);
+      }
+    }
+
+    // Validate fundraiser if provided
+    if (input.fundraiserId) {
+      const fundraiser = await this.prisma.fundraiser.findUnique({
+        where: { id: input.fundraiserId },
+      });
+      if (!fundraiser) {
+        throw new InvalidInputException('Fundraiser not found');
+      }
     }
 
     // Validate parent comment if replying to a comment
@@ -750,7 +835,12 @@ export class SocialService {
       const parentComment = await this.prisma.comment.findUnique({
         where: { id: input.parentId },
       });
-      if (!parentComment || parentComment.postId !== input.postId) {
+      if (
+        !parentComment ||
+        (input.postId && parentComment.postId !== input.postId) ||
+        (input.fundraiserId &&
+          parentComment.fundraiserId !== input.fundraiserId)
+      ) {
         throw new InvalidInputException('Invalid parent comment');
       }
     }
@@ -760,6 +850,7 @@ export class SocialService {
         content: input.content,
         authorId: userId,
         postId: input.postId,
+        fundraiserId: input.fundraiserId,
         parentId: input.parentId,
       },
       include: {
@@ -790,14 +881,16 @@ export class SocialService {
       },
     });
 
-    // Update post comment count (reply count)
-    await this.prisma.post.update({
-      where: { id: input.postId },
-      data: {
-        replyCount: { increment: 1 },
-        engagementScore: { increment: 1.5 },
-      },
-    });
+    // Update post comment count if this is a post comment
+    if (input.postId) {
+      await this.prisma.post.update({
+        where: { id: input.postId },
+        data: {
+          replyCount: { increment: 1 },
+          engagementScore: { increment: 1.5 },
+        },
+      });
+    }
 
     return this.mapToCommentDto(comment as CommentWithRelations, userId);
   }
@@ -820,16 +913,24 @@ export class SocialService {
       );
     }
 
-    await this.prisma.$transaction([
+    const operations = [
       this.prisma.comment.delete({ where: { id: commentId } }),
-      this.prisma.post.update({
-        where: { id: comment.postId },
-        data: {
-          replyCount: { decrement: 1 },
-          engagementScore: { decrement: 1.5 },
-        },
-      }),
-    ]);
+    ];
+
+    // Update post reply count if this is a post comment
+    if (comment.postId) {
+      operations.push(
+        this.prisma.post.update({
+          where: { id: comment.postId },
+          data: {
+            replyCount: { decrement: 1 },
+            engagementScore: { decrement: 1.5 },
+          },
+        }) as any,
+      );
+    }
+
+    await this.prisma.$transaction(operations);
 
     return true;
   }
@@ -1197,7 +1298,7 @@ export class SocialService {
           avatarUrl: reply.author.avatarUrl ?? undefined,
           isVerifiedCreator: reply.author.isVerifiedCreator,
         },
-        postId: reply.postId,
+        postId: reply.postId ?? undefined,
         parentId: reply.parentId ?? undefined,
         likesCount: reply.likesCount,
         replies: [],
@@ -1211,7 +1312,7 @@ export class SocialService {
       id: comment.id,
       content: comment.content,
       author,
-      postId: comment.postId,
+      postId: comment.postId ?? undefined,
       parentId: comment.parentId ?? undefined,
       likesCount: comment.likesCount,
       replies,

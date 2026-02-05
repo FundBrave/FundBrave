@@ -48,7 +48,7 @@ export default function CampaignViewPage() {
         campaign_id: campaign.id,
         name: apiCampaign?.title || campaign.title,
         description: apiCampaign?.description || ('description' in campaign ? campaign.description : ''),
-        creator_id: apiCampaign?.creator || ('creator' in campaign && campaign.creator.handle ? campaign.creator.handle : 'unknown'),
+        creator_id: ((apiCampaign?.creator as any)?.id as string) || ('creator' in campaign && (campaign.creator as any).handle ? (campaign.creator as any).handle : 'unknown'),
         goal_amount: apiCampaign ? parseFloat(apiCampaign.goal) / Math.pow(10, USDC_DECIMALS) : ('goal' in campaign ? (typeof campaign.goal === 'string' ? parseFloat(campaign.goal) : campaign.goal) : 1000),
         category: campaign.categories?.[0] || 'general',
       });
@@ -120,6 +120,10 @@ export default function CampaignViewPage() {
   const daysLeft = apiCampaign && apiCampaign.deadline
     ? Math.max(0, Math.ceil((new Date(apiCampaign.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 30; // Default to 30 days if no deadline
+
+  // Check if campaign is fully funded (use API field if available)
+  const isFullyFunded = apiCampaign?.goalReached ?? (amountRaised >= targetAmount);
+  const fundingPercentage = targetAmount > 0 ? Math.round((amountRaised / targetAmount) * 100) : 0;
 
   // Campaign data for action bar
   const campaignData = {
@@ -196,16 +200,36 @@ export default function CampaignViewPage() {
             <CampaignStory story={'story' in campaign ? campaign.story : ''} />
 
             {/* Action Buttons (Left Column) - Using CampaignActionBar */}
-            <div className="pt-2 pb-6 sm:pb-8 border-b border-border-subtle">
-              <CampaignActionBar
-                campaign={campaignData}
-                variant="buttons"
-                showDonate={true}
-              />
-            </div>
+            {!isFullyFunded && (
+              <div className="pt-2 pb-6 sm:pb-8 border-b border-border-subtle">
+                <CampaignActionBar
+                  campaign={campaignData}
+                  variant="buttons"
+                  showDonate={true}
+                  showStake={true}
+                />
+              </div>
+            )}
+
+            {/* Fully Funded Message */}
+            {isFullyFunded && (
+              <div className="pt-2 pb-6 sm:pb-8 border-b border-border-subtle">
+                <div className="bg-success/10 border border-success/30 rounded-lg px-6 py-4">
+                  <p className="text-success font-semibold text-lg mb-1">
+                    🎉 Fully Funded!
+                  </p>
+                  <p className="text-text-secondary text-sm">
+                    This campaign has reached {fundingPercentage}% of its goal. Thank you to all supporters!
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Comments Section */}
-            <CampaignComments comments={'comments' in campaign ? (campaign.comments || []) : []} />
+            <CampaignComments
+              comments={'comments' in campaign ? (campaign.comments || []) : []}
+              campaignId={id}
+            />
 
             {/* Updates Section */}
             <CampaignUpdates updates={('updates' in campaign ? (campaign.updates || []) : []) as any} />
@@ -227,6 +251,7 @@ export default function CampaignViewPage() {
                 supportersCount={apiCampaign?.donorsCount || ('supportersCount' in campaign ? campaign.supportersCount : 0)}
                 daysLeft={daysLeft}
                 campaign={campaignData}
+                isFullyFunded={isFullyFunded}
               />
 
               {/* Fraud Detection Alert - Show if not low risk */}
@@ -240,8 +265,8 @@ export default function CampaignViewPage() {
                 />
               )}
 
-              {/* Donate & Stake Buttons */}
-              {apiCampaign && (
+              {/* Donate & Stake Buttons (only if not fully funded) */}
+              {apiCampaign && !isFullyFunded && (
                 <div className="space-y-3">
                   <Button
                     onClick={() => router.push(`/campaigns/${id}/donate`)}
@@ -249,15 +274,36 @@ export default function CampaignViewPage() {
                   >
                     Donate Now
                   </Button>
+                  <Button
+                    onClick={() => router.push(`/campaigns/${id}/stake`)}
+                    variant="outline"
+                    className="w-full py-3"
+                  >
+                    Stake USDC
+                  </Button>
                 </div>
               )}
 
-              {/* Campaign Staking Interface */}
-              <CampaignStakingInterface
-                campaignId={id}
-                stakingPoolAddress={apiCampaign?.stakingPoolAddr}
-                className="mt-6"
-              />
+              {/* Fully Funded Badge (Right Sidebar) */}
+              {apiCampaign && isFullyFunded && (
+                <div className="bg-success/10 border border-success/30 rounded-lg px-4 py-3 text-center">
+                  <p className="text-success font-bold text-sm">
+                    ✅ Goal Reached
+                  </p>
+                  <p className="text-text-secondary text-xs mt-1">
+                    {fundingPercentage}% funded
+                  </p>
+                </div>
+              )}
+
+              {/* Campaign Staking Interface (only if not fully funded) */}
+              {!isFullyFunded && (
+                <CampaignStakingInterface
+                  campaignId={id}
+                  stakingPoolAddress={apiCampaign?.stakingPoolAddr ?? undefined}
+                  className="mt-6"
+                />
+              )}
             </div>
           </div>
         </div>

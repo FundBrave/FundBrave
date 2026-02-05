@@ -94,11 +94,12 @@ export async function seedComments(
     });
 
     if (!parentComment) continue;
+    if (!parentComment.postId || !parentComment.post) continue; // Skip if no post
 
     // Reply from either the post author or another user
     const isPostAuthorReply = Math.random() < 0.4;
     const author = isPostAuthorReply
-      ? users.find((u) => u.id === parentComment.post.authorId)!
+      ? users.find((u) => u.id === parentComment.post!.authorId)!
       : faker.helpers.arrayElement(users.filter((u) => u.id !== parentComment.authorId));
 
     const content = faker.helpers.arrayElement(replyTemplates);
@@ -120,10 +121,12 @@ export async function seedComments(
       repliesCreated++;
 
       // Update post reply count
-      await prisma.post.update({
-        where: { id: parentComment.postId },
-        data: { replyCount: { increment: 1 } },
-      });
+      if (parentComment.postId) {
+        await prisma.post.update({
+          where: { id: parentComment.postId },
+          data: { replyCount: { increment: 1 } },
+        });
+      }
     } catch (error) {
       console.error(`  ✗ Failed to create nested reply:`, error);
     }

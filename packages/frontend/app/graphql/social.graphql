@@ -148,6 +148,17 @@ query GetPostComments($postId: ID!, $limit: Int = 20, $offset: Int = 0) {
   }
 }
 
+# Get fundraiser comments
+query GetFundraiserComments($fundraiserId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  fundraiserComments(fundraiserId: $fundraiserId, limit: $limit, offset: $offset) {
+    items {
+      ...CommentFields
+    }
+    hasMore
+    total
+  }
+}
+
 # Get post replies
 query GetPostReplies($postId: ID!, $limit: Int = 20, $offset: Int = 0) {
   postReplies(postId: $postId, limit: $limit, offset: $offset) {
