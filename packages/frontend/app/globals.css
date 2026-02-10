@@ -119,6 +119,11 @@
   /* Shadows */
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+  /* Semantic status colors */
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-info: #3b82f6;
 }
 
 /* Tailwind v4 CSS-first design system tokens */
@@ -700,6 +705,11 @@
 
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+  /* Semantic status colors */
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-info: #60a5fa;
 }
 
 * {
@@ -905,10 +915,11 @@ a,
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Radius tokens defined explicitly in :root (line 213-222) */
+  /* --radius-sm: calc(var(--radius) - 4px); */
+  /* --radius-md: calc(var(--radius) - 2px); */
+  /* --radius-lg: var(--radius); */
+  /* --radius-xl: calc(var(--radius) + 4px); */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -1315,4 +1326,18 @@ textarea:focus {
 
 .animate-slide-up {
   animation: slide-up 300ms ease-out;
+}
+
+/* Progress bar indeterminate animation */
+@keyframes progress-indeterminate {
+  0% {
+    left: -33%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.animate-progress-indeterminate {
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
 }
