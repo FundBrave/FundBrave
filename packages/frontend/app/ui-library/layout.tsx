@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Menu, Search, Command } from "lucide-react";
 import { ThemeToggle } from "@/app/components/theme/theme-toggle";
@@ -15,6 +16,11 @@ export default function UILibraryLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Dev-only guard — returns 404 in production
+  if (process.env.NODE_ENV !== "development") {
+    notFound();
+  }
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
