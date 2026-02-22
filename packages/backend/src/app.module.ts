@@ -43,6 +43,7 @@ import { EmailModule } from './modules/email/email.module';
 import { HealthModule } from './modules/health/health.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { SearchModule } from './modules/search/search.module';
+import { Web3ChatModule } from './modules/web3-chat/web3-chat.module';
 
 @Module({
   imports: [
@@ -112,6 +113,7 @@ import { SearchModule } from './modules/search/search.module';
     HealthModule, // Health check endpoints for monitoring
     SettingsModule, // User settings, notifications, privacy, security
     SearchModule, // Unified search across campaigns, users, posts
+    Web3ChatModule, // Tier 3: Encrypted message archive + encryption key management
   ],
   controllers: [AppController],
   providers: [AppService],

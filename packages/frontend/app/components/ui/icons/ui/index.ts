@@ -28,4 +28,5 @@ export {
   Info,
   CheckCircle2,
   ExternalLink,
+  ShieldCheck,
 } from './UIIcons';

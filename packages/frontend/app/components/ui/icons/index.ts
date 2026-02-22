@@ -62,6 +62,7 @@ export {
   Info,
   CheckCircle2,
   ExternalLink,
+  ShieldCheck,
 } from './ui';
 
 // Form Icons (mail, lock, user, upload)

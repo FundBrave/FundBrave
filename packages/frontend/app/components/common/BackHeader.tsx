@@ -44,7 +44,7 @@ export function BackHeader({
       <button
         onClick={handleBack}
         className={cn(
-          "size-10 rounded-full flex items-center justify-center",
+          "size-11 min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center",
           "hover:bg-surface-overlay active:bg-foreground/15 transition-colors",
           "focus:outline-none focus:ring-2 focus:ring-primary-500/50"
         )}
