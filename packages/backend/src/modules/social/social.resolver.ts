@@ -135,6 +135,21 @@ export class SocialResolver {
     );
   }
 
+  @Query(() => PaginatedComments, { name: 'fundraiserComments' })
+  async getFundraiserComments(
+    @Args('fundraiserId', { type: () => ID }) fundraiserId: string,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @CurrentUser() viewer?: { id: string },
+  ): Promise<PaginatedComments> {
+    return this.socialService.getFundraiserComments(
+      fundraiserId,
+      limit,
+      offset,
+      viewer?.id,
+    );
+  }
+
   // ==================== Post Mutations ====================
 
   @Mutation(() => Post)

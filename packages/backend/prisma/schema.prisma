@@ -415,8 +415,12 @@ model Comment {
   content  String @db.Text
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  postId   String
-  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // Support both posts and fundraisers
+  postId       String?
+  post         Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  fundraiserId String?
+  fundraiser   Fundraiser? @relation(fields: [fundraiserId], references: [id], onDelete: Cascade)
 
   // Nested comments
   parentId String?
@@ -430,6 +434,7 @@ model Comment {
   updatedAt DateTime @updatedAt
 
   @@index([postId])
+  @@index([fundraiserId])
   @@index([authorId])
   @@index([parentId])
   @@map("comments")
@@ -540,6 +545,7 @@ model Fundraiser {
   donations               Donation[]
   stakes                  Stake[]
   posts                   Post[]
+  comments                Comment[]
   updates                 FundraiserUpdate[]
   milestones              Milestone[]
   proposals               Proposal[]

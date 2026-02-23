@@ -215,8 +215,8 @@ export class Comment {
   @Field(() => PostAuthor)
   author: PostAuthor;
 
-  @Field(() => ID)
-  postId: string;
+  @Field(() => ID, { nullable: true })
+  postId?: string;
 
   @Field(() => ID, { nullable: true })
   parentId?: string;
@@ -361,9 +361,15 @@ export class CreateCommentInput {
   @MaxLength(2000)
   content: string;
 
-  @Field()
+  @Field({ nullable: true })
+  @IsOptional()
   @IsString()
-  postId: string;
+  postId?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  fundraiserId?: string;
 
   @Field({ nullable: true })
   @IsOptional()

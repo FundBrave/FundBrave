@@ -14,14 +14,17 @@ export const CONTRACT_ADDRESSES = {
   mockUsdc: '0x9A676e781A523b5d0C0e43731313A708CB607508' as Address,
 } as const;
 
-// Base Sepolia Addresses
+// Base Sepolia Addresses (Updated: 2026-02-03)
 export const BASE_SEPOLIA_ADDRESSES = {
-  fundraiserFactory: '0x7253b4E79cc708873b83Bb3C3F50F3e81b21819c' as Address,
+  fundraiserFactory: '0xc8AE0239616ABD8AbB3FC8286E0b4A092f9B777F' as Address,
   fbtToken: '0xE42A6ff84160Ac399607667C32392378Bbb270E0' as Address,
   usdc: '0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f' as Address,
   weth: '0x4200000000000000000000000000000000000006' as Address,
-  wealthBuildingDonation: '0x8DcC63E7Df76ece01c186568E269a2cF3aC8A886' as Address,
-  platformTreasury: '0x664AbB27C9c3d287117676c77B6A1c88B831D836' as Address,
+  wealthBuildingDonation: '0x04bAa18401366B29630D6B5F29f006994BFC6A84' as Address,
+  platformTreasury: '0x67b64BAa1f506a24fE8082166e337FBfAb5628a8' as Address,
+  // Implementation contracts (for reference)
+  fundraiserImplementation: '0xf79732B4D25521F2C8d8619c568C065fBf69bc9e' as Address,
+  stakingPoolImplementation: '0x51A41B4F07a7b5b6D2eF72E3AaD97aDE1e3E86F8' as Address,
 } as const;
 
 export const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000/api';

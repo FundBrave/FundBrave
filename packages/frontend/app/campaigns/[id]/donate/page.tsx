@@ -5,6 +5,9 @@ import { motion } from "motion/react";
 import { getCampaignById } from "@/app/campaigns/data";
 import SuccessCard from "@/app/components/ui/SuccessCard";
 import { BackHeader } from "@/app/components/common/BackHeader";
+import { Loader2, ArrowLeft } from "@/app/components/ui/icons";
+import { Button } from "@/app/components/ui/button";
+import Link from "next/link";
 
 // Import donation components
 import {
@@ -22,6 +25,8 @@ import {
 // Import hook and utilities
 import { useDonation, formatAmount } from "@/lib/hooks/useDonation";
 import { PRESET_AMOUNTS, CRYPTO_OPTIONS } from "@/lib/constants/donation";
+import { useCampaign } from "@/app/hooks/useCampaigns";
+import { USDC_DECIMALS } from "@/app/lib/contracts/config";
 
 /**
  * DonatePage - Main donation page component
@@ -31,7 +36,38 @@ export default function DonatePage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const campaign = getCampaignById(id);
+
+  // Fetch real campaign data from API
+  const { campaign: apiCampaign, isLoading, error } = useCampaign(id);
+
+  // Fallback to mock data if API fails
+  const mockCampaign = getCampaignById(id);
+  const campaign = apiCampaign || mockCampaign;
+
+  // Parse API campaign data
+  const amountRaised = apiCampaign
+    ? parseFloat(apiCampaign.amountRaised) / Math.pow(10, USDC_DECIMALS)
+    : mockCampaign
+      ? mockCampaign.amountRaised
+      : 0;
+  const targetAmount = apiCampaign
+    ? parseFloat(apiCampaign.goal) / Math.pow(10, USDC_DECIMALS)
+    : mockCampaign
+      ? mockCampaign.targetAmount
+      : 1000;
+
+  // Extract creator info safely with fallbacks
+  const creator = apiCampaign?.creator || (mockCampaign?.creator
+    ? {
+        avatarUrl: mockCampaign.creator.avatarUrl || '/placeholder-avatar.png',
+        name: mockCampaign.creator.name || 'Anonymous',
+        handle: mockCampaign.creator.handle || '@anonymous'
+      }
+    : {
+        avatarUrl: '/placeholder-avatar.png',
+        name: 'Anonymous',
+        handle: '@anonymous'
+      });
 
   // Use the donation hook to manage all state and handlers
   const {
@@ -45,20 +81,56 @@ export default function DonatePage() {
     campaign: campaign
       ? {
           id: campaign.id,
-          title: campaign.title,
-          imageUrl: campaign.imageUrl,
-          targetAmount: campaign.targetAmount,
-          amountRaised: campaign.amountRaised,
-          creator: campaign.creator,
+          title: apiCampaign?.title || campaign.title,
+          imageUrl: apiCampaign?.imageUrl || campaign.imageUrl,
+          targetAmount: targetAmount,
+          amountRaised: amountRaised,
+          creator: creator,
         }
       : null,
   });
 
-  // Handle campaign not found
-  if (!campaign) {
+  // Handle loading state
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center text-foreground">
-        <div>Campaign not found</div>
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
+          <p className="text-text-secondary">Loading campaign...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error or campaign not found
+  if (error || !campaign) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center text-foreground">
+        <div className="text-center max-w-md px-4">
+          <h1 className="text-2xl font-bold mb-4">
+            {error ? 'Campaign Loading Error' : 'Campaign Not Found'}
+          </h1>
+          <p className="text-text-secondary mb-6">
+            {error
+              ? "We couldn't load the campaign data. This might be a temporary issue."
+              : "The campaign you're looking for doesn't exist or has been removed."}
+          </p>
+          {error && (
+            <Button
+              onClick={() => window.location.reload()}
+              className="mb-4"
+            >
+              Try Again
+            </Button>
+          )}
+          <Link
+            href="/campaigns"
+            className="text-primary-400 hover:text-primary-300 flex items-center justify-center gap-2"
+          >
+            <ArrowLeft size={20} />
+            Back to Campaigns
+          </Link>
+        </div>
       </div>
     );
   }
@@ -67,7 +139,7 @@ export default function DonatePage() {
     <div className="min-h-screen bg-background text-foreground">
       <BackHeader
         title="Donate"
-        subtitle={campaign.title}
+        subtitle={apiCampaign?.title || campaign.title}
         fallbackHref={`/campaigns/${id}`}
       />
       <div className="flex items-center justify-center py-10 px-4">
@@ -85,7 +157,7 @@ export default function DonatePage() {
                 calculations.totalAmount,
                 2
               )} USD to ${
-                campaign.title
+                apiCampaign?.title || campaign.title
               }. Your contribution brings them ${calculations.donationImpact.toFixed(
                 1
               )}% closer to their goal!`}
@@ -103,11 +175,11 @@ export default function DonatePage() {
           <CampaignInfoHeader
             campaign={{
               id: campaign.id,
-              title: campaign.title,
-              imageUrl: campaign.imageUrl,
-              targetAmount: campaign.targetAmount,
-              amountRaised: campaign.amountRaised,
-              creator: campaign.creator,
+              title: apiCampaign?.title || campaign.title,
+              imageUrl: apiCampaign?.imageUrl || campaign.imageUrl,
+              targetAmount: targetAmount,
+              amountRaised: amountRaised,
+              creator: creator,
             }}
             showImpact={showImpact}
             donationImpact={calculations.donationImpact}

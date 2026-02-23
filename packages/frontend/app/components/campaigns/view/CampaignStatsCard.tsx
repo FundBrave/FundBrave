@@ -20,6 +20,7 @@ interface CampaignStatsCardProps {
   supportersCount: number;
   daysLeft: number;
   campaign: CampaignData;
+  isFullyFunded?: boolean;
 }
 
 export default function CampaignStatsCard({
@@ -28,6 +29,7 @@ export default function CampaignStatsCard({
   supportersCount,
   daysLeft,
   campaign,
+  isFullyFunded = false,
 }: CampaignStatsCardProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
@@ -113,23 +115,48 @@ export default function CampaignStatsCard({
         </div>
 
         {/* Action Buttons - Matching reference design */}
-        <div className="flex flex-col gap-3 sm:gap-4 w-full">
-          {/* Donate Now - Primary gradient button */}
-          <Button asChild variant="primary" size="lg" fullWidth>
-            <Link href={`/campaigns/${campaign.id}/donate`}>Donate Now</Link>
-          </Button>
-          {/* Share - Outline button with icon */}
-          <Button
-            variant="outline"
-            size="lg"
-            fullWidth
-            onClick={() => setIsShareModalOpen(true)}
-            className="gap-2"
-          >
-            <Share2 size={18} />
-            Share
-          </Button>
-        </div>
+        {!isFullyFunded ? (
+          <div className="flex flex-col gap-3 sm:gap-4 w-full">
+            {/* Donate Now - Primary gradient button */}
+            <Button asChild variant="primary" size="lg" fullWidth>
+              <Link href={`/campaigns/${campaign.id}/donate`}>Donate Now</Link>
+            </Button>
+            {/* Share - Outline button with icon */}
+            <Button
+              variant="outline"
+              size="lg"
+              fullWidth
+              onClick={() => setIsShareModalOpen(true)}
+              className="gap-2"
+            >
+              <Share2 size={18} />
+              Share
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 sm:gap-4 w-full">
+            {/* Fully Funded Badge */}
+            <div className="bg-success/10 border border-success/30 rounded-lg px-4 py-3 text-center">
+              <p className="text-success font-bold text-base mb-1">
+                ✅ Goal Reached!
+              </p>
+              <p className="text-text-secondary text-sm">
+                This campaign is fully funded
+              </p>
+            </div>
+            {/* Share button still available */}
+            <Button
+              variant="outline"
+              size="lg"
+              fullWidth
+              onClick={() => setIsShareModalOpen(true)}
+              className="gap-2"
+            >
+              <Share2 size={18} />
+              Share
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Reminder Section */}

@@ -5,24 +5,38 @@ import { useCreateCommentMutation } from "@/app/generated/graphql";
 import type { Comment } from "@/app/types/comment";
 
 interface UseAddCommentReturn {
-  addComment: (postId: string, content: string, parentId?: string) => Promise<Comment | null>;
+  addComment: (
+    options: {
+      postId?: string;
+      fundraiserId?: string;
+      content: string;
+      parentId?: string;
+    }
+  ) => Promise<Comment | null>;
   isAdding: boolean;
   error: Error | null;
 }
 
 /**
  * useAddComment - Add a comment with optimistic update using GraphQL
+ * Supports both post and fundraiser comments
  */
 export function useAddComment(): UseAddCommentReturn {
   const [createCommentMutation, { loading: isAdding, error }] = useCreateCommentMutation();
 
   const addComment = useCallback(
-    async (postId: string, content: string, parentId?: string): Promise<Comment | null> => {
+    async ({ postId, fundraiserId, content, parentId }: {
+      postId?: string;
+      fundraiserId?: string;
+      content: string;
+      parentId?: string;
+    }): Promise<Comment | null> => {
       try {
         const result = await createCommentMutation({
           variables: {
             input: {
               postId,
+              fundraiserId,
               content,
               parentId,
             },
@@ -31,7 +45,7 @@ export function useAddComment(): UseAddCommentReturn {
             createComment: {
               __typename: 'Comment',
               id: `temp-${Date.now()}`,
-              postId,
+              postId: postId || null,
               parentId: parentId || null,
               content,
               likesCount: 0,
@@ -53,18 +67,20 @@ export function useAddComment(): UseAddCommentReturn {
           update: (cache, { data }) => {
             if (!data?.createComment) return;
 
-            // Update post's replyCount (backend uses replyCount, not commentsCount)
-            cache.modify({
-              id: cache.identify({ __typename: 'Post', id: postId }),
-              fields: {
-                replyCount: (prev: number) => prev + 1,
-              },
-            });
+            // Update post's replyCount if this is a post comment
+            if (postId) {
+              cache.modify({
+                id: cache.identify({ __typename: 'Post', id: postId }),
+                fields: {
+                  replyCount: (prev: number) => prev + 1,
+                },
+              });
+            }
 
             // Note: We rely on refetchQueries to update the comment tree
             // to avoid duplicate replies from manual cache updates
           },
-          refetchQueries: ['GetPostComments'],
+          refetchQueries: postId ? ['GetPostComments'] : fundraiserId ? ['GetFundraiserComments'] : [],
         });
 
         if (result.data?.createComment) {

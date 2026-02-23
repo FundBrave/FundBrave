@@ -18,9 +18,12 @@ const protectedRoutes = [
 const authRoutes = ['/auth/login', '/auth/signup', '/auth'];
 
 /**
- * Routes that allow donations require auth
+ * Public routes that anyone can view (no auth required)
+ * - Campaign listing: /campaigns
+ * - Campaign details: /campaigns/[id]
+ * - Donation pages: /campaigns/[id]/donate (auth only required for wallet connection)
+ * - Staking pages: /campaigns/[id]/stake (auth only required for wallet connection)
  */
-const donateRoutePattern = /^\/campaigns\/[^/]+\/donate$/;
 
 /**
  * Middleware to protect routes based on authentication status
@@ -38,7 +41,7 @@ export function middleware(request: NextRequest) {
   // Check if route is protected and user is not authenticated
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
-  ) || donateRoutePattern.test(pathname);
+  );
 
   if (isProtectedRoute && !isAuthenticated) {
     // Redirect to login with return URL
