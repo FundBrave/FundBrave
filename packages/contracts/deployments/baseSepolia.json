@@ -1,85 +1,21 @@
 {
-  "network": "baseSepolia",
-  "chainId": null,
-  "deployedAt": null,
-  "contracts": {
-    "FundBraveToken": {
-      "address": "0xE42A6ff84160Ac399607667C32392378Bbb270E0",
-      "txHash": "0x33edb0efea5af4f030543cf34e7584dc7f23bdd281a6abc669098efa247aa2e7",
-      "constructorArgs": [
-        "0x396E931faD8c43c7200D70BbDE91e962CfaCCa5e"
-      ],
-      "isProxy": true,
-      "implementationAddress": "0xcc8eC10b641d581c8D6ecA58287155bed3546a57",
-      "deployedAt": "2026-01-23T15:42:27.517Z"
-    },
-    "FundraiserImplementation": {
-      "address": "0xf79732B4D25521F2C8d8619c568C065fBf69bc9e",
-      "txHash": "0x2ac0d59d3cd2abe9ea1dca289ef3da345b988c2d0e327a27aee78022a8a59a1a",
-      "constructorArgs": [],
-      "isProxy": false,
-      "implementationAddress": null,
-      "deployedAt": "2026-01-23T15:43:07.189Z"
-    },
-    "StakingPoolImplementation": {
-      "address": "0x51A41B4F07a7b5b6D2eF72E3AaD97aDE1e3E86F8",
-      "txHash": "0x81cb11b401a67edd4d9eabfb6327cb1c6d301927471410cfab9e919df5df64f6",
-      "constructorArgs": [],
-      "isProxy": false,
-      "implementationAddress": null,
-      "deployedAt": "2026-01-23T15:43:46.781Z"
-    },
-    "WealthBuildingDonation": {
-      "address": "0x04bAa18401366B29630D6B5F29f006994BFC6A84",
-      "txHash": "manual-deployment",
-      "constructorArgs": [],
-      "isProxy": true,
-      "implementationAddress": "0xC12340c58Bea9A4698C26E9a34da323c24314d92",
-      "deployedAt": "2026-02-03T13:31:34.669Z"
-    },
-    "WealthBuildingDonationImplementation": {
-      "address": "0xC12340c58Bea9A4698C26E9a34da323c24314d92",
-      "txHash": "manual-deployment",
-      "constructorArgs": [],
-      "isProxy": false,
-      "implementationAddress": null,
-      "deployedAt": "2026-02-03T13:31:34.669Z"
-    },
-    "PlatformTreasury": {
-      "address": "0x67b64BAa1f506a24fE8082166e337FBfAb5628a8",
-      "txHash": "manual-deployment",
-      "constructorArgs": [],
-      "isProxy": true,
-      "implementationAddress": "0x48d015858382961f2b58648E351A2E1687Ce7909",
-      "deployedAt": "2026-02-03T13:31:34.669Z"
-    },
-    "PlatformTreasuryImplementation": {
-      "address": "0x48d015858382961f2b58648E351A2E1687Ce7909",
-      "txHash": "manual-deployment",
-      "constructorArgs": [],
-      "isProxy": false,
-      "implementationAddress": null,
-      "deployedAt": "2026-02-03T13:31:34.669Z"
-    },
-    "FundraiserFactory": {
-      "address": "0xc8AE0239616ABD8AbB3FC8286E0b4A092f9B777F",
-      "txHash": "manual-deployment",
-      "constructorArgs": [
-        "0xf79732B4D25521F2C8d8619c568C065fBf69bc9e",
-        "0x51A41B4F07a7b5b6D2eF72E3AaD97aDE1e3E86F8",
-        "0x0000000000000000000000000000000000000000",
-        "0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f",
-        "0x4200000000000000000000000000000000000006",
-        "0x67b64BAa1f506a24fE8082166e337FBfAb5628a8",
-        "0x8bAB6d1b75f19e9eD9fCe8b9BD338844fF79aE27",
-        "0x10F1A9D11CDf50041f3f8cB7191CBE2f31750ACC",
-        "0x0000000000000000000000000000000000000000",
-        0
-      ],
-      "isProxy": false,
-      "implementationAddress": null,
-      "deployedAt": "2026-02-03T13:31:34.669Z"
-    }
-  },
-  "lastUpdated": "2026-02-03T13:31:34.669Z"
+  "USDC": "0xf269f54304f8DB2dB613341CC7E189B02BEf98dE",
+  "aUSDC": "0xCdF55352fa73B548d81E57f2Ebb691462bD4a95F",
+  "AAVE_POOL": "0xA14694B3a1788D22c660C837842B2d22E24983B4",
+  "FBT": "0xC6C8D66d44610F587ACAB25A0AE4ff8d76f81559",
+  "ReceiptOFT": "0xEE6a8FAD5c1581b6348F88A7DFbAc81c30A743cC",
+  "PlatformTreasury": "0x6A498d5E8A5af9C0097dBB62ddc1e33C1A4131eC",
+  "WealthBuildingDonation": "0x34329F963C4C67BE258aD5ED4bB0769B81FD9034",
+  "YieldDistributor": "0x3CB5E148afC21fFb8a76b4ad9a3C285dEE9f12e2",
+  "ImpactDAOPool": "0x56482B412ba6c91c7b8F0027a2B455A8537aAb9C",
+  "FundraiserImplementation": "0x2B6e2C5259887A66Fd1D1c6996966a8518D410a9",
+  "StakingPoolImplementation": "0xF1c2e1c28FF395B193D8235365dcD3D08b1ecb94",
+  "SwapAdapter": "0x3b0D92907191f3a44FE2126e9F5A3D80603aAA16",
+  "DAI": "0xD5F45AE6088fE7DadA621C8A70F94abE3F46f7Bf",
+  "WETH": "0x8140C9fE21D9639FD69E9eF345Be39d767eE7FE2",
+  "FundraiserFactory": "0xb89D6039dE729f6c951862EB177795Ac4aDfD2cd",
+  "MockWormholeCore": "0x50673Ee4Fe9eBfDbf4Ea942f0602D5d7bC7FD8A8",
+  "BridgeRouter": "0xA477535A50e8d3Cc326AAE49f3D94aD3bcF6Ea5B",
+  "WormholeReceiver": "0xE0c5b2865c33C97235fb1bABCEe71A260651A221",
+  "FundBraveBridge": "0xb3C210cB2075e72B10f00c41e30120480017a136"
 }

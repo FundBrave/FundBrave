@@ -27,6 +27,8 @@ import { useDonation, formatAmount } from "@/lib/hooks/useDonation";
 import { PRESET_AMOUNTS, CRYPTO_OPTIONS } from "@/lib/constants/donation";
 import { useCampaign } from "@/app/hooks/useCampaigns";
 import { USDC_DECIMALS } from "@/app/lib/contracts/config";
+import { DonationTabs } from "@/app/components/donation/DonationTabs";
+import { Address } from "viem";
 
 /**
  * DonatePage - Main donation page component
@@ -169,7 +171,20 @@ export default function DonatePage() {
         </div>
       )}
 
-      <div className="w-full max-w-[851px] bg-background border-border-subtle border">
+      {/* On-Chain DonationTabs — Primary donation interface */}
+      {apiCampaign && apiCampaign.onChainId !== undefined && (
+        <div className="w-full max-w-[851px] bg-surface-elevated border border-border-subtle rounded-xl mb-8">
+          <div className="p-6 md:p-8">
+            <DonationTabs
+              campaignId={apiCampaign.onChainId}
+              stakingPoolAddress={apiCampaign.stakingPoolAddr as Address | undefined}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Legacy donation form (fallback when no on-chain ID) */}
+      <div className={`w-full max-w-[851px] bg-background border-border-subtle border ${apiCampaign?.onChainId !== undefined ? 'hidden' : ''}`}>
         <div className="p-6 md:p-10 space-y-10">
           {/* Campaign Info Header */}
           <CampaignInfoHeader

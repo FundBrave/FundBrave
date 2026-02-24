@@ -12,6 +12,7 @@ export { WithdrawModal } from "./WithdrawModal";
 export { Leaderboard } from "./Leaderboard";
 export { PremiumBanner } from "./PremiumBanner";
 export { ProfileSidebar } from "./ProfileSidebar";
+export { DeFiPositions } from "./DeFiPositions";
 
 // Component Props Types
 export type { StatusBadgeProps } from "./StatusBadge";

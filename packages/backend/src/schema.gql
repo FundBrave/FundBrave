@@ -89,8 +89,9 @@ type ConversationUnreadCount {
 
 input CreateCommentInput {
   content: String!
+  fundraiserId: String
   parentId: String
-  postId: String!
+  postId: String
 }
 
 input CreateDAOProposalInput {
@@ -754,7 +755,7 @@ type Mutation {
 
   """Create a new DAO proposal"""
   createDAOProposal(input: CreateDAOProposalInput!): DAOProposal!
-  createFundraiser(input: CreateFundraiserInput!, onChainId: Int!, txHash: String!): Fundraiser!
+  createFundraiser(input: CreateFundraiserInput!, onChainId: Int!, stakingPoolAddr: String, txHash: String!): Fundraiser!
   createPost(input: CreatePostInput!): Post!
   createReport(input: CreateReportInput!): ReportOperationResult!
   deleteAllNotifications: NotificationOperationResult!
@@ -1262,6 +1263,7 @@ type Query {
   fundraiser(id: ID!): Fundraiser!
   fundraiserByOnChainId(onChainId: Int!): Fundraiser!
   fundraiserCategories: [CategoryCount!]!
+  fundraiserComments(fundraiserId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedComments!
   fundraiserDonationStats(fundraiserId: ID!): DonationStats!
   fundraiserDonations(fundraiserId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedDonations!
 
@@ -1372,7 +1374,6 @@ type Query {
   poolStats(poolAddress: String!): StakingPoolStats!
   post(id: ID!): Post!
   postComments(limit: Int! = 20, offset: Int! = 0, postId: ID!): PaginatedComments!
-  fundraiserComments(fundraiserId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedComments!
   postReplies(limit: Int! = 20, offset: Int! = 0, postId: ID!): PaginatedPosts!
   posts(filter: PostFilterInput, limit: Int! = 20, offset: Int! = 0, order: SortOrder! = DESC, sortBy: PostSortBy! = CREATED_AT): PaginatedPosts!
   postsByHashtag(limit: Int! = 20, offset: Int! = 0, tag: String!): PaginatedPosts!

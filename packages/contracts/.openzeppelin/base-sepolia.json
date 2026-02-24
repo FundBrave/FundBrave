@@ -15,6 +15,226 @@
       "address": "0xa14ab03dCEdda793eeA2114E27A4959eD5B4E302",
       "txHash": "0x7f3c69bd5d4417d8a99868e86508d20b1f3cb84a0c8a1e217e4a580159245d5a",
       "kind": "uups"
+    },
+    {
+      "address": "0xB0998c503d483C486D9E3e7AcD1Af92aA05B41fc",
+      "txHash": "0x53b43a1e8e80ae086af95fd7c668499e742165cd7b485e068a4a4b0a983cf5ef",
+      "kind": "uups"
+    },
+    {
+      "address": "0xE20aFf278eB0bee0A601620674582c6594Fda690",
+      "txHash": "0x00046748e96af6c2063ff9025a51a183c5fed07a3a7581855b0d7d55bb220d72",
+      "kind": "uups"
+    },
+    {
+      "address": "0x7Fd0EE7512Fd87FCe43B62A20E1BE02ed95eb5E4",
+      "txHash": "0x5052626cb0873d69a0804369058b67d8b4a84b3a9f125dda511937287fce8a28",
+      "kind": "uups"
+    },
+    {
+      "address": "0x41Ff670257aa35a820B7ff764fAa75D1C5F7191c",
+      "txHash": "0x79bfc6952c4825b30603630f23be0a05d738a1da1cfcc34165f9ffa251f9f033",
+      "kind": "uups"
+    },
+    {
+      "address": "0x8E87c515c42d0CBE022f087d123F8F0CD3B2D892",
+      "txHash": "0x643974a46b8a99b7b0f4b26ee23edc8f03edb2c3d1b5c675a1ffd44fbb42e990",
+      "kind": "uups"
+    },
+    {
+      "address": "0xd0Bf63d9e16800b6239C616D1e91EfAc317103fE",
+      "txHash": "0xd4e94b71761cfd6a863d046f639b076be9599043cce35ee3e77b3a9ba382ef9b",
+      "kind": "uups"
+    },
+    {
+      "address": "0x1d51db5C0a98f3E3B878C02668C21F8e3D68c24E",
+      "txHash": "0xab34912f8ff4e6e2d1bd790ec875c16d2134b545b06e28408c417d4448146538",
+      "kind": "uups"
+    },
+    {
+      "address": "0x6f7f56527418Ee40F98813e5599283d2E3be39De",
+      "txHash": "0x96ccf0b1ad5215a55679b12163028723e8b97fc8dbde1fcde1da0e6dc00a6ee5",
+      "kind": "uups"
+    },
+    {
+      "address": "0x63b2E7f2326967DC760F16c0de02626B864beDD1",
+      "txHash": "0x8e9565e123cdd21bc6a6f3fdc0fcacd777fe2b350cf78b4776d217f4acc8e5c2",
+      "kind": "uups"
+    },
+    {
+      "address": "0x1d1816ABEbCfcef30A1c89Bfa7ab463d7d89333C",
+      "txHash": "0xdb0acfbe559a1e93d737cc1f1eb5838ab7b913c44a1bc008e2aba49eedca6246",
+      "kind": "uups"
+    },
+    {
+      "address": "0xF154Ad77bec1b8329Ab58997b5E59736CF646164",
+      "txHash": "0xd1142934179fc6bbf8472b21bd657a56ed9729e2b71d4b900b6f06c1a74c52a3",
+      "kind": "uups"
+    },
+    {
+      "address": "0x84d30Dca63132ac0af3334E87e86C9A38B2Bc64D",
+      "txHash": "0x054f1b49dea6de30d2f0414e2f8e3caa5f15b6ec1b75830710676bf8756bdc17",
+      "kind": "uups"
+    },
+    {
+      "address": "0x625EEB76Ccb8A0e141CCb583D8C39d30e1F38CF3",
+      "txHash": "0xe5975fdbb7f47a7c76131a375b0aa8546c9b8b376932e13dc3dbd44be4882114",
+      "kind": "uups"
+    },
+    {
+      "address": "0x62EE036A652e4DBa75260b16e3Fc746c3406F87F",
+      "txHash": "0xb1f278ef9733d58fa420e0ed7429970ce9b7fac74d05767ff5f771d4de6e4a03",
+      "kind": "uups"
+    },
+    {
+      "address": "0x3Bb6AAC50B23958498E1003781e96128ff9A11e0",
+      "txHash": "0x6b81560baba6373664dd039812069e837d65dfce0b4a95a7870a0a36e9ea44b1",
+      "kind": "uups"
+    },
+    {
+      "address": "0x52cb6c0A2Ae1aFbD4575dc40BA4EE6d0a16b9248",
+      "txHash": "0xbe1d52d72ba3fb74680206f71b70186d35ed6edaf8a2a60aad9e6db0017220cc",
+      "kind": "uups"
+    },
+    {
+      "address": "0x2588D3dFC9D07a8d7365b003967a56aA92a24eD2",
+      "txHash": "0x28bfdfab122ab053c588b7bf341af665c428be45182f475a41e8f64355581ca3",
+      "kind": "uups"
+    },
+    {
+      "address": "0x7396525b61639d728aDe36fFbb31c58e0e906B5f",
+      "txHash": "0xead6e4b6fc936bbec45ea6855d5fc7daa8dbc2d68e64f3e89223bd9b240b9f89",
+      "kind": "uups"
+    },
+    {
+      "address": "0x48DB805877c4071CFd4DB4F1b42a430834EFc715",
+      "txHash": "0x3e2804d8f682883dbab80cf8956295665b4f0916e06385f7179d36446d22c3c0",
+      "kind": "uups"
+    },
+    {
+      "address": "0xc6390e59c717037994b400c16680A4aF6828eb76",
+      "txHash": "0xa73015b374de7c3bb4658f77c6545366087a1ba804b52136205b86bd4a8e4296",
+      "kind": "uups"
+    },
+    {
+      "address": "0x25DF2124e544efFE56Eb411f5d2D3B7594C40C59",
+      "txHash": "0xb2f282a11d062fd9da022e6b75863a9af974496bf76b4cc744887ea73fb64f5f",
+      "kind": "uups"
+    },
+    {
+      "address": "0x0F0cadf11FEd99F4561130Cd6EE5D50BE4590253",
+      "txHash": "0x81ffe2751fa379a4efa93f01d06e3dde0af4e7dd7f725438ece7000d3f97110c",
+      "kind": "uups"
+    },
+    {
+      "address": "0x4f84FD56AAF17f6f46B0263491d3d9a626213F2c",
+      "txHash": "0xf44930fb8e1e6c2e96ab2ed3b23d918530cd258426d6896a841ac2d0e3c0c12f",
+      "kind": "uups"
+    },
+    {
+      "address": "0x43BFD6271377A548646F62Cac9d055fe49F4Eae5",
+      "txHash": "0x5060fe8b57cbcdb971c8f2dfd466d843779c7a2356242ddc94131ae6d316b26c",
+      "kind": "uups"
+    },
+    {
+      "address": "0x32CEA9878513f1Df1FDd0228290216d6b3e19094",
+      "txHash": "0x1a11db23b56463d0123a3200719449dc9118f64ee516235373513e56394504ad",
+      "kind": "uups"
+    },
+    {
+      "address": "0xb42ec8d3681b5B8427632Ab6495730150c5346bb",
+      "txHash": "0x92126b95a2aaea2337ad7097cccf44704ad2b7feee2997545e7e8f127b3d720d",
+      "kind": "uups"
+    },
+    {
+      "address": "0x1b16D82E34F6EEDcb3973feffD22ef034cFe1f0e",
+      "txHash": "0x8dfbdc7b8218f923d8232678b60985615957f4ddb0fef2e4535465e56f9fa1ed",
+      "kind": "uups"
+    },
+    {
+      "address": "0x2bC00482CD26E79D6cEC0B424c2C0601755fe4a5",
+      "txHash": "0xdb8914a2e51984c0035aa39b4ed16f1d3ca36a494d1635fd6ba014f9bccf650f",
+      "kind": "uups"
+    },
+    {
+      "address": "0x0AcD48468FD04cF8ccAdaBfB7FCBF2D80A43844A",
+      "txHash": "0xfc207dc1834a097fa03184d2a9bcb945faa8a238089f53d886ee6b469611fbcf",
+      "kind": "uups"
+    },
+    {
+      "address": "0xd385a0E420692b40e5efCD78B931c13dA6517CDD",
+      "txHash": "0xdeca226c8f56073e690d9f99220b4682deeabc0d720e526c7b697bca563f517a",
+      "kind": "uups"
+    },
+    {
+      "address": "0x7fa50939492FB66eA164f9a598Cb0f630FDa2b68",
+      "txHash": "0x6b93d6a25cd7ef75f7a27834c9930fba026d03321dfa57539bb6af9b26b42acd",
+      "kind": "uups"
+    },
+    {
+      "address": "0x6Eb248568e3766F817f860ce328F942760CfD73B",
+      "txHash": "0x01630da271627625faed844defa050bde6bcb03642d0d6104274aaa691cb05b1",
+      "kind": "uups"
+    },
+    {
+      "address": "0x6cb94E466dD97b072515D718BfcF79b4073F1b2C",
+      "txHash": "0x44f1c063d4e905be6f87aef96d3fc410bcc4b04e9c2925d358d8ef8fd847cbd9",
+      "kind": "uups"
+    },
+    {
+      "address": "0x51314d2F010B18Ca5ae56ED509305eAF049f619D",
+      "txHash": "0x4687af0e50d673b11e9d4abfa10d41f3134a84b00bcb3e0125eefbdf5fa09822",
+      "kind": "uups"
+    },
+    {
+      "address": "0x54A499ecf7873B3ECf870d9aa71BF0a20aD804AB",
+      "txHash": "0xed010e578e515c7909b0031709cf78a0db2f3c5e3656fb026b94f8c40a8a3340",
+      "kind": "uups"
+    },
+    {
+      "address": "0x34d58e4cB987C062440f1F363ff4e824142Bf563",
+      "txHash": "0x31716baee32509dccf939d979d00eef64f2f066633b96b25e505ce8df295ced7",
+      "kind": "uups"
+    },
+    {
+      "address": "0x15a4b6D098868c1F778ebBA600534bBC1dABEB5f",
+      "txHash": "0x66e17ca6353145bce8484d823f32b64ac6f905e58ec6aa603f7efd7901666ffc",
+      "kind": "uups"
+    },
+    {
+      "address": "0x67A4B1Abe604510F9E87392985b56736b7BeAD7A",
+      "txHash": "0xece8071513a19037cebb895342fb0733c01c89bc5e522fa42e3197337c67605e",
+      "kind": "uups"
+    },
+    {
+      "address": "0x4f97808979134307AaE25F13f41D32D71e2691f1",
+      "txHash": "0xe36dcd824ef7f7cf45ac26d23016d35fac9e54572ed35c15df9cbb6da94c3859",
+      "kind": "uups"
+    },
+    {
+      "address": "0x2B9A5fc5492bc2aC5bF47fE6494E9bAe3Df4282e",
+      "txHash": "0x30e6aa29f761b2e4b387d0d7120149c4b8c8da41c1ce3757bedec544e049b791",
+      "kind": "uups"
+    },
+    {
+      "address": "0xC6C8D66d44610F587ACAB25A0AE4ff8d76f81559",
+      "txHash": "0xe3e8fb637ae7577b356f187ac2be9d327ef46cdccd8e5be7436a26c312703cd4",
+      "kind": "uups"
+    },
+    {
+      "address": "0x6A498d5E8A5af9C0097dBB62ddc1e33C1A4131eC",
+      "txHash": "0x6ded4d565cb16fc008c55320ad8053ae18848d384a88424cde48fd7940b691ae",
+      "kind": "uups"
+    },
+    {
+      "address": "0x34329F963C4C67BE258aD5ED4bB0769B81FD9034",
+      "txHash": "0x5c8dcb142c5220960c10ba0f9e50374aded0bd6a7ab97a83ba0e6a95c530e0a6",
+      "kind": "uups"
+    },
+    {
+      "address": "0x56482B412ba6c91c7b8F0027a2B455A8537aAb9C",
+      "txHash": "0x1649fab8b49f720ef850eed3252e9c42bad22d184a6e233c3d024584fbd8d219",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -698,6 +918,1390 @@
             "numberOfBytes": "32"
           },
           "t_struct(EndowmentRecord)13122_storage": {
+            "label": "struct WealthBuildingDonation.EndowmentRecord",
+            "members": [
+              {
+                "label": "principal",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "lifetimeYield",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "causeYieldPaid",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "donorStockValue",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "lastHarvestTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\ReentrancyGuardUpgradeable.sol:43",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "78be952119f6b8fd4159d8f9bcfeb088a7f5347b8568f6aad6453bb099daba88": {
+      "address": "0x87122653eF79614d97011F9F913d7c72705081Dd",
+      "txHash": "0x4f6752110b9a7d7843114f48f8e072b333833a7e368447be0de1cf21f2ad2de0",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "USDC",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IERC20)5431",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:246"
+          },
+          {
+            "label": "wealthBuildingDonation",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(IWealthBuildingDonation)15618",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:249"
+          },
+          {
+            "label": "FBT",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_contract(IFundBraveToken)15629",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:252"
+          },
+          {
+            "label": "totalFeesCollected",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:255"
+          },
+          {
+            "label": "totalFeesStaked",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:258"
+          },
+          {
+            "label": "pendingFeesToStake",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:261"
+          },
+          {
+            "label": "totalFBTStaked",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:264"
+          },
+          {
+            "label": "fbtStaked",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:267"
+          },
+          {
+            "label": "yieldPerTokenStored",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:270"
+          },
+          {
+            "label": "userYieldPerTokenPaid",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:273"
+          },
+          {
+            "label": "pendingYield",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:276"
+          },
+          {
+            "label": "minStakeThreshold",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:279"
+          },
+          {
+            "label": "authorizedFeeSenders",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:282"
+          },
+          {
+            "label": "operationalFunds",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:285"
+          },
+          {
+            "label": "totalYieldDistributed",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:288"
+          },
+          {
+            "label": "timelock",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_address",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:291"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_array(t_uint256)39_storage",
+            "contract": "PlatformTreasury",
+            "src": "contracts\\PlatformTreasury.sol:294"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)1408_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)1348_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)1559_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)1623_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_uint256)39_storage": {
+            "label": "uint256[39]",
+            "numberOfBytes": "1248"
+          },
+          "t_contract(IERC20)5431": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IFundBraveToken)15629": {
+            "label": "contract IFundBraveToken",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IWealthBuildingDonation)15618": {
+            "label": "contract IWealthBuildingDonation",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\ReentrancyGuardUpgradeable.sol:43",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "3ea4c03238dd209d8e30aebdee2ac9b2bc01886d29208b25bf00cb186afc378e": {
+      "address": "0x7E343a40564512C7Bb56cE230782444008475899",
+      "txHash": "0xa1031bfc61c47148e5a53c6e0feae155233a1008f71fcbfcb8cd29681c260806",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "AAVE_POOL",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IAavePool)34273",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:105"
+          },
+          {
+            "label": "USDC",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(IERC20)11111",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:107"
+          },
+          {
+            "label": "aUSDC",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_contract(IERC20)11111",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:109"
+          },
+          {
+            "label": "FBT",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_contract(IFundBraveToken)24910",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:111"
+          },
+          {
+            "label": "yieldDistributor",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:115"
+          },
+          {
+            "label": "platformWallet",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:117"
+          },
+          {
+            "label": "totalStakedPrincipal",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:121"
+          },
+          {
+            "label": "stakerPrincipal",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:123"
+          },
+          {
+            "label": "stakerYieldSplit",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_struct(YieldSplit)24960_storage)",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:127"
+          },
+          {
+            "label": "defaultYieldSplit",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_struct(YieldSplit)24960_storage",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:129"
+          },
+          {
+            "label": "yieldPerTokenStored",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:133"
+          },
+          {
+            "label": "userYieldPerTokenPaid",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:135"
+          },
+          {
+            "label": "pendingStakerYield",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:137"
+          },
+          {
+            "label": "periodFinish",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:141"
+          },
+          {
+            "label": "rewardRate",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:143"
+          },
+          {
+            "label": "rewardsDuration",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:145"
+          },
+          {
+            "label": "lastUpdateTime",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_uint256",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:147"
+          },
+          {
+            "label": "rewardPerTokenStored",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:149"
+          },
+          {
+            "label": "userRewardPerTokenPaid",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:151"
+          },
+          {
+            "label": "fbtRewards",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:153"
+          },
+          {
+            "label": "lastHarvestTimestamp",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_uint256",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:157"
+          },
+          {
+            "label": "timelock",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_address",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:161"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_array(t_uint256)39_storage",
+            "contract": "ImpactDAOPool",
+            "src": "contracts\\ImpactDAOPool.sol:164"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)2625_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)2565_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)3132_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)3196_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_uint256)39_storage": {
+            "label": "uint256[39]",
+            "numberOfBytes": "1248"
+          },
+          "t_contract(IAavePool)34273": {
+            "label": "contract IAavePool",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IERC20)11111": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IFundBraveToken)24910": {
+            "label": "contract IFundBraveToken",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_struct(YieldSplit)24960_storage)": {
+            "label": "mapping(address => struct ImpactDAOPool.YieldSplit)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(YieldSplit)24960_storage": {
+            "label": "struct ImpactDAOPool.YieldSplit",
+            "members": [
+              {
+                "label": "daoShare",
+                "type": "t_uint16",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "stakerShare",
+                "type": "t_uint16",
+                "offset": 2,
+                "slot": "0"
+              },
+              {
+                "label": "platformShare",
+                "type": "t_uint16",
+                "offset": 4,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\ReentrancyGuardUpgradeable.sol:43",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "b69ab05016ee7c002fc30bd13a96ba46007f2fef12b7f554dee5431d288f6176": {
+      "address": "0xa43D6c50fC5e0Ae0013CBe9e29829E9f59FBC131",
+      "txHash": "0xd0e274f221a2dcd8fc1e17db82c53e7cefcb5de084689868d02d06979da43194",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "aavePool",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IAavePool)22645",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:224"
+          },
+          {
+            "label": "usdc",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(IERC20)5431",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:227"
+          },
+          {
+            "label": "aUsdc",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_contract(IERC20)5431",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:230"
+          },
+          {
+            "label": "swapAdapter",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_contract(IStockSwapAdapter)19070",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:233"
+          },
+          {
+            "label": "platformTreasury",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:236"
+          },
+          {
+            "label": "authorizedFactory",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:239"
+          },
+          {
+            "label": "fundraiserBeneficiaries",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_uint256,t_address)",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:242"
+          },
+          {
+            "label": "supportedStocks",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:245"
+          },
+          {
+            "label": "isStockSupported",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:248"
+          },
+          {
+            "label": "defaultStock",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_address",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:251"
+          },
+          {
+            "label": "totalEndowmentPrincipal",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:254"
+          },
+          {
+            "label": "fundraiserEndowmentPrincipal",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:257"
+          },
+          {
+            "label": "lastGlobalHarvestTime",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:260"
+          },
+          {
+            "label": "endowments",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_struct(EndowmentRecord)19284_storage))",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:279"
+          },
+          {
+            "label": "donorStockBalances",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:282"
+          },
+          {
+            "label": "accumulatedYieldPerPrincipal",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:285"
+          },
+          {
+            "label": "endowmentYieldDebt",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:288"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_array(t_uint256)40_storage",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:291"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)1408_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)1348_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)1559_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)1623_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)40_storage": {
+            "label": "uint256[40]",
+            "numberOfBytes": "1280"
+          },
+          "t_contract(IAavePool)22645": {
+            "label": "contract IAavePool",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IERC20)5431": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IStockSwapAdapter)19070": {
+            "label": "contract IStockSwapAdapter",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_struct(EndowmentRecord)19284_storage))": {
+            "label": "mapping(address => mapping(uint256 => struct WealthBuildingDonation.EndowmentRecord))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(EndowmentRecord)19284_storage)": {
+            "label": "mapping(uint256 => struct WealthBuildingDonation.EndowmentRecord)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(EndowmentRecord)19284_storage": {
+            "label": "struct WealthBuildingDonation.EndowmentRecord",
+            "members": [
+              {
+                "label": "principal",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "lifetimeYield",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "causeYieldPaid",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "donorStockValue",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "lastHarvestTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\ReentrancyGuardUpgradeable.sol:43",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "17ccd615e5a519a22708a13108035b65ed4561828fedcc3c6e4f72e690ff7fcc": {
+      "address": "0x7DD054695367e4b502D584D56ac4a13Eb5B91714",
+      "txHash": "0x467d8ddb75802bd464e901f8b4a5653b68a16af4ed9c9eb21987a919adee9d23",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "aavePool",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IAavePool)36051",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:224"
+          },
+          {
+            "label": "usdc",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(IERC20)11111",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:227"
+          },
+          {
+            "label": "aUsdc",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_contract(IERC20)11111",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:230"
+          },
+          {
+            "label": "swapAdapter",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_contract(IStockSwapAdapter)30522",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:233"
+          },
+          {
+            "label": "platformTreasury",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:236"
+          },
+          {
+            "label": "authorizedFactory",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:239"
+          },
+          {
+            "label": "fundraiserBeneficiaries",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_uint256,t_address)",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:242"
+          },
+          {
+            "label": "supportedStocks",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:245"
+          },
+          {
+            "label": "isStockSupported",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:248"
+          },
+          {
+            "label": "defaultStock",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_address",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:251"
+          },
+          {
+            "label": "totalEndowmentPrincipal",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:254"
+          },
+          {
+            "label": "fundraiserEndowmentPrincipal",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:257"
+          },
+          {
+            "label": "lastGlobalHarvestTime",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:260"
+          },
+          {
+            "label": "endowments",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_struct(EndowmentRecord)30736_storage))",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:279"
+          },
+          {
+            "label": "donorStockBalances",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:282"
+          },
+          {
+            "label": "accumulatedYieldPerPrincipal",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:285"
+          },
+          {
+            "label": "endowmentYieldDebt",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:288"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_array(t_uint256)40_storage",
+            "contract": "WealthBuildingDonation",
+            "src": "contracts\\WealthBuildingDonation.sol:291"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)2625_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)2565_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)3132_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)3196_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)40_storage": {
+            "label": "uint256[40]",
+            "numberOfBytes": "1280"
+          },
+          "t_contract(IAavePool)36051": {
+            "label": "contract IAavePool",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IERC20)11111": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IStockSwapAdapter)30522": {
+            "label": "contract IStockSwapAdapter",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_struct(EndowmentRecord)30736_storage))": {
+            "label": "mapping(address => mapping(uint256 => struct WealthBuildingDonation.EndowmentRecord))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(EndowmentRecord)30736_storage)": {
+            "label": "mapping(uint256 => struct WealthBuildingDonation.EndowmentRecord)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(EndowmentRecord)30736_storage": {
             "label": "struct WealthBuildingDonation.EndowmentRecord",
             "members": [
               {

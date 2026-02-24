@@ -8,6 +8,7 @@ import {
   WithdrawalHistoryTable,
   Leaderboard,
   WithdrawModal,
+  DeFiPositions,
 } from "@/app/components/earnings";
 import { BackHeader } from "@/app/components/common/BackHeader";
 import {
@@ -209,6 +210,22 @@ export default function DashboardPage() {
               comparisonText={`Compared to ${earningsStats.comparisonPeriod}`}
             />
           </div>
+
+          {/* DeFi Positions — Per-campaign staking & wealth building breakdown */}
+          {campaignsData?.fundraisersByCreator?.items && campaignsData.fundraisersByCreator.items.length > 0 && (
+            <div className="pb-6 border-b border-border-default">
+              <DeFiPositions
+                campaigns={campaignsData.fundraisersByCreator.items
+                  .filter((f: any) => f.onChainId !== undefined && f.onChainId !== null)
+                  .map((f: any) => ({
+                    id: f.id,
+                    title: f.name,
+                    onChainId: f.onChainId,
+                    stakingPoolAddr: f.stakingPoolAddr,
+                  }))}
+              />
+            </div>
+          )}
 
           {/* Tables and Leaderboard Row - Side by side */}
           <div className="flex flex-col lg:flex-row gap-6">
