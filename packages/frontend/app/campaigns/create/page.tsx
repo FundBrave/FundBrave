@@ -15,8 +15,14 @@ import {
   FileText,
   Clock,
   Eye,
+  Loader2,
 } from "@/app/components/ui/icons";
 import { useReducedMotion } from "@/app/hooks/useReducedMotion";
+import { useCreateCampaign } from "@/app/hooks/useCreateCampaign";
+import { useAccount } from "wagmi";
+import { type Address } from "viem";
+import { uploadApi } from "@/lib/api/upload";
+import { USDC_DECIMALS } from "@/app/lib/contracts/config";
 
 // New enhanced components
 import { GoalAmountInput } from "./GoalAmountInput";
@@ -856,12 +862,43 @@ function PreviewStep({
 export default function CreateCampaignPage() {
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
+  const { address, isConnected } = useAccount();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CampaignFormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [createdCampaignId, setCreatedCampaignId] = useState<string | undefined>();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Campaign creation hook (on-chain + backend)
+  const {
+    createCampaign,
+    reset: resetCreateCampaign,
+    step: createStep,
+    error: createError,
+    txHash,
+    onChainId,
+    campaignId,
+    isProcessing,
+  } = useCreateCampaign();
+
+  // Watch for successful creation
+  useEffect(() => {
+    if (createStep === 'success' && campaignId) {
+      setCreatedCampaignId(campaignId);
+      setIsSubmitting(false);
+      setShowSuccess(true);
+    }
+  }, [createStep, campaignId]);
+
+  // Watch for errors
+  useEffect(() => {
+    if (createStep === 'error' && createError) {
+      setSubmitError(createError);
+      setIsSubmitting(false);
+    }
+  }, [createStep, createError]);
 
   // Get animation variants based on motion preference
   const animationVariants = prefersReducedMotion ? reducedMotionVariants : stepVariants;
@@ -917,23 +954,63 @@ export default function CreateCampaignPage() {
     setErrors({});
   }, []);
 
-  // Handle form submission
+  // Handle form submission — real on-chain + backend flow
   const handleSubmit = useCallback(async () => {
+    if (!isConnected || !address) {
+      setSubmitError("Please connect your wallet first.");
+      return;
+    }
+
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Step 1: Upload image if provided
+      let imageUrl = "";
+      if (formData.imageFile) {
+        try {
+          const uploadResult = await uploadApi.uploadPostMedia(formData.imageFile);
+          imageUrl = uploadResult.url;
+        } catch (uploadErr) {
+          // Image upload is optional — proceed without it
+          console.warn("Image upload failed, proceeding without image:", uploadErr);
+        }
+      }
 
-      // In real implementation, this would return the created campaign ID
-      setCreatedCampaignId("new-campaign-123");
-      setIsSubmitting(false);
-      setShowSuccess(true);
+      // Step 2: Prepare data for smart contract
+      const goalInUSDC = BigInt(
+        Math.round(parseFloat(formData.goalAmount) * Math.pow(10, USDC_DECIMALS))
+      );
+
+      const beneficiaryAddress: Address =
+        formData.beneficiaryType === "self"
+          ? address
+          : (formData.beneficiaryWallet as Address) || address;
+
+      const durationDays = parseInt(formData.duration, 10) || 30;
+
+      // Step 3: Call smart contract + save to backend (handled by useCreateCampaign)
+      await createCampaign({
+        title: formData.title,
+        description: formData.description,
+        goal: goalInUSDC,
+        duration: durationDays,
+        category: formData.category,
+        imageUrl: imageUrl || undefined,
+        images: imageUrl ? [imageUrl] : [],
+        categories: [formData.category],
+        region: "",
+        beneficiary: beneficiaryAddress,
+      });
+
+      // The rest is handled by useEffect watching createStep
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create campaign";
+      setSubmitError(errorMessage);
       setIsSubmitting(false);
       console.error("Failed to create campaign:", error);
     }
-  }, []);
+  }, [formData, address, isConnected, createCampaign]);
 
   // Handle success modal actions
   const handleViewCampaign = useCallback(() => {
@@ -945,7 +1022,9 @@ export default function CreateCampaignPage() {
     setCurrentStep(1);
     setShowSuccess(false);
     setCreatedCampaignId(undefined);
-  }, []);
+    setSubmitError(null);
+    resetCreateCampaign();
+  }, [resetCreateCampaign]);
 
   // Render current step content
   const renderStepContent = () => {
@@ -1007,12 +1086,62 @@ export default function CreateCampaignPage() {
               </motion.div>
             </AnimatePresence>
 
+            {/* Transaction progress feedback */}
+            {isSubmitting && currentStep === STEPS.length && (
+              <div className="mt-6 p-4 bg-surface-sunken rounded-xl border border-border-subtle">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {createStep === 'uploading' && 'Uploading image...'}
+                      {createStep === 'confirming_wallet' && 'Confirm transaction in your wallet...'}
+                      {createStep === 'mining' && 'Transaction submitted, waiting for confirmation...'}
+                      {createStep === 'saving_backend' && 'Saving campaign data...'}
+                      {createStep === 'idle' && 'Preparing...'}
+                    </p>
+                    {txHash && (
+                      <a
+                        href={`https://sepolia.basescan.org/tx/${txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary-400 hover:text-primary-300 mt-1 inline-block"
+                      >
+                        View on BaseScan
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error message */}
+            {submitError && (
+              <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <p className="text-sm text-red-400">{submitError}</p>
+                <button
+                  onClick={() => { setSubmitError(null); resetCreateCampaign(); }}
+                  className="text-xs text-red-300 hover:text-red-200 mt-2 underline"
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+
+            {/* Wallet not connected warning */}
+            {currentStep === STEPS.length && !isConnected && (
+              <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                <p className="text-sm text-yellow-400">
+                  Please connect your wallet to publish this campaign on-chain.
+                </p>
+              </div>
+            )}
+
             {/* Navigation buttons */}
             <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-border-subtle">
               <Button
                 variant="ghost"
                 onClick={handleBack}
-                disabled={currentStep === 1}
+                disabled={currentStep === 1 || isSubmitting}
                 className={cn(
                   "w-full sm:w-auto min-h-[44px]",
                   currentStep === 1 && "opacity-0 pointer-events-none"
@@ -1035,8 +1164,14 @@ export default function CreateCampaignPage() {
                 <Button
                   variant="primary"
                   onClick={handleSubmit}
+                  disabled={isSubmitting || !isConnected}
                   loading={isSubmitting}
-                  loadingText="Publishing..."
+                  loadingText={
+                    createStep === 'confirming_wallet' ? 'Confirm in Wallet...' :
+                    createStep === 'mining' ? 'Mining...' :
+                    createStep === 'saving_backend' ? 'Saving...' :
+                    'Publishing...'
+                  }
                   className="w-full sm:w-auto min-h-[44px]"
                 >
                   Publish Campaign

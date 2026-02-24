@@ -260,7 +260,7 @@ export const BASE_SEPOLIA_TESTNET: NetworkConfig = {
   contracts: {
     fundraiserFactory:
       process.env.BASE_SEPOLIA_FUNDRAISER_FACTORY ||
-      '0x7253b4E79cc708873b83Bb3C3F50F3e81b21819c',
+      '0xb89D6039dE729f6c951862EB177795Ac4aDfD2cd',
     fundBraveToken:
       process.env.BASE_SEPOLIA_FBT ||
       '0xE42A6ff84160Ac399607667C32392378Bbb270E0',
@@ -269,13 +269,13 @@ export const BASE_SEPOLIA_TESTNET: NetworkConfig = {
       '0x0000000000000000000000000000000000000000', // Not deployed yet
     wealthBuildingDonation:
       process.env.BASE_SEPOLIA_WEALTH_BUILDING ||
-      '0x8DcC63E7Df76ece01c186568E269a2cF3aC8A886',
+      '0x34329F963C4C67BE258aD5ED4bB0769B81FD9034',
     platformTreasury:
       process.env.BASE_SEPOLIA_PLATFORM_TREASURY ||
       '0x664AbB27C9c3d287117676c77B6A1c88B831D836',
     usdc:
       process.env.BASE_SEPOLIA_USDC ||
-      '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Circle's USDC on Base Sepolia
+      '0xf269f54304f8DB2dB613341CC7E189B02BEf98dE', // MockUSDC on Base Sepolia
     aUsdc:
       process.env.BASE_SEPOLIA_AUSDC ||
       '0x0000000000000000000000000000000000000000', // Aave aUSDC (if available on Base Sepolia)
@@ -338,12 +338,14 @@ export const BASE_MAINNET: NetworkConfig = {
 // ==================== Network Registry ====================
 
 export const SUPPORTED_NETWORKS: Record<number, NetworkConfig> = {
+  // Only initialize networks we actually use to avoid RPC auth errors
+  // Other networks can be re-enabled when contracts are deployed there
   // 31337: LOCALHOST,  // Commented out - not running local Hardhat node
-  11155111: SEPOLIA_TESTNET,
-  137: POLYGON_MAINNET,
-  42161: ARBITRUM_ONE,
-  84532: BASE_SEPOLIA_TESTNET,
-  8453: BASE_MAINNET,
+  // 11155111: SEPOLIA_TESTNET,  // No contracts deployed
+  // 137: POLYGON_MAINNET,  // 401 Unauthorized - no valid API key
+  // 42161: ARBITRUM_ONE,  // No contracts deployed
+  84532: BASE_SEPOLIA_TESTNET,  // Primary testnet - contracts deployed here
+  // 8453: BASE_MAINNET,  // Enable when ready for production
 };
 
 // Default network for the application

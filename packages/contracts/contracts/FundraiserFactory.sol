@@ -17,6 +17,11 @@ import { WealthBuildingDonation } from "./WealthBuildingDonation.sol";
 import { ImpactDAOPool } from "./ImpactDAOPool.sol";
 import { PlatformTreasury } from "./PlatformTreasury.sol";
 
+/// @dev Minimal interface for ReceiptOFT controller management
+interface IReceiptOFTController {
+    function setController(address _controller, bool _enabled) external;
+}
+
 /**
  * @title FundraiserFactory
  * @author FundBrave Team
@@ -189,10 +194,17 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
         _addCategory("Sports");
     }
 
+    /// @notice BridgeRouter contract address (authorized to call cross-chain handlers)
+    address public bridgeRouter;
+
+    /// @notice Emitted when BridgeRouter is updated
+    event BridgeRouterUpdated(address indexed newRouter);
+
     // ============ Modifiers ============
 
+    /// @dev Allows calls from either the direct bridge or the BridgeRouter
     modifier onlyBridge() {
-        if (msg.sender != fundBraveBridge) revert NotBridge();
+        if (msg.sender != fundBraveBridge && msg.sender != bridgeRouter) revert NotBridge();
         _;
     }
 
@@ -332,6 +344,11 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
         stakingPools[currentId] = poolAddress;
         activeFundraisers[currentId] = true;
 
+        // Register fundraiser with WealthBuildingDonation for wealth building donations
+        if (address(wealthBuildingDonation) != address(0)) {
+            try wealthBuildingDonation.registerFundraiser(currentId, beneficiary) {} catch {}
+        }
+
         unchecked {
             totalFundraisersCreated++;
             activeFundraiserCount++;
@@ -396,6 +413,10 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
                 address(this),
                 msg.sender
             );
+            // Register pool as authorized controller on ReceiptOFT for mint/burn
+            if (receiptOFT != address(0)) {
+                IReceiptOFTController(receiptOFT).setController(pool, true);
+            }
             return pool;
         } else if (stakingPoolType == 1) {
             if (MORPHO_VAULT == address(0)) revert MorphoNotConfigured();
@@ -486,158 +507,60 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
 
     // ============ Wealth-Building Donation Functions ============
 
-    /**
-     * @notice Make a Wealth-Building donation (80% direct, 20% endowed)
-     * @param fundraiserId The fundraiser to donate to
-     * @param amount USDC amount to donate
-     */
-    function donateWealthBuilding(uint256 fundraiserId, uint256 amount)
-        external
-        nonReentrant
-        whenNotPaused
-    {
+    /// @dev Shared internal logic for wealth-building donations
+    function _executeWealthBuilding(address donor, uint256 fundraiserId, uint256 usdcAmount) internal {
         if (fundraiserId >= _fundraisers.length) revert InvalidFundraiserId();
-        if (amount == 0) revert InvalidAmount();
+        if (usdcAmount == 0) revert InvalidAmount();
         if (address(wealthBuildingDonation) == address(0)) revert WealthBuildingNotConfigured();
-
         Fundraiser fundraiser = _fundraisers[fundraiserId];
+        IERC20(USDC).forceApprove(address(wealthBuildingDonation), usdcAmount);
+        (uint256 directAmount, uint256 endowmentAmount) = wealthBuildingDonation.donate(
+            donor, fundraiserId, usdcAmount, fundraiser.beneficiary()
+        );
+        fundraiser.creditDonation(donor, directAmount, "wealth-building");
+        totalFundsRaised += usdcAmount;
+        emit WealthBuildingDonationMade(donor, fundraiserId, usdcAmount, directAmount, endowmentAmount);
+    }
 
+    /// @notice Make a Wealth-Building donation in USDC (80% direct, 20% endowed)
+    function donateWealthBuilding(uint256 fundraiserId, uint256 amount) external nonReentrant whenNotPaused {
         IERC20(USDC).safeTransferFrom(msg.sender, address(this), amount);
-        IERC20(USDC).forceApprove(address(wealthBuildingDonation), amount);
-
-        (uint256 directAmount, uint256 endowmentAmount) = wealthBuildingDonation.donate(
-            msg.sender,
-            fundraiserId,
-            amount,
-            fundraiser.beneficiary()
-        );
-
-        fundraiser.creditDonation(msg.sender, directAmount, "wealth-building");
-        totalFundsRaised += amount;
-
-        emit WealthBuildingDonationMade(msg.sender, fundraiserId, amount, directAmount, endowmentAmount);
+        _executeWealthBuilding(msg.sender, fundraiserId, amount);
     }
 
-    /**
-     * @notice Make a Wealth-Building donation using any ERC20 token
-     * @param fundraiserId The fundraiser to donate to
-     * @param token Address of the ERC20 token to donate
-     * @param amount Amount of tokens to donate
-     */
-    function donateWealthBuildingERC20(
-        uint256 fundraiserId,
-        address token,
-        uint256 amount
-    ) external nonReentrant whenNotPaused {
+    /// @notice Make a Wealth-Building donation using any ERC20 token
+    function donateWealthBuildingERC20(uint256 fundraiserId, address token, uint256 amount) external nonReentrant whenNotPaused {
         if (amount == 0) revert InvalidAmount();
-        if (fundraiserId >= _fundraisers.length) revert InvalidFundraiserId();
-        if (address(wealthBuildingDonation) == address(0)) revert WealthBuildingNotConfigured();
-
-        Fundraiser fundraiser = _fundraisers[fundraiserId];
-
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        uint256 usdcAmount = _swapToUSDC(token, amount);
-
-        IERC20(USDC).forceApprove(address(wealthBuildingDonation), usdcAmount);
-        (uint256 directAmount, uint256 endowmentAmount) = wealthBuildingDonation.donate(
-            msg.sender,
-            fundraiserId,
-            usdcAmount,
-            fundraiser.beneficiary()
-        );
-
-        fundraiser.creditDonation(msg.sender, directAmount, "wealth-building-erc20");
-        totalFundsRaised += usdcAmount;
-
-        emit WealthBuildingDonationMade(msg.sender, fundraiserId, usdcAmount, directAmount, endowmentAmount);
+        _executeWealthBuilding(msg.sender, fundraiserId, _swapToUSDC(token, amount));
     }
 
-    /**
-     * @notice Make a Wealth-Building donation using native currency (ETH)
-     * @param fundraiserId The fundraiser to donate to
-     */
-    function donateWealthBuildingNative(uint256 fundraiserId)
-        external
-        payable
-        nonReentrant
-        whenNotPaused
-    {
+    /// @notice Make a Wealth-Building donation using native currency (ETH)
+    function donateWealthBuildingNative(uint256 fundraiserId) external payable nonReentrant whenNotPaused {
         if (msg.value == 0) revert InvalidAmount();
-        if (fundraiserId >= _fundraisers.length) revert InvalidFundraiserId();
-        if (address(wealthBuildingDonation) == address(0)) revert WealthBuildingNotConfigured();
-
-        Fundraiser fundraiser = _fundraisers[fundraiserId];
-        uint256 usdcAmount = _swapNativeToUSDC(msg.value);
-
-        IERC20(USDC).forceApprove(address(wealthBuildingDonation), usdcAmount);
-        (uint256 directAmount, uint256 endowmentAmount) = wealthBuildingDonation.donate(
-            msg.sender,
-            fundraiserId,
-            usdcAmount,
-            fundraiser.beneficiary()
-        );
-
-        fundraiser.creditDonation(msg.sender, directAmount, "wealth-building-native");
-        totalFundsRaised += usdcAmount;
-
-        emit WealthBuildingDonationMade(msg.sender, fundraiserId, usdcAmount, directAmount, endowmentAmount);
-    }
-
-    // ============ Impact DAO Pool Functions ============
-
-    /**
-     * @notice Get the ImpactDAOPool address for direct staking
-     * @dev Users should approve USDC to ImpactDAOPool and call stake() directly
-     *      This is more gas efficient than routing through the Factory
-     * @return Address of the ImpactDAOPool contract
-     */
-    function getImpactDAOPool() external view returns (address) {
-        return address(impactDAOPool);
-    }
-
-    /**
-     * @notice Convenience function to check if ImpactDAOPool is configured
-     * @return True if ImpactDAOPool is set
-     */
-    function isImpactDAOPoolConfigured() external view returns (bool) {
-        return address(impactDAOPool) != address(0);
+        _executeWealthBuilding(msg.sender, fundraiserId, _swapNativeToUSDC(msg.value));
     }
 
     // ============ Cross-Chain Functions ============
 
-    /**
-     * @notice Handles cross-chain donation from bridge with replay attack protection
-     * @dev Only callable by the configured bridge contract
-     * @param donor Address of the donor on the source chain
-     * @param fundraiserId ID of the fundraiser to donate to
-     * @param usdcAmount Amount of USDC to donate
-     * @param messageHash Unique hash of the cross-chain message for replay protection
-     * @param sourceChainId Chain ID of the source chain
-     */
-    function handleCrossChainDonation(
-        address donor,
-        uint256 fundraiserId,
-        uint256 usdcAmount,
-        bytes32 messageHash,
-        uint32 sourceChainId
-    ) external nonReentrant whenNotPaused onlyBridge {
-        // Replay attack protection
+    /// @dev Validates and marks a cross-chain message as processed (replay protection + hash verification)
+    function _validateCrossChainMsg(
+        address donor, uint256 fundraiserId, uint256 usdcAmount,
+        bytes32 messageHash, uint32 sourceChainId, uint8 actionType
+    ) internal {
         if (processedMessages[messageHash]) revert MessageAlreadyProcessed();
-
-        // Verify message hash matches expected parameters
         bytes32 expectedHash = keccak256(abi.encodePacked(
-            donor,
-            fundraiserId,
-            usdcAmount,
-            sourceChainId,
-            block.chainid,
-            uint8(0) // 0 = donation type
+            donor, fundraiserId, usdcAmount, sourceChainId, block.chainid, actionType
         ));
         if (messageHash != expectedHash) revert InvalidMessageHash();
-
-        // Mark message as processed before external calls (CEI pattern)
         processedMessages[messageHash] = true;
+    }
 
+    function handleCrossChainDonation(
+        address donor, uint256 fundraiserId, uint256 usdcAmount,
+        bytes32 messageHash, uint32 sourceChainId
+    ) external nonReentrant whenNotPaused onlyBridge {
+        _validateCrossChainMsg(donor, fundraiserId, usdcAmount, messageHash, sourceChainId, 0);
         if (fundraiserId >= _fundraisers.length) revert InvalidFundraiserId();
         Fundraiser fundraiser = _fundraisers[fundraiserId];
         IERC20(USDC).safeTransfer(address(fundraiser), usdcAmount);
@@ -645,136 +568,37 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
         totalFundsRaised += usdcAmount;
     }
 
-    /**
-     * @notice Handles cross-chain stake from bridge with replay attack protection
-     * @dev Only callable by the configured bridge contract
-     * @param donor Address of the staker on the source chain
-     * @param fundraiserId ID of the fundraiser's staking pool
-     * @param usdcAmount Amount of USDC to stake
-     * @param messageHash Unique hash of the cross-chain message for replay protection
-     * @param sourceChainId Chain ID of the source chain
-     */
     function handleCrossChainStake(
-        address donor,
-        uint256 fundraiserId,
-        uint256 usdcAmount,
-        bytes32 messageHash,
-        uint32 sourceChainId
+        address donor, uint256 fundraiserId, uint256 usdcAmount,
+        bytes32 messageHash, uint32 sourceChainId
     ) external nonReentrant whenNotPaused onlyBridge {
-        // Replay attack protection
-        if (processedMessages[messageHash]) revert MessageAlreadyProcessed();
-
-        // Verify message hash matches expected parameters
-        bytes32 expectedHash = keccak256(abi.encodePacked(
-            donor,
-            fundraiserId,
-            usdcAmount,
-            sourceChainId,
-            block.chainid,
-            uint8(1) // 1 = stake type
-        ));
-        if (messageHash != expectedHash) revert InvalidMessageHash();
-
-        // Mark message as processed before external calls (CEI pattern)
-        processedMessages[messageHash] = true;
-
+        _validateCrossChainMsg(donor, fundraiserId, usdcAmount, messageHash, sourceChainId, 1);
         address poolAddress = stakingPools[fundraiserId];
         if (poolAddress == address(0)) revert NoStakingPool();
         IERC20(USDC).safeTransfer(poolAddress, usdcAmount);
         _depositToPool(poolAddress, donor, usdcAmount);
     }
 
-    /**
-     * @notice Legacy handler for backwards compatibility (DEPRECATED)
-     * @dev Only callable by the configured bridge contract. Use new version with message hash for security.
-     * @param donor Address of the donor on the source chain
-     * @param fundraiserId ID of the fundraiser to donate to
-     * @param usdcAmount Amount of USDC to donate
-     */
-    function handleCrossChainDonationLegacy(
-        address donor,
-        uint256 fundraiserId,
-        uint256 usdcAmount
+    function handleCrossChainWealthBuilding(
+        address donor, uint256 fundraiserId, uint256 usdcAmount,
+        bytes32 messageHash, uint32 sourceChainId
     ) external nonReentrant whenNotPaused onlyBridge {
-        if (fundraiserId >= _fundraisers.length) revert InvalidFundraiserId();
-        Fundraiser fundraiser = _fundraisers[fundraiserId];
-        IERC20(USDC).safeTransfer(address(fundraiser), usdcAmount);
-        fundraiser.creditDonation(donor, usdcAmount, "cross-chain-legacy");
-        totalFundsRaised += usdcAmount;
+        _validateCrossChainMsg(donor, fundraiserId, usdcAmount, messageHash, sourceChainId, 2);
+        _executeWealthBuilding(donor, fundraiserId, usdcAmount);
     }
 
-    /**
-     * @notice Legacy handler for backwards compatibility (DEPRECATED)
-     * @dev Only callable by the configured bridge contract. Use new version with message hash for security.
-     * @param donor Address of the staker on the source chain
-     * @param fundraiserId ID of the fundraiser's staking pool
-     * @param usdcAmount Amount of USDC to stake
-     */
-    function handleCrossChainStakeLegacy(
-        address donor,
-        uint256 fundraiserId,
-        uint256 usdcAmount
-    ) external nonReentrant whenNotPaused onlyBridge {
-        address poolAddress = stakingPools[fundraiserId];
-        if (poolAddress == address(0)) revert NoStakingPool();
-        IERC20(USDC).safeTransfer(poolAddress, usdcAmount);
-        _depositToPool(poolAddress, donor, usdcAmount);
-    }
-
-    /**
-     * @notice Check if a cross-chain message has already been processed
-     * @param messageHash The hash of the message to check
-     * @return True if the message has been processed
-     */
     function isMessageProcessed(bytes32 messageHash) external view returns (bool) {
         return processedMessages[messageHash];
     }
 
-    /**
-     * @notice Compute the expected message hash for a cross-chain donation
-     * @param donor Address of the donor
-     * @param fundraiserId ID of the fundraiser
-     * @param usdcAmount Amount of USDC
-     * @param sourceChainId Source chain ID
-     * @return The computed message hash
-     */
-    function computeDonationMessageHash(
-        address donor,
-        uint256 fundraiserId,
-        uint256 usdcAmount,
-        uint32 sourceChainId
+    /// @notice Compute expected message hash for any cross-chain action
+    /// @param actionType 0=donate, 1=stake, 2=wealthBuild
+    function computeMessageHash(
+        address donor, uint256 fundraiserId, uint256 usdcAmount,
+        uint32 sourceChainId, uint8 actionType
     ) external view returns (bytes32) {
         return keccak256(abi.encodePacked(
-            donor,
-            fundraiserId,
-            usdcAmount,
-            sourceChainId,
-            block.chainid,
-            uint8(0)
-        ));
-    }
-
-    /**
-     * @notice Compute the expected message hash for a cross-chain stake
-     * @param donor Address of the staker
-     * @param fundraiserId ID of the fundraiser
-     * @param usdcAmount Amount of USDC
-     * @param sourceChainId Source chain ID
-     * @return The computed message hash
-     */
-    function computeStakeMessageHash(
-        address donor,
-        uint256 fundraiserId,
-        uint256 usdcAmount,
-        uint32 sourceChainId
-    ) external view returns (bytes32) {
-        return keccak256(abi.encodePacked(
-            donor,
-            fundraiserId,
-            usdcAmount,
-            sourceChainId,
-            block.chainid,
-            uint8(1)
+            donor, fundraiserId, usdcAmount, sourceChainId, block.chainid, actionType
         ));
     }
 
@@ -905,5 +729,14 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
         if (_newBridge == address(0)) revert ZeroAddress();
         fundBraveBridge = _newBridge;
         emit BridgeUpdated(_newBridge);
+    }
+
+    /**
+     * @notice Sets the BridgeRouter contract address (also authorized to call cross-chain handlers)
+     * @param _bridgeRouter Address of the BridgeRouter contract
+     */
+    function setBridgeRouter(address _bridgeRouter) external onlyRole(ADMIN_ROLE) {
+        bridgeRouter = _bridgeRouter;
+        emit BridgeRouterUpdated(_bridgeRouter);
     }
 }

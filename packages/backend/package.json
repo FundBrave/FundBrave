@@ -22,7 +22,8 @@
     "seed:blockchain": "ts-node prisma/seeds/blockchain.seed.ts",
     "seed:campaigns": "ts-node prisma/seeds/campaigns-onchain.seed.ts",
     "seed:campaigns:only": "ts-node prisma/seeds/campaigns-onchain.seed.ts",
-    "create-test-user": "ts-node scripts/create-test-user.ts"
+    "create-test-user": "ts-node scripts/create-test-user.ts",
+    "db:reset": "ts-node scripts/reset-db.ts"
   },
   "dependencies": {
     "@apollo/server": "^5.2.0",

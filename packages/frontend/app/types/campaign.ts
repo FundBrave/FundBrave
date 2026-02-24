@@ -35,6 +35,10 @@ export interface CampaignCreateInput {
   duration: number; // in days
   category: string;
   imageUrl?: string;
+  images: string[];
+  categories: string[];
+  region: string;
+  beneficiary: Address;
 }
 
 export interface Donation {

@@ -159,12 +159,14 @@ export class FundraisersResolver {
     @Args('input') input: CreateFundraiserInput,
     @Args('txHash') txHash: string,
     @Args('onChainId', { type: () => Int }) onChainId: number,
+    @Args('stakingPoolAddr', { type: () => String, nullable: true }) stakingPoolAddr?: string,
   ): Promise<Fundraiser> {
     return this.fundraisersService.createFundraiser(
       user.id,
       input,
       txHash,
       onChainId,
+      stakingPoolAddr,
     );
   }
 

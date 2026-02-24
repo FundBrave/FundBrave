@@ -3095,16 +3095,17 @@ export type GetFundraisersByCreatorQueryVariables = Exact<{
 }>;
 
 
-export type GetFundraisersByCreatorQuery = { __typename?: 'Query', fundraisersByCreator: { __typename?: 'PaginatedFundraisers', total: number, hasMore: boolean, items: Array<{ __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, raisedAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, createdAt: string, isActive: boolean, isFeatured: boolean, goalReached: boolean, onChainId: number, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, isVerifiedCreator: boolean }, stats: { __typename?: 'FundraiserStats', donorsCount: number, totalDonations: string, avgDonation: string, percentageRaised: number, daysLeft: number, stakersCount: number, totalStaked: string, updatesCount: number } }> } };
+export type GetFundraisersByCreatorQuery = { __typename?: 'Query', fundraisersByCreator: { __typename?: 'PaginatedFundraisers', total: number, hasMore: boolean, items: Array<{ __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, raisedAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, createdAt: string, isActive: boolean, isFeatured: boolean, goalReached: boolean, onChainId: number, stakingPoolAddr?: string | null, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, isVerifiedCreator: boolean }, stats: { __typename?: 'FundraiserStats', donorsCount: number, totalDonations: string, avgDonation: string, percentageRaised: number, daysLeft: number, stakersCount: number, totalStaked: string, updatesCount: number } }> } };
 
 export type CreateFundraiserMutationVariables = Exact<{
   input: CreateFundraiserInput;
   onChainId: Scalars['Int']['input'];
   txHash: Scalars['String']['input'];
+  stakingPoolAddr?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type CreateFundraiserMutation = { __typename?: 'Mutation', createFundraiser: { __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, onChainId: number, txHash: string, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null } } };
+export type CreateFundraiserMutation = { __typename?: 'Mutation', createFundraiser: { __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, onChainId: number, txHash: string, stakingPoolAddr?: string | null, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null } } };
 
 export type AddFundraiserUpdateMutationVariables = Exact<{
   fundraiserId: Scalars['ID']['input'];
@@ -4081,6 +4082,7 @@ export const GetFundraisersByCreatorDocument = gql`
       isFeatured
       goalReached
       onChainId
+      stakingPoolAddr
       creator {
         id
         walletAddress
@@ -4144,8 +4146,8 @@ export type GetFundraisersByCreatorLazyQueryHookResult = ReturnType<typeof useGe
 export type GetFundraisersByCreatorSuspenseQueryHookResult = ReturnType<typeof useGetFundraisersByCreatorSuspenseQuery>;
 export type GetFundraisersByCreatorQueryResult = ApolloReactCommon.QueryResult<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>;
 export const CreateFundraiserDocument = gql`
-    mutation CreateFundraiser($input: CreateFundraiserInput!, $onChainId: Int!, $txHash: String!) {
-  createFundraiser(input: $input, onChainId: $onChainId, txHash: $txHash) {
+    mutation CreateFundraiser($input: CreateFundraiserInput!, $onChainId: Int!, $txHash: String!, $stakingPoolAddr: String) {
+  createFundraiser(input: $input, onChainId: $onChainId, txHash: $txHash, stakingPoolAddr: $stakingPoolAddr) {
     id
     name
     description
@@ -4157,6 +4159,7 @@ export const CreateFundraiserDocument = gql`
     region
     onChainId
     txHash
+    stakingPoolAddr
     creator {
       id
       walletAddress

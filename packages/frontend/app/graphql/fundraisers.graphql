@@ -146,6 +146,7 @@ query GetFundraisersByCreator(
       isFeatured
       goalReached
       onChainId
+      stakingPoolAddr
       creator {
         id
         walletAddress
@@ -175,8 +176,9 @@ mutation CreateFundraiser(
   $input: CreateFundraiserInput!
   $onChainId: Int!
   $txHash: String!
+  $stakingPoolAddr: String
 ) {
-  createFundraiser(input: $input, onChainId: $onChainId, txHash: $txHash) {
+  createFundraiser(input: $input, onChainId: $onChainId, txHash: $txHash, stakingPoolAddr: $stakingPoolAddr) {
     id
     name
     description
@@ -188,6 +190,7 @@ mutation CreateFundraiser(
     region
     onChainId
     txHash
+    stakingPoolAddr
     creator {
       id
       walletAddress

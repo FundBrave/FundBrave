@@ -402,6 +402,7 @@ export class FundraisersService {
     input: CreateFundraiserInput,
     txHash: string,
     onChainId: number,
+    stakingPoolAddr?: string,
   ): Promise<Fundraiser> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -418,6 +419,54 @@ export class FundraisersService {
     }
 
     const fundraiser = await this.prisma.$transaction(async (tx) => {
+      // Check if a fundraiser with this onChainId already exists
+      // This can happen if:
+      //   1. Stale/seeded data from a previous deployment conflicts
+      //   2. A retry after the on-chain tx succeeded but backend save failed
+      const existing = await tx.fundraiser.findUnique({
+        where: { onChainId },
+      });
+
+      if (existing) {
+        // If it belongs to the same user and has the same txHash, return it (idempotent retry)
+        if (existing.creatorId === userId && existing.txHash === txHash) {
+          const existingWithRelations = await tx.fundraiser.findUnique({
+            where: { id: existing.id },
+            include: {
+              creator: {
+                select: {
+                  id: true,
+                  walletAddress: true,
+                  username: true,
+                  displayName: true,
+                  avatarUrl: true,
+                  isVerifiedCreator: true,
+                },
+              },
+              milestones: true,
+              updates: true,
+              stakes: {
+                where: { isActive: true },
+                select: { amount: true },
+              },
+            },
+          });
+          return existingWithRelations!;
+        }
+
+        // If it's stale data from a different deployment (different txHash or different user),
+        // delete the old record and its related data so we can create the new one
+        await tx.vote.deleteMany({ where: { proposal: { fundraiserId: existing.id } } });
+        await tx.proposal.deleteMany({ where: { fundraiserId: existing.id } });
+        await tx.wealthBuildingDonation.deleteMany({ where: { fundraiserId: existing.id } });
+        await tx.stake.deleteMany({ where: { fundraiserId: existing.id } });
+        await tx.donation.deleteMany({ where: { fundraiserId: existing.id } });
+        await tx.fundraiserUpdate.deleteMany({ where: { fundraiserId: existing.id } });
+        await tx.milestone.deleteMany({ where: { fundraiserId: existing.id } });
+        await tx.comment.deleteMany({ where: { fundraiserId: existing.id } });
+        await tx.fundraiser.delete({ where: { id: existing.id } });
+      }
+
       // Create fundraiser
       const newFundraiser = await tx.fundraiser.create({
         data: {
@@ -431,6 +480,7 @@ export class FundraisersService {
           goalAmount: input.goalAmount,
           currency: input.currency || 'USDC',
           beneficiary: input.beneficiary,
+          stakingPoolAddr: stakingPoolAddr || undefined,
           deadline,
           creatorId: userId,
         },

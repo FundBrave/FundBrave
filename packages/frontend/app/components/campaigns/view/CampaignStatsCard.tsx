@@ -110,32 +110,15 @@ export default function CampaignStatsCard({
             </p>
           </div>
           <p className="text-xs text-purple-400 font-semibold pt-3 uppercase tracking-wide">
-            Campaign ending in {daysLeft} weeks
+            {daysLeft > 0
+              ? `Campaign ending in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`
+              : 'Campaign has ended'}
           </p>
         </div>
 
-        {/* Action Buttons - Matching reference design */}
-        {!isFullyFunded ? (
-          <div className="flex flex-col gap-3 sm:gap-4 w-full">
-            {/* Donate Now - Primary gradient button */}
-            <Button asChild variant="primary" size="lg" fullWidth>
-              <Link href={`/campaigns/${campaign.id}/donate`}>Donate Now</Link>
-            </Button>
-            {/* Share - Outline button with icon */}
-            <Button
-              variant="outline"
-              size="lg"
-              fullWidth
-              onClick={() => setIsShareModalOpen(true)}
-              className="gap-2"
-            >
-              <Share2 size={18} />
-              Share
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3 sm:gap-4 w-full">
-            {/* Fully Funded Badge */}
+        {/* Status & Share */}
+        <div className="flex flex-col gap-3 sm:gap-4 w-full">
+          {isFullyFunded && (
             <div className="bg-success/10 border border-success/30 rounded-lg px-4 py-3 text-center">
               <p className="text-success font-bold text-base mb-1">
                 ✅ Goal Reached!
@@ -144,19 +127,18 @@ export default function CampaignStatsCard({
                 This campaign is fully funded
               </p>
             </div>
-            {/* Share button still available */}
-            <Button
-              variant="outline"
-              size="lg"
-              fullWidth
-              onClick={() => setIsShareModalOpen(true)}
-              className="gap-2"
-            >
-              <Share2 size={18} />
-              Share
-            </Button>
-          </div>
-        )}
+          )}
+          <Button
+            variant="outline"
+            size="lg"
+            fullWidth
+            onClick={() => setIsShareModalOpen(true)}
+            className="gap-2"
+          >
+            <Share2 size={18} />
+            Share Campaign
+          </Button>
+        </div>
       </div>
 
       {/* Reminder Section */}

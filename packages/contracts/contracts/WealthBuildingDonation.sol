@@ -235,6 +235,9 @@ contract WealthBuildingDonation is
     /// @notice Address receiving platform fees
     address public platformTreasury;
 
+    /// @notice Authorized factory address that can register fundraisers
+    address public authorizedFactory;
+
     /// @notice Mapping of fundraiser ID to beneficiary address
     mapping(uint256 => address) public fundraiserBeneficiaries;
 
@@ -352,9 +355,12 @@ contract WealthBuildingDonation is
      * @dev Called by FundraiserFactory or directly with prior USDC approval
      *
      * Split breakdown for $1000 donation:
-     * - $780 (78%) -> Beneficiary (direct impact)
-     * - $200 (20%) -> Aave endowment (permanent)
+     * - $800 (80%) -> Beneficiary (direct impact)
+     * - $180 (18%) -> Aave endowment (permanent)
      * - $20 (2%) -> Platform treasury
+     *
+     * Platform fee is taken from the endowment portion so the cause
+     * always receives exactly 80% of the donation.
      *
      * @param donor Address making the donation
      * @param fundraiserId ID of the fundraiser to donate to
@@ -386,17 +392,17 @@ contract WealthBuildingDonation is
         // Transfer USDC from caller to this contract
         usdc.safeTransferFrom(msg.sender, address(this), amount);
 
-        // Calculate splits using unchecked for gas savings (values can't overflow)
+        // Calculate splits: cause gets exactly 80%, platform fee from endowment
         uint256 platformFee;
         unchecked {
-            // Endowment: 20% of total
-            endowmentAmount = (amount * ENDOWMENT_SHARE_BPS) / BASIS_POINTS;
+            // Direct to beneficiary: exactly 80% of total
+            directAmount = (amount * DIRECT_SHARE_BPS) / BASIS_POINTS;
 
-            // Platform fee: 2% of total (taken from direct portion)
+            // Platform fee: 2% of total (taken from endowment portion)
             platformFee = (amount * PLATFORM_FEE_BPS) / BASIS_POINTS;
 
-            // Direct to beneficiary: 80% - 2% = 78%
-            directAmount = amount - endowmentAmount - platformFee;
+            // Endowment: remainder (20% - 2% = 18%)
+            endowmentAmount = amount - directAmount - platformFee;
         }
 
         // === Effects: Update state before external calls (CEI pattern) ===
@@ -797,7 +803,8 @@ contract WealthBuildingDonation is
     function registerFundraiser(
         uint256 fundraiserId,
         address beneficiary
-    ) external onlyOwner {
+    ) external {
+        require(msg.sender == owner() || msg.sender == authorizedFactory, "WBD: Not authorized");
         if (beneficiary == address(0)) revert ZeroAddress();
         if (fundraiserBeneficiaries[fundraiserId] != address(0)) {
             revert InvalidFundraiser(); // Already registered
@@ -881,6 +888,14 @@ contract WealthBuildingDonation is
             revert StockNotSupported();
         }
         defaultStock = stockToken;
+    }
+
+    /**
+     * @notice Set the authorized factory address that can register fundraisers
+     * @param _factory New factory address
+     */
+    function setAuthorizedFactory(address _factory) external onlyOwner {
+        authorizedFactory = _factory;
     }
 
     /**
