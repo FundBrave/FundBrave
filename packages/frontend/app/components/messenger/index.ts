@@ -11,6 +11,13 @@ export { ChatArea, type ChatAreaProps } from "./ChatArea";
 export { SharedFilesSidebar } from "./SharedFilesSidebar";
 export { UserSearchModal } from "./UserSearchModal";
 
+// Web3 Chat Components
+export { EncryptionBadge } from "./EncryptionBadge";
+export { ConnectionStatus } from "./ConnectionStatus";
+export { WakuFallbackBanner } from "./WakuFallbackBanner";
+export { WalletNudgeBanner } from "./WalletNudgeBanner";
+export { EncryptionSetupFlow } from "./EncryptionSetupFlow";
+
 // Re-export types from the centralized types file
 export type {
   Chat,

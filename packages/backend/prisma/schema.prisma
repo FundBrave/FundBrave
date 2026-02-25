@@ -153,6 +153,14 @@ model User {
   otpAttempts          Int       @default(0) // Failed attempts counter for rate limiting
   otpLastAttemptAt     DateTime? // Last OTP attempt timestamp for rate limiting
 
+  // Web3 Chat - Encryption Key Management
+  // Stores SHA-256 hash of user's X25519 public key for key rotation verification.
+  // The server never stores the actual key — only the hash for integrity checks.
+  encryptionPubKeyHash String? // SHA-256 hash of user's encryption public key
+
+  // Web3 Chat - Message Archive Relation
+  messageArchives MessageArchive[] @relation("ArchiveSender")
+
   @@index([walletAddress])
   @@index([passwordResetToken])
   @@index([username])
@@ -1667,6 +1675,40 @@ model RewardClaim {
 
   @@index([userId])
   @@map("reward_claims")
+}
+
+// ==================== WEB3 CHAT - ENCRYPTED MESSAGE ARCHIVE ====================
+
+/**
+ * MessageArchive: Encrypted message storage for the Web3 Chat Tier 3 feature.
+ *
+ * Trust model (identical to Signal):
+ * - The server stores an opaque encrypted blob (encryptedData).
+ * - The server has NO ability to decrypt the content. Ever.
+ * - conversationHash is a keccak256 hash of sorted participant user IDs —
+ *   it reveals nothing about who is in the conversation.
+ * - The blob is encrypted client-side before upload using the sender's
+ *   and recipient's X25519 public keys (NaCl box or equivalent).
+ *
+ * Privacy guarantees:
+ * - A user can only retrieve archives where they are the senderUserId.
+ * - Optional expiresAt supports automatic TTL-based cleanup (right to be forgotten).
+ * - DELETE endpoint allows manual deletion at any time.
+ */
+model MessageArchive {
+  id               String    @id @default(uuid())
+  conversationHash String    // keccak256 hash of sorted participant user IDs (NOT plaintext)
+  encryptedData    Bytes     // Opaque encrypted blob — server CANNOT decrypt this
+  senderUserId     String    // User who uploaded this archive chunk
+  createdAt        DateTime  @default(now())
+  expiresAt        DateTime? // Optional TTL — null means retain indefinitely
+
+  sender User @relation("ArchiveSender", fields: [senderUserId], references: [id], onDelete: Cascade)
+
+  @@index([conversationHash, createdAt])
+  @@index([senderUserId])
+  @@index([expiresAt]) // For efficient TTL cleanup queries
+  @@map("message_archives")
 }
 
 // ==================== CONTRACT ADDRESSES REGISTRY ====================

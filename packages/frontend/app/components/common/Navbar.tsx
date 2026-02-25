@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  ShieldCheck,
 } from "@/app/components/ui/icons";
 import { NotificationBell, NotificationPanel } from "@/app/components/notifications";
 import { useUnreadCount } from "@/app/hooks/useMessaging";
@@ -278,6 +279,16 @@ export default function Navbar({ className }: NavbarProps) {
                 )}
               </Link>
 
+              {/* Web3 Encrypted Messaging Indicator */}
+              <Link
+                href="/messenger"
+                className="min-h-[44px] min-w-[44px] size-9 rounded-full bg-surface-sunken flex items-center justify-center hover:bg-surface-overlay active:bg-surface-overlay active:scale-[0.98] transition-colors"
+                aria-label="Encrypted messaging"
+                title="End-to-end encrypted"
+              >
+                <ShieldCheck size={18} className="text-green-500/80" />
+              </Link>
+
               {/* Notifications Bell with Panel */}
               <div className="relative">
                 <NotificationBell size="md" />
@@ -527,8 +538,9 @@ export default function Navbar({ className }: NavbarProps) {
                 onClick={() => setMobileMenuOpen(false)}
                 className="relative flex flex-col items-center gap-2 p-4 min-h-[44px] rounded-xl bg-surface-overlay border border-border-default hover:bg-surface-elevated active:bg-surface-elevated active:scale-[0.98] transition-colors"
               >
-                <div className="relative">
+                <div className="relative flex items-center gap-1">
                   <MessageCircle size={24} className="text-foreground/80" />
+                  <ShieldCheck size={20} className="text-green-500/80" />
                   {/* Unread Badge */}
                   {unreadMessageCount > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-primary text-white text-[9px] font-bold rounded-full border-2 border-background">
