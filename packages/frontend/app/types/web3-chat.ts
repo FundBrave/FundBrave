@@ -55,6 +55,15 @@ export interface OutboxMessage {
   error?: string;
 }
 
+// --- Typing Indicators (over Waku) ----------------------------------------
+
+export interface WakuTypingEvent {
+  userId: string;
+  conversationId: string;
+  isTyping: boolean;
+  timestamp: number;
+}
+
 // ─── Conversation Types ──────────────────────────────────────────────────────
 
 export type EncryptionState =
@@ -181,7 +190,7 @@ export type WakuConnectionStatus =
   | 'connecting'
   | 'connected'
   | 'error'
-  | 'degraded';
+  | 'queuing';  // was 'degraded' -- now means outbox is active, Waku reconnecting
 
 export interface WakuNodeState {
   status: WakuConnectionStatus;

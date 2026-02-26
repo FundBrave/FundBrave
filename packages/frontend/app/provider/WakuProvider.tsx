@@ -5,6 +5,7 @@ import type { WakuNodeState, WakuConnectionStatus } from '@/app/types/web3-chat'
 import { broadcastEvent, onBroadcastEvent } from '@/lib/waku/local-store';
 
 const WAKU_ENABLED = process.env.NEXT_PUBLIC_WAKU_ENABLED !== 'false';
+const NWAKU_MULTIADDR = process.env.NEXT_PUBLIC_NWAKU_MULTIADDR || '';
 
 // Backoff config
 const INITIAL_BACKOFF_MS = 1000;
@@ -64,7 +65,18 @@ export function WakuProvider({ children }: WakuProviderProps) {
         // Dynamic import to avoid SSR issues
         const { createLightNode, waitForRemotePeer, Protocols } = await import('@waku/sdk');
 
-        const node = await createLightNode({ defaultBootstrap: true });
+        // Build bootstrap/static peer list
+        const bootstrapPeers: string[] = [];
+
+        // 1. Self-hosted nwaku relay node (highest priority)
+        if (NWAKU_MULTIADDR) {
+          bootstrapPeers.push(NWAKU_MULTIADDR);
+        }
+
+        const node = await createLightNode({
+          defaultBootstrap: true,  // Keep public fleet as backup
+          bootstrapPeers: bootstrapPeers.length > 0 ? bootstrapPeers : undefined,
+        });
         await node.start();
         await waitForRemotePeer(node, [Protocols.Filter, Protocols.LightPush, Protocols.Store]);
 
@@ -96,7 +108,7 @@ export function WakuProvider({ children }: WakuProviderProps) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
 
         if (connectAttemptsRef.current >= MAX_CONNECT_ATTEMPTS) {
-          updateStatus('degraded', { error: errorMsg });
+          updateStatus('queuing', { error: errorMsg });
           broadcastEvent({ type: 'waku_inactive', tabId: TAB_ID });
 
           // Start degraded retry loop
@@ -173,7 +185,7 @@ export function WakuProvider({ children }: WakuProviderProps) {
     node: nodeRef.current,
     state,
     isReady: state.status === 'connected',
-    isDegraded: state.status === 'degraded',
+    isDegraded: state.status === 'queuing',
     isEnabled: WAKU_ENABLED,
     restart,
   };

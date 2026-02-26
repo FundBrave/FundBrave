@@ -14,7 +14,7 @@ export { UserSearchModal } from "./UserSearchModal";
 // Web3 Chat Components
 export { EncryptionBadge } from "./EncryptionBadge";
 export { ConnectionStatus } from "./ConnectionStatus";
-export { WakuFallbackBanner } from "./WakuFallbackBanner";
+export { WakuDisconnectedBanner } from "./WakuDisconnectedBanner";
 export { WalletNudgeBanner } from "./WalletNudgeBanner";
 export { EncryptionSetupFlow } from "./EncryptionSetupFlow";
 

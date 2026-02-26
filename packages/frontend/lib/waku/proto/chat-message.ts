@@ -39,6 +39,14 @@ const KeyRotationFields = new protobuf.Type('KeyRotation')
   .add(new protobuf.Field('nonce', 7, 'string'))
   .add(new protobuf.Field('timestamp', 8, 'uint64'));
 
+// --- TypingIndicatorProto ------------------------------------------------
+
+const TypingIndicatorFields = new protobuf.Type('TypingIndicator')
+  .add(new protobuf.Field('userId', 1, 'string'))
+  .add(new protobuf.Field('conversationId', 2, 'string'))
+  .add(new protobuf.Field('isTyping', 3, 'bool'))
+  .add(new protobuf.Field('timestamp', 4, 'uint64'));
+
 // ─── Encode / Decode helpers ─────────────────────────────────────────────────
 
 export const ChatMessageProto = {
@@ -71,5 +79,16 @@ export const KeyRotationProto = {
   },
   decode(buffer: Uint8Array): Record<string, unknown> {
     return KeyRotationFields.decode(buffer) as unknown as Record<string, unknown>;
+  },
+};
+
+export const TypingIndicatorProto = {
+  encode(message: Record<string, unknown>): Uint8Array {
+    const errMsg = TypingIndicatorFields.verify(message);
+    if (errMsg) throw new Error(`TypingIndicator validation: ${errMsg}`);
+    return TypingIndicatorFields.encode(TypingIndicatorFields.create(message)).finish();
+  },
+  decode(buffer: Uint8Array): Record<string, unknown> {
+    return TypingIndicatorFields.decode(buffer) as unknown as Record<string, unknown>;
   },
 };

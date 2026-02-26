@@ -34,3 +34,15 @@ export function getConversationId(userId1: string, userId2: string): string {
   const [first, second] = sortedPair(userId1, userId2);
   return keccak256(toBytes(`${first}:${second}`));
 }
+
+/**
+ * Typing indicator topic for a DM pair.
+ * Same deterministic pairing as DM content topic, but on a separate topic
+ * so typing events don't pollute the message Store.
+ */
+export function getTypingContentTopic(userId1: string, userId2: string): string {
+  const [first, second] = sortedPair(userId1, userId2);
+  const hash = keccak256(toBytes(`${first}:${second}`));
+  const shortHash = hash.slice(2, 18);
+  return `/${APP_NAME}/${PROTOCOL_VERSION}/typing-${shortHash}/proto`;
+}

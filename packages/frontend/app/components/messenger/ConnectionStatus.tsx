@@ -16,7 +16,7 @@ const STATUS_CONFIG: Record<WakuConnectionStatus, { color: string; bgClass: stri
   connecting: { color: '#f59e0b', bgClass: 'bg-amber-500 animate-pulse', label: 'Connecting...' },
   disconnected: { color: '#a3a3a3', bgClass: 'bg-neutral-400', label: 'Disconnected' },
   error: { color: '#ef4444', bgClass: 'bg-red-500', label: 'Connection Error' },
-  degraded: { color: '#ef4444', bgClass: 'bg-red-500 animate-pulse', label: 'Degraded Mode' },
+  queuing: { color: '#f59e0b', bgClass: 'bg-amber-500 animate-pulse', label: 'Queuing Messages' },
 };
 
 /**
@@ -40,7 +40,7 @@ export function ConnectionStatus({ status, className }: ConnectionStatusProps) {
           'inline-block h-2 w-2 rounded-full',
           // Keep animate-pulse for connecting/degraded, but strip bg-* from Tailwind
           // since Framer Motion owns backgroundColor
-          (status === 'connecting' || status === 'degraded') && 'animate-pulse'
+          (status === 'connecting' || status === 'queuing') && 'animate-pulse'
         )}
         animate={{ backgroundColor: config.color }}
         transition={{ duration: DURATION.normal, ease: EASE.snappy }}

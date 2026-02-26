@@ -56,7 +56,7 @@ interface UseWakuChatOptions {
  * - E2E encrypt outgoing and decrypt incoming messages
  * - WhatsApp-style outbox: failed sends queue to IndexedDB and auto-resend on reconnect
  * - Message deduplication by ID
- * - Falls back to Socket.IO when Waku is in degraded mode
+ * - When Waku is unavailable, messages queue in IndexedDB outbox and auto-flush on reconnect
  *
  * Message lifecycle:
  *   compose -> encrypt -> protobuf encode -> LightPush
@@ -94,7 +94,7 @@ export function useWakuChat({
   const contentTopic = userId && peerUserId ? getDMContentTopic(userId, peerUserId) : null;
 
   const connectionStatus: WakuConnectionStatus = isDegraded
-    ? 'degraded'
+    ? 'queuing'
     : state.status;
 
   // ─── Helper: Add message to state (deduped) ─────────────────────────────────

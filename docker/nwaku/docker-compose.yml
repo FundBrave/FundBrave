@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  nwaku:
+    image: statusteam/nim-waku:v0.24.0
+    ports:
+      - "60000:60000"  # libp2p
+      - "8000:8000"    # WebSocket
+      - "8003:8003"    # REST API (monitoring)
+    command:
+      - --listen-address=0.0.0.0
+      - --websocket-support=true
+      - --websocket-port=8000
+      - --relay=true
+      - --filter=true
+      - --lightpush=true
+      - --store=true
+      - --store-message-db-url=sqlite:///data/store.db
+      - --rest=true
+      - --rest-address=0.0.0.0
+      - --rest-port=8003
+    volumes:
+      - nwaku-data:/data
+    restart: unless-stopped
+
+volumes:
+  nwaku-data:

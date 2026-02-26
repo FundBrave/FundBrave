@@ -8,7 +8,8 @@ import { Button } from "@/app/components/ui/button";
 import { MessageBubble, DateSeparator } from "./MessageBubble";
 import { EncryptionBadge } from "./EncryptionBadge";
 import { ConnectionStatus } from "./ConnectionStatus";
-import { WakuFallbackBanner } from "./WakuFallbackBanner";
+import { motion, AnimatePresence } from "motion/react";
+import { WakuDisconnectedBanner } from "./WakuDisconnectedBanner";
 import { WalletNudgeBanner } from "./WalletNudgeBanner";
 import type { Message, ChatUser } from "@/app/types/messenger";
 import type { WakuConnectionStatus, MessageSendStatus } from "@/app/types/web3-chat";
@@ -34,8 +35,16 @@ export interface ChatAreaProps {
   isEncrypted?: boolean;
   /** Waku connection status for the connection indicator */
   connectionStatus?: WakuConnectionStatus;
-  /** Whether Waku is in degraded (fallback) mode */
-  isDegraded?: boolean;
+  /** Whether Waku is disconnected (queuing mode) */
+  isDisconnected?: boolean;
+  /** Number of messages in the outbox queue */
+  outboxCount?: number;
+  /** Whether the peer is currently typing */
+  isPeerTyping?: boolean;
+  /** Called on each keystroke to broadcast typing indicator */
+  onTyping?: () => void;
+  /** Called when typing stops (blur, send) */
+  onStopTyping?: () => void;
   /** Whether the current user is using a temp wallet */
   isTempWallet?: boolean;
   /** Callback to retry Waku connection from fallback banner */
@@ -168,10 +177,14 @@ function MessageInput({
   onSend,
   onEmojiClick,
   onAttachmentClick,
+  onTyping,
+  onStopTyping,
 }: {
   onSend: (content: string) => void;
   onEmojiClick?: () => void;
   onAttachmentClick?: () => void;
+  onTyping?: () => void;
+  onStopTyping?: () => void;
 }) {
   const [message, setMessage] = useState("");
 
@@ -180,6 +193,7 @@ function MessageInput({
     if (message.trim()) {
       onSend(message.trim());
       setMessage("");
+      onStopTyping?.();
     }
   };
 
@@ -210,8 +224,12 @@ function MessageInput({
         <input
           type="text"
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value);
+            onTyping?.();
+          }}
           onKeyDown={handleKeyDown}
+          onBlur={() => onStopTyping?.()}
           placeholder="Enter your message here..."
           inputMode="text"
           enterKeyHint="send"
@@ -260,7 +278,11 @@ export function ChatArea({
   onToggleSharedFiles,
   isEncrypted,
   connectionStatus,
-  isDegraded,
+  isDisconnected,
+  outboxCount = 0,
+  isPeerTyping,
+  onTyping,
+  onStopTyping,
   isTempWallet,
   onRetryConnection,
   onConnectWallet,
@@ -290,9 +312,9 @@ export function ChatArea({
         connectionStatus={connectionStatus}
       />
 
-      {/* Degraded mode fallback banner */}
-      {isDegraded && onRetryConnection && (
-        <WakuFallbackBanner onRetry={onRetryConnection} />
+      {/* Disconnected mode banner */}
+      {isDisconnected && onRetryConnection && (
+        <WakuDisconnectedBanner outboxCount={outboxCount} onRetry={onRetryConnection} />
       )}
 
       {/* Wallet nudge banner for temp-wallet users */}
@@ -323,6 +345,38 @@ export function ChatArea({
           </div>
         ))}
 
+        {/* Typing indicator */}
+        <AnimatePresence>
+          {isPeerTyping && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center gap-2 px-1 py-2"
+            >
+              <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-2">
+                <motion.span className="flex gap-0.5">
+                  {[0, 1, 2].map((i) => (
+                    <motion.span
+                      key={i}
+                      className="h-1.5 w-1.5 rounded-full bg-white/50"
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{
+                        duration: 0.6,
+                        repeat: Infinity,
+                        delay: i * 0.15,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  ))}
+                </motion.span>
+                <span className="text-xs text-white/40">typing</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Scroll anchor */}
         <div ref={messagesEndRef} />
       </div>
@@ -332,6 +386,8 @@ export function ChatArea({
         onSend={handleSendMessage}
         onEmojiClick={onEmojiClick}
         onAttachmentClick={onAttachmentClick}
+        onTyping={onTyping}
+        onStopTyping={onStopTyping}
       />
     </div>
   );

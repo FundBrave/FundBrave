@@ -19,11 +19,10 @@ import { BackHeader } from "@/app/components/common/BackHeader";
 import {
   useConversations,
   useMessages,
-  useSendMessage,
   useMarkAsRead,
   type Message,
 } from "@/app/hooks/useMessaging";
-import { useWebSocket } from "@/app/hooks/useWebSocket";
+import { useWakuTyping } from "@/app/hooks/useWakuTyping";
 import { useAuth } from "@/app/provider/AuthProvider";
 import { useWakuNode } from "@/app/provider/WakuProvider";
 import { useEncryption } from "@/app/hooks/useEncryption";
@@ -63,7 +62,6 @@ function MessengerInner() {
 
   const {
     isReady: wakuIsReady,
-    isDegraded: wakuIsDegraded,
     state: wakuState,
     restart: restartWaku,
   } = useWakuNode();
@@ -108,7 +106,6 @@ function MessengerInner() {
     isLoading: messagesLoading,
   } = useMessages(selectedConversationId, 50, 0);
 
-  const { sendMessage: sendMessageApi } = useSendMessage();
   const { markAsRead } = useMarkAsRead();
 
   // ─── Convert API conversations to Chat format ─────────────────────────────
@@ -149,7 +146,8 @@ function MessengerInner() {
   const isTempWallet = walletTypeDetected === "temp";
   const wakuConnectionStatus = wakuState.status;
   const showWalletNudge = isTempWallet && web3ConversationCount >= WALLET_NUDGE_THRESHOLD;
-  const isEncrypted = encryptionReady && !wakuIsDegraded;
+  const isWakuDisconnected = !wakuIsReady && wakuConnectionStatus !== 'connecting';
+  const isEncrypted = encryptionReady;
 
   // ─── Load Peer Public Key on Conversation Change ──────────────────────────
 
@@ -201,6 +199,10 @@ function MessengerInner() {
       refetchConversations();
     }, [refetchConversations]),
   });
+
+  // ─── Waku Typing Indicators (replaces Socket.IO typing) ────────────────────
+
+  const wakuTyping = useWakuTyping({ peerUserId });
 
   // ─── Convert API messages to ChatMessage format ───────────────────────────
 
@@ -277,53 +279,6 @@ function MessengerInner() {
 
     return () => { cancelled = true; };
   }, [user?.id, encryptionReady]);
-
-  // ─── WebSocket for real-time updates (degraded fallback path) ─────────────
-
-  const { isConnected: wsConnected, joinConversation, leaveConversation } =
-    useWebSocket({
-      onNewMessage: (event) => {
-        if (event.conversationId === selectedConversationId) {
-          const newMessage: ChatMessage = {
-            id: event.message.id,
-            senderId: event.message.senderId,
-            content: event.message.content,
-            timestamp: event.message.createdAt,
-            isRead: event.message.isRead,
-          };
-          setLocalMessages((prev) => [...prev, newMessage]);
-
-          if (selectedConversationId && event.message.senderId !== user?.id) {
-            markAsRead(selectedConversationId, event.message.id);
-          }
-        }
-        refetchConversations();
-      },
-      onMessageRead: (event) => {
-        if (event.conversationId === selectedConversationId) {
-          setLocalMessages((prev) =>
-            prev.map((msg) =>
-              event.messageIds.includes(msg.id)
-                ? { ...msg, isRead: true }
-                : msg
-            )
-          );
-        }
-      },
-      onTypingIndicator: (event) => {
-        console.log("Typing:", event);
-      },
-    });
-
-  // Join conversation room when selected
-  useEffect(() => {
-    if (selectedConversationId) {
-      joinConversation(selectedConversationId);
-      return () => {
-        leaveConversation(selectedConversationId);
-      };
-    }
-  }, [selectedConversationId, joinConversation, leaveConversation]);
 
   // Mark messages as read when viewing
   useEffect(() => {
@@ -405,74 +360,30 @@ function MessengerInner() {
       // Track send status
       setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "sending" }));
 
-      if (wakuIsReady && encryptionReady && !wakuIsDegraded && peerPublicKey) {
-        // ─── Web3 Path: Send via Waku LightPush ─────────────────────────
-        try {
-          await wakuChat.sendMessage(content);
+      // --- Always send via Waku (outbox handles offline queuing) ---
+      try {
+        await wakuChat.sendMessage(content);
 
-          // Update status to sent
-          setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "sent" }));
+        setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "sent" }));
 
-          // After a short delay, mark as delivered
-          setTimeout(() => {
-            setMessageSendStatuses((prev) => ({
-              ...prev,
-              [messageId]: "delivered",
-            }));
-          }, 1500);
+        // After a short delay, mark as delivered
+        setTimeout(() => {
+          setMessageSendStatuses((prev) => ({
+            ...prev,
+            [messageId]: "delivered",
+          }));
+        }, 1500);
 
-          refetchConversations();
-        } catch {
-          // Failed — message goes to outbox (handled by useWakuChat internally)
-          setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "queued" }));
-        }
-      } else {
-        // ─── Degraded Path: Send via backend (Socket.IO fallback) ─────────
-
-        const message = await sendMessageApi(selectedConversationId, content);
-        if (message) {
-          setLocalMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === messageId
-                ? {
-                    id: message.id,
-                    senderId: message.senderId,
-                    content: message.content,
-                    timestamp: message.createdAt,
-                    isRead: message.isRead,
-                    mediaUrl: message.mediaUrl,
-                  }
-                : msg
-            )
-          );
-          setMessageSendStatuses((prev) => {
-            const next = { ...prev };
-            delete next[messageId];
-            next[message.id] = "delivered";
-            return next;
-          });
-          refetchConversations();
-        } else {
-          setLocalMessages((prev) =>
-            prev.filter((msg) => msg.id !== messageId)
-          );
-          setMessageSendStatuses((prev) => {
-            const next = { ...prev };
-            delete next[messageId];
-            return next;
-          });
-        }
+        refetchConversations();
+      } catch {
+        // Message queued to outbox by useWakuChat internally
+        setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "queued" }));
       }
     },
     [
       selectedConversationId,
       user?.id,
-      wakuIsReady,
-      encryptionReady,
-      wakuIsDegraded,
-      peerPublicKey,
       wakuChat.sendMessage,
-      sendMessageApi,
       refetchConversations,
     ]
   );
@@ -643,11 +554,15 @@ function MessengerInner() {
                 onToggleSharedFiles={handleToggleSharedFiles}
                 isEncrypted={isEncrypted}
                 connectionStatus={wakuConnectionStatus}
-                isDegraded={wakuIsDegraded}
+                isDisconnected={isWakuDisconnected}
                 isTempWallet={showWalletNudge}
                 onRetryConnection={handleRetryConnection}
                 onConnectWallet={handleConnectWallet}
                 messageSendStatuses={messageSendStatuses}
+                outboxCount={wakuChat.outboxMessages.length}
+                isPeerTyping={wakuTyping.isPeerTyping}
+                onTyping={wakuTyping.sendTyping}
+                onStopTyping={wakuTyping.sendStopTyping}
               />
             )
           ) : (
@@ -708,16 +623,16 @@ function MessengerInner() {
               "inline-block w-2 h-2 rounded-full mr-2",
               wakuIsReady
                 ? "bg-green-500"
-                : wsConnected
-                  ? "bg-amber-500"
+                : wakuConnectionStatus === "connecting"
+                  ? "bg-amber-500 animate-pulse"
                   : "bg-error"
             )}
           />
           {wakuIsReady
             ? "Waku P2P"
-            : wsConnected
-              ? "Socket.IO (fallback)"
-              : "Disconnected"}
+            : wakuConnectionStatus === "connecting"
+              ? "Connecting..."
+              : `Offline (${wakuChat.outboxMessages.length} queued)`}
         </div>
       )}
 
