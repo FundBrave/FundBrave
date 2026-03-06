@@ -204,12 +204,18 @@ export function ConnectedAccountsSection({
         )}
       </AnimatePresence>
 
+      {/* Coming soon notice */}
+      <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
+        <p className="text-xs text-text-secondary">
+          Linking additional OAuth providers to your account is coming soon. You can currently sign in with the method you used to create your account.
+        </p>
+      </div>
+
       {/* Provider grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {allProviders.map((provider) => {
           const account = getAccountForProvider(provider);
           const isConnected = account?.connected ?? false;
-          const isLoading = loadingProvider === provider;
           const config = providerConfig[provider];
 
           return (
@@ -220,7 +226,7 @@ export function ConnectedAccountsSection({
                 "border transition-all duration-200",
                 isConnected
                   ? "border-white/20 bg-surface-sunken/50"
-                  : "border-white/10 bg-transparent"
+                  : "border-white/10 bg-transparent opacity-50"
               )}
             >
               <div className="flex items-center gap-3">
@@ -250,6 +256,11 @@ export function ConnectedAccountsSection({
                       Primary
                     </span>
                   )}
+                  {!isConnected && (
+                    <span className="text-xs text-text-tertiary">
+                      Coming soon
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -258,20 +269,14 @@ export function ConnectedAccountsSection({
                 type="button"
                 variant={isConnected ? "outline" : "primary"}
                 size="sm"
-                onClick={() => handleAction(provider, isConnected)}
-                disabled={isLoading}
+                disabled={true}
                 className={cn(
                   "min-w-[100px]",
-                  isConnected && "text-text-secondary hover:text-foreground"
+                  isConnected && "text-text-secondary",
+                  !isConnected && "opacity-50 cursor-not-allowed"
                 )}
               >
-                {isLoading ? (
-                  <Spinner size="sm" color={isConnected ? "primary" : "white"} />
-                ) : isConnected ? (
-                  "Disconnect"
-                ) : (
-                  "Connect"
-                )}
+                {isConnected ? "Connected" : "Connect"}
               </Button>
             </div>
           );

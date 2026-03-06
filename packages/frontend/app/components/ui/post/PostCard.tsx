@@ -269,7 +269,7 @@ export function PostCard(props: PostCardProps) {
               <CommentSection
                 postId={post.id}
                 comments={post.comments || []}
-                onAddComment={(content) => onAddComment?.(post.id, content)}
+                onAddComment={(content, mentions) => onAddComment?.(post.id, content, mentions)}
                 onLikeComment={(commentId) => onLikeComment?.(post.id, commentId)}
                 onUnlikeComment={(commentId) => onUnlikeComment?.(post.id, commentId)}
                 onReplyToComment={(commentId, content) =>

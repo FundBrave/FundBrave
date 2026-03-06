@@ -7,6 +7,7 @@ import { Button } from "@/app/components/ui/button";
 import { Label } from "@/app/components/ui/label";
 import { OTPInput } from "@/app/components/ui/form/OTPInput";
 import type { BackupCode } from "./schemas";
+import { settingsApi } from "@/lib/api/settings";
 
 /**
  * Inline SVG Icons
@@ -133,55 +134,44 @@ export interface SetupTwoFactorModalProps {
 }
 
 /**
- * Mock API function to generate TOTP secret
+ * Call backend to generate TOTP secret and QR code
  */
-async function generateTotpSecret(): Promise<{
+async function generateTotpSecret(password: string = ''): Promise<{
   secret: string;
   qrCodeUrl: string;
   manualEntryKey: string;
 }> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const response = await settingsApi.enable2FA(password);
 
-  // In production, this would call the backend API
-  const secret = "JBSWY3DPEHPK3PXP";
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/FundBrave:user@example.com?secret=${secret}&issuer=FundBrave`;
+  if (!response.success || !response.secret || !response.qrCodeUrl) {
+    throw new Error(response.message || 'Failed to generate 2FA secret');
+  }
 
   return {
-    secret,
-    qrCodeUrl,
-    manualEntryKey: secret.match(/.{1,4}/g)?.join(" ") || secret,
+    secret: response.secret,
+    qrCodeUrl: response.qrCodeUrl,
+    manualEntryKey: response.secret.match(/.{1,4}/g)?.join(" ") || response.secret,
   };
 }
 
 /**
- * Mock API function to verify TOTP code
+ * Call backend to verify TOTP code and complete 2FA setup
+ * Returns backup codes on success
  */
-async function verifyTotpCode(code: string): Promise<boolean> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+async function verifyTotpCode(code: string): Promise<{ valid: boolean; backupCodes: BackupCode[] }> {
+  const response = await settingsApi.verify2FA(code);
 
-  // In production, this would call the backend API
-  // For development, accept "123456" as valid
-  return code === "123456";
-}
-
-/**
- * Mock API function to generate backup codes
- */
-async function generateBackupCodes(): Promise<BackupCode[]> {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  // Generate 10 random backup codes
-  const codes: BackupCode[] = [];
-  for (let i = 0; i < 10; i++) {
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-    const formatted = `${code.substring(0, 4)}-${code.substring(4, 8)}`;
-    codes.push({
-      code: formatted,
-      used: false,
-    });
+  if (!response.success) {
+    return { valid: false, backupCodes: [] };
   }
 
-  return codes;
+  // Transform backend backup codes to BackupCode format
+  const backupCodes: BackupCode[] = (response.backupCodes || []).map(code => ({
+    code,
+    used: false,
+  }));
+
+  return { valid: true, backupCodes };
 }
 
 /**
@@ -202,6 +192,7 @@ export function SetupTwoFactorModal({
 }: SetupTwoFactorModalProps) {
   const [currentStep, setCurrentStep] = useState<SetupStep>("method");
   const [selectedMethod, setSelectedMethod] = useState<"authenticator" | "sms">("authenticator");
+  const [password, setPassword] = useState("");
   const [totpSecret, setTotpSecret] = useState<{
     secret: string;
     qrCodeUrl: string;
@@ -221,6 +212,7 @@ export function SetupTwoFactorModal({
     if (!isOpen) {
       setCurrentStep("method");
       setSelectedMethod("authenticator");
+      setPassword("");
       setTotpSecret(null);
       setVerificationCode("");
       setBackupCodes([]);
@@ -256,20 +248,30 @@ export function SetupTwoFactorModal({
   }, [isOpen]);
 
   const handleMethodNext = async () => {
+    if (!password.trim()) {
+      setError("Please enter your password to continue");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
       if (selectedMethod === "authenticator") {
-        const secret = await generateTotpSecret();
+        const secret = await generateTotpSecret(password);
         setTotpSecret(secret);
         setCurrentStep("setup");
       } else {
         // SMS setup would go here
         setError("SMS setup not yet implemented");
       }
-    } catch (err) {
-      setError("Failed to generate secret. Please try again.");
+    } catch (err: any) {
+      const message = err?.message || "Failed to generate secret. Please try again.";
+      if (message.toLowerCase().includes("password")) {
+        setError("Incorrect password. Please try again.");
+      } else {
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -289,11 +291,10 @@ export function SetupTwoFactorModal({
     setError(null);
 
     try {
-      const isValid = await verifyTotpCode(verificationCode);
+      const result = await verifyTotpCode(verificationCode);
 
-      if (isValid) {
-        const codes = await generateBackupCodes();
-        setBackupCodes(codes);
+      if (result.valid) {
+        setBackupCodes(result.backupCodes);
         setCurrentStep("backup-codes");
       } else {
         setError("Invalid verification code. Please try again.");
@@ -488,6 +489,34 @@ export function SetupTwoFactorModal({
                     </button>
                   </div>
 
+                  {/* Password confirmation */}
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="2fa-password">Confirm your password</Label>
+                    <input
+                      id="2fa-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && password.trim()) {
+                          handleMethodNext();
+                        }
+                      }}
+                      placeholder="Enter your current password"
+                      className={cn(
+                        "w-full px-4 py-3 rounded-xl",
+                        "bg-surface-sunken/50 border border-white/10",
+                        "text-foreground placeholder:text-text-tertiary",
+                        "focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
+                        "text-sm"
+                      )}
+                      autoComplete="current-password"
+                    />
+                    <p className="text-xs text-text-tertiary">
+                      Your password is required to enable two-factor authentication.
+                    </p>
+                  </div>
+
                   {error && (
                     <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                       <p className="text-sm text-destructive">{error}</p>
@@ -503,6 +532,7 @@ export function SetupTwoFactorModal({
                       onClick={handleMethodNext}
                       loading={isLoading}
                       loadingText="Setting up..."
+                      disabled={!password.trim()}
                     >
                       Continue
                     </Button>

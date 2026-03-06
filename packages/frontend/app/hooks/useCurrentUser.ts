@@ -1,6 +1,7 @@
 "use client";
 
 import { useGetMeQuery } from "@/app/generated/graphql";
+import { useAuth } from "@/app/provider/AuthProvider";
 
 export interface CurrentUser {
   id: string;
@@ -21,12 +22,15 @@ interface UseCurrentUserReturn {
 
 /**
  * useCurrentUser - Fetch current logged-in user data
- * Uses GraphQL GetMe query
+ * Uses GraphQL GetMe query, waits for auth to resolve first
  */
 export function useCurrentUser(): UseCurrentUserReturn {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
   const { data, loading, error, refetch } = useGetMeQuery({
     fetchPolicy: 'cache-first',
     errorPolicy: 'all',
+    skip: authLoading || !isAuthenticated,
   });
 
   const currentUser: CurrentUser | null = data?.me
@@ -43,7 +47,7 @@ export function useCurrentUser(): UseCurrentUserReturn {
 
   return {
     currentUser,
-    isLoading: loading,
+    isLoading: authLoading || loading,
     error: error || null,
     refetch,
   };

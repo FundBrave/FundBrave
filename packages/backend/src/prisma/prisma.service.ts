@@ -4,6 +4,7 @@ import {
   OnModuleDestroy,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaClient, Prisma } from '@prisma/client';
 
 /**
@@ -50,8 +51,13 @@ const PRISMA_CONNECTION_ERROR_CODES = [
 
 /**
  * Extended PrismaClient options for Supabase connection pooling
+ * Note: This helper function reads from process.env directly because it's called
+ * during service construction before dependency injection is fully set up.
+ * Database URL and NODE_ENV must be available via environment variables at startup.
  */
 const getPrismaClientOptions = (): Prisma.PrismaClientOptions => {
+  // These values MUST come from process.env as they're needed during Prisma client initialization,
+  // which happens before the NestJS container is fully initialized
   const databaseUrl = process.env.DATABASE_URL || '';
   const isSupabasePgBouncer = databaseUrl.includes('pgbouncer=true');
   const isProduction = process.env.NODE_ENV === 'production';
@@ -84,7 +90,7 @@ export class PrismaService
   private isConnected = false;
   private connectionAttempts = 0;
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     super(getPrismaClientOptions());
     this.setupEventListeners();
   }
@@ -164,7 +170,11 @@ export class PrismaService
    */
   private setupEventListeners(): void {
     // Log queries in development
-    if (process.env.NODE_ENV !== 'production') {
+    // Note: process.env.NODE_ENV is read here because this is called during constructor
+    // before ConfigService access is fully available. In setupEventListeners context,
+    // we use process.env directly as a fallback.
+    const nodeEnv = process.env.NODE_ENV || 'development';
+    if (nodeEnv !== 'production') {
       // @ts-expect-error - Prisma event typing
       this.$on('query', (e: Prisma.QueryEvent) => {
         if (e.duration > 100) {
@@ -189,7 +199,12 @@ export class PrismaService
    * Log connection information (sanitized)
    */
   private logConnectionInfo(): void {
-    const databaseUrl = process.env.DATABASE_URL || '';
+    // Retrieve values from ConfigService if available, fallback to process.env
+    const databaseUrl =
+      this.configService.get<string>('DATABASE_URL') || process.env.DATABASE_URL || '';
+    const nodeEnv =
+      this.configService.get<string>('NODE_ENV') || process.env.NODE_ENV || 'development';
+
     const isSupabasePgBouncer = databaseUrl.includes('pgbouncer=true');
     const connectionLimit =
       databaseUrl.match(/connection_limit=(\d+)/)?.[1] || 'default';
@@ -198,14 +213,17 @@ export class PrismaService
       `Connection mode: ${isSupabasePgBouncer ? 'Supabase PgBouncer (Transaction)' : 'Direct/Session'}`,
     );
     this.logger.log(`Connection limit: ${connectionLimit}`);
-    this.logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    this.logger.log(`Environment: ${nodeEnv}`);
   }
 
   /**
    * Start periodic health checks
    */
   private startHealthCheck(): void {
-    if (process.env.NODE_ENV === 'test') {
+    const nodeEnv =
+      this.configService.get<string>('NODE_ENV') || process.env.NODE_ENV || 'development';
+
+    if (nodeEnv === 'test') {
       return; // Skip health checks in test environment
     }
 

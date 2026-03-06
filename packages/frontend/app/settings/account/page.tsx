@@ -16,131 +16,19 @@ import type {
 } from "./schemas";
 import { settingsApi } from "@/lib/api/settings";
 import { useAuth } from "@/app/provider/AuthProvider";
+import { useGetMeQuery } from "@/app/generated/graphql";
 
 /**
- * Mock API Functions
- *
- * These simulate the backend endpoints from PHASE2_UX_SPECS.md Section 3.7
- * Replace with actual API calls in production
+ * Default connected accounts (OAuth not yet implemented in backend)
+ * These show the available providers with none connected by default
  */
-
-// Mock account data
-const mockAccountInfo: AccountInfo = {
-  email: "john.doe@example.com",
-  emailVerified: true,
-  createdAt: new Date("2024-06-15"),
-  lastLoginAt: new Date(),
-  lastLoginLocation: "San Francisco, CA",
-  accountStatus: "active",
-  passwordLastChangedAt: new Date("2024-11-20"),
-};
-
-// Mock connected accounts
-const mockConnectedAccounts: ConnectedAccount[] = [
-  {
-    provider: "google",
-    connected: true,
-    email: "john.doe@gmail.com",
-    connectedAt: new Date("2024-06-15"),
-    isPrimary: true,
-  },
-  {
-    provider: "github",
-    connected: true,
-    email: "johndoe",
-    connectedAt: new Date("2024-08-10"),
-    isPrimary: false,
-  },
-  {
-    provider: "apple",
-    connected: false,
-  },
-  {
-    provider: "twitter",
-    connected: false,
-  },
-  {
-    provider: "discord",
-    connected: false,
-  },
+const defaultConnectedAccounts: ConnectedAccount[] = [
+  { provider: "google", connected: false },
+  { provider: "github", connected: false },
+  { provider: "apple", connected: false },
+  { provider: "twitter", connected: false },
+  { provider: "discord", connected: false },
 ];
-
-/**
- * Simulates GET /api/users/me/account
- */
-async function fetchAccountData(): Promise<{
-  accountInfo: AccountInfo;
-  connectedAccounts: ConnectedAccount[];
-}> {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return {
-    accountInfo: mockAccountInfo,
-    connectedAccounts: mockConnectedAccounts,
-  };
-}
-
-/**
- * Simulates PATCH /api/users/me/email
- */
-async function changeEmail(data: ChangeEmailFormData): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // Simulate validation errors
-  if (data.password !== "password123") {
-    throw new Error("Incorrect password");
-  }
-
-  if (data.newEmail === mockAccountInfo.email) {
-    throw new Error("This email is already your current email");
-  }
-
-  console.log("Email change requested:", data.newEmail);
-}
-
-/**
- * Simulates PATCH /api/users/me/password
- */
-async function changePassword(data: ChangePasswordFormData): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // Simulate validation errors
-  if (data.currentPassword !== "password123") {
-    throw new Error("Current password is incorrect");
-  }
-
-  console.log("Password changed successfully");
-}
-
-/**
- * Simulates POST /api/auth/providers/{provider}
- */
-async function connectProvider(provider: OAuthProvider): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  console.log("Connected provider:", provider);
-}
-
-/**
- * Simulates DELETE /api/auth/providers/{provider}
- */
-async function disconnectProvider(provider: OAuthProvider): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log("Disconnected provider:", provider);
-}
-
-/**
- * Simulates DELETE /api/users/me
- */
-async function deleteAccount(data: DeleteAccountFormData): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  // Simulate validation errors
-  if (data.password !== "password123") {
-    throw new Error("Incorrect password");
-  }
-
-  console.log("Account deletion requested");
-  // In production, this would redirect to a goodbye page
-}
 
 /**
  * AccountSettingsPage - Account settings management page
@@ -149,34 +37,33 @@ async function deleteAccount(data: DeleteAccountFormData): Promise<void> {
  *
  * Features:
  * - Email display and change flow
- * - Password change with strength meter
- * - Connected OAuth accounts management
- * - Account information display
- * - Account deletion with confirmation
- *
- * API Endpoints (from PHASE2_UX_SPECS.md):
- * - GET /api/users/me/account - Fetch account data
- * - PATCH /api/users/me/email - Change email
- * - PATCH /api/users/me/password - Change password
- * - GET /api/auth/providers - List connected OAuth
- * - POST /api/auth/providers/{provider} - Connect OAuth
- * - DELETE /api/auth/providers/{provider} - Disconnect OAuth
- * - DELETE /api/users/me - Delete account (soft)
+ * - Password change with strength meter (connected to backend)
+ * - Connected OAuth accounts management (placeholder - backend not ready)
+ * - Account information display (real data from API)
+ * - Account deletion (placeholder - backend not ready)
  */
 export default function AccountSettingsPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Fetch full user data from GraphQL for createdAt, emailVerified, etc.
+  const { data: meData, loading: meLoading } = useGetMeQuery({
+    skip: !isAuthenticated || authLoading,
+    fetchPolicy: 'cache-and-network',
+  });
 
   // Data state
   const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
-  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>(mockConnectedAccounts);
+  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>(defaultConnectedAccounts);
 
   // UI state
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch initial data from settings API
+  // Load account data from backend settings API + GraphQL user data
   useEffect(() => {
     async function loadAccountData() {
+      if (authLoading || meLoading) return;
+
       if (!isAuthenticated) {
         setIsLoading(false);
         setError("Please log in to view account settings");
@@ -184,21 +71,22 @@ export default function AccountSettingsPage() {
       }
 
       try {
-        const data = await settingsApi.getAllSettings();
+        const settingsData = await settingsApi.getAllSettings();
+        const me = meData?.me;
 
-        // Transform API data to AccountInfo format
         const transformedAccountInfo: AccountInfo = {
-          email: user?.email || "",
-          emailVerified: true, // TODO: Get from user object when available
-          createdAt: new Date(), // TODO: Get from user object when available
+          email: me?.email || user?.email || "",
+          emailVerified: settingsData.security?.emailVerified ?? me?.emailVerified ?? false,
+          createdAt: me?.createdAt ? new Date(me.createdAt) : new Date(),
           lastLoginAt: new Date(),
-          lastLoginLocation: "Unknown", // TODO: Get from backend when available
+          lastLoginLocation: "Unknown",
           accountStatus: "active",
-          passwordLastChangedAt: new Date(), // TODO: Get from backend when available
+          passwordLastChangedAt: settingsData.security?.lastPasswordChange
+            ? new Date(settingsData.security.lastPasswordChange)
+            : undefined,
         };
 
         setAccountInfo(transformedAccountInfo);
-        // OAuth connections will be set from mockConnectedAccounts for now
       } catch (err) {
         console.error("Failed to load settings:", err);
         setError("Failed to load account data. Please refresh the page.");
@@ -208,94 +96,66 @@ export default function AccountSettingsPage() {
     }
 
     loadAccountData();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, authLoading, meLoading, user, meData]);
 
-  // Handle email change
+  // Handle email change — not yet implemented in backend
   const handleEmailChange = async (data: ChangeEmailFormData) => {
-    try {
-      // TODO: Implement email change API endpoint in backend
-      // await settingsApi.updateProfile({ email: data.newEmail });
-      console.log("Email change requested:", data.newEmail);
-      throw new Error("Email change not yet implemented in backend");
-    } catch (err) {
-      throw err;
-    }
+    // Email change endpoint does not exist yet in backend
+    throw new Error("Email change is not available yet. This feature is coming soon.");
   };
 
-  // Handle password change
+  // Handle password change — connected to real backend
   const handlePasswordChange = async (data: ChangePasswordFormData) => {
-    try {
-      // TODO: Implement password change API endpoint in backend
-      // await settingsApi.updatePassword(data);
-      console.log("Password change requested");
+    const result = await settingsApi.changePassword({
+      currentPassword: data.currentPassword,
+      newPassword: data.newPassword,
+      confirmPassword: data.confirmPassword,
+    });
 
-      // Update password changed date
+    if (result.success) {
+      // Update local state to reflect password change
       if (accountInfo) {
         setAccountInfo({
           ...accountInfo,
           passwordLastChangedAt: new Date(),
         });
       }
-
-      throw new Error("Password change not yet implemented in backend");
-    } catch (err) {
-      throw err;
     }
   };
 
-  // Handle OAuth connect
+  // Handle OAuth connect — not yet implemented in backend
   const handleConnect = async (provider: OAuthProvider) => {
-    try {
-      // TODO: Implement OAuth connection in backend
-      console.log("Connected provider:", provider);
-      // Update connected accounts
-      setConnectedAccounts((prev) =>
-        prev.map((account) =>
-          account.provider === provider
-            ? { ...account, connected: true, connectedAt: new Date() }
-            : account
-        )
-      );
-    } catch (err) {
-      console.error("Failed to connect provider:", err);
-      throw err;
-    }
+    // OAuth connection endpoint does not exist yet
+    console.log("OAuth connect not yet implemented for:", provider);
+    setConnectedAccounts((prev) =>
+      prev.map((account) =>
+        account.provider === provider
+          ? { ...account, connected: true, connectedAt: new Date() }
+          : account
+      )
+    );
   };
 
-  // Handle OAuth disconnect
+  // Handle OAuth disconnect — not yet implemented in backend
   const handleDisconnect = async (provider: OAuthProvider) => {
-    try {
-      // TODO: Implement OAuth disconnection in backend
-      console.log("Disconnected provider:", provider);
-      // Update connected accounts
-      setConnectedAccounts((prev) =>
-        prev.map((account) =>
-          account.provider === provider
-            ? { ...account, connected: false, email: undefined, connectedAt: undefined }
-            : account
-        )
-      );
-    } catch (err) {
-      console.error("Failed to disconnect provider:", err);
-      throw err;
-    }
+    // OAuth disconnection endpoint does not exist yet
+    console.log("OAuth disconnect not yet implemented for:", provider);
+    setConnectedAccounts((prev) =>
+      prev.map((account) =>
+        account.provider === provider
+          ? { ...account, connected: false, email: undefined, connectedAt: undefined }
+          : account
+      )
+    );
   };
 
-  // Handle account deletion
+  // Handle account deletion — not yet implemented in backend
   const handleDeleteAccount = async (data: DeleteAccountFormData) => {
-    try {
-      // TODO: Implement account deletion API endpoint in backend
-      console.log("Account deletion requested");
-      // await settingsApi.deleteAccount(data.password);
-      // window.location.href = "/";
-      throw new Error("Account deletion not yet implemented in backend");
-    } catch (err) {
-      throw err;
-    }
+    throw new Error("Account deletion is not available yet. This feature is coming soon.");
   };
 
   // Loading state
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex flex-col gap-8">
         {/* Page Header Skeleton */}

@@ -881,16 +881,24 @@ export default function CreateCampaignPage() {
     onChainId,
     campaignId,
     isProcessing,
+    isGasless,
+    hasWallet,
   } = useCreateCampaign();
 
-  // Watch for successful creation
+  // Auto-fill beneficiary wallet with connected wallet address
+  useEffect(() => {
+    if (address && !formData.beneficiaryWallet) {
+      setFormData((prev) => ({ ...prev, beneficiaryWallet: address }));
+    }
+  }, [address]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Watch for successful creation — redirect to campaign page
   useEffect(() => {
     if (createStep === 'success' && campaignId) {
-      setCreatedCampaignId(campaignId);
       setIsSubmitting(false);
-      setShowSuccess(true);
+      router.push(`/campaigns/${campaignId}`);
     }
-  }, [createStep, campaignId]);
+  }, [createStep, campaignId, router]);
 
   // Watch for errors
   useEffect(() => {
@@ -955,12 +963,8 @@ export default function CreateCampaignPage() {
   }, []);
 
   // Handle form submission — real on-chain + backend flow
+  // Supports both Web3 (wallet-signed) and Web2 (gasless) paths
   const handleSubmit = useCallback(async () => {
-    if (!isConnected || !address) {
-      setSubmitError("Please connect your wallet first.");
-      return;
-    }
-
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -982,14 +986,17 @@ export default function CreateCampaignPage() {
         Math.round(parseFloat(formData.goalAmount) * Math.pow(10, USDC_DECIMALS))
       );
 
-      const beneficiaryAddress: Address =
+      // Beneficiary: use connected wallet address if available, otherwise
+      // the backend will use the user's managed wallet address for gasless creation
+      const beneficiaryAddress =
         formData.beneficiaryType === "self"
-          ? address
+          ? address  // undefined if no wallet connected — backend resolves from user's managed wallet
           : (formData.beneficiaryWallet as Address) || address;
 
       const durationDays = parseInt(formData.duration, 10) || 30;
 
       // Step 3: Call smart contract + save to backend (handled by useCreateCampaign)
+      // The hook auto-selects: wallet connected → Web3 path, otherwise → gasless path
       await createCampaign({
         title: formData.title,
         description: formData.description,
@@ -1010,7 +1017,7 @@ export default function CreateCampaignPage() {
       setIsSubmitting(false);
       console.error("Failed to create campaign:", error);
     }
-  }, [formData, address, isConnected, createCampaign]);
+  }, [formData, address, createCampaign]);
 
   // Handle success modal actions
   const handleViewCampaign = useCallback(() => {
@@ -1127,11 +1134,12 @@ export default function CreateCampaignPage() {
               </div>
             )}
 
-            {/* Wallet not connected warning */}
+            {/* Wallet connection info banner */}
             {currentStep === STEPS.length && !isConnected && (
-              <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
-                <p className="text-sm text-yellow-400">
-                  Please connect your wallet to publish this campaign on-chain.
+              <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <p className="text-sm text-blue-400">
+                  No wallet connected — your campaign will be created gaslessly via FundBrave.
+                  You can connect a wallet later to manage your campaign on-chain.
                 </p>
               </div>
             )}
@@ -1164,17 +1172,18 @@ export default function CreateCampaignPage() {
                 <Button
                   variant="primary"
                   onClick={handleSubmit}
-                  disabled={isSubmitting || !isConnected}
+                  disabled={isSubmitting}
                   loading={isSubmitting}
                   loadingText={
                     createStep === 'confirming_wallet' ? 'Confirm in Wallet...' :
                     createStep === 'mining' ? 'Mining...' :
+                    createStep === 'submitting' ? 'Creating Campaign...' :
                     createStep === 'saving_backend' ? 'Saving...' :
                     'Publishing...'
                   }
                   className="w-full sm:w-auto min-h-[44px]"
                 >
-                  Publish Campaign
+                  {hasWallet ? 'Publish Campaign' : 'Create Campaign'}
                   <Sparkles size={18} aria-hidden="true" />
                 </Button>
               )}

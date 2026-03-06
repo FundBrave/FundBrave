@@ -1,5 +1,6 @@
 import { Resolver, Query, Mutation, Args, Int, ID } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { DonationsService } from './donations.service';
 import {
   Donation,
@@ -36,6 +37,7 @@ export class DonationsResolver {
   // ==================== Queries ====================
 
   @Query(() => Donation, { name: 'donation' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getDonation(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<Donation> {
@@ -43,11 +45,13 @@ export class DonationsResolver {
   }
 
   @Query(() => Donation, { name: 'donationByTxHash' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getDonationByTxHash(@Args('txHash') txHash: string): Promise<Donation> {
     return this.donationsService.getDonationByTxHash(txHash);
   }
 
   @Query(() => PaginatedDonations, { name: 'donations' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getDonations(
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
@@ -71,6 +75,7 @@ export class DonationsResolver {
   }
 
   @Query(() => PaginatedDonations, { name: 'fundraiserDonations' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getFundraiserDonations(
     @Args('fundraiserId', { type: () => ID }) fundraiserId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -84,6 +89,7 @@ export class DonationsResolver {
   }
 
   @Query(() => PaginatedDonations, { name: 'userDonations' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getUserDonations(
     @Args('userId', { type: () => ID }) userId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -103,6 +109,7 @@ export class DonationsResolver {
   }
 
   @Query(() => PaginatedDonations, { name: 'donationsByAddress' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getDonationsByAddress(
     @Args('address') address: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -112,6 +119,7 @@ export class DonationsResolver {
   }
 
   @Query(() => DonationStats, { name: 'fundraiserDonationStats' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getFundraiserDonationStats(
     @Args('fundraiserId', { type: () => ID }) fundraiserId: string,
   ): Promise<DonationStats> {
@@ -119,6 +127,7 @@ export class DonationsResolver {
   }
 
   @Query(() => UserDonationStats, { name: 'userDonationStats' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUserDonationStats(
     @Args('userId', { type: () => ID }) userId: string,
   ): Promise<UserDonationStats> {
@@ -134,6 +143,7 @@ export class DonationsResolver {
   }
 
   @Query(() => DonationLeaderboard, { name: 'donationLeaderboard' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getDonationLeaderboard(
     @Args('period', {
       type: () => LeaderboardPeriod,
@@ -149,6 +159,7 @@ export class DonationsResolver {
   }
 
   @Query(() => [DonationLeaderboardEntry], { name: 'topDonors' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getTopDonors(
     @Args('fundraiserId', { type: () => ID }) fundraiserId: string,
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
@@ -157,6 +168,7 @@ export class DonationsResolver {
   }
 
   @Query(() => [RecentDonationActivity], { name: 'recentDonations' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getRecentDonationActivity(
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
   ): Promise<RecentDonationActivity[]> {
@@ -164,6 +176,7 @@ export class DonationsResolver {
   }
 
   @Query(() => DonationStats, { name: 'platformDonationStats' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getPlatformDonationStats(): Promise<DonationStats> {
     return this.donationsService.getPlatformDonationStats();
   }
@@ -202,6 +215,7 @@ export class DonationsResolver {
    * Useful for frontend to avoid duplicate submissions
    */
   @Query(() => Boolean, { name: 'donationExistsByTxHash' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async donationExistsByTxHash(
     @Args('txHash') txHash: string,
   ): Promise<boolean> {

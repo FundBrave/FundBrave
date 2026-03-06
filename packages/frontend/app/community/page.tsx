@@ -14,6 +14,7 @@ import {
 import { BackHeader } from "@/app/components/common/BackHeader";
 import { PostEditor } from "@/app/components/social/PostEditor";
 import { useAuth } from "@/app/provider/AuthProvider";
+import { useMentionSearch } from "@/app/hooks/useMentionSearch";
 
 // Mock data for communities with Unsplash images
 const mockCommunities: Community[] = [
@@ -143,6 +144,7 @@ export default function CommunityPage() {
   const [selectedCommunityId, setSelectedCommunityId] = useState<string>("1");
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const { searchUsers } = useMentionSearch();
 
   const handleSelectCommunity = (communityId: string) => {
     setSelectedCommunityId(communityId);
@@ -236,6 +238,7 @@ export default function CommunityPage() {
                 currentUserName={user?.displayName || user?.username || "You"}
                 placeholder={`What would you like to share with ${selectedCommunity.name}?`}
                 onSubmit={handlePostSubmit}
+                onSearchUsers={searchUsers}
                 enableModeration={true}
                 allowFlaggedContent={true}
               />

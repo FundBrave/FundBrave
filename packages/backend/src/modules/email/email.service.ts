@@ -40,12 +40,22 @@ export class EmailService {
   private resend: Resend | null = null;
   private readonly fromAddress: string;
   private readonly isConfigured: boolean;
+  private readonly frontendUrl: string;
+  private readonly supportEmail: string;
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('RESEND_API_KEY');
     this.fromAddress = this.configService.get<string>(
       'RESEND_FROM_EMAIL',
       'FundBrave <onboarding@resend.dev>', // Free tier default
+    );
+    this.frontendUrl = this.configService.get<string>(
+      'FRONTEND_URL',
+      'https://fundbrave.com',
+    );
+    this.supportEmail = this.configService.get<string>(
+      'SUPPORT_EMAIL',
+      'support@fundbrave.com',
     );
 
     this.isConfigured = !!apiKey;
@@ -128,7 +138,10 @@ export class EmailService {
     token: string,
     username?: string,
   ): Promise<boolean> {
-    const { subject, html } = verificationEmailTemplate({ token, username });
+    const { subject, html } = verificationEmailTemplate(
+      { token, username },
+      this.frontendUrl,
+    );
     return this.sendEmail({ to: email, subject, html });
   }
 
@@ -140,7 +153,11 @@ export class EmailService {
     token: string,
     username?: string,
   ): Promise<boolean> {
-    const { subject, html } = passwordResetEmailTemplate({ token, username });
+    const { subject, html } = passwordResetEmailTemplate(
+      { token, username },
+      this.frontendUrl,
+      this.supportEmail,
+    );
     return this.sendEmail({ to: email, subject, html });
   }
 
@@ -148,7 +165,10 @@ export class EmailService {
    * Send welcome email
    */
   async sendWelcomeEmail(email: string, username: string): Promise<boolean> {
-    const { subject, html } = welcomeEmailTemplate({ username });
+    const { subject, html } = welcomeEmailTemplate(
+      { username },
+      this.frontendUrl,
+    );
     return this.sendEmail({ to: email, subject, html });
   }
 
@@ -163,9 +183,10 @@ export class EmailService {
       return false;
     }
 
-    const { subject, html } = notificationDigestEmailTemplate({
-      notifications,
-    });
+    const { subject, html } = notificationDigestEmailTemplate(
+      { notifications },
+      this.frontendUrl,
+    );
     return this.sendEmail({ to: email, subject, html });
   }
 

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { Prisma, User as PrismaUser } from '@prisma/client';
 import { createHash } from 'crypto';
 import {
@@ -41,7 +42,10 @@ type UserWithRelations = PrismaUser;
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   // ==================== Query Methods ====================
 
@@ -775,6 +779,13 @@ export class UsersService {
       }),
     ]);
 
+    // Send follow notification
+    this.notificationsService
+      .notifyFollow(followingId, followerId)
+      .catch((err) =>
+        this.logger.debug(`Follow notification failed: ${err}`),
+      );
+
     return true;
   }
 
@@ -1103,6 +1114,7 @@ export class UsersService {
       bannerUrl: user.bannerUrl ?? undefined,
       location: user.location ?? undefined,
       website: user.website ?? undefined,
+      socialLinks: (user as any).socialLinks ?? undefined,
       isVerifiedCreator: user.isVerifiedCreator,
       verificationBadge:
         (user.verificationBadge as VerificationBadge) ?? undefined,

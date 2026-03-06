@@ -33,6 +33,7 @@ type Comment {
   id: ID!
   isLiked: Boolean
   likesCount: Int!
+  mentions: [String!]!
   parentId: ID
   postId: ID
   replies: [Comment!]!
@@ -90,6 +91,7 @@ type ConversationUnreadCount {
 input CreateCommentInput {
   content: String!
   fundraiserId: String
+  mentions: [String!]
   parentId: String
   postId: String
 }
@@ -104,7 +106,7 @@ input CreateDAOProposalInput {
 }
 
 input CreateFundraiserInput {
-  beneficiary: String!
+  beneficiary: String
   categories: [String!]!
   currency: String! = "USDC"
   deadline: String!
@@ -756,6 +758,7 @@ type Mutation {
   """Create a new DAO proposal"""
   createDAOProposal(input: CreateDAOProposalInput!): DAOProposal!
   createFundraiser(input: CreateFundraiserInput!, onChainId: Int!, stakingPoolAddr: String, txHash: String!): Fundraiser!
+  createFundraiserGasless(input: CreateFundraiserInput!): Fundraiser!
   createPost(input: CreatePostInput!): Post!
   createReport(input: CreateReportInput!): ReportOperationResult!
   deleteAllNotifications: NotificationOperationResult!
@@ -1631,6 +1634,20 @@ input SendMessageInput {
   mediaUrl: String
 }
 
+type SocialLinks {
+  facebook: String
+  instagram: String
+  linkedin: String
+  twitter: String
+}
+
+input SocialLinksInput {
+  facebook: String
+  instagram: String
+  linkedin: String
+  twitter: String
+}
+
 type SocialTrendingHashtag {
   postsCount: Int!
   tag: String!
@@ -1929,6 +1946,7 @@ input UpdateProfileInput {
   email: String
   isPrivate: Boolean
   location: String
+  socialLinks: SocialLinksInput
   username: String
   website: String
 }
@@ -1954,6 +1972,7 @@ type User {
   lastSeenAt: DateTime
   location: String
   onboardingCompleted: Boolean!
+  socialLinks: SocialLinks
   stats: UserStats!
   updatedAt: DateTime!
   username: String

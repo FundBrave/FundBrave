@@ -179,11 +179,22 @@ async function fetchSecurityData(): Promise<{
       emailVerified: true,
     };
 
-    // Transform API sessions to match local Session type (convert string to Date)
-    const sessions: Session[] = apiSessions.map(session => ({
-      ...session,
-      lastActiveAt: new Date(session.lastActiveAt),
-      createdAt: new Date(session.createdAt),
+    // Transform API sessions (backend SessionInfoDto) to match local Session type
+    const sessions: Session[] = apiSessions.map((session: any) => ({
+      id: session.id,
+      deviceType: "desktop" as const,
+      deviceName: session.device || "Unknown device",
+      browser: session.device?.split(" on ")?.[0] || "Unknown",
+      os: session.device?.split(" on ")?.[1] || "Unknown",
+      location: {
+        city: session.location?.split(",")?.[0]?.trim() || "Unknown",
+        country: session.location?.split(",")?.[1]?.trim() || "Unknown",
+        countryCode: "",
+      },
+      ipAddress: session.ipAddress || "Unknown",
+      isCurrent: session.isCurrent ?? false,
+      lastActiveAt: new Date(session.lastActive || session.lastActiveAt || Date.now()),
+      createdAt: new Date(session.lastActive || session.createdAt || Date.now()),
     }));
 
     // TODO: Fetch login attempts from backend
