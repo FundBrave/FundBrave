@@ -221,6 +221,9 @@ export class Comment {
   @Field(() => ID, { nullable: true })
   parentId?: string;
 
+  @Field(() => [String])
+  mentions: string[];
+
   @Field(() => Int)
   likesCount: number;
 
@@ -375,6 +378,12 @@ export class CreateCommentInput {
   @IsOptional()
   @IsString()
   parentId?: string;
+
+  @Field(() => [String], { nullable: true })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  mentions?: string[];
 }
 
 @InputType()

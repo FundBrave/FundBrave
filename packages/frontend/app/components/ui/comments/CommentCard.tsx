@@ -5,7 +5,9 @@ import gsap from "gsap";
 import { Heart, MessageCircle, MoreHorizontal, Trash2 } from "@/app/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { CommentInput } from "./CommentInput";
+import { PostContent } from "@/app/components/ui/post/PostContent";
 import type { Comment } from "@/app/types/comment";
+import type { MentionUser } from "@/app/components/social/PostEditor";
 
 // Format relative time (e.g., "2h ago", "3d ago")
 function formatRelativeTime(dateString: string): string {
@@ -30,6 +32,7 @@ interface CommentCardProps {
   onUnlike: (commentId: string) => void;
   onReply: (commentId: string, content: string) => void;
   onDelete?: (commentId: string) => void;
+  onSearchUsers?: (query: string) => Promise<MentionUser[]>;
   depth?: number;
   maxDepth?: number;
   currentUserUsername?: string;
@@ -49,6 +52,7 @@ export function CommentCard({
   onUnlike,
   onReply,
   onDelete,
+  onSearchUsers,
   depth = 0,
   maxDepth = 3,
   currentUserUsername = "janesmith",
@@ -192,10 +196,11 @@ export function CommentCard({
             </span>
           </div>
 
-          {/* Comment Content */}
-          <p className="text-foreground text-sm mt-1 leading-relaxed">
-            {comment.content}
-          </p>
+          {/* Comment Content - renders @mentions as clickable links */}
+          <PostContent
+            content={comment.content}
+            className="text-sm mt-1"
+          />
 
           {/* Actions */}
           <div className="flex items-center gap-4 mt-2">
@@ -267,6 +272,7 @@ export function CommentCard({
             placeholder={`Reply to @${comment.author.username}...`}
             onSubmit={handleReply}
             onCancel={() => setShowReplyInput(false)}
+            onSearchUsers={onSearchUsers}
             isReply
             autoFocus
           />

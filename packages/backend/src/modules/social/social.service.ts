@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   Prisma,
   Post as PrismaPost,
@@ -104,7 +105,10 @@ type CommentWithRelations = Prisma.CommentGetPayload<{
 export class SocialService {
   private readonly logger = new Logger(SocialService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   // ==================== Post Methods ====================
 
@@ -355,6 +359,13 @@ export class SocialService {
       include: this.getPostIncludes(),
     });
 
+    // Send mention notifications (fire-and-forget, don't block post creation)
+    if (input.mentions && input.mentions.length > 0) {
+      this.sendMentionNotifications(userId, input.mentions, post.id).catch(
+        (err) => this.logger.debug(`Mention notifications failed: ${err}`),
+      );
+    }
+
     return this.mapToPostDto(fullPost!, userId);
   }
 
@@ -461,6 +472,15 @@ export class SocialService {
       }),
     ]);
 
+    // Send like notification (skip self-like)
+    if (post.authorId !== userId) {
+      this.notificationsService
+        .notifyLike(post.authorId, userId, postId)
+        .catch((err) =>
+          this.logger.debug(`Like notification failed: ${err}`),
+        );
+    }
+
     return true;
   }
 
@@ -534,6 +554,15 @@ export class SocialService {
         },
       }),
     ]);
+
+    // Send repost notification (skip self-repost)
+    if (post.authorId !== userId) {
+      this.notificationsService
+        .notifyRepost(post.authorId, userId, input.postId)
+        .catch((err) =>
+          this.logger.debug(`Repost notification failed: ${err}`),
+        );
+    }
 
     return true;
   }
@@ -852,6 +881,7 @@ export class SocialService {
         postId: input.postId,
         fundraiserId: input.fundraiserId,
         parentId: input.parentId,
+        mentions: input.mentions || [],
       },
       include: {
         author: {
@@ -890,6 +920,30 @@ export class SocialService {
           engagementScore: { increment: 1.5 },
         },
       });
+
+      // Send comment notification to post author (skip self-comment)
+      const post = await this.prisma.post.findUnique({
+        where: { id: input.postId },
+        select: { authorId: true },
+      });
+      if (post && post.authorId !== userId) {
+        this.notificationsService
+          .notifyComment(post.authorId, userId, input.postId, comment.id)
+          .catch((err) =>
+            this.logger.debug(`Comment notification failed: ${err}`),
+          );
+      }
+    }
+
+    // Send mention notifications from comment
+    if (input.mentions && input.mentions.length > 0) {
+      this.sendMentionNotifications(
+        userId,
+        input.mentions,
+        input.postId || comment.id,
+      ).catch((err) =>
+        this.logger.debug(`Comment mention notifications failed: ${err}`),
+      );
     }
 
     return this.mapToCommentDto(comment as CommentWithRelations, userId);
@@ -1300,6 +1354,7 @@ export class SocialService {
         },
         postId: reply.postId ?? undefined,
         parentId: reply.parentId ?? undefined,
+        mentions: (reply as any).mentions || [],
         likesCount: reply.likesCount,
         replies: [],
         createdAt: reply.createdAt,
@@ -1314,11 +1369,45 @@ export class SocialService {
       author,
       postId: comment.postId ?? undefined,
       parentId: comment.parentId ?? undefined,
+      mentions: (comment as any).mentions || [],
       likesCount: comment.likesCount,
       replies,
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
       isLiked,
     };
+  }
+
+  // ==================== Notification Helpers ====================
+
+  /**
+   * Send mention notifications to all mentioned users
+   * Resolves usernames to user IDs and calls notifyMention for each
+   */
+  private async sendMentionNotifications(
+    actorId: string,
+    mentionedUsernames: string[],
+    postId: string,
+  ): Promise<void> {
+    for (const username of mentionedUsernames) {
+      try {
+        const user = await this.prisma.user.findFirst({
+          where: { username },
+          select: { id: true },
+        });
+
+        if (user && user.id !== actorId) {
+          await this.notificationsService.notifyMention(
+            user.id,
+            actorId,
+            postId,
+          );
+        }
+      } catch (err) {
+        this.logger.debug(
+          `Failed to notify mention for @${username}: ${err}`,
+        );
+      }
+    }
   }
 }

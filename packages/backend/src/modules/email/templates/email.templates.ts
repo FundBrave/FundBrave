@@ -49,11 +49,14 @@ export function otpVerificationEmailTemplate(data: {
 /**
  * Email verification template (link-based)
  */
-export function verificationEmailTemplate(data: {
-  token: string;
-  username?: string;
-}): { subject: string; html: string } {
-  const verifyUrl = `${process.env.FRONTEND_URL || 'https://fundbrave.com'}/verify-email?token=${data.token}`;
+export function verificationEmailTemplate(
+  data: {
+    token: string;
+    username?: string;
+  },
+  frontendUrl: string = 'https://fundbrave.com',
+): { subject: string; html: string } {
+  const verifyUrl = `${frontendUrl}/verify-email?token=${data.token}`;
 
   const content = `
     <h1>Verify Your Email</h1>
@@ -80,12 +83,15 @@ export function verificationEmailTemplate(data: {
  * Password reset template
  * Enhanced with security notices, clear CTAs, and professional branding
  */
-export function passwordResetEmailTemplate(data: {
-  token: string;
-  username?: string;
-}): { subject: string; html: string } {
-  const resetUrl = `${process.env.FRONTEND_URL || 'https://fundbrave.com'}/auth/reset-password?token=${data.token}`;
-  const supportEmail = process.env.SUPPORT_EMAIL || 'support@fundbrave.com';
+export function passwordResetEmailTemplate(
+  data: {
+    token: string;
+    username?: string;
+  },
+  frontendUrl: string = 'https://fundbrave.com',
+  supportEmail: string = 'support@fundbrave.com',
+): { subject: string; html: string } {
+  const resetUrl = `${frontendUrl}/auth/reset-password?token=${data.token}`;
 
   const content = `
     <h1>Reset Your Password</h1>
@@ -143,11 +149,14 @@ export function passwordResetEmailTemplate(data: {
 /**
  * Welcome email template
  */
-export function welcomeEmailTemplate(data: { username: string }): {
+export function welcomeEmailTemplate(
+  data: { username: string },
+  frontendUrl: string = 'https://fundbrave.com',
+): {
   subject: string;
   html: string;
 } {
-  const dashboardUrl = `${process.env.FRONTEND_URL || 'https://fundbrave.com'}/dashboard`;
+  const dashboardUrl = `${frontendUrl}/dashboard`;
 
   const content = `
     <h1>Welcome to FundBrave!</h1>
@@ -178,9 +187,12 @@ export function welcomeEmailTemplate(data: { username: string }): {
 /**
  * Notification digest template
  */
-export function notificationDigestEmailTemplate(data: {
-  notifications: Array<{ title: string; message: string }>;
-}): { subject: string; html: string } {
+export function notificationDigestEmailTemplate(
+  data: {
+    notifications: Array<{ title: string; message: string }>;
+  },
+  frontendUrl: string = 'https://fundbrave.com',
+): { subject: string; html: string } {
   const notificationsList = data.notifications
     .map(
       (n) => `
@@ -192,7 +204,7 @@ export function notificationDigestEmailTemplate(data: {
     )
     .join('');
 
-  const dashboardUrl = `${process.env.FRONTEND_URL || 'https://fundbrave.com'}/notifications`;
+  const dashboardUrl = `${frontendUrl}/notifications`;
 
   const content = `
     <h1>Your Notification Summary</h1>

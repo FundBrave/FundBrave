@@ -286,7 +286,7 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
         _validateFundraiserParams(name, images, categories, description, beneficiary, goal, durationInDays);
 
         fundraiserAddress = _createFundraiserInternal(
-            name, images, categories, description, region, beneficiary, goal, durationInDays
+            msg.sender, name, images, categories, description, region, beneficiary, goal, durationInDays
         );
     }
 
@@ -309,12 +309,48 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
         if (goal == 0) revert InvalidAmount();
 
         return _createFundraiserInternal(
-            name, images, categories, description, region, beneficiary, goal, durationInDays
+            msg.sender, name, images, categories, description, region, beneficiary, goal, durationInDays
+        );
+    }
+
+    /**
+     * @notice Creates a fundraiser on behalf of another address (gasless/relayed creation)
+     * @dev Only callable by ADMIN_ROLE (backend wallet). The creator address becomes the
+     *      campaign owner on-chain, enabling web2 users to create campaigns without paying gas.
+     * @param creator The address that will own the fundraiser (user's wallet or custodial address)
+     * @param name Campaign name
+     * @param images Campaign image URLs
+     * @param categories Campaign categories
+     * @param description Campaign description
+     * @param region Geographic region
+     * @param beneficiary Address to receive funds
+     * @param goal Funding goal in USDC (6 decimals)
+     * @param durationInDays Duration of the campaign
+     * @return fundraiserAddress Address of the created fundraiser
+     */
+    function createFundraiserFor(
+        address creator,
+        string memory name,
+        string[] memory images,
+        string[] memory categories,
+        string memory description,
+        string memory region,
+        address payable beneficiary,
+        uint256 goal,
+        uint256 durationInDays
+    ) external onlyRole(ADMIN_ROLE) nonReentrant whenNotPaused returns (address fundraiserAddress) {
+        if (creator == address(0)) revert FundraiserFactoryLib.InvalidBeneficiary();
+        _validateFundraiserParams(name, images, categories, description, beneficiary, goal, durationInDays);
+
+        fundraiserAddress = _createFundraiserInternal(
+            creator, name, images, categories, description, region, beneficiary, goal, durationInDays
         );
     }
 
     /// @dev Internal function to create and register a fundraiser
+    /// @param creator The address that will own the fundraiser
     function _createFundraiserInternal(
+        address creator,
         string memory name,
         string[] memory images,
         string[] memory categories,
@@ -333,12 +369,12 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
 
         Fundraiser(clone).initialize(
             currentId, name, images, categories, description, region,
-            beneficiary, msg.sender, goal, deadline, USDC, feeRecipient, address(this)
+            beneficiary, creator, goal, deadline, USDC, feeRecipient, address(this)
         );
 
         Fundraiser fundraiser = Fundraiser(clone);
         _fundraisers.push(fundraiser);
-        _fundraisersByOwner[msg.sender].push(fundraiser);
+        _fundraisersByOwner[creator].push(fundraiser);
 
         address poolAddress = _deployStakingPool(beneficiary);
         stakingPools[currentId] = poolAddress;
@@ -354,7 +390,7 @@ contract FundraiserFactory is AccessControl, Pausable, ReentrancyGuard {
             activeFundraiserCount++;
         }
 
-        emit FundraiserCreated(clone, msg.sender, currentId, name, goal, deadline);
+        emit FundraiserCreated(clone, creator, currentId, name, goal, deadline);
         emit StakingPoolCreated(currentId, poolAddress);
 
         unchecked { currentId++; }

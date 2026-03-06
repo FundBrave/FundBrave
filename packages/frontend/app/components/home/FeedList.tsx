@@ -132,8 +132,8 @@ export function FeedList({ filter = "recent", className }: FeedListProps) {
   );
 
   const handleAddComment = useCallback(
-    (postId: string, content: string) => {
-      addComment(postId, content);
+    (postId: string, content: string, mentions?: string[]) => {
+      addComment(postId, content, mentions);
     },
     [addComment]
   );
@@ -153,8 +153,8 @@ export function FeedList({ filter = "recent", className }: FeedListProps) {
   );
 
   const handleReplyToComment = useCallback(
-    (postId: string, commentId: string, content: string) => {
-      replyToComment(postId, commentId, content);
+    (postId: string, commentId: string, content: string, mentions?: string[]) => {
+      replyToComment(postId, commentId, content, mentions);
     },
     [replyToComment]
   );

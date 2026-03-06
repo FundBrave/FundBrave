@@ -479,7 +479,7 @@ export class FundraisersService {
           region: input.region,
           goalAmount: input.goalAmount,
           currency: input.currency || 'USDC',
-          beneficiary: input.beneficiary,
+          beneficiary: input.beneficiary || user.walletAddress,
           stakingPoolAddr: stakingPoolAddr || undefined,
           deadline,
           creatorId: userId,
@@ -529,7 +529,30 @@ export class FundraisersService {
 
     this.logger.log(`Created fundraiser ${fundraiser.id} for user ${userId}`);
 
-    return this.mapToFundraiserDto(fundraiser);
+    // Re-fetch with full relations to satisfy mapToFundraiserDto type requirements
+    const fullFundraiser = await this.prisma.fundraiser.findUniqueOrThrow({
+      where: { id: fundraiser.id },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            walletAddress: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+            isVerifiedCreator: true,
+          },
+        },
+        milestones: true,
+        updates: true,
+        stakes: {
+          where: { isActive: true },
+          select: { amount: true },
+        },
+      },
+    });
+
+    return this.mapToFundraiserDto(fullFundraiser);
   }
 
   /**

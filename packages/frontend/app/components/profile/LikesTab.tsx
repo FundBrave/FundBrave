@@ -42,10 +42,10 @@ export default function LikesTab({ likes }: LikesTabProps) {
           enableComments
           onLike={(postId) => likePost(postId)}
           onUnlike={(postId) => unlikePost(postId)}
-          onAddComment={(postId, content) => addComment(postId, content)}
+          onAddComment={(postId, content, mentions) => addComment(postId, content, mentions)}
           onLikeComment={(postId, commentId) => likeComment(postId, commentId)}
           onUnlikeComment={(postId, commentId) => unlikeComment(postId, commentId)}
-          onReplyToComment={(postId, commentId, content) => replyToComment(postId, commentId, content)}
+          onReplyToComment={(postId, commentId, content, mentions) => replyToComment(postId, commentId, content, mentions)}
           onDeleteComment={(postId, commentId) => deleteComment(postId, commentId)}
         />
       ))}

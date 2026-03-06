@@ -260,7 +260,7 @@ export const BASE_SEPOLIA_TESTNET: NetworkConfig = {
   contracts: {
     fundraiserFactory:
       process.env.BASE_SEPOLIA_FUNDRAISER_FACTORY ||
-      '0xb89D6039dE729f6c951862EB177795Ac4aDfD2cd',
+      '0x1a62AebFA057b0797794b98CB33c657B657f80d6',
     fundBraveToken:
       process.env.BASE_SEPOLIA_FBT ||
       '0xE42A6ff84160Ac399607667C32392378Bbb270E0',

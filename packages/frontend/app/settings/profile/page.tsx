@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { ProfileSettingsForm } from "./ProfileSettingsForm";
 import type { ProfileSettingsFormData } from "./schemas";
 import { useGetMeQuery, useUpdateProfileMutation, useIsUsernameAvailableQuery } from "@/app/generated/graphql";
+import { useAuth } from "@/app/provider/AuthProvider";
 
 /**
  * Real GraphQL-based API functions
@@ -30,13 +31,15 @@ import { useGetMeQuery, useUpdateProfileMutation, useIsUsernameAvailableQuery } 
  * - IsUsernameAvailable query - Check username availability
  */
 export default function ProfileSettingsPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [initialData, setInitialData] =
     useState<Partial<ProfileSettingsFormData> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch current user profile via GraphQL
+  // Fetch current user profile via GraphQL — wait for auth first
   const { data: userData, loading: isLoading, error: queryError } = useGetMeQuery({
     fetchPolicy: 'cache-and-network',
+    skip: authLoading || !isAuthenticated,
   });
 
   // Update profile mutation

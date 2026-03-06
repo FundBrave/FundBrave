@@ -36,7 +36,7 @@ export default function ProfilePage() {
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const { addPost } = usePosts();
   const plusIconRef = useRef<SVGSVGElement>(null);
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, isLoading: authLoading } = useAuth();
 
   const username = params.username as string;
 
@@ -91,24 +91,26 @@ export default function ProfilePage() {
   };
 
   // Transform user data for ProfileHeader
+  const isCurrentUser = !!(currentUser && user && currentUser.id === user.id);
+
   const userData = user ? {
     id: user.id,
     name: user.displayName || user.username || "Anonymous",
     username: user.username || "",
-    country: "", // TODO: Add country field to GraphQL
-    countryFlag: "", // TODO: Add country flag
-    points: 0, // TODO: Calculate points
+    country: user.location || "",
+    countryFlag: "",
+    points: user.stats?.reputationScore || 0,
     bio: user.bio || "",
-    followers: user.stats.followersCount || 0,
-    following: user.stats.followingCount || 0,
+    followers: user.stats?.followersCount || 0,
+    following: user.stats?.followingCount || 0,
     memberSince: user.createdAt,
-    isCurrentUser: false, // TODO: Check if current user
-    isFollowing: false, // TODO: Implement follow status check
+    isCurrentUser,
+    isFollowing: user.isFollowing ?? false,
     socialLinks: {
-      linkedin: "",
-      instagram: "",
-      twitter: "",
-      facebook: "",
+      linkedin: (user as any).socialLinks?.linkedin || "",
+      instagram: (user as any).socialLinks?.instagram || "",
+      twitter: (user as any).socialLinks?.twitter || "",
+      facebook: (user as any).socialLinks?.facebook || "",
     },
   } : null;
 
@@ -131,8 +133,8 @@ export default function ProfilePage() {
     setIsCreatePostOpen(true);
   }, []);
 
-  // Loading state
-  if (userLoading) {
+  // Loading state — include auth loading to prevent premature "not found"
+  if (authLoading || userLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -251,7 +253,7 @@ export default function ProfilePage() {
               </>
             )}
 
-            {activeTab === "posts" && <PostsTab />}
+            {activeTab === "posts" && <PostsTab userId={user.id} />}
 
             {activeTab === "donations" && (
               <DonationsTab donations={[]} />

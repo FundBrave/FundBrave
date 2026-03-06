@@ -200,6 +200,30 @@ mutation CreateFundraiser(
   }
 }
 
+# Gasless campaign creation (backend relays on-chain tx for web2 users)
+mutation CreateFundraiserGasless($input: CreateFundraiserInput!) {
+  createFundraiserGasless(input: $input) {
+    id
+    name
+    description
+    goalAmount
+    currency
+    deadline
+    images
+    categories
+    region
+    onChainId
+    txHash
+    stakingPoolAddr
+    creator {
+      id
+      walletAddress
+      username
+      displayName
+    }
+  }
+}
+
 # Add Fundraiser Update Mutation
 mutation AddFundraiserUpdate(
   $fundraiserId: ID!

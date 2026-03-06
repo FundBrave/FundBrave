@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ethers } from 'ethers';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -44,6 +45,7 @@ export class BlockchainIndexerService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventsService: EventsService,
+    private readonly configService: ConfigService,
     @Optional() private readonly providerService?: ProviderService,
   ) {}
 
@@ -131,52 +133,52 @@ export class BlockchainIndexerService implements OnModuleInit {
     const providerConfigs = [
       {
         chainId: ChainId.ETHEREUM,
-        rpc: process.env.ETHEREUM_RPC,
+        rpc: this.configService.get<string>('ETHEREUM_RPC'),
         name: 'Ethereum Mainnet',
       },
       {
         chainId: ChainId.SEPOLIA,
-        rpc: process.env.SEPOLIA_RPC,
+        rpc: this.configService.get<string>('SEPOLIA_RPC'),
         name: 'Sepolia Testnet',
       },
       {
         chainId: ChainId.POLYGON,
-        rpc: process.env.POLYGON_RPC,
+        rpc: this.configService.get<string>('POLYGON_RPC'),
         name: 'Polygon Mainnet',
       },
       {
         chainId: ChainId.MUMBAI,
-        rpc: process.env.MUMBAI_RPC,
+        rpc: this.configService.get<string>('MUMBAI_RPC'),
         name: 'Mumbai Testnet',
       },
       {
         chainId: ChainId.AVALANCHE,
-        rpc: process.env.AVALANCHE_RPC,
+        rpc: this.configService.get<string>('AVALANCHE_RPC'),
         name: 'Avalanche Mainnet',
       },
       {
         chainId: ChainId.FUJI,
-        rpc: process.env.FUJI_RPC,
+        rpc: this.configService.get<string>('FUJI_RPC'),
         name: 'Fuji Testnet',
       },
       {
         chainId: ChainId.ARBITRUM,
-        rpc: process.env.ARBITRUM_RPC,
+        rpc: this.configService.get<string>('ARBITRUM_RPC'),
         name: 'Arbitrum Mainnet',
       },
       {
         chainId: ChainId.OPTIMISM,
-        rpc: process.env.OPTIMISM_RPC,
+        rpc: this.configService.get<string>('OPTIMISM_RPC'),
         name: 'Optimism Mainnet',
       },
       {
         chainId: ChainId.BASE,
-        rpc: process.env.BASE_RPC_URL,
+        rpc: this.configService.get<string>('BASE_RPC_URL'),
         name: 'Base Mainnet',
       },
       {
         chainId: ChainId.BASE_SEPOLIA,
-        rpc: process.env.BASE_SEPOLIA_RPC_URL,
+        rpc: this.configService.get<string>('BASE_SEPOLIA_RPC_URL'),
         name: 'Base Sepolia',
       },
     ];
@@ -213,7 +215,9 @@ export class BlockchainIndexerService implements OnModuleInit {
    * Setup indexer configurations for each chain and contract
    */
   private setupIndexerConfigs(): void {
-    const envChainId = parseInt(process.env.CHAIN_ID || '11155111'); // Default to Sepolia
+    const envChainId = parseInt(
+      this.configService.get<string>('CHAIN_ID', '11155111'),
+    ); // Default to Sepolia
 
     for (const [chainId, provider] of this.providers) {
       // Get RPC URL from environment based on chain ID
@@ -229,7 +233,12 @@ export class BlockchainIndexerService implements OnModuleInit {
               chainId,
             ),
             events: Object.values(ImpactDAOPoolEvent),
-            startBlock: parseInt(process.env.IMPACT_DAO_START_BLOCK || '0'),
+            startBlock: parseInt(
+              this.configService.get<string>(
+                'IMPACT_DAO_START_BLOCK',
+                '0',
+              ),
+            ),
           },
           {
             name: ContractName.WEALTH_BUILDING_DONATION,
@@ -239,7 +248,10 @@ export class BlockchainIndexerService implements OnModuleInit {
             ),
             events: Object.values(WealthBuildingDonationEvent),
             startBlock: parseInt(
-              process.env.WEALTH_BUILDING_START_BLOCK || '0',
+              this.configService.get<string>(
+                'WEALTH_BUILDING_START_BLOCK',
+                '0',
+              ),
             ),
           },
           {
@@ -249,7 +261,9 @@ export class BlockchainIndexerService implements OnModuleInit {
               chainId,
             ),
             events: Object.values(PlatformTreasuryEvent),
-            startBlock: parseInt(process.env.TREASURY_START_BLOCK || '0'),
+            startBlock: parseInt(
+              this.configService.get<string>('TREASURY_START_BLOCK', '0'),
+            ),
           },
           {
             name: ContractName.FUND_BRAVE_TOKEN,
@@ -258,7 +272,9 @@ export class BlockchainIndexerService implements OnModuleInit {
               chainId,
             ),
             events: Object.values(FundBraveTokenEvent),
-            startBlock: parseInt(process.env.FBT_START_BLOCK || '0'),
+            startBlock: parseInt(
+              this.configService.get<string>('FBT_START_BLOCK', '0'),
+            ),
           },
           {
             name: ContractName.STAKING_POOL,
@@ -267,7 +283,12 @@ export class BlockchainIndexerService implements OnModuleInit {
               chainId,
             ),
             events: Object.values(StakingPoolEvent),
-            startBlock: parseInt(process.env.STAKING_POOL_START_BLOCK || '0'),
+            startBlock: parseInt(
+              this.configService.get<string>(
+                'STAKING_POOL_START_BLOCK',
+                '0',
+              ),
+            ),
           },
           {
             name: ContractName.FUNDRAISER_FACTORY,
@@ -276,7 +297,9 @@ export class BlockchainIndexerService implements OnModuleInit {
               chainId,
             ),
             events: ['FundraiserCreated', 'DonationReceived', 'FundsWithdrawn'],
-            startBlock: parseInt(process.env.FACTORY_START_BLOCK || '0'),
+            startBlock: parseInt(
+              this.configService.get<string>('FACTORY_START_BLOCK', '0'),
+            ),
           },
         ],
       };
@@ -541,7 +564,10 @@ export class BlockchainIndexerService implements OnModuleInit {
     chainId: ChainId,
   ): string {
     const envKey = `${contractName.toUpperCase()}_ADDRESS_${chainId}`;
-    return process.env[envKey] || `0x0000000000000000000000000000000000000000`;
+    return (
+      this.configService.get<string>(envKey) ||
+      `0x0000000000000000000000000000000000000000`
+    );
   }
 
   /**
@@ -549,18 +575,24 @@ export class BlockchainIndexerService implements OnModuleInit {
    */
   private getRpcUrl(chainId: ChainId): string {
     const rpcUrls: Record<ChainId, string | undefined> = {
-      [ChainId.ETHEREUM]: process.env.ETHEREUM_RPC,
-      [ChainId.SEPOLIA]: process.env.SEPOLIA_RPC,
-      [ChainId.POLYGON]: process.env.POLYGON_RPC,
-      [ChainId.MUMBAI]: process.env.MUMBAI_RPC,
-      [ChainId.AVALANCHE]: process.env.AVALANCHE_RPC,
-      [ChainId.FUJI]: process.env.FUJI_RPC,
-      [ChainId.ARBITRUM]: process.env.ARBITRUM_RPC,
-      [ChainId.ARBITRUM_SEPOLIA]: process.env.ARBITRUM_SEPOLIA_RPC,
-      [ChainId.OPTIMISM]: process.env.OPTIMISM_RPC,
-      [ChainId.OPTIMISM_SEPOLIA]: process.env.OPTIMISM_SEPOLIA_RPC,
-      [ChainId.BASE]: process.env.BASE_RPC_URL,
-      [ChainId.BASE_SEPOLIA]: process.env.BASE_SEPOLIA_RPC_URL,
+      [ChainId.ETHEREUM]: this.configService.get<string>('ETHEREUM_RPC'),
+      [ChainId.SEPOLIA]: this.configService.get<string>('SEPOLIA_RPC'),
+      [ChainId.POLYGON]: this.configService.get<string>('POLYGON_RPC'),
+      [ChainId.MUMBAI]: this.configService.get<string>('MUMBAI_RPC'),
+      [ChainId.AVALANCHE]: this.configService.get<string>('AVALANCHE_RPC'),
+      [ChainId.FUJI]: this.configService.get<string>('FUJI_RPC'),
+      [ChainId.ARBITRUM]: this.configService.get<string>('ARBITRUM_RPC'),
+      [ChainId.ARBITRUM_SEPOLIA]: this.configService.get<string>(
+        'ARBITRUM_SEPOLIA_RPC',
+      ),
+      [ChainId.OPTIMISM]: this.configService.get<string>('OPTIMISM_RPC'),
+      [ChainId.OPTIMISM_SEPOLIA]: this.configService.get<string>(
+        'OPTIMISM_SEPOLIA_RPC',
+      ),
+      [ChainId.BASE]: this.configService.get<string>('BASE_RPC_URL'),
+      [ChainId.BASE_SEPOLIA]: this.configService.get<string>(
+        'BASE_SEPOLIA_RPC_URL',
+      ),
     };
     return rpcUrls[chainId] || '';
   }

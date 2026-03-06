@@ -1,5 +1,6 @@
 import { Resolver, Query, Mutation, Args, Int, ID } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import {
   User,
@@ -22,6 +23,7 @@ export class UsersResolver {
   // ==================== Queries ====================
 
   @Query(() => User, { name: 'user' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUser(
     @Args('id', { type: () => ID }) id: string,
     @CurrentUser() viewer?: { id: string },
@@ -30,6 +32,7 @@ export class UsersResolver {
   }
 
   @Query(() => User, { name: 'userByWallet' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUserByWallet(
     @Args('walletAddress') walletAddress: string,
     @CurrentUser() viewer?: { id: string },
@@ -38,6 +41,7 @@ export class UsersResolver {
   }
 
   @Query(() => User, { name: 'userByUsername' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUserByUsername(
     @Args('username') username: string,
     @CurrentUser() viewer?: { id: string },
@@ -52,6 +56,7 @@ export class UsersResolver {
   }
 
   @Query(() => PaginatedUsers, { name: 'users' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getUsers(
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
@@ -63,6 +68,7 @@ export class UsersResolver {
   }
 
   @Query(() => UserSearchResult, { name: 'searchUsers' })
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   async searchUsers(
     @Args('query') query: string,
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
@@ -71,6 +77,7 @@ export class UsersResolver {
   }
 
   @Query(() => PaginatedFollows, { name: 'followers' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getFollowers(
     @Args('userId', { type: () => ID }) userId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -80,6 +87,7 @@ export class UsersResolver {
   }
 
   @Query(() => PaginatedFollows, { name: 'following' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getFollowing(
     @Args('userId', { type: () => ID }) userId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -109,6 +117,7 @@ export class UsersResolver {
   }
 
   @Query(() => UserActivitySummary, { name: 'userActivity' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUserActivity(
     @Args('userId', { type: () => ID }) userId: string,
   ): Promise<UserActivitySummary> {
@@ -132,6 +141,7 @@ export class UsersResolver {
   }
 
   @Query(() => Boolean, { name: 'isUsernameAvailable' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async isUsernameAvailable(
     @Args('username') username: string,
   ): Promise<boolean> {
@@ -168,6 +178,7 @@ export class UsersResolver {
     description:
       'Get personalized user suggestions for "Who to Follow" section',
   })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getSuggestedUsers(
     @Args('limit', {
       type: () => Int,

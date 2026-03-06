@@ -41,6 +41,7 @@ model User {
   bannerUrl   String?
   location    String?
   website     String?
+  socialLinks Json?   // { linkedin?: string, twitter?: string, instagram?: string, facebook?: string }
 
   // Verification & Reputation
   isVerifiedCreator Boolean            @default(false)
@@ -418,6 +419,8 @@ model Comment {
   parentId String?
   parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies  Comment[] @relation("CommentReplies")
+
+  mentions String[] @default([])
 
   likesCount Int           @default(0)
   likes      CommentLike[]

@@ -68,6 +68,7 @@ fragment CommentFields on Comment {
   postId
   parentId
   content
+  mentions
   createdAt
   updatedAt
   likesCount
@@ -78,6 +79,7 @@ fragment CommentFields on Comment {
   replies {
     id
     content
+    mentions
     createdAt
     likesCount
     isLiked

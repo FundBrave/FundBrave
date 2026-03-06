@@ -1,5 +1,6 @@
 import { Resolver, Query, Mutation, Args, Int, ID } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { SocialService } from './social.service';
 import {
   Post,
@@ -27,6 +28,7 @@ export class SocialResolver {
   // ==================== Post Queries ====================
 
   @Query(() => Post, { name: 'post' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getPost(
     @Args('id', { type: () => ID }) id: string,
     @CurrentUser() viewer?: { id: string },
@@ -35,6 +37,7 @@ export class SocialResolver {
   }
 
   @Query(() => PaginatedPosts, { name: 'posts' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getPosts(
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
@@ -60,6 +63,7 @@ export class SocialResolver {
   }
 
   @Query(() => PaginatedPosts, { name: 'userPosts' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getUserPosts(
     @Args('userId', { type: () => ID }) userId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -70,6 +74,7 @@ export class SocialResolver {
   }
 
   @Query(() => PaginatedPosts, { name: 'postReplies' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getPostReplies(
     @Args('postId', { type: () => ID }) postId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -80,6 +85,7 @@ export class SocialResolver {
   }
 
   @Query(() => PaginatedPosts, { name: 'postsByHashtag' })
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   async getPostsByHashtag(
     @Args('tag') tag: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -112,6 +118,7 @@ export class SocialResolver {
   }
 
   @Query(() => [SocialTrendingHashtag], { name: 'trendingHashtags' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getTrendingHashtags(
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
   ): Promise<SocialTrendingHashtag[]> {
@@ -121,6 +128,7 @@ export class SocialResolver {
   // ==================== Comment Queries ====================
 
   @Query(() => PaginatedComments, { name: 'postComments' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getPostComments(
     @Args('postId', { type: () => ID }) postId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -136,6 +144,7 @@ export class SocialResolver {
   }
 
   @Query(() => PaginatedComments, { name: 'fundraiserComments' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getFundraiserComments(
     @Args('fundraiserId', { type: () => ID }) fundraiserId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,

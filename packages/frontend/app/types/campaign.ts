@@ -38,7 +38,7 @@ export interface CampaignCreateInput {
   images: string[];
   categories: string[];
   region: string;
-  beneficiary: Address;
+  beneficiary?: Address;
 }
 
 export interface Donation {

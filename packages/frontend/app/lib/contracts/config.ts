@@ -17,7 +17,7 @@ export const CONTRACT_ADDRESSES = {
 // Base Sepolia Addresses (Updated: 2026-02-18)
 // Synced with .env.local NEXT_PUBLIC_* values and current deployed contracts
 export const BASE_SEPOLIA_ADDRESSES = {
-  fundraiserFactory: '0xb89D6039dE729f6c951862EB177795Ac4aDfD2cd' as Address,
+  fundraiserFactory: '0x1a62AebFA057b0797794b98CB33c657B657f80d6' as Address,
   fbtToken: '0xE42A6ff84160Ac399607667C32392378Bbb270E0' as Address,
   usdc: '0xf269f54304f8DB2dB613341CC7E189B02BEf98dE' as Address,
   weth: '0x8140C9fE21D9639FD69E9eF345Be39d767eE7FE2' as Address,

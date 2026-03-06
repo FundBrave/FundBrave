@@ -18,6 +18,7 @@
     "deploy:statusl2:wbd": "hardhat run scripts/deploy/04_deploy_WealthBuildingDonation.js --network statusL2Testnet",
     "deploy:statusl2:treasury": "hardhat run scripts/deploy/05_deploy_PlatformTreasury.js --network statusL2Testnet",
     "deploy:statusl2:factory": "hardhat run scripts/deploy/06_deploy_FundraiserFactory.js --network statusL2Testnet",
+    "upgrade:factory:baseSepolia": "hardhat run scripts/upgrade-factory-gasless.js --network baseSepolia",
     "upgrade:sepolia": "hardhat run scripts/upgrade.js --network sepolia",
     "upgrade:mumbai": "hardhat run scripts/upgrade.js --network mumbai",
     "verify:sepolia": "hardhat run scripts/verify.js --network sepolia",

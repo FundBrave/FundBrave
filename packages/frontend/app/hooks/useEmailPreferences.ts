@@ -17,14 +17,48 @@ import { settingsApi } from '@/lib/api/settings';
 import { useAuth } from '@/app/provider/AuthProvider';
 
 /**
+ * Map backend notification fields to frontend EmailPreferences fields
+ */
+function backendToFrontend(backend: any): EmailPreferences {
+  return {
+    donationAlerts: backend.notifyOnDonation ?? true,
+    campaignFunded: backend.notifyOnStake ?? true,
+    campaignUpdates: backend.notifyOnYieldHarvest ?? true,
+    newFollowers: backend.notifyOnFollow ?? false,
+    comments: backend.notifyOnComment ?? false,
+    replies: backend.notifyOnMention ?? false,
+    mentions: backend.notifyOnMention ?? false,
+    weeklyDigest: backend.emailEnabled ?? true,
+    marketing: backend.notifyOnDAOProposal ?? false,
+  };
+}
+
+/**
+ * Map frontend EmailPreferences fields to backend notification fields
+ */
+function frontendToBackend(prefs: Partial<EmailPreferences>): Record<string, boolean> {
+  const result: Record<string, boolean> = {};
+  if (prefs.donationAlerts !== undefined) result.notifyOnDonation = prefs.donationAlerts;
+  if (prefs.campaignFunded !== undefined) result.notifyOnStake = prefs.campaignFunded;
+  if (prefs.campaignUpdates !== undefined) result.notifyOnYieldHarvest = prefs.campaignUpdates;
+  if (prefs.newFollowers !== undefined) result.notifyOnFollow = prefs.newFollowers;
+  if (prefs.comments !== undefined) result.notifyOnComment = prefs.comments;
+  if (prefs.replies !== undefined) result.notifyOnMention = prefs.replies;
+  if (prefs.mentions !== undefined) result.notifyOnMention = prefs.mentions;
+  if (prefs.weeklyDigest !== undefined) result.emailEnabled = prefs.weeklyDigest;
+  if (prefs.marketing !== undefined) result.notifyOnDAOProposal = prefs.marketing;
+  return result;
+}
+
+/**
  * Fetch user's email preferences from backend
  */
 async function fetchEmailPreferences(): Promise<GetEmailPreferencesResponse> {
   try {
     const settings = await settingsApi.getAllSettings();
     return {
-      preferences: settings.notifications,
-      email: 'user@example.com', // TODO: Get from auth context
+      preferences: backendToFrontend(settings.notifications),
+      email: '', // Email comes from auth context, not notifications
     };
   } catch (error) {
     console.error('Failed to fetch email preferences:', error);
@@ -39,9 +73,10 @@ async function updateEmailPreferences(
   request: UpdateEmailPreferencesRequest
 ): Promise<UpdateEmailPreferencesResponse> {
   try {
-    const updated = await settingsApi.updateNotifications(request.preferences);
+    const backendData = frontendToBackend(request.preferences);
+    const updated = await settingsApi.updateNotifications(backendData as any);
     return {
-      preferences: updated,
+      preferences: backendToFrontend(updated),
       success: true,
     };
   } catch (error) {
