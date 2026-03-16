@@ -1429,8 +1429,10 @@ type Query {
   userActivity(userId: ID!): UserActivitySummary!
   userByUsername(username: String!): User!
   userByWallet(walletAddress: String!): User!
+  userComments(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedComments!
   userDonationStats(userId: ID!): UserDonationStats!
   userDonations(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedDonations!
+  userLikedPosts(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedPosts!
   userPosts(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedPosts!
   userStakes(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedStakes!
   userStakingStats(userId: ID!): UserStakingStats!

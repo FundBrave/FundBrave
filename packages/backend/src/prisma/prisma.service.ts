@@ -267,7 +267,11 @@ export class PrismaService
       try {
         await this.reconnect();
       } catch (reconnectError) {
-        this.logger.error('Database reconnection failed');
+        const reconnectMessage =
+          reconnectError instanceof Error
+            ? reconnectError.message
+            : 'Unknown error';
+        this.logger.error(`Database reconnection failed: ${reconnectMessage}`);
       }
     }
   }
@@ -301,7 +305,11 @@ export class PrismaService
     if (error instanceof Prisma.PrismaClientRustPanicError) {
       return true;
     }
-    // Check for connection timeout errors
+    // PrismaClientUnknownRequestError covers "Engine is not yet connected" errors
+    if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+      return true;
+    }
+    // Check for connection-related message keywords
     if (error instanceof Error) {
       const message = error.message.toLowerCase();
       return (
@@ -309,7 +317,9 @@ export class PrismaService
         message.includes('timeout') ||
         message.includes('pool') ||
         message.includes('econnrefused') ||
-        message.includes('enotfound')
+        message.includes('enotfound') ||
+        message.includes('not yet connected') ||
+        message.includes('engine is not')
       );
     }
     return false;
