@@ -160,9 +160,9 @@ export default function HomePage() {
     points: parseInt(entry.totalDonated) || 0,
   })) || [];
 
-  // Transform suggested users data
+  // Transform suggested users data — exclude self and already-followed users
   const suggestedUsers: SuggestedUser[] = suggestedUsersData?.suggestedUsers
-    .filter(user => !user.isFollowing)
+    .filter(user => !user.isFollowing && user.id !== meData.me.id)
     .map(user => ({
       id: user.id,
       name: user.displayName || user.username || "Anonymous",

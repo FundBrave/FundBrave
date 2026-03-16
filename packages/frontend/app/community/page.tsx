@@ -15,6 +15,7 @@ import { BackHeader } from "@/app/components/common/BackHeader";
 import { PostEditor } from "@/app/components/social/PostEditor";
 import { useAuth } from "@/app/provider/AuthProvider";
 import { useMentionSearch } from "@/app/hooks/useMentionSearch";
+import { useFollowUserMutation, useUnfollowUserMutation } from "@/app/generated/graphql";
 
 // Mock data for communities with Unsplash images
 const mockCommunities: Community[] = [
@@ -145,6 +146,9 @@ export default function CommunityPage() {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const { searchUsers } = useMentionSearch();
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [followUserMutation] = useFollowUserMutation();
+  const [unfollowUserMutation] = useUnfollowUserMutation();
 
   const handleSelectCommunity = (communityId: string) => {
     setSelectedCommunityId(communityId);
@@ -162,8 +166,37 @@ export default function CommunityPage() {
     console.log("Join community clicked");
   };
 
-  const handleFollowAuthor = (authorId: string) => {
-    console.log("Follow author:", authorId);
+  const handleFollowAuthor = async (authorId: string) => {
+    const isCurrentlyFollowing = followingIds.has(authorId);
+    // Optimistic update
+    setFollowingIds((prev) => {
+      const next = new Set(prev);
+      if (isCurrentlyFollowing) {
+        next.delete(authorId);
+      } else {
+        next.add(authorId);
+      }
+      return next;
+    });
+    try {
+      if (isCurrentlyFollowing) {
+        await unfollowUserMutation({ variables: { userId: authorId } });
+      } else {
+        await followUserMutation({ variables: { userId: authorId } });
+      }
+    } catch (error) {
+      // Revert optimistic update on failure
+      setFollowingIds((prev) => {
+        const next = new Set(prev);
+        if (isCurrentlyFollowing) {
+          next.add(authorId);
+        } else {
+          next.delete(authorId);
+        }
+        return next;
+      });
+      console.error("Failed to follow/unfollow:", error);
+    }
   };
 
   const handleReactToPost = (postId: string, emoji: string) => {
@@ -254,7 +287,10 @@ export default function CommunityPage() {
                 onlineCount: mockCommunityDetails.onlineCount,
                 isJoined: selectedCommunity.isJoined,
               }}
-              posts={mockPosts}
+              posts={mockPosts.map((p) => ({
+                ...p,
+                isFollowing: followingIds.has(p.author.id ?? ""),
+              }))}
               onJoin={handleJoinCommunity}
               onFollowAuthor={handleFollowAuthor}
               onReactToPost={handleReactToPost}

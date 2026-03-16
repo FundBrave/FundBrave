@@ -195,6 +195,28 @@ query GetTrendingHashtags($limit: Int = 10, $period: TrendingPeriod = TWENTY_FOU
   }
 }
 
+# Get posts liked by a user
+query GetUserLikedPosts($userId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  userLikedPosts(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      ...PostFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get comments made by a user
+query GetUserComments($userId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  userComments(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      ...CommentFields
+    }
+    hasMore
+    total
+  }
+}
+
 # Get my bookmarks
 query GetMyBookmarks($limit: Int = 20, $offset: Int = 0) {
   myBookmarks(limit: $limit, offset: $offset) {

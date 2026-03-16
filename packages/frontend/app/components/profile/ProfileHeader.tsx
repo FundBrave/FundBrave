@@ -178,7 +178,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           </button>
         </div>
         <p className="text-foreground font-bold text-base">
-          Member since {user.memberSince}
+          Member since {new Date(user.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </p>
       </div>
     </div>

@@ -13,7 +13,7 @@ import {
   UpdateNotificationSettingsInput,
   UserFilterInput,
 } from './dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Resolver(() => User)
@@ -23,6 +23,7 @@ export class UsersResolver {
   // ==================== Queries ====================
 
   @Query(() => User, { name: 'user' })
+  @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUser(
     @Args('id', { type: () => ID }) id: string,
@@ -32,6 +33,7 @@ export class UsersResolver {
   }
 
   @Query(() => User, { name: 'userByWallet' })
+  @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUserByWallet(
     @Args('walletAddress') walletAddress: string,
@@ -41,6 +43,7 @@ export class UsersResolver {
   }
 
   @Query(() => User, { name: 'userByUsername' })
+  @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUserByUsername(
     @Args('username') username: string,
@@ -56,6 +59,7 @@ export class UsersResolver {
   }
 
   @Query(() => PaginatedUsers, { name: 'users' })
+  @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getUsers(
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -178,6 +182,7 @@ export class UsersResolver {
     description:
       'Get personalized user suggestions for "Who to Follow" section',
   })
+  @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getSuggestedUsers(
     @Args('limit', {

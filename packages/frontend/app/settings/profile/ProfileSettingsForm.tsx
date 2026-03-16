@@ -22,6 +22,23 @@ import type { SocialLinks } from "@/app/components/ui/form/SocialLinksGroup";
  * Inline SVG Icons - following NotFoundPage pattern
  */
 const icons = {
+  image: (
+    <svg
+      viewBox="0 0 24 24"
+      width="32"
+      height="32"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  ),
   user: (
     <svg
       viewBox="0 0 24 24"
@@ -458,6 +475,112 @@ function AvatarUpload({
   );
 }
 
+/**
+ * Cover image upload section
+ */
+function CoverImageUpload({
+  coverUrl,
+  onUpload,
+  onRemove,
+  error,
+  isUploading,
+}: {
+  coverUrl: string | null;
+  onUpload: (file: File) => void;
+  onRemove: () => void;
+  error?: string;
+  isUploading?: boolean;
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) onUpload(file);
+    e.target.value = "";
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Preview */}
+      <div
+        className={cn(
+          "relative w-full h-36 rounded-xl overflow-hidden",
+          "bg-surface-sunken border-2",
+          "flex items-center justify-center",
+          error ? "border-destructive" : "border-white/10"
+        )}
+      >
+        {coverUrl ? (
+          <Image
+            src={coverUrl}
+            alt="Cover photo"
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <span className="text-text-tertiary flex flex-col items-center gap-2">
+            {icons.image}
+            <span className="text-xs">No cover photo</span>
+          </span>
+        )}
+
+        {/* Overlay buttons */}
+        <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/40 opacity-0 hover:opacity-100 transition-opacity">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 text-black text-sm font-medium rounded-lg hover:bg-white transition-colors"
+          >
+            {icons.upload}
+            <span className="ml-1">{coverUrl ? "Change" : "Upload"}</span>
+          </button>
+          {coverUrl && (
+            <button
+              type="button"
+              onClick={onRemove}
+              disabled={isUploading}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-destructive/90 text-white text-sm font-medium rounded-lg hover:bg-destructive transition-colors"
+            >
+              {icons.trash}
+              <span className="ml-1">Remove</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/gif"
+        onChange={handleFileChange}
+        className="hidden"
+        aria-label="Choose cover photo"
+      />
+
+      <div className="flex items-center gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          loading={isUploading}
+          loadingText="Uploading..."
+        >
+          {icons.upload}
+          <span className="ml-2">{coverUrl ? "Change cover" : "Upload cover"}</span>
+        </Button>
+        <p className="text-xs text-text-tertiary">JPG, PNG or GIF. Max size 5MB. Recommended: 1500×500px.</p>
+      </div>
+
+      {error && (
+        <p className="text-xs text-destructive" role="alert">{error}</p>
+      )}
+    </div>
+  );
+}
+
 // ============================================================================
 // Main Form Component
 // ============================================================================
@@ -467,12 +590,18 @@ export interface ProfileSettingsFormProps {
   initialData?: Partial<ProfileSettingsFormData>;
   /** Avatar URL from user profile */
   initialAvatarUrl?: string | null;
+  /** Cover image URL from user profile */
+  initialCoverUrl?: string | null;
   /** Handler for form submission */
   onSubmit: (data: ProfileSettingsFormData) => Promise<void>;
   /** Handler for avatar upload */
   onAvatarUpload?: (file: File) => Promise<string>;
   /** Handler for avatar removal */
   onAvatarRemove?: () => Promise<void>;
+  /** Handler for cover image upload */
+  onCoverUpload?: (file: File) => Promise<string>;
+  /** Handler for cover image removal */
+  onCoverRemove?: () => Promise<void>;
   /** Handler for username availability check */
   checkUsernameAvailability?: (username: string) => Promise<boolean>;
   /** Success callback */
@@ -496,9 +625,12 @@ export interface ProfileSettingsFormProps {
 export function ProfileSettingsForm({
   initialData,
   initialAvatarUrl,
+  initialCoverUrl,
   onSubmit,
   onAvatarUpload,
   onAvatarRemove,
+  onCoverUpload,
+  onCoverRemove,
   checkUsernameAvailability,
   onSuccess,
 }: ProfileSettingsFormProps) {
@@ -510,6 +642,9 @@ export function ProfileSettingsForm({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     initialAvatarUrl ?? null
   );
+  const [coverUrl, setCoverUrl] = useState<string | null>(
+    initialCoverUrl ?? null
+  );
   const [errors, setErrors] = useState<
     Partial<Record<keyof ProfileSettingsFormData, string>>
   >({});
@@ -517,10 +652,12 @@ export function ProfileSettingsForm({
     Partial<Record<keyof SocialLinks, string>>
   >({});
   const [avatarError, setAvatarError] = useState<string | undefined>();
+  const [coverError, setCoverError] = useState<string | undefined>();
 
   // UI state
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -588,6 +725,46 @@ export function ProfileSettingsForm({
       setAvatarError("Failed to remove avatar. Please try again.");
     } finally {
       setIsUploadingAvatar(false);
+    }
+  };
+
+  // Handle cover image upload
+  const handleCoverUpload = async (file: File) => {
+    const validation = avatarUploadSchema.safeParse({ file });
+    if (!validation.success) {
+      setCoverError(validation.error.issues[0]?.message);
+      return;
+    }
+    setCoverError(undefined);
+    setIsUploadingCover(true);
+    try {
+      if (onCoverUpload) {
+        const url = await onCoverUpload(file);
+        setCoverUrl(url);
+        setIsDirty(true);
+      } else {
+        const url = URL.createObjectURL(file);
+        setCoverUrl(url);
+        setIsDirty(true);
+      }
+    } catch {
+      setCoverError("Failed to upload cover photo. Please try again.");
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
+  // Handle cover image removal
+  const handleCoverRemove = async () => {
+    setIsUploadingCover(true);
+    try {
+      if (onCoverRemove) await onCoverRemove();
+      setCoverUrl(null);
+      setIsDirty(true);
+    } catch {
+      setCoverError("Failed to remove cover photo. Please try again.");
+    } finally {
+      setIsUploadingCover(false);
     }
   };
 
@@ -701,6 +878,17 @@ export function ProfileSettingsForm({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Cover Photo Section */}
+      <FormSection title="Cover Photo">
+        <CoverImageUpload
+          coverUrl={coverUrl}
+          onUpload={handleCoverUpload}
+          onRemove={handleCoverRemove}
+          error={coverError}
+          isUploading={isUploadingCover}
+        />
+      </FormSection>
 
       {/* Avatar Section */}
       <FormSection title="Profile Photo">

@@ -2,7 +2,8 @@
 
 import { useState, useCallback, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { useAuth } from "@/app/provider/AuthProvider";
+import { cn, formatPostDate } from "@/lib/utils";
 import { CommentSection } from "@/app/components/ui/comments";
 import { PostHeader } from "./PostHeader";
 import { PostContent } from "./PostContent";
@@ -46,6 +47,12 @@ export function PostCard(props: PostCardProps) {
   } = props;
 
   const router = useRouter();
+  const { user: currentUser } = useAuth();
+
+  // Determine if this post belongs to the logged-in user — never show Follow on own posts
+  const isOwnPost =
+    !!(currentUser?.id && post.author.id && currentUser.id === post.author.id) ||
+    !!(currentUser?.username && post.author.username && currentUser.username === post.author.username);
 
   // Merge variant defaults with explicit props
   const variantDefaults = getVariantDefaults(variant);
@@ -61,6 +68,7 @@ export function PostCard(props: PostCardProps) {
 
   const [showComments, setShowComments] = useState(false);
   const [isFollowing, setIsFollowing] = useState(post.isFollowing ?? false);
+  const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked ?? false);
 
   // Normalize images - handle both single imageUrl and images array
   const images: PostImage[] = post.images?.length
@@ -174,7 +182,7 @@ export function PostCard(props: PostCardProps) {
               timestamp={post.timestamp || post.createdAt}
               rawTimestamp={!!post.timestamp}
               showRole={showAuthorRole}
-              showFollowButton={showFollowButton}
+              showFollowButton={showFollowButton && !isOwnPost}
               isFollowing={isFollowing}
               showAvatarBorder={showAvatarBorder}
               onFollow={handleFollowClick}
@@ -209,7 +217,7 @@ export function PostCard(props: PostCardProps) {
                 <span className="text-text-secondary">@{post.author.username}</span>
                 <span className="text-text-secondary">·</span>
                 <span className="text-text-secondary">
-                  {post.timestamp || new Date(post.createdAt).toLocaleDateString()}
+                  {post.timestamp || formatPostDate(post.createdAt)}
                 </span>
               </div>
               <button
@@ -246,13 +254,16 @@ export function PostCard(props: PostCardProps) {
                 likesCount: post.likesCount,
                 commentsCount: post.commentsCount,
                 isLiked: post.isLiked,
-                isBookmarked: post.isBookmarked ?? false,
+                isBookmarked: isBookmarked,
               }}
               campaign={post.campaign}
               onLike={handleLikeClick}
               onComment={handleCommentClick}
               onShare={() => onShare?.(post.id)}
-              onBookmark={() => onBookmark?.(post.id)}
+              onBookmark={() => {
+                setIsBookmarked((prev) => !prev);
+                onBookmark?.(post.id);
+              }}
               onDonate={post.campaign ? () => {
                 // Navigate to campaign donation page
                 router.push(`/campaigns/${post.campaign!.id}/donate`);

@@ -19,8 +19,85 @@ import { CreatePost } from "@/app/components/ui";
 import { usePosts } from "@/app/provider/PostsContext";
 import { useUserProfile } from "@/app/hooks/useUserProfile";
 import { useGetFundraisersByCreatorQuery } from "@/app/generated/graphql";
+import { gql, useQuery } from "@apollo/client";
+import type { Donation } from "@/app/generated/graphql";
 import type { PublishData } from "@/app/components/ui/types/CreatePost.types";
 import { useAuth } from "@/app/provider/AuthProvider";
+
+const GET_USER_LIKED_POSTS = gql`
+  query GetUserLikedPosts($userId: ID!, $limit: Int, $offset: Int) {
+    userLikedPosts(userId: $userId, limit: $limit, offset: $offset) {
+      total
+      hasMore
+      items {
+        id
+        content
+        type
+        createdAt
+        isLiked
+        isBookmarked
+        likesCount
+        replyCount
+        repostsCount
+        bookmarksCount
+        author {
+          id
+          username
+          displayName
+          avatarUrl
+          isVerifiedCreator
+        }
+      }
+    }
+  }
+`;
+
+const GET_USER_COMMENTS = gql`
+  query GetUserComments($userId: ID!, $limit: Int, $offset: Int) {
+    userComments(userId: $userId, limit: $limit, offset: $offset) {
+      total
+      hasMore
+      items {
+        id
+        content
+        createdAt
+        likesCount
+        isLiked
+        postId
+        author {
+          id
+          username
+          displayName
+          avatarUrl
+          isVerifiedCreator
+        }
+      }
+    }
+  }
+`;
+
+const GET_USER_DONATIONS = gql`
+  query GetUserDonations($userId: ID!, $limit: Int, $offset: Int) {
+    userDonations(userId: $userId, limit: $limit, offset: $offset) {
+      total
+      hasMore
+      items {
+        id
+        amount
+        amountUSD
+        token
+        createdAt
+        isAnonymous
+        message
+        fundraiser {
+          id
+          name
+          images
+        }
+      }
+    }
+  }
+`;
 
 // Tab options for the profile page
 type ProfileTab = "posts" | "donations" | "campaigns" | "likes" | "comments";
@@ -59,6 +136,33 @@ export default function ProfilePage() {
   // Fetch user profile data from GraphQL
   const { user, isLoading: userLoading, error: userError } = useUserProfile(shouldFetch ? username : "");
 
+  // Fetch user's donations
+  const { data: donationsData, loading: donationsLoading } = useQuery(GET_USER_DONATIONS, {
+    variables: { userId: user?.id || '', limit: 20, offset: 0 },
+    skip: !user?.id || activeTab !== "donations",
+    fetchPolicy: 'network-only',
+  });
+
+  const donations: Donation[] = donationsData?.userDonations?.items || [];
+
+  // Fetch user's liked posts
+  const { data: likedPostsData, loading: likedPostsLoading } = useQuery(GET_USER_LIKED_POSTS, {
+    variables: { userId: user?.id || '', limit: 20, offset: 0 },
+    skip: !user?.id || activeTab !== "likes",
+    fetchPolicy: 'network-only',
+  });
+
+  const likedPosts = likedPostsData?.userLikedPosts?.items || [];
+
+  // Fetch user's comments
+  const { data: userCommentsData, loading: userCommentsLoading } = useQuery(GET_USER_COMMENTS, {
+    variables: { userId: user?.id || '', limit: 20, offset: 0 },
+    skip: !user?.id || activeTab !== "comments",
+    fetchPolicy: 'network-only',
+  });
+
+  const userComments = userCommentsData?.userComments?.items || [];
+
   // Fetch user's campaigns
   const { data: campaignsData, loading: campaignsLoading } = useGetFundraisersByCreatorQuery({
     variables: {
@@ -91,7 +195,14 @@ export default function ProfilePage() {
   };
 
   // Transform user data for ProfileHeader
-  const isCurrentUser = !!(currentUser && user && currentUser.id === user.id);
+  // Compare by ID first, then fall back to username match (handles cases where
+  // auth cookie check fails but user is clearly on their own profile URL)
+  const isCurrentUser = !!(
+    currentUser && (
+      (user && currentUser.id === user.id) ||
+      (currentUser.username && currentUser.username === username)
+    )
+  );
 
   const userData = user ? {
     id: user.id,
@@ -216,14 +327,17 @@ export default function ProfilePage() {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pb-2">
-                <button className="p-2.5 rounded-full border border-border-subtle hover:bg-surface-overlay transition-colors">
-                  <MessageIcon className="w-5 h-5 text-white" />
-                </button>
-                <Link href="/settings/profile">
-                  <button className="px-5 py-2 rounded-full bg-white text-black font-bold text-sm hover:bg-white/90 transition-colors">
-                    Edit profile
+                {isCurrentUser ? (
+                  <Link href="/settings/profile">
+                    <button className="px-5 py-2 rounded-full bg-white text-black font-bold text-sm hover:bg-white/90 transition-colors">
+                      Edit profile
+                    </button>
+                  </Link>
+                ) : (
+                  <button className="p-2.5 rounded-full border border-border-subtle hover:bg-surface-overlay transition-colors">
+                    <MessageIcon className="w-5 h-5 text-white" />
                   </button>
-                </Link>
+                )}
               </div>
             </div>
 
@@ -256,13 +370,15 @@ export default function ProfilePage() {
             {activeTab === "posts" && <PostsTab userId={user.id} />}
 
             {activeTab === "donations" && (
-              <DonationsTab donations={[]} />
+              <DonationsTab donations={donations} isLoading={donationsLoading} />
             )}
 
-            {activeTab === "likes" && <LikesTab likes={[]} />}
+            {activeTab === "likes" && (
+              <LikesTab posts={likedPosts} isLoading={likedPostsLoading} />
+            )}
 
             {activeTab === "comments" && (
-              <CommentsTab comments={[]} />
+              <CommentsTab comments={userComments} isLoading={userCommentsLoading} />
             )}
           </div>
         </div>

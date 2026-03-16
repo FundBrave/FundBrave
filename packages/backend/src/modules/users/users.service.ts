@@ -1076,9 +1076,31 @@ export class UsersService {
     user: PrismaUser,
     viewerId?: string,
   ): Promise<User> {
+    // Count actual follow relationships from the Follow table (denormalized counter can drift)
+    const [actualFollowersCount, actualFollowingCount] = await Promise.all([
+      this.prisma.follow.count({ where: { followingId: user.id } }),
+      this.prisma.follow.count({ where: { followerId: user.id } }),
+    ]);
+
+    // Repair denormalized counters if they drifted
+    if (
+      user.followersCount !== actualFollowersCount ||
+      user.followingCount !== actualFollowingCount
+    ) {
+      this.prisma.user
+        .update({
+          where: { id: user.id },
+          data: {
+            followersCount: actualFollowersCount,
+            followingCount: actualFollowingCount,
+          },
+        })
+        .catch(() => {/* non-critical, ignore */});
+    }
+
     const stats: UserStats = {
-      followersCount: user.followersCount,
-      followingCount: user.followingCount,
+      followersCount: actualFollowersCount,
+      followingCount: actualFollowingCount,
       postsCount: user.postsCount,
       fundraisersCount: user.fundraisersCount,
       totalDonated: user.totalDonated.toString(),

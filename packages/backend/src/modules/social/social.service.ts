@@ -697,6 +697,105 @@ export class SocialService {
     };
   }
 
+  /**
+   * Get posts liked by a user
+   */
+  async getUserLikedPosts(
+    userId: string,
+    limit: number,
+    offset: number,
+    viewerId?: string,
+  ): Promise<PaginatedPosts> {
+    const [likes, total] = await Promise.all([
+      this.prisma.like.findMany({
+        where: { userId },
+        include: {
+          post: {
+            include: this.getPostIncludes(),
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.like.count({ where: { userId } }),
+    ]);
+
+    const items = await Promise.all(
+      likes.map((l) =>
+        this.mapToPostDto(l.post as PostWithRelations, viewerId),
+      ),
+    );
+
+    return {
+      items,
+      total,
+      hasMore: offset + limit < total,
+    };
+  }
+
+  /**
+   * Get comments made by a user
+   */
+  async getUserComments(
+    userId: string,
+    limit: number,
+    offset: number,
+    viewerId?: string,
+  ): Promise<PaginatedComments> {
+    const commentIncludes = {
+      author: {
+        select: {
+          id: true,
+          walletAddress: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+          isVerifiedCreator: true,
+        },
+      },
+      replies: {
+        include: {
+          author: {
+            select: {
+              id: true,
+              walletAddress: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+              isVerifiedCreator: true,
+            },
+          },
+        },
+        take: 3,
+        orderBy: { createdAt: 'asc' as const },
+      },
+    };
+
+    const [comments, total] = await Promise.all([
+      this.prisma.comment.findMany({
+        where: { authorId: userId, parentId: null },
+        include: commentIncludes,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.comment.count({ where: { authorId: userId, parentId: null } }),
+    ]);
+
+    const items = await Promise.all(
+      comments.map((c) =>
+        this.mapToCommentDto(c as CommentWithRelations, viewerId),
+      ),
+    );
+
+    return {
+      items,
+      total,
+      hasMore: offset + limit < total,
+    };
+  }
+
   // ==================== Comment Methods ====================
 
   /**

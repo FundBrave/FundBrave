@@ -3,7 +3,7 @@
 import { Avatar } from "@/app/components/ui/Avatar";
 import { Button } from "@/app/components/ui/button";
 import { VerifiedBadge } from "./VerifiedBadge";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { cn, formatRelativeTime, formatPostDate } from "@/lib/utils";
 import type { PostAuthor } from "@/app/types/post";
 
 export interface PostHeaderProps {
@@ -47,7 +47,7 @@ export function PostHeader({
   onAuthorClick,
   className,
 }: PostHeaderProps) {
-  const displayTimestamp = rawTimestamp ? timestamp : formatRelativeTime(timestamp);
+  const displayTimestamp = rawTimestamp ? timestamp : formatPostDate(timestamp);
 
   return (
     <div className={cn("flex gap-3", className)}>
@@ -87,9 +87,9 @@ export function PostHeader({
                 {author.name}
               </span>
               {author.isVerified && <VerifiedBadge size="md" />}
-              {showFollowButton && (
+              {showFollowButton && !isFollowing && (
                 <Button
-                  variant={isFollowing ? "ghost" : "tertiary"}
+                  variant="tertiary"
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -97,7 +97,7 @@ export function PostHeader({
                   }}
                   className="h-auto px-2 py-0.5 ml-1"
                 >
-                  {isFollowing ? "Following" : "Follow"}
+                  Follow
                 </Button>
               )}
             </div>
