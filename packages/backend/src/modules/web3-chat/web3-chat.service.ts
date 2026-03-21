@@ -184,7 +184,7 @@ export class Web3ChatService {
     const archive = await this.prisma.messageArchive.create({
       data: {
         conversationHash: dto.conversationHash,
-        encryptedData: binaryData,
+        encryptedData: new Uint8Array(binaryData),
         senderUserId,
         expiresAt,
       },

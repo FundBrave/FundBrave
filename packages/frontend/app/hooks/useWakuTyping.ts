@@ -52,19 +52,21 @@ export function useWakuTyping({ peerUserId }: UseWakuTypingOptions): UseWakuTypi
 
     const subscribe = async () => {
       try {
-        const wakuNode = node as {
-          createDecoder: (params: { contentTopic: string }) => unknown;
-          filter: {
-            subscribe: (
-              decoders: unknown[],
-              callback: (message: unknown) => void
-            ) => Promise<{ unsubscribe: () => Promise<void> }>;
-          };
-        };
+        const wakuNode = node as Record<string, unknown>;
 
-        const decoder = wakuNode.createDecoder({ contentTopic: typingTopic });
+        // Guard: filter protocol may not be available
+        const filter = wakuNode.filter as { subscribe?: (...args: unknown[]) => Promise<unknown> } | undefined;
+        if (!filter?.subscribe) {
+          console.warn('[useWakuTyping] Filter protocol not available, skipping typing subscription');
+          return;
+        }
 
-        const subscription = await wakuNode.filter.subscribe(
+        const createDecoder = wakuNode.createDecoder as ((params: { contentTopic: string }) => unknown) | undefined;
+        if (!createDecoder) return;
+
+        const decoder = createDecoder({ contentTopic: typingTopic });
+
+        const result = await filter.subscribe(
           [decoder],
           (wakuMessage: unknown) => {
             if (!mountedRef.current) return;
@@ -101,9 +103,12 @@ export function useWakuTyping({ peerUserId }: UseWakuTypingOptions): UseWakuTypi
           }
         );
 
-        unsubscribe = () => {
-          subscription.unsubscribe().catch(() => {});
-        };
+        // Waku SDK may return an object with .unsubscribe() or a function directly
+        if (typeof result === 'function') {
+          unsubscribe = () => { (result as () => void)(); };
+        } else if (result && typeof (result as { unsubscribe?: unknown }).unsubscribe === 'function') {
+          unsubscribe = () => { (result as { unsubscribe: () => Promise<void> }).unsubscribe().catch(() => {}); };
+        }
       } catch (err) {
         console.error('[useWakuTyping] Filter subscription failed:', err);
       }
@@ -131,18 +136,14 @@ export function useWakuTyping({ peerUserId }: UseWakuTypingOptions): UseWakuTypi
       }
 
       try {
-        const wakuNode = node as {
-          createEncoder: (params: { contentTopic: string; ephemeral: boolean }) => unknown;
-          lightPush: {
-            send: (
-              encoder: unknown,
-              message: { payload: Uint8Array }
-            ) => Promise<{ recipients: number }>;
-          };
-        };
+        const wakuNode = node as Record<string, unknown>;
+        const createEncoder = wakuNode.createEncoder as ((params: { contentTopic: string; ephemeral: boolean }) => unknown) | undefined;
+        const lightPush = wakuNode.lightPush as { send?: (encoder: unknown, message: { payload: Uint8Array }) => Promise<unknown> } | undefined;
+
+        if (!createEncoder || !lightPush?.send) return;
 
         // Ephemeral = true so typing events are NOT stored in Waku Store
-        const encoder = wakuNode.createEncoder({
+        const encoder = createEncoder({
           contentTopic: typingTopic,
           ephemeral: true,
         });
@@ -154,7 +155,7 @@ export function useWakuTyping({ peerUserId }: UseWakuTypingOptions): UseWakuTypi
           timestamp: Date.now(),
         });
 
-        await wakuNode.lightPush.send(encoder, { payload });
+        await lightPush.send(encoder, { payload });
       } catch {
         // Typing indicators are best-effort; silently ignore failures
       }

@@ -143,13 +143,24 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
             )}
           </div>
 
-          {/* Follow Button - Only show if not current user */}
+          {/* Message & Follow - Only show if not current user */}
           {!user.isCurrentUser && (
-            <FollowButton
-              userId={user.id}
-              initialIsFollowing={user.isFollowing}
-              initialFollowerCount={user.followers}
-            />
+            <div className="flex items-center gap-3">
+              <a
+                href={`/messenger?user=${user.id}`}
+                className="px-4 py-2 rounded-full border border-foreground/20 hover:bg-foreground/10 transition-colors text-sm font-medium text-foreground flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                </svg>
+                Message
+              </a>
+              <FollowButton
+                userId={user.id}
+                initialIsFollowing={user.isFollowing}
+                initialFollowerCount={user.followers}
+              />
+            </div>
           )}
         </div>
       </div>
@@ -178,7 +189,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           </button>
         </div>
         <p className="text-foreground font-bold text-base">
-          Member since {user.memberSince}
+          Member since {new Date(user.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </p>
       </div>
     </div>

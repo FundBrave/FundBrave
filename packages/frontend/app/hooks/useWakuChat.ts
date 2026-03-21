@@ -246,9 +246,12 @@ export function useWakuChat({
           }
         );
 
-        unsubscribe = () => {
-          subscription.unsubscribe().catch(() => {});
-        };
+        // Waku SDK may return a function directly or an object with .unsubscribe()
+        if (typeof subscription === 'function') {
+          unsubscribe = subscription as () => void;
+        } else if (subscription && typeof (subscription as { unsubscribe?: unknown }).unsubscribe === 'function') {
+          unsubscribe = () => { (subscription as { unsubscribe: () => Promise<void> }).unsubscribe().catch(() => {}); };
+        }
         filterUnsubRef.current = unsubscribe;
       } catch (err) {
         console.error('[useWakuChat] Filter subscription failed:', err);

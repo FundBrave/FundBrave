@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   nwaku:
-    image: statusteam/nim-waku:v0.24.0
+    image: wakuorg/nwaku:latest
     ports:
       - "60000:60000"  # libp2p
       - "8000:8000"    # WebSocket

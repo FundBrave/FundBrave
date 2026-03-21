@@ -133,20 +133,23 @@ export function useMessages(conversationId: string | null, limit = 50, offset = 
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
 
-  const fetchMessages = useCallback(async () => {
+  const fetchMessages = useCallback(async (silent = false) => {
     if (!isAuthenticated || !conversationId) {
       setIsLoading(false);
       return;
     }
 
     try {
-      setIsLoading(true);
-      setError(null);
+      // Only show loading on initial fetch, not on polls
+      if (!silent) {
+        setIsLoading(true);
+        setError(null);
+      }
 
       const response = await fetch(
         `${API_BASE}/api/messages/conversations/${conversationId}/messages?limit=${limit}&offset=${offset}`,
         {
-          credentials: 'include', // Send HttpOnly cookies
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -158,20 +161,38 @@ export function useMessages(conversationId: string | null, limit = 50, offset = 
       }
 
       const data: PaginatedMessages = await response.json();
-      // Backend might return 'items', fallback to 'messages' for compatibility
-      setMessages(data.items || data.messages || []);
+      const newMessages = data.items || data.messages || [];
+
+      // Only update state if messages actually changed (prevents unnecessary re-renders)
+      setMessages(prev => {
+        if (prev.length === newMessages.length && prev.length > 0 && prev[prev.length - 1]?.id === newMessages[newMessages.length - 1]?.id) {
+          return prev; // No change — skip re-render
+        }
+        return newMessages;
+      });
       setTotal(data.total || 0);
       setHasMore(data.hasMore || false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      if (!silent) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   }, [isAuthenticated, conversationId, limit, offset]);
 
   useEffect(() => {
-    fetchMessages();
+    fetchMessages(false);
   }, [fetchMessages]);
+
+  // Poll for new messages every 3 seconds (silent — no loading state, no unnecessary re-renders)
+  useEffect(() => {
+    if (!conversationId) return;
+    const interval = setInterval(() => fetchMessages(true), 3000);
+    return () => clearInterval(interval);
+  }, [conversationId, fetchMessages]);
 
   return {
     messages,
@@ -338,7 +359,7 @@ export function useStartConversation() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ recipientId }),
+          body: JSON.stringify({ participantId: recipientId }),
         });
 
         if (!response.ok) {

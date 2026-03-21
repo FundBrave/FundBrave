@@ -15,6 +15,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCampaign } from "@/app/hooks/useCampaigns";
 import { useFraudDetection } from "@/app/hooks/useFraudDetection";
+import { useMessageUser } from "@/app/hooks/useMessageUser";
 import { USDC_DECIMALS } from "@/app/lib/contracts/config";
 import { Button } from "@/app/components/ui/button";
 import { FraudDetectionAlert, FraudRiskBadge } from "@/app/components/ai/FraudDetectionAlert";
@@ -26,6 +27,7 @@ export default function CampaignViewPage() {
 
   // Fetch real campaign data from API
   const { campaign: apiCampaign, isLoading, error } = useCampaign(id);
+  const { messageUser } = useMessageUser();
 
   // Fallback to mock data if API fails
   const mockCampaign = getCampaignById(id);
@@ -48,7 +50,7 @@ export default function CampaignViewPage() {
         campaign_id: campaign.id,
         name: apiCampaign?.title || campaign.title,
         description: apiCampaign?.description || ('description' in campaign ? campaign.description : ''),
-        creator_id: apiCampaign?.creator || ('creator' in campaign && campaign.creator.handle ? campaign.creator.handle : 'unknown'),
+        creator_id: (typeof apiCampaign?.creator === 'string' ? apiCampaign.creator : apiCampaign?.creator?.handle) || ('creator' in campaign && campaign.creator.handle ? campaign.creator.handle : 'unknown'),
         goal_amount: apiCampaign ? parseFloat(apiCampaign.goal) / Math.pow(10, USDC_DECIMALS) : ('goal' in campaign ? (typeof campaign.goal === 'string' ? parseFloat(campaign.goal) : campaign.goal) : 1000),
         category: campaign.categories?.[0] || 'general',
       });
@@ -181,6 +183,19 @@ export default function CampaignViewPage() {
                     <span className="font-bold text-foreground text-base">
                       {creator.name}
                     </span>
+                    {apiCampaign?.creator && (
+                      <button
+                        onClick={() => {
+                          const creatorId = typeof apiCampaign.creator === 'string'
+                            ? apiCampaign.creator
+                            : apiCampaign.creator?.handle;
+                          if (creatorId) messageUser(creatorId);
+                        }}
+                        className="text-xs font-bold text-primary-400 hover:text-primary-300 uppercase tracking-wide"
+                      >
+                        Message
+                      </button>
+                    )}
                     <button className="text-xs font-bold text-primary-400 hover:text-primary-300 uppercase tracking-wide">
                       Follow
                     </button>
@@ -255,7 +270,7 @@ export default function CampaignViewPage() {
               {/* Campaign Staking Interface */}
               <CampaignStakingInterface
                 campaignId={id}
-                stakingPoolAddress={apiCampaign?.stakingPoolAddr}
+                stakingPoolAddress={apiCampaign?.stakingPoolAddr ?? undefined}
                 className="mt-6"
               />
             </div>

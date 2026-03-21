@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   ChatSidebar,
@@ -19,7 +20,9 @@ import { BackHeader } from "@/app/components/common/BackHeader";
 import {
   useConversations,
   useMessages,
+  useSendMessage,
   useMarkAsRead,
+  useStartConversation,
   type Message,
 } from "@/app/hooks/useMessaging";
 import { useWakuTyping } from "@/app/hooks/useWakuTyping";
@@ -57,6 +60,13 @@ const mockSharedFiles: SharedFile[] = [];
  */
 function MessengerInner() {
   const { user } = useAuth();
+
+  // ─── URL Search Params (deep-link into conversation) ──────────────────────
+  const searchParams = useSearchParams();
+  const urlConversationId = searchParams.get('conversation');
+  const urlUserId = searchParams.get('user');
+
+  const { startConversation } = useStartConversation();
 
   // ─── Waku Node (real hook) ──────────────────────────────────────────────────
 
@@ -106,6 +116,7 @@ function MessengerInner() {
     isLoading: messagesLoading,
   } = useMessages(selectedConversationId, 50, 0);
 
+  const { sendMessage: sendMessageApi } = useSendMessage();
   const { markAsRead } = useMarkAsRead();
 
   // ─── Convert API conversations to Chat format ─────────────────────────────
@@ -208,13 +219,16 @@ function MessengerInner() {
 
   useEffect(() => {
     if (apiMessages && apiMessages.length > 0) {
-      const converted: ChatMessage[] = apiMessages.map((msg) => ({
-        id: msg.id,
-        senderId: msg.senderId,
-        content: msg.content,
-        timestamp: msg.createdAt,
-        isRead: msg.isRead,
-      }));
+      const converted: ChatMessage[] = apiMessages
+        .slice()
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        .map((msg) => ({
+          id: msg.id,
+          senderId: msg.senderId || msg.sender?.id || '',
+          content: msg.content,
+          timestamp: msg.createdAt,
+          isRead: msg.isRead,
+        }));
       setLocalMessages(converted);
     } else {
       setLocalMessages([]);
@@ -290,6 +304,42 @@ function MessengerInner() {
     }
   }, [selectedConversationId, localMessages, markAsRead, user?.id]);
 
+  // ─── Auto-select conversation from URL params ────────────────────────────
+  useEffect(() => {
+    if (urlConversationId) {
+      setSelectedConversationId(urlConversationId);
+      // Clean URL to prevent re-trigger on back/forward
+      window.history.replaceState(null, '', '/messenger');
+    }
+  }, [urlConversationId]);
+
+  useEffect(() => {
+    if (!urlUserId || !user?.id || urlUserId === user.id) return;
+
+    // Clean URL immediately to prevent double-firing
+    const targetUserId = urlUserId;
+    window.history.replaceState(null, '', '/messenger');
+
+    let cancelled = false;
+
+    const createAndSelect = async () => {
+      try {
+        const conversation = await startConversation(targetUserId);
+        if (!cancelled && conversation?.id) {
+          setSelectedConversationId(conversation.id);
+          refetchConversations();
+        }
+      } catch (err) {
+        console.error('[Messenger] Failed to start conversation:', err);
+      }
+    };
+
+    createAndSelect();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlUserId]);
+
   // ─── Encryption Setup Handlers ────────────────────────────────────────────
 
   const handleSignWithWallet = useCallback(async () => {
@@ -360,13 +410,16 @@ function MessengerInner() {
       // Track send status
       setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "sending" }));
 
-      // --- Always send via Waku (outbox handles offline queuing) ---
+      // --- Send via both Waku (P2P) and backend API (persistence) ---
       try {
-        await wakuChat.sendMessage(content);
+        // Send via backend API for persistence and cross-user delivery
+        await sendMessageApi(selectedConversationId, content);
+
+        // Also send via Waku for real-time P2P delivery
+        wakuChat.sendMessage(content).catch(() => {});
 
         setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "sent" }));
 
-        // After a short delay, mark as delivered
         setTimeout(() => {
           setMessageSendStatuses((prev) => ({
             ...prev,
@@ -376,7 +429,7 @@ function MessengerInner() {
 
         refetchConversations();
       } catch {
-        // Message queued to outbox by useWakuChat internally
+        // Backend failed — message still sent via Waku/outbox
         setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "queued" }));
       }
     },
@@ -384,6 +437,7 @@ function MessengerInner() {
       selectedConversationId,
       user?.id,
       wakuChat.sendMessage,
+      sendMessageApi,
       refetchConversations,
     ]
   );
@@ -665,7 +719,15 @@ function MessengerInner() {
 export default function MessengerPage() {
   return (
     <WakuProvider>
-      <MessengerInner />
+      <Suspense
+        fallback={
+          <div className="flex h-dvh items-center justify-center bg-background">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        }
+      >
+        <MessengerInner />
+      </Suspense>
     </WakuProvider>
   );
 }
