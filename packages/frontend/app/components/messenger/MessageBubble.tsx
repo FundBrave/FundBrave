@@ -2,8 +2,12 @@
 
 import React from "react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
+import { Clock, Check, Lock } from "@/app/components/ui/icons";
+import { DURATION, EASE } from "@/lib/constants/animation";
 import type { Message, MessageAttachment } from "@/app/types/messenger";
+import type { MessageSendStatus } from "@/app/types/web3-chat";
 
 export interface MessageBubbleProps {
   /** Message data */
@@ -16,6 +20,10 @@ export interface MessageBubbleProps {
   senderName?: string;
   /** Whether to show the timestamp */
   showTimestamp?: boolean;
+  /** Optional send status for WhatsApp-style indicators (queued, sending, sent, delivered) */
+  sendStatus?: MessageSendStatus;
+  /** Whether this message was end-to-end encrypted */
+  isEncrypted?: boolean;
 }
 
 /**
@@ -49,7 +57,7 @@ function MessageAttachments({
           return (
             <div
               key={attachment.id}
-              className="relative h-40 w-40 overflow-hidden rounded-lg"
+              className="relative h-40 w-full max-w-[160px] overflow-hidden rounded-lg"
             >
               <Image
                 src={attachment.url}
@@ -79,6 +87,61 @@ function MessageAttachments({
   );
 }
 
+/** Crossfade variants for send status icon transitions */
+const statusIconVariants = {
+  hidden: { opacity: 0, scale: 0.7 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: DURATION.fast, ease: EASE.snappy },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.7,
+    transition: { duration: DURATION.quick, ease: EASE.standard },
+  },
+};
+
+/**
+ * Renders a WhatsApp-style send status indicator for sent messages
+ * with smooth crossfade transitions between states.
+ *
+ * Framer Motion owns: opacity, scale (icon transitions).
+ * Tailwind owns: sizing, color, animate-pulse.
+ *
+ * - queued: clock icon (gray)
+ * - sending: clock icon (gray, pulsing)
+ * - sent: single checkmark (gray)
+ * - delivered: double checkmark (green)
+ */
+function SendStatusIndicator({ status }: { status: MessageSendStatus }) {
+  return (
+    <AnimatePresence mode="wait">
+      {status === "queued" && (
+        <motion.span key="queued" variants={statusIconVariants} initial="hidden" animate="visible" exit="exit" className="inline-flex">
+          <Clock className="h-3 w-3 text-text-tertiary" />
+        </motion.span>
+      )}
+      {status === "sending" && (
+        <motion.span key="sending" variants={statusIconVariants} initial="hidden" animate="visible" exit="exit" className="inline-flex">
+          <Clock className="h-3 w-3 animate-pulse text-text-tertiary" />
+        </motion.span>
+      )}
+      {status === "sent" && (
+        <motion.span key="sent" variants={statusIconVariants} initial="hidden" animate="visible" exit="exit" className="inline-flex">
+          <Check className="h-3 w-3 text-text-tertiary" />
+        </motion.span>
+      )}
+      {status === "delivered" && (
+        <motion.span key="delivered" variants={statusIconVariants} initial="hidden" animate="visible" exit="exit" className="inline-flex -space-x-1.5">
+          <Check className="h-3 w-3 text-green-500" />
+          <Check className="h-3 w-3 text-green-500" />
+        </motion.span>
+      )}
+    </AnimatePresence>
+  );
+}
+
 /**
  * Individual message bubble component.
  * Sent messages have purple gradient background and align right.
@@ -88,6 +151,8 @@ export function MessageBubble({
   message,
   isSent,
   showTimestamp = true,
+  sendStatus,
+  isEncrypted,
 }: MessageBubbleProps) {
   return (
     <div
@@ -126,16 +191,34 @@ export function MessageBubble({
           )}
         </div>
 
-        {/* Timestamp */}
+        {/* Timestamp + encryption lock + send status */}
         {showTimestamp && (
-          <span
+          <div
             className={cn(
-              "block text-[10px] text-text-tertiary",
-              isSent ? "text-right pr-1" : "text-left pl-1"
+              "flex items-center gap-1.5 text-[11px] text-text-tertiary",
+              isSent ? "justify-end pr-1" : "justify-start pl-1"
             )}
           >
-            {formatMessageTime(message.timestamp)}
-          </span>
+            {/* Encryption lock icon: Framer Motion owns opacity (gentle fade-in) */}
+            {isEncrypted && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: DURATION.fast, ease: EASE.standard }}
+                className="inline-flex"
+              >
+                <Lock className="h-2.5 w-2.5 text-text-tertiary" aria-label="Encrypted" />
+              </motion.span>
+            )}
+
+            {/* Timestamp text */}
+            <span>{formatMessageTime(message.timestamp)}</span>
+
+            {/* Send status indicator (only for sent messages) */}
+            {isSent && sendStatus && (
+              <SendStatusIndicator status={sendStatus} />
+            )}
+          </div>
         )}
       </div>
     </div>
