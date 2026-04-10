@@ -5,6 +5,7 @@ import { useAuth } from '@/app/provider/AuthProvider';
 import { useWakuNode } from '@/app/provider/WakuProvider';
 import { getDMContentTopic, getConversationId } from '@/lib/waku/content-topics';
 import { ChatMessageProto } from '@/lib/waku/proto/chat-message';
+import { makeDecoder, makeEncoder } from '@/lib/waku/codec';
 import {
   saveMessages,
   loadMessages,
@@ -162,19 +163,13 @@ export function useWakuChat({
 
     const subscribe = async () => {
       try {
-        // Use node's createDecoder which handles routing info automatically
-        const wakuNode = node as {
-          createDecoder: (params: { contentTopic: string }) => unknown;
-          filter: {
-            subscribe: (
-              decoders: unknown[],
-              callback: (message: unknown) => void
-            ) => Promise<{ unsubscribe: () => Promise<void> }>;
-          };
-        };
-        const decoder = wakuNode.createDecoder({ contentTopic });
+        const wakuNode = node as Record<string, unknown>;
+        const filter = wakuNode.filter as { subscribe?: (...args: unknown[]) => Promise<unknown> } | undefined;
+        if (!filter?.subscribe) return;
 
-        const subscription = await wakuNode.filter.subscribe(
+        const decoder = await makeDecoder(contentTopic);
+
+        const subscription = await filter.subscribe(
           [decoder],
           (wakuMessage: unknown) => {
             if (!mountedRef.current) return;
@@ -348,17 +343,11 @@ export function useWakuChat({
       // Attempt to send via Waku LightPush
       if (isReady && node) {
         try {
-          // Use node's createEncoder which handles routing info automatically
-          const wakuNode = node as {
-            createEncoder: (params: { contentTopic: string }) => unknown;
-            lightPush: {
-              send: (
-                encoder: unknown,
-                message: { payload: Uint8Array }
-              ) => Promise<{ recipients: number }>;
-            };
-          };
-          const encoder = wakuNode.createEncoder({ contentTopic });
+          const wakuNode = node as Record<string, unknown>;
+          const lightPush = wakuNode.lightPush as { send?: (encoder: unknown, message: { payload: Uint8Array }) => Promise<{ recipients: number }> } | undefined;
+          if (!lightPush?.send) throw new Error('LightPush not available');
+
+          const encoder = await makeEncoder(contentTopic);
 
           const payload = ChatMessageProto.encode({
             id: chatMessage.id,
@@ -376,7 +365,7 @@ export function useWakuChat({
             replyToId: metadata?.replyToId,
           });
 
-          const result = await wakuNode.lightPush.send(encoder, { payload });
+          const result = await lightPush.send(encoder, { payload });
 
           if (result.recipients > 0) {
             // Successfully sent
@@ -456,16 +445,9 @@ export function useWakuChat({
         return;
       }
 
-      // Use node's createEncoder which handles routing info automatically
-      const wakuNode = node as {
-        createEncoder: (params: { contentTopic: string }) => unknown;
-        lightPush: {
-          send: (
-            encoder: unknown,
-            message: { payload: Uint8Array }
-          ) => Promise<{ recipients: number }>;
-        };
-      };
+      const wakuNode = node as Record<string, unknown>;
+      const lightPush = wakuNode.lightPush as { send?: (encoder: unknown, message: { payload: Uint8Array }) => Promise<{ recipients: number }> } | undefined;
+      if (!lightPush?.send) return;
 
       for (const entry of forConversation) {
         if (!mountedRef.current) break;
@@ -487,7 +469,7 @@ export function useWakuChat({
             entry.message.senderUserId,
             entry.message.recipientUserId
           );
-          const encoder = wakuNode.createEncoder({ contentTopic: entryContentTopic });
+          const encoder = await makeEncoder(entryContentTopic);
 
           const payload = ChatMessageProto.encode({
             id: entry.message.id,
@@ -505,7 +487,7 @@ export function useWakuChat({
             replyToId: entry.message.metadata?.replyToId,
           });
 
-          const result = await wakuNode.lightPush.send(encoder, { payload });
+          const result = await lightPush.send(encoder, { payload });
 
           if (result.recipients > 0) {
             // Successfully sent — remove from outbox

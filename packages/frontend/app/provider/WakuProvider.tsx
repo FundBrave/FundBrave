@@ -65,19 +65,25 @@ export function WakuProvider({ children }: WakuProviderProps) {
         // Dynamic import to avoid SSR issues
         const { createLightNode, waitForRemotePeer, Protocols } = await import('@waku/sdk');
 
-        // Build bootstrap/static peer list
-        const bootstrapPeers: string[] = [];
-
-        // 1. Self-hosted nwaku relay node (highest priority)
-        if (NWAKU_MULTIADDR) {
-          bootstrapPeers.push(NWAKU_MULTIADDR);
-        }
-
         const node = await createLightNode({
-          defaultBootstrap: true,  // Keep public fleet as backup
-          bootstrapPeers: bootstrapPeers.length > 0 ? bootstrapPeers : undefined,
+          defaultBootstrap: true,
+          // Allow non-TLS (ws://) connections for local dev nwaku nodes
+          ...(NWAKU_MULTIADDR && NWAKU_MULTIADDR.includes('/ws/') && !NWAKU_MULTIADDR.includes('/wss/')
+            ? { libp2p: { filterMultiaddrs: false } }
+            : {}),
         });
         await node.start();
+
+        // Dial self-hosted nwaku relay node directly (if configured)
+        if (NWAKU_MULTIADDR) {
+          try {
+            await (node as unknown as { dial: (addr: string) => Promise<void> }).dial(NWAKU_MULTIADDR);
+            console.log('[WakuProvider] Connected to self-hosted nwaku relay');
+          } catch (dialErr) {
+            console.warn('[WakuProvider] Failed to dial nwaku, falling back to public fleet:', dialErr);
+          }
+        }
+
         await waitForRemotePeer(node, [Protocols.Filter, Protocols.LightPush, Protocols.Store]);
 
         if (!mountedRef.current) {

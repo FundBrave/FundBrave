@@ -8,8 +8,10 @@ services:
       - "8003:8003"    # REST API (monitoring)
     command:
       - --listen-address=0.0.0.0
+      - --nodekey=${NWAKU_NODE_KEY:?Set NWAKU_NODE_KEY in .env}
       - --websocket-support=true
       - --websocket-port=8000
+      - --cluster-id=1
       - --relay=true
       - --filter=true
       - --lightpush=true

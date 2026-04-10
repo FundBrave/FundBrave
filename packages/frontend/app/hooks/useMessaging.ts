@@ -187,7 +187,7 @@ export function useMessages(conversationId: string | null, limit = 50, offset = 
     fetchMessages(false);
   }, [fetchMessages]);
 
-  // Poll for new messages every 3 seconds (silent — no loading state, no unnecessary re-renders)
+  // Poll for new messages (3s) — primary delivery until nwaku relay is deployed on VPS
   useEffect(() => {
     if (!conversationId) return;
     const interval = setInterval(() => fetchMessages(true), 3000);

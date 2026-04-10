@@ -87,3 +87,6 @@ video-production/*.webm
 video-production/video-scenes/
 video-production/title-cards/
 video-production/audio/
+
+# nwaku secrets
+docker/nwaku/.env

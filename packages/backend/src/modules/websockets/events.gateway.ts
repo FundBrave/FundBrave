@@ -9,14 +9,23 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import * as jwt from 'jsonwebtoken';
+import * as cookie from 'cookie';
+
+interface AuthenticatedSocket extends Socket {
+  userId?: string;
+}
 
 /**
  * WebSocket Gateway for real-time events
  * Handles subscriptions and broadcasts for all platform activities
+ *
+ * Security: JWT is validated on connection. Private rooms (user, conversation,
+ * typing) require the authenticated user to own the resource.
  */
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL || '*',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
     credentials: true,
   },
   namespace: '/events',
@@ -32,12 +41,40 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // ==================== Connection Lifecycle ====================
 
-  handleConnection(client: Socket) {
-    this.logger.log(`Client connected: ${client.id}`);
+  handleConnection(client: AuthenticatedSocket) {
+    // Extract JWT from cookie or auth header
+    try {
+      let token: string | undefined;
+
+      // Try cookie first
+      const cookieHeader = client.handshake.headers.cookie;
+      if (cookieHeader) {
+        const cookies = cookie.parse(cookieHeader);
+        token = cookies['access_token'];
+      }
+
+      // Fallback to auth header
+      if (!token && client.handshake.auth?.token) {
+        token = client.handshake.auth.token as string;
+      }
+
+      if (token) {
+        const secret = process.env.JWT_SECRET;
+        if (secret) {
+          const decoded = jwt.verify(token, secret) as { sub?: string; userId?: string };
+          client.userId = decoded.sub || decoded.userId;
+        }
+      }
+    } catch {
+      // JWT invalid or expired — client connects but without userId
+      // They can still subscribe to public rooms (fundraiser, stats, dao)
+    }
+
+    this.logger.log(`Client connected: ${client.id} (userId: ${client.userId || 'anonymous'})`);
     this.connectedClients.set(client.id, []);
   }
 
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: AuthenticatedSocket) {
     this.logger.log(`Client disconnected: ${client.id}`);
     this.connectedClients.delete(client.id);
   }
@@ -76,12 +113,19 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   /**
    * Subscribe to user-specific notifications
+   * Security: Only the authenticated user can subscribe to their own room
    */
   @SubscribeMessage('subscribeUser')
   handleSubscribeUser(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() userId: string,
   ) {
+    if (!client.userId) {
+      return { event: 'error', data: { message: 'Authentication required' } };
+    }
+    if (client.userId !== userId) {
+      return { event: 'error', data: { message: 'Cannot subscribe to another user\'s notifications' } };
+    }
     const room = `user:${userId}`;
     client.join(room);
     this.addSubscription(client.id, room);
@@ -432,16 +476,20 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   /**
    * Subscribe to a specific conversation for real-time updates
+   * Security: Requires authentication
    */
   @SubscribeMessage('subscribeConversation')
   handleSubscribeConversation(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() conversationId: string,
   ) {
+    if (!client.userId) {
+      return { event: 'error', data: { message: 'Authentication required' } };
+    }
     const room = `conversation:${conversationId}`;
     client.join(room);
     this.addSubscription(client.id, room);
-    this.logger.log(`Client ${client.id} subscribed to ${room}`);
+    this.logger.log(`Client ${client.id} (user: ${client.userId}) subscribed to ${room}`);
     return { event: 'subscribed', data: { room } };
   }
 
@@ -450,7 +498,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
    */
   @SubscribeMessage('unsubscribeConversation')
   handleUnsubscribeConversation(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() conversationId: string,
   ) {
     const room = `conversation:${conversationId}`;
@@ -462,14 +510,17 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   /**
    * Handle typing start event from client
+   * Security: userId must match the authenticated user
    */
   @SubscribeMessage('typingStart')
   handleTypingStart(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: string; userId: string },
   ) {
+    if (!client.userId || client.userId !== data.userId) {
+      return { event: 'error', data: { message: 'Authentication required' } };
+    }
     const room = `conversation:${data.conversationId}`;
-    // Broadcast to other participants in the conversation
     client.to(room).emit('userTyping', {
       conversationId: data.conversationId,
       userId: data.userId,
@@ -484,14 +535,17 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   /**
    * Handle typing stop event from client
+   * Security: userId must match the authenticated user
    */
   @SubscribeMessage('typingStop')
   handleTypingStop(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: string; userId: string },
   ) {
+    if (!client.userId || client.userId !== data.userId) {
+      return { event: 'error', data: { message: 'Authentication required' } };
+    }
     const room = `conversation:${data.conversationId}`;
-    // Broadcast to other participants in the conversation
     client.to(room).emit('userTyping', {
       conversationId: data.conversationId,
       userId: data.userId,

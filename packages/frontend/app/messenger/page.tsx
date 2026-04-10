@@ -411,8 +411,10 @@ function MessengerInner() {
       setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "sending" }));
 
       // --- Send via both Waku (P2P) and backend API (persistence) ---
+      // SECURITY NOTE: Backend API sends plaintext (not E2E encrypted).
+      // This is a temporary fallback until nwaku relay is deployed.
+      // Remove sendMessageApi() call once Waku delivery is confirmed working.
       try {
-        // Send via backend API for persistence and cross-user delivery
         await sendMessageApi(selectedConversationId, content);
 
         // Also send via Waku for real-time P2P delivery

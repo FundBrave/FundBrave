@@ -5,6 +5,7 @@ import { useAuth } from '@/app/provider/AuthProvider';
 import { useWakuNode } from '@/app/provider/WakuProvider';
 import { getTypingContentTopic, getConversationId } from '@/lib/waku/content-topics';
 import { TypingIndicatorProto } from '@/lib/waku/proto/chat-message';
+import { makeDecoder, makeEncoder } from '@/lib/waku/codec';
 
 /** How long before a typing indicator expires if no new event received */
 const TYPING_TIMEOUT_MS = 4_000;
@@ -61,10 +62,7 @@ export function useWakuTyping({ peerUserId }: UseWakuTypingOptions): UseWakuTypi
           return;
         }
 
-        const createDecoder = wakuNode.createDecoder as ((params: { contentTopic: string }) => unknown) | undefined;
-        if (!createDecoder) return;
-
-        const decoder = createDecoder({ contentTopic: typingTopic });
+        const decoder = await makeDecoder(typingTopic);
 
         const result = await filter.subscribe(
           [decoder],
@@ -137,16 +135,11 @@ export function useWakuTyping({ peerUserId }: UseWakuTypingOptions): UseWakuTypi
 
       try {
         const wakuNode = node as Record<string, unknown>;
-        const createEncoder = wakuNode.createEncoder as ((params: { contentTopic: string; ephemeral: boolean }) => unknown) | undefined;
         const lightPush = wakuNode.lightPush as { send?: (encoder: unknown, message: { payload: Uint8Array }) => Promise<unknown> } | undefined;
 
-        if (!createEncoder || !lightPush?.send) return;
+        if (!lightPush?.send) return;
 
-        // Ephemeral = true so typing events are NOT stored in Waku Store
-        const encoder = createEncoder({
-          contentTopic: typingTopic,
-          ephemeral: true,
-        });
+        const encoder = await makeEncoder(typingTopic, true);
 
         const payload = TypingIndicatorProto.encode({
           userId,
