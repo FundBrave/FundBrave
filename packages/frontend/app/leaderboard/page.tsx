@@ -49,10 +49,10 @@ export default function LeaderboardPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-4 sm:mb-6"
         >
-          <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
             Leaderboard
           </h1>
-          <p className="text-xs xs:text-sm sm:text-base text-white/40 mt-1">
+          <p className="text-xs xs:text-sm sm:text-base text-text-secondary mt-1">
             Top contributors in our community
           </p>
         </motion.div>

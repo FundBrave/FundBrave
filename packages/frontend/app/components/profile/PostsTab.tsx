@@ -70,9 +70,9 @@ export default function PostsTab({ userId, username: externalUsername, posts: ex
 
   if (error) {
     return (
-      <div className="text-center py-12 text-red-400">
+      <div className="text-center py-12 text-destructive">
         <p className="mb-2">Failed to load posts</p>
-        <p className="text-sm">Please try again later</p>
+        <p className="text-sm text-text-tertiary">Please try again later</p>
       </div>
     );
   }

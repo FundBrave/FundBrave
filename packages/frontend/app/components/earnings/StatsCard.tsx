@@ -91,7 +91,7 @@ export function StatsCard({
         <div
           className={cn(
             "flex items-center gap-1 text-sm font-medium",
-            isPositive ? "text-green-400" : "text-red-400"
+            isPositive ? "text-success" : "text-destructive"
           )}
         >
           <span>

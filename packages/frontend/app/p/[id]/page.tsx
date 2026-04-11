@@ -38,9 +38,9 @@ export default function PostDetailPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-surface-elevated flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-white/40"
+              className="w-8 h-8 text-text-tertiary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
