@@ -48,9 +48,10 @@ export function HomeLayout({
 
       {/* Main Content - Flexible center column */}
       <main
+        id="main-content"
         className={cn(
           "flex-1 min-w-0",
-          "md:px-6 md:py-6 md:pt-24 px-2 py-2 pt-12",
+          "md:px-6 md:py-6 md:pt-20 px-2 py-2 pt-16",
           "overflow-x-hidden"
         )}
       >

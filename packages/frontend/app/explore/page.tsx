@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Sparkles,
   TrendingUp,
@@ -188,7 +189,7 @@ export default function ExplorePage() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Explore Campaigns</h1>
@@ -212,10 +213,11 @@ export default function ExplorePage() {
                     className="group bg-surface-elevated border border-border-subtle hover:border-primary/30 rounded-xl overflow-hidden transition-all text-left"
                   >
                     <div className="relative h-56">
-                      <img
+                      <Image
                         src={campaign.image}
                         alt={campaign.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute top-3 left-3 px-3 py-1 bg-primary/90 backdrop-blur-sm rounded-full text-xs font-semibold text-white flex items-center gap-1">
                         <Sparkles className="w-3 h-3" />
@@ -278,10 +280,11 @@ export default function ExplorePage() {
                     className="group bg-surface-elevated border border-border-subtle hover:border-success/30 rounded-xl overflow-hidden transition-all text-left"
                   >
                     <div className="relative h-40">
-                      <img
+                      <Image
                         src={campaign.image}
                         alt={campaign.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute top-2 left-2 px-2 py-1 bg-success/90 backdrop-blur-sm rounded-full text-xs font-semibold text-white flex items-center gap-1">
                         <TrendingUp className="w-3 h-3" />
@@ -385,11 +388,12 @@ export default function ExplorePage() {
                   onClick={() => router.push(`/campaigns/${campaign.id}`)}
                   className="group bg-surface-elevated border border-border-subtle hover:border-primary/30 rounded-xl overflow-hidden transition-all text-left"
                 >
-                  <div className="relative h-48">
-                    <img
+                  <div className="relative h-48 overflow-hidden">
+                    <Image
                       src={campaign.image}
                       alt={campaign.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute top-2 right-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-full text-xs text-white">
                       {campaign.category}
@@ -417,9 +421,11 @@ export default function ExplorePage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <img
+                      <Image
                         src={campaign.creatorImage}
                         alt={campaign.creatorName}
+                        width={24}
+                        height={24}
                         className="w-6 h-6 rounded-full"
                       />
                       <span className="text-xs text-text-tertiary flex-1 truncate">

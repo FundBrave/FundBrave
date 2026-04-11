@@ -7,6 +7,7 @@ import { usePosts } from "@/app/provider/PostsContext";
 import { useGetFeedQuery } from "@/app/generated/graphql";
 import { PostCard, fromContextPost } from "@/app/components/profile";
 import { Spinner } from "@/app/components/ui/Spinner";
+import { EmptyStatePosts } from "@/app/components/ui/EmptyState";
 import { useInfiniteScroll } from "@/app/hooks/useInfiniteScroll";
 import type { FeedListProps, FeedFilter } from "@/app/types/home";
 import type { Post } from "@/app/provider/PostsContext";
@@ -170,8 +171,8 @@ export function FeedList({ filter = "recent", className }: FeedListProps) {
   if (error) {
     return (
       <div className={cn("flex flex-col items-center justify-center py-12", className)}>
-        <p className="text-red-400 text-sm">Failed to load feed</p>
-        <p className="text-white/30 text-sm mt-1">Please try again later</p>
+        <p className="text-destructive text-sm">Failed to load feed</p>
+        <p className="text-text-tertiary text-sm mt-1">Please try again later</p>
       </div>
     );
   }
@@ -188,9 +189,8 @@ export function FeedList({ filter = "recent", className }: FeedListProps) {
   // Empty state
   if (!loading && posts.length === 0) {
     return (
-      <div className={cn("flex flex-col items-center justify-center py-12", className)}>
-        <p className="text-white/40 text-sm">No posts yet</p>
-        <p className="text-white/30 text-sm mt-1">Be the first to create a post!</p>
+      <div className={className}>
+        <EmptyStatePosts />
       </div>
     );
   }
@@ -233,7 +233,7 @@ export function FeedList({ filter = "recent", className }: FeedListProps) {
       {/* End of Feed Message */}
       {!hasMore && posts.length > 0 && (
         <div className="flex justify-center py-6">
-          <p className="text-white/30 text-sm">You&apos;ve reached the end</p>
+          <p className="text-text-tertiary text-sm">You&apos;ve reached the end</p>
         </div>
       )}
     </div>

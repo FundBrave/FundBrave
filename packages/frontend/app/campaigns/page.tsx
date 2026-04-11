@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "@/app/components/ui/icons";
 import { CampaignCard, CategorySidebar, MobileCategoryFilter } from "../components/campaigns";
 import { Navbar } from "@/app/components/common";
+import { EmptyStateCampaigns } from "@/app/components/ui/EmptyState";
 import { useCampaigns } from "@/app/hooks/useCampaigns";
 import type { CampaignCategory } from "@/app/types/campaign";
 import { USDC_DECIMALS } from "@/app/lib/contracts/config";
@@ -132,6 +133,22 @@ export default function CampaignsPage() {
   const [sortBy, setSortBy] = useState<SortOption>("oldest");
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close sort dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        sortDropdownRef.current &&
+        !sortDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSortDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Fetch campaigns from API
   const { campaigns: apiCampaigns, isLoading, error } = useCampaigns({
@@ -214,7 +231,7 @@ export default function CampaignsPage() {
 
           {/* Sort Dropdown */}
           <div className="flex justify-end mb-5">
-            <div className="relative">
+            <div className="relative" ref={sortDropdownRef}>
               <button
                 onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
                 className="flex items-center gap-1.5 text-white font-[family-name:var(--font-family-gilgan)]"
@@ -257,7 +274,7 @@ export default function CampaignsPage() {
           {/* Campaigns Grid - Scrollable container with responsive columns */}
           <div className="flex-1 overflow-y-auto custom-scrollbar pb-6 pr-2">
             {error && (
-              <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
+              <div className="mb-4 p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
                 Failed to load campaigns from API. Showing fallback data.
               </div>
             )}
@@ -294,10 +311,7 @@ export default function CampaignsPage() {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-                <p className="text-text-secondary text-lg mb-2">No campaigns found</p>
-                <p className="text-text-secondary text-sm">Try adjusting your filters</p>
-              </div>
+              <EmptyStateCampaigns />
             )}
           </div>
         </div>
