@@ -1,40 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { LeaderboardTabs } from "@/app/components/leaderboard/LeaderboardTabs";
 import { TopThreePodium } from "@/app/components/leaderboard/TopThreePodium";
 import { LeaderboardList } from "@/app/components/leaderboard/LeaderboardList";
-import { mockLeaderboardData, CURRENT_USER_ID } from "./data";
-import type { LeaderboardPeriod } from "@/app/types/leaderboard";
+import {
+  useGetDonationLeaderboardQuery,
+  useGetMeQuery,
+  LeaderboardPeriod as GqlLeaderboardPeriod,
+} from "@/app/generated/graphql";
+import { useAuth } from "@/app/provider/AuthProvider";
+import { Spinner } from "@/app/components/ui/Spinner";
+import type { LeaderboardPeriod, LeaderboardUser } from "@/app/types/leaderboard";
 import { Navbar } from "@/app/components/common";
 
-/**
- * LeaderboardPage - Main leaderboard page showing user rankings
- * Features:
- * - Time period tabs (All Time, This Month, This Week)
- * - Top 3 podium with crown for #1
- * - Scrollable list for rank 4+
- * - Dynamic user position indicator
- */
+/** Map local period type to GraphQL enum */
+const PERIOD_MAP: Record<LeaderboardPeriod, GqlLeaderboardPeriod> = {
+  "all-time": "ALL" as GqlLeaderboardPeriod,
+  "monthly": "THIRTY_DAYS" as GqlLeaderboardPeriod,
+  "weekly": "SEVEN_DAYS" as GqlLeaderboardPeriod,
+};
+
 export default function LeaderboardPage() {
   const [activePeriod, setActivePeriod] = useState<LeaderboardPeriod>("all-time");
+  const { isAuthenticated } = useAuth();
 
-  // Get data based on active period
-  const getCurrentData = () => {
-    switch (activePeriod) {
-      case "all-time":
-        return mockLeaderboardData.allTime;
-      case "monthly":
-        return mockLeaderboardData.monthly;
-      case "weekly":
-        return mockLeaderboardData.weekly;
-      default:
-        return mockLeaderboardData.allTime;
-    }
-  };
+  const { data: meData } = useGetMeQuery({
+    skip: !isAuthenticated,
+    fetchPolicy: "cache-first",
+  });
 
-  const allUsers = getCurrentData();
+  const { data, loading, error } = useGetDonationLeaderboardQuery({
+    variables: {
+      period: PERIOD_MAP[activePeriod],
+      limit: 25,
+    },
+    fetchPolicy: "cache-first",
+  });
+
+  const allUsers: LeaderboardUser[] = useMemo(() => {
+    if (!data?.donationLeaderboard?.entries) return [];
+    return data.donationLeaderboard.entries.map((entry) => ({
+      rank: entry.rank,
+      id: entry.donor.id || entry.donor.walletAddress,
+      name: entry.donor.isAnonymous
+        ? "Anonymous"
+        : entry.donor.displayName || entry.donor.username || "Unknown",
+      username: entry.donor.username ? `@${entry.donor.username}` : "@anonymous",
+      avatar: entry.donor.avatarUrl || "",
+      points: parseInt(entry.totalDonated) || 0,
+      memberSince: "",
+    }));
+  }, [data]);
+
+  const currentUserId = meData?.me?.id || "";
   const top3Users = allUsers.slice(0, 3);
   const remainingUsers = allUsers.filter((u) => u.rank > 3);
 
@@ -49,10 +69,10 @@ export default function LeaderboardPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-4 sm:mb-6"
         >
-          <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
             Leaderboard
           </h1>
-          <p className="text-xs xs:text-sm sm:text-base text-white/40 mt-1">
+          <p className="text-xs xs:text-sm sm:text-base text-text-secondary mt-1">
             Top contributors in our community
           </p>
         </motion.div>
@@ -60,26 +80,37 @@ export default function LeaderboardPage() {
         {/* Time Period Tabs */}
         <LeaderboardTabs activeTab={activePeriod} onTabChange={setActivePeriod} />
 
-        {/* Content with AnimatePresence for tab transitions */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activePeriod}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.25 }}
-          >
-            {/* Top 3 Podium */}
-            <TopThreePodium users={top3Users} />
-
-            {/* Leaderboard List (Rank 4+) */}
-            <LeaderboardList
-              users={remainingUsers}
-              currentUserId={CURRENT_USER_ID}
-              allUsers={allUsers}
-            />
-          </motion.div>
-        </AnimatePresence>
+        {/* Content */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Spinner size="lg" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <p className="text-text-secondary">Failed to load leaderboard data.</p>
+          </div>
+        ) : allUsers.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-text-secondary">No leaderboard data yet. Be the first to donate!</p>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activePeriod}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.25 }}
+            >
+              <TopThreePodium users={top3Users} />
+              <LeaderboardList
+                users={remainingUsers}
+                currentUserId={currentUserId}
+                allUsers={allUsers}
+              />
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
     </main>
     </>
