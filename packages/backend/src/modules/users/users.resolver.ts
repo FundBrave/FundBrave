@@ -1,5 +1,6 @@
 import { Resolver, Query, Mutation, Args, Int, ID } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import {
   User,
@@ -12,7 +13,7 @@ import {
   UpdateNotificationSettingsInput,
   UserFilterInput,
 } from './dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Resolver(() => User)
@@ -22,6 +23,8 @@ export class UsersResolver {
   // ==================== Queries ====================
 
   @Query(() => User, { name: 'user' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUser(
     @Args('id', { type: () => ID }) id: string,
     @CurrentUser() viewer?: { id: string },
@@ -30,6 +33,8 @@ export class UsersResolver {
   }
 
   @Query(() => User, { name: 'userByWallet' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUserByWallet(
     @Args('walletAddress') walletAddress: string,
     @CurrentUser() viewer?: { id: string },
@@ -38,6 +43,8 @@ export class UsersResolver {
   }
 
   @Query(() => User, { name: 'userByUsername' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUserByUsername(
     @Args('username') username: string,
     @CurrentUser() viewer?: { id: string },
@@ -52,6 +59,8 @@ export class UsersResolver {
   }
 
   @Query(() => PaginatedUsers, { name: 'users' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getUsers(
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
@@ -63,6 +72,7 @@ export class UsersResolver {
   }
 
   @Query(() => UserSearchResult, { name: 'searchUsers' })
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   async searchUsers(
     @Args('query') query: string,
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
@@ -71,6 +81,7 @@ export class UsersResolver {
   }
 
   @Query(() => PaginatedFollows, { name: 'followers' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getFollowers(
     @Args('userId', { type: () => ID }) userId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -80,6 +91,7 @@ export class UsersResolver {
   }
 
   @Query(() => PaginatedFollows, { name: 'following' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getFollowing(
     @Args('userId', { type: () => ID }) userId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -109,6 +121,7 @@ export class UsersResolver {
   }
 
   @Query(() => UserActivitySummary, { name: 'userActivity' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getUserActivity(
     @Args('userId', { type: () => ID }) userId: string,
   ): Promise<UserActivitySummary> {
@@ -132,6 +145,7 @@ export class UsersResolver {
   }
 
   @Query(() => Boolean, { name: 'isUsernameAvailable' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async isUsernameAvailable(
     @Args('username') username: string,
   ): Promise<boolean> {
@@ -168,6 +182,8 @@ export class UsersResolver {
     description:
       'Get personalized user suggestions for "Who to Follow" section',
   })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getSuggestedUsers(
     @Args('limit', {
       type: () => Int,

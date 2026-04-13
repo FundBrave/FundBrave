@@ -8,6 +8,7 @@ import {
   WithdrawalHistoryTable,
   Leaderboard,
   WithdrawModal,
+  DeFiPositions,
 } from "@/app/components/earnings";
 import { BackHeader } from "@/app/components/common/BackHeader";
 import {
@@ -38,11 +39,11 @@ import type { UserProfile, EarningsStats } from "@/app/types/earnings";
  */
 
 export default function DashboardPage() {
-  const { user: authUser, isAuthenticated } = useAuth();
+  const { user: authUser, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Fetch current user data from GraphQL
+  // Fetch current user data from GraphQL — skip while auth is still resolving
   const { data: meData, loading: meLoading, error: meError } = useGetMeQuery({
-    skip: !isAuthenticated,
+    skip: !isAuthenticated || authLoading,
     fetchPolicy: 'cache-and-network',
   });
 
@@ -123,8 +124,8 @@ export default function DashboardPage() {
     console.log("Premium subscription clicked - placeholder action");
   };
 
-  // Loading state
-  if (meLoading) {
+  // Loading state — show spinner while auth or user data is resolving
+  if (authLoading || meLoading) {
     return (
       <div className="min-h-screen bg-background">
         <BackHeader title="Dashboard" fallbackHref="/" />
@@ -138,7 +139,7 @@ export default function DashboardPage() {
     );
   }
 
-  // Error state
+  // Error state — only show after auth has finished resolving
   if (meError || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-background">
@@ -209,6 +210,22 @@ export default function DashboardPage() {
               comparisonText={`Compared to ${earningsStats.comparisonPeriod}`}
             />
           </div>
+
+          {/* DeFi Positions — Per-campaign staking & wealth building breakdown */}
+          {campaignsData?.fundraisersByCreator?.items && campaignsData.fundraisersByCreator.items.length > 0 && (
+            <div className="pb-6 border-b border-border-default">
+              <DeFiPositions
+                campaigns={campaignsData.fundraisersByCreator.items
+                  .filter((f: any) => f.onChainId !== undefined && f.onChainId !== null)
+                  .map((f: any) => ({
+                    id: f.id,
+                    title: f.name,
+                    onChainId: f.onChainId,
+                    stakingPoolAddr: f.stakingPoolAddr,
+                  }))}
+              />
+            </div>
+          )}
 
           {/* Tables and Leaderboard Row - Side by side */}
           <div className="flex flex-col lg:flex-row gap-6">

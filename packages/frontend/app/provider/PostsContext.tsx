@@ -67,16 +67,16 @@ interface PostsContextValue {
   posts: Post[];
   isLoading: boolean;
   // Post actions
-  addPost: (content: string, imageUrl?: string) => Promise<void>;
+  addPost: (content: string, mentions?: string[], imageUrl?: string) => Promise<void>;
   likePost: (postId: string) => Promise<void>;
   unlikePost: (postId: string) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   repost: (postId: string) => Promise<void>;
   // Comment actions
-  addComment: (postId: string, content: string) => Promise<void>;
+  addComment: (postId: string, content: string, mentions?: string[]) => Promise<void>;
   likeComment: (postId: string, commentId: string) => Promise<void>;
   unlikeComment: (postId: string, commentId: string) => Promise<void>;
-  replyToComment: (postId: string, commentId: string, content: string) => Promise<void>;
+  replyToComment: (postId: string, commentId: string, content: string, mentions?: string[]) => Promise<void>;
   deleteComment: (postId: string, commentId: string) => Promise<void>;
 }
 
@@ -110,12 +110,13 @@ export function PostsProvider({ children }: PostsProviderProps) {
   // POST ACTIONS
   // ============================================
 
-  const addPost = useCallback(async (content: string, imageUrl?: string) => {
+  const addPost = useCallback(async (content: string, mentions?: string[], imageUrl?: string) => {
     try {
       await createPostMutation({
         variables: {
           input: {
             content,
+            mentions: mentions && mentions.length > 0 ? mentions : undefined,
             mediaUrls: imageUrl ? [imageUrl] : undefined,
             type: imageUrl ? 'MEDIA' : 'TEXT', // Use valid PostType enum values
           },
@@ -241,13 +242,14 @@ export function PostsProvider({ children }: PostsProviderProps) {
   // COMMENT ACTIONS
   // ============================================
 
-  const addComment = useCallback(async (postId: string, content: string) => {
+  const addComment = useCallback(async (postId: string, content: string, mentions?: string[]) => {
     try {
       await createCommentMutation({
         variables: {
           input: {
             postId,
             content,
+            mentions: mentions && mentions.length > 0 ? mentions : undefined,
           },
         },
         optimisticResponse: {
@@ -337,7 +339,7 @@ export function PostsProvider({ children }: PostsProviderProps) {
     }
   }, [unlikeCommentMutation]);
 
-  const replyToComment = useCallback(async (postId: string, commentId: string, content: string) => {
+  const replyToComment = useCallback(async (postId: string, commentId: string, content: string, mentions?: string[]) => {
     try {
       await createCommentMutation({
         variables: {
@@ -345,6 +347,7 @@ export function PostsProvider({ children }: PostsProviderProps) {
             postId,
             content,
             parentId: commentId,
+            mentions: mentions && mentions.length > 0 ? mentions : undefined,
           },
         },
         update: (cache, { data }) => {

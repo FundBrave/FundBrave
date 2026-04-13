@@ -81,20 +81,19 @@ export function SuggestedUser({ user, onFollow }: SuggestedUserProps) {
         <p className="text-sm text-text-secondary truncate">@{user.username}</p>
       </div>
 
-      {/* Follow Button */}
-      <Button
-        ref={buttonRef}
-        variant={isFollowing ? "secondary" : "primary"}
-        size="md"
-        onClick={handleFollow}
-        disabled={isLoading}
-        className={cn(
-          "shrink-0 min-w-[80px]",
-          isFollowing && "bg-surface-overlay border-border-default"
-        )}
-      >
-        {isLoading ? "..." : isFollowing ? "Following" : "Follow"}
-      </Button>
+      {/* Follow Button - hidden after following */}
+      {!isFollowing && (
+        <Button
+          ref={buttonRef}
+          variant="primary"
+          size="md"
+          onClick={handleFollow}
+          disabled={isLoading}
+          className="shrink-0 min-w-[80px]"
+        >
+          {isLoading ? "..." : "Follow"}
+        </Button>
+      )}
     </div>
   );
 }

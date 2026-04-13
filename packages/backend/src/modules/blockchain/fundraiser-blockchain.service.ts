@@ -122,6 +122,86 @@ export class FundraiserBlockchainService {
   }
 
   /**
+   * Create a fundraiser on-chain on behalf of another address (gasless/relayed).
+   * Uses the ADMIN_ROLE backend wallet to call createFundraiserFor(),
+   * setting the creator as the campaign owner instead of the backend wallet.
+   */
+  async createFundraiserForOnChain(
+    creator: string,
+    input: CreateFundraiserOnChainDto,
+  ): Promise<CreateFundraiserOnChainResponseDto> {
+    const chainId = input.chainId ?? DEFAULT_CHAIN_ID;
+
+    const signer = this.contractsService.getSigner();
+    if (!signer) {
+      throw new InvalidInputException(
+        'Backend wallet not configured for blockchain operations',
+      );
+    }
+
+    const factory =
+      this.contractsService.getFundraiserFactoryWithSigner(chainId);
+
+    this.logger.log(
+      `Creating gasless fundraiser on chain ${chainId} for creator ${creator}: ${input.name}`,
+    );
+
+    try {
+      const tx = await this.contractsService.executeWithRetry(
+        async () => {
+          return factory.createFundraiserFor(
+            creator,
+            input.name,
+            input.images,
+            input.categories,
+            input.description,
+            input.region || '',
+            input.beneficiary,
+            BigInt(input.goalAmount),
+            input.durationInDays,
+          );
+        },
+        'Create Fundraiser For (Gasless)',
+      );
+
+      this.logger.log(`Gasless transaction submitted: ${tx.hash}`);
+
+      const receipt = await this.contractsService.waitForTransaction(
+        tx.hash,
+        chainId,
+      );
+
+      const event = this.contractsService.extractFundraiserCreatedEvent(
+        receipt.logs,
+      );
+
+      if (!event) {
+        throw new BlockchainTransactionException(
+          tx.hash,
+          'FundraiserCreated event not found in transaction logs',
+        );
+      }
+
+      this.logger.log(
+        `Gasless fundraiser created: ID=${event.id}, address=${event.fundraiser}, creator=${creator}`,
+      );
+
+      return {
+        txHash: tx.hash,
+        onChainId: Number(event.id),
+        fundraiserAddress: event.fundraiser,
+        blockNumber: receipt.blockNumber,
+        chainId,
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Unknown blockchain error';
+      this.logger.error(`Failed to create gasless fundraiser: ${message}`);
+      throw new BlockchainTransactionException('pending', message);
+    }
+  }
+
+  /**
    * Create fundraiser on-chain and save to database in one operation
    */
   async createFundraiserWithBlockchain(

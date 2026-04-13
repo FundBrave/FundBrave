@@ -34,6 +34,48 @@ registerEnumType(VerificationBadge, { name: 'VerificationBadge' });
 // ==================== Output DTOs ====================
 
 @ObjectType()
+export class SocialLinks {
+  @Field({ nullable: true })
+  linkedin?: string;
+
+  @Field({ nullable: true })
+  twitter?: string;
+
+  @Field({ nullable: true })
+  instagram?: string;
+
+  @Field({ nullable: true })
+  facebook?: string;
+}
+
+@InputType()
+export class SocialLinksInput {
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  linkedin?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  twitter?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  instagram?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  facebook?: string;
+}
+
+@ObjectType()
 export class UserStats {
   @Field(() => Int)
   followersCount: number;
@@ -103,6 +145,9 @@ export class User {
 
   @Field({ nullable: true })
   website?: string;
+
+  @Field(() => SocialLinks, { nullable: true })
+  socialLinks?: SocialLinks;
 
   @Field()
   isVerifiedCreator: boolean;
@@ -369,6 +414,10 @@ export class UpdateProfileInput {
   @IsOptional()
   @IsUrl()
   website?: string;
+
+  @Field(() => SocialLinksInput, { nullable: true })
+  @IsOptional()
+  socialLinks?: SocialLinksInput;
 
   @Field({ nullable: true })
   @IsOptional()

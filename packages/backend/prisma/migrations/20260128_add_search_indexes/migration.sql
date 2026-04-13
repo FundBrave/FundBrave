@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS "search_queries" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "query" TEXT NOT NULL,
   "normalized_query" TEXT NOT NULL,
-  "user_id" UUID REFERENCES "users"("id") ON DELETE SET NULL,
+  "user_id" TEXT REFERENCES "users"("id") ON DELETE SET NULL,
   "results_count" INTEGER NOT NULL DEFAULT 0,
   "clicked_result_id" TEXT,
   "clicked_result_type" TEXT,

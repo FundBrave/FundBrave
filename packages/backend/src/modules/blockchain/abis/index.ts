@@ -32,6 +32,7 @@ export const FUNDRAISER_FACTORY_ABI = [
   // State-Changing Functions
   'function createFundraiser(string name, string[] images, string[] categories, string description, string region, address beneficiary, uint256 goal, uint256 durationInDays) returns (address)',
   'function createVerifiedFundraiser(string name, string[] images, string[] categories, string description, string region, address beneficiary, uint256 goal, uint256 durationInDays) returns (address)',
+  'function createFundraiserFor(address creator, string name, string[] images, string[] categories, string description, string region, address beneficiary, uint256 goal, uint256 durationInDays) returns (address)',
   'function donateNative(uint256 fundraiserId) payable',
   'function donateERC20(uint256 fundraiserId, address token, uint256 amount)',
   'function donateWealthBuilding(uint256 fundraiserId, uint256 amount)',

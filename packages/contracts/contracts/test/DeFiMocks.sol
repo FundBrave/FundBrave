@@ -42,10 +42,16 @@ contract MockWETH is MockERC20 {
     }
 }
 
-// 3. Mock Aave Pool
+// 3. Mock Aave Pool (with yield simulation for testnet)
 contract MockAavePool {
     IERC20 public asset;
     MockERC20 public aToken;
+
+    // Track depositors for proportional yield distribution
+    address[] public depositors;
+    mapping(address => uint256) public deposits;
+    mapping(address => bool) public isDepositor;
+    uint256 public totalDeposits;
 
     constructor(address _asset, address _aToken) {
         asset = IERC20(_asset);
@@ -60,12 +66,64 @@ contract MockAavePool {
         require(_asset == address(asset), "Invalid asset");
         asset.transferFrom(msg.sender, address(this), amount);
         aToken.mint(onBehalfOf, amount);
+
+        // Track depositor for yield simulation
+        if (!isDepositor[onBehalfOf]) {
+            depositors.push(onBehalfOf);
+            isDepositor[onBehalfOf] = true;
+        }
+        deposits[onBehalfOf] += amount;
+        totalDeposits += amount;
     }
 
     function withdraw(address _asset, uint256 amount, address to) external returns (uint256) {
         require(_asset == address(asset), "Invalid asset");
         asset.transfer(to, amount);
         return amount;
+    }
+
+    /**
+     * @notice Simulates yield accrual by minting additional aTokens proportionally to depositors.
+     * @dev In real Aave, aTokens rebase to reflect yield. Here we explicitly mint extra aTokens.
+     *      The caller should first mint USDC to this contract (to back withdrawals),
+     *      then call simulateYield to distribute aToken yield to depositors.
+     * @param amount Total yield amount to simulate (in asset decimals, e.g., 6 for USDC)
+     */
+    function simulateYield(uint256 amount) external {
+        require(totalDeposits > 0, "No deposits to generate yield for");
+
+        // Distribute yield proportionally to all depositors
+        uint256 remaining = amount;
+        for (uint256 i = 0; i < depositors.length; i++) {
+            address depositor = depositors[i];
+            if (deposits[depositor] > 0) {
+                uint256 share;
+                if (i == depositors.length - 1) {
+                    // Last depositor gets remainder to avoid dust
+                    share = remaining;
+                } else {
+                    share = (amount * deposits[depositor]) / totalDeposits;
+                    remaining -= share;
+                }
+                if (share > 0) {
+                    aToken.mint(depositor, share);
+                }
+            }
+        }
+    }
+
+    /**
+     * @notice Returns the aUSDC token address
+     */
+    function aUsdc() external view returns (address) {
+        return address(aToken);
+    }
+
+    /**
+     * @notice Returns the number of depositors
+     */
+    function getDepositorCount() external view returns (uint256) {
+        return depositors.length;
     }
 }
 

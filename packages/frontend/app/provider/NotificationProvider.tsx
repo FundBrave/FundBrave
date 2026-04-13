@@ -108,139 +108,6 @@ function groupNotificationsByTime(
 }
 
 /**
- * Mock data generator for development
- */
-function generateMockNotifications(): Notification[] {
-  const now = new Date();
-  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-  const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-  return [
-    {
-      id: "1",
-      type: "donation",
-      message: "John donated $50 to your campaign \"Help Build a School\"",
-      isRead: false,
-      createdAt: now.toISOString(),
-      actor: {
-        id: "user-1",
-        name: "John Smith",
-        username: "johnsmith",
-        avatar: "/image.png",
-      },
-      target: {
-        type: "campaign",
-        id: "campaign-1",
-        title: "Help Build a School",
-        url: "/campaigns/campaign-1",
-      },
-    },
-    {
-      id: "2",
-      type: "new_follower",
-      message: "Sarah started following you",
-      isRead: false,
-      createdAt: oneHourAgo.toISOString(),
-      actor: {
-        id: "user-2",
-        name: "Sarah Johnson",
-        username: "sarahj",
-        avatar: "/image.png",
-      },
-      target: {
-        type: "user",
-        id: "user-2",
-        url: "/profile/sarahj",
-      },
-    },
-    {
-      id: "3",
-      type: "comment",
-      message: "Mike commented on your campaign: \"This is amazing!\"",
-      isRead: false,
-      createdAt: twoHoursAgo.toISOString(),
-      actor: {
-        id: "user-3",
-        name: "Mike Davis",
-        username: "miked",
-        avatar: "/image.png",
-      },
-      target: {
-        type: "campaign",
-        id: "campaign-1",
-        title: "Help Build a School",
-        url: "/campaigns/campaign-1",
-      },
-    },
-    {
-      id: "4",
-      type: "campaign_milestone",
-      message: "Your campaign \"Medical Fund\" reached 50% of its goal!",
-      isRead: true,
-      createdAt: yesterday.toISOString(),
-      target: {
-        type: "campaign",
-        id: "campaign-2",
-        title: "Medical Fund",
-        url: "/campaigns/campaign-2",
-      },
-    },
-    {
-      id: "5",
-      type: "like_post",
-      message: "Emma liked your post",
-      isRead: true,
-      createdAt: yesterday.toISOString(),
-      actor: {
-        id: "user-4",
-        name: "Emma Wilson",
-        username: "emmaw",
-        avatar: "/image.png",
-      },
-      target: {
-        type: "post",
-        id: "post-1",
-        url: "/p/post-1",
-      },
-    },
-    {
-      id: "6",
-      type: "campaign_update",
-      message: "Campaign \"Emergency Relief\" posted an update",
-      isRead: true,
-      createdAt: twoDaysAgo.toISOString(),
-      target: {
-        type: "campaign",
-        id: "campaign-3",
-        title: "Emergency Relief",
-        url: "/campaigns/campaign-3",
-      },
-    },
-    {
-      id: "7",
-      type: "mention",
-      message: "Alex mentioned you in a comment",
-      isRead: true,
-      createdAt: weekAgo.toISOString(),
-      actor: {
-        id: "user-5",
-        name: "Alex Brown",
-        username: "alexb",
-        avatar: "/image.png",
-      },
-      target: {
-        type: "comment",
-        id: "comment-1",
-        url: "/p/post-2?comment=comment-1",
-      },
-    },
-  ];
-}
-
-/**
  * NotificationProvider Component
  *
  * Provides global notification state and actions to the application.
@@ -280,12 +147,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setUnreadCount(newCount);
     } catch (error) {
       console.error("Failed to fetch unread count:", error);
-      // Fallback to mock count on error (use state updater)
-      setNotifications((currentNotifications) => {
-        const mockCount = (currentNotifications || []).filter((n) => !n.isRead).length;
-        setUnreadCount(mockCount);
-        return currentNotifications;
-      });
+      // Keep current count on error
     }
   }, []); // No dependencies needed since we use state updaters
 
@@ -321,16 +183,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         setUnreadCount(data.unreadCount);
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
-        // Fallback to mock data on error
-        const mockData = generateMockNotifications();
+        // Show empty state on error instead of mock data
         if (reset) {
-          setNotifications(mockData);
+          setNotifications([]);
           setCursor(null);
-        } else {
-          setNotifications((prev) => [...(prev || []), ...mockData]);
         }
         setHasMore(false);
-        setUnreadCount(mockData.filter((n) => !n.isRead).length);
       } finally {
         setIsLoading(false);
       }

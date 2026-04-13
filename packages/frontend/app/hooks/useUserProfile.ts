@@ -10,7 +10,7 @@ export function useUserProfile(username: string) {
   const { data, loading, error, refetch } = useGetUserByUsernameQuery({
     variables: { username },
     skip: !username,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'network-only',
   });
 
   const user = data?.userByUsername || null;

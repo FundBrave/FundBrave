@@ -27,6 +27,10 @@ yarn-debug.log*
 .env.*.local
 .nul
 
+/test-frontend
+
+test-frontend
+
 # Temporary files
 *.tmp
 *.temp

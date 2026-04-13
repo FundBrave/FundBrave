@@ -2006,8 +2006,20 @@ export class AuthService implements OnModuleInit {
     };
     error?: string;
   }> {
-    const testEmail = 'okwuosahpaschal@gmail.com';
-    const testPassword = '84316860p*A';
+    const testEmail = process.env.TEST_USER_EMAIL;
+    const testPassword = process.env.TEST_USER_PASSWORD;
+
+    if (!testEmail || !testPassword) {
+      return {
+        exists: false,
+        hasPassword: false,
+        passwordValid: false,
+        isActive: false,
+        isSuspended: false,
+        emailVerified: false,
+        error: 'TEST_USER_EMAIL and TEST_USER_PASSWORD environment variables are not set.',
+      };
+    }
 
     try {
       const user = await this.prisma.user.findFirst({
@@ -2106,7 +2118,7 @@ export class AuthService implements OnModuleInit {
    * Add artificial delay to prevent timing attacks
    */
   private async artificialDelay(): Promise<void> {
-    const delay = 100 + Math.random() * 200;
+    const delay = 500 + Math.random() * 500; // 500-1000ms to mitigate timing attacks
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 

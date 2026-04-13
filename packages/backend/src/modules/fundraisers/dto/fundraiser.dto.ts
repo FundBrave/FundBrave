@@ -302,9 +302,10 @@ export class CreateFundraiserInput {
   @IsString()
   currency?: string;
 
-  @Field()
+  @Field({ nullable: true })
+  @IsOptional()
   @IsEthereumAddress()
-  beneficiary: string;
+  beneficiary?: string;
 
   @Field()
   @IsDateString()

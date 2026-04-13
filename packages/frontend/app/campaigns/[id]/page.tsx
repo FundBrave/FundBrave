@@ -1,33 +1,43 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { getCampaignById } from "../data";
 import CampaignHeader from "@/app/components/campaigns/view/CampaignHeader";
 import CampaignStatsCard from "@/app/components/campaigns/view/CampaignStatsCard";
 import CampaignStory from "@/app/components/campaigns/view/CampaignStory";
 import CampaignComments from "@/app/components/campaigns/view/CampaignComments";
 import CampaignUpdates from "@/app/components/campaigns/view/CampaignUpdates";
-import { CampaignActionBar, CampaignStakingInterface } from "@/app/components/campaigns";
+import { CampaignActionBar } from "@/app/components/campaigns";
 import { BackHeader } from "@/app/components/common/BackHeader";
 import { ArrowLeft, Loader2 } from "@/app/components/ui/icons";
 import Link from "next/link";
 import Image from "next/image";
 import { useCampaign } from "@/app/hooks/useCampaigns";
+import { useOnChainCampaignStats } from "@/app/hooks/useOnChainCampaignStats";
 import { useFraudDetection } from "@/app/hooks/useFraudDetection";
 import { useMessageUser } from "@/app/hooks/useMessageUser";
 import { USDC_DECIMALS } from "@/app/lib/contracts/config";
 import { Button } from "@/app/components/ui/button";
 import { FraudDetectionAlert, FraudRiskBadge } from "@/app/components/ai/FraudDetectionAlert";
+import { DonationTabs } from "@/app/components/donation/DonationTabs";
+import { Address } from "viem";
+import { useAccount } from "wagmi";
 
 export default function CampaignViewPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+  const { address } = useAccount();
 
   // Fetch real campaign data from API
   const { campaign: apiCampaign, isLoading, error } = useCampaign(id);
   const { messageUser } = useMessageUser();
+
+  // Read on-chain stats directly from the Fundraiser contract
+  // This ensures raised amount updates immediately after donations,
+  // even before the backend syncs the new state.
+  const onChainStats = useOnChainCampaignStats(apiCampaign?.onChainId);
 
   // Fallback to mock data if API fails
   const mockCampaign = getCampaignById(id);
@@ -41,10 +51,15 @@ export default function CampaignViewPage() {
     error: fraudError,
   } = useFraudDetection();
 
-  // Run fraud check when campaign data is available
+  // Track whether we've already attempted the fraud check for this campaign
+  // Prevents infinite retry loop when the AI service is unavailable
+  const fraudCheckAttempted = useRef<string | null>(null);
+
+  // Run fraud check once when campaign data is available
   const runFraudCheck = useCallback(async () => {
     if (!campaign) return;
 
+    fraudCheckAttempted.current = campaign.id;
     try {
       await analyzeCampaign({
         campaign_id: campaign.id,
@@ -60,7 +75,7 @@ export default function CampaignViewPage() {
   }, [campaign, apiCampaign, analyzeCampaign]);
 
   useEffect(() => {
-    if (campaign && !fraudResult && !isFraudChecking) {
+    if (campaign && !fraudResult && !isFraudChecking && fraudCheckAttempted.current !== campaign.id) {
       runFraudCheck();
     }
   }, [campaign, fraudResult, isFraudChecking, runFraudCheck]);
@@ -108,20 +123,29 @@ export default function CampaignViewPage() {
     );
   }
 
-  // Parse API campaign data
-  const amountRaised = apiCampaign
+  // Parse campaign data — prefer on-chain stats (real-time) over backend (may be stale)
+  const apiAmountRaised = apiCampaign
     ? parseFloat(apiCampaign.amountRaised) / Math.pow(10, USDC_DECIMALS)
     : 'amountRaised' in campaign
       ? (typeof campaign.amountRaised === 'string' ? parseFloat(campaign.amountRaised) : campaign.amountRaised)
       : 0;
-  const targetAmount = apiCampaign
+  // Use on-chain data if loaded (always more up-to-date), fall back to API data
+  const amountRaised = onChainStats.isLoaded ? onChainStats.amountRaised : apiAmountRaised;
+
+  const apiTargetAmount = apiCampaign
     ? parseFloat(apiCampaign.goal) / Math.pow(10, USDC_DECIMALS)
     : 'goal' in campaign
       ? (typeof campaign.goal === 'string' ? parseFloat(campaign.goal) : campaign.goal)
       : 1000;
+  const targetAmount = (onChainStats.isLoaded && onChainStats.goal > 0) ? onChainStats.goal : apiTargetAmount;
+
   const daysLeft = apiCampaign && apiCampaign.deadline
     ? Math.max(0, Math.ceil((new Date(apiCampaign.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 30; // Default to 30 days if no deadline
+
+  // Check if campaign is fully funded (use on-chain data first)
+  const isFullyFunded = amountRaised >= targetAmount && targetAmount > 0;
+  const fundingPercentage = targetAmount > 0 ? Math.round((amountRaised / targetAmount) * 100) : 0;
 
   // Campaign data for action bar
   const campaignData = {
@@ -152,9 +176,9 @@ export default function CampaignViewPage() {
     <div className="min-h-screen bg-background text-foreground font-[family-name:var(--font-family-montserrat)]">
       <BackHeader title="Campaign" fallbackHref="/campaigns" />
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-8 flex flex-col gap-12">
+          <div className="lg:col-span-7 flex flex-col gap-10">
             {/* Header Section (Title, Image, Categories) */}
             <CampaignHeader
               title={campaign.title}
@@ -210,38 +234,56 @@ export default function CampaignViewPage() {
             {/* Story Section */}
             <CampaignStory story={'story' in campaign ? campaign.story : ''} />
 
-            {/* Action Buttons (Left Column) - Using CampaignActionBar */}
-            <div className="pt-2 pb-6 sm:pb-8 border-b border-border-subtle">
+            {/* Fully Funded Message */}
+            {isFullyFunded && (
+              <div className="bg-success/10 border border-success/30 rounded-lg px-6 py-4">
+                <p className="text-success font-semibold text-lg mb-1">
+                  🎉 Fully Funded!
+                </p>
+                <p className="text-text-secondary text-sm">
+                  This campaign has reached {fundingPercentage}% of its goal. Thank you to all supporters!
+                </p>
+              </div>
+            )}
+
+            {/* Share & Remind Actions */}
+            <div className="pb-6 sm:pb-8 border-b border-border-subtle">
               <CampaignActionBar
                 campaign={campaignData}
                 variant="buttons"
-                showDonate={true}
+                showDonate={false}
+                showStake={false}
               />
             </div>
 
             {/* Comments Section */}
-            <CampaignComments comments={'comments' in campaign ? (campaign.comments || []) : []} />
+            <CampaignComments
+              comments={'comments' in campaign ? (campaign.comments || []) : []}
+              campaignId={id}
+            />
 
             {/* Updates Section */}
             <CampaignUpdates updates={('updates' in campaign ? (campaign.updates || []) : []) as any} />
           </div>
 
-          {/* Right Column - Stats & Actions */}
-          <div className="lg:col-span-4 lg:pl-4">
-            <div className="sticky top-6 sm:top-10 space-y-4">
-              {/* Fraud Risk Badge - Compact */}
+          {/* Right Column - Stats & Donation Interface */}
+          <div className="lg:col-span-5">
+            <div className="sticky top-6 sm:top-10 flex flex-col gap-5">
+              {/* Fraud Risk Badge */}
               {(fraudResult || isFraudChecking) && (
-                <div className="flex items-center justify-end mb-2">
+                <div className="flex items-center justify-end">
                   <FraudRiskBadge result={fraudResult} isChecking={isFraudChecking} />
                 </div>
               )}
 
+              {/* Campaign Stats (progress circle, amount, supporters) */}
               <CampaignStatsCard
                 amountRaised={amountRaised}
                 targetAmount={targetAmount}
-                supportersCount={apiCampaign?.donorsCount || ('supportersCount' in campaign ? campaign.supportersCount : 0)}
+                supportersCount={onChainStats.isLoaded ? onChainStats.donorsCount : (apiCampaign?.donorsCount || ('supportersCount' in campaign ? campaign.supportersCount : 0))}
                 daysLeft={daysLeft}
                 campaign={campaignData}
+                isFullyFunded={isFullyFunded}
               />
 
               {/* Fraud Detection Alert - Show if not low risk */}
@@ -255,15 +297,16 @@ export default function CampaignViewPage() {
                 />
               )}
 
-              {/* Donate & Stake Buttons */}
-              {apiCampaign && (
-                <div className="space-y-3">
-                  <Button
-                    onClick={() => router.push(`/campaigns/${id}/donate`)}
-                    className="w-full py-3 bg-primary hover:bg-primary/90"
-                  >
-                    Donate Now
-                  </Button>
+              {/* DonationTabs - Multi-currency donations, wealth building, staking */}
+              {apiCampaign && apiCampaign.onChainId !== undefined && !isFullyFunded && (
+                <div className="bg-surface-elevated border border-border-subtle rounded-xl overflow-visible">
+                  <div className="p-5">
+                    <DonationTabs
+                      campaignId={apiCampaign.onChainId}
+                      stakingPoolAddress={apiCampaign.stakingPoolAddr as Address | undefined}
+                      onDonationSuccess={onChainStats.refetch}
+                    />
+                  </div>
                 </div>
               )}
 

@@ -215,11 +215,14 @@ export class Comment {
   @Field(() => PostAuthor)
   author: PostAuthor;
 
-  @Field(() => ID)
-  postId: string;
+  @Field(() => ID, { nullable: true })
+  postId?: string;
 
   @Field(() => ID, { nullable: true })
   parentId?: string;
+
+  @Field(() => [String])
+  mentions: string[];
 
   @Field(() => Int)
   likesCount: number;
@@ -361,14 +364,26 @@ export class CreateCommentInput {
   @MaxLength(2000)
   content: string;
 
-  @Field()
+  @Field({ nullable: true })
+  @IsOptional()
   @IsString()
-  postId: string;
+  postId?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  fundraiserId?: string;
 
   @Field({ nullable: true })
   @IsOptional()
   @IsString()
   parentId?: string;
+
+  @Field(() => [String], { nullable: true })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  mentions?: string[];
 }
 
 @InputType()

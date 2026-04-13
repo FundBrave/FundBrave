@@ -1,5 +1,6 @@
 import { Resolver, Query, Mutation, Args, Int, ID } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { SocialService } from './social.service';
 import {
   Post,
@@ -17,7 +18,7 @@ import {
   PostSortBy,
 } from './dto';
 import { SortOrder } from '../fundraisers/dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Resolver(() => Post)
@@ -27,6 +28,8 @@ export class SocialResolver {
   // ==================== Post Queries ====================
 
   @Query(() => Post, { name: 'post' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async getPost(
     @Args('id', { type: () => ID }) id: string,
     @CurrentUser() viewer?: { id: string },
@@ -35,6 +38,8 @@ export class SocialResolver {
   }
 
   @Query(() => PaginatedPosts, { name: 'posts' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getPosts(
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
@@ -60,6 +65,8 @@ export class SocialResolver {
   }
 
   @Query(() => PaginatedPosts, { name: 'userPosts' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getUserPosts(
     @Args('userId', { type: () => ID }) userId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -70,6 +77,8 @@ export class SocialResolver {
   }
 
   @Query(() => PaginatedPosts, { name: 'postReplies' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getPostReplies(
     @Args('postId', { type: () => ID }) postId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -80,6 +89,8 @@ export class SocialResolver {
   }
 
   @Query(() => PaginatedPosts, { name: 'postsByHashtag' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   async getPostsByHashtag(
     @Args('tag') tag: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -112,15 +123,42 @@ export class SocialResolver {
   }
 
   @Query(() => [SocialTrendingHashtag], { name: 'trendingHashtags' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getTrendingHashtags(
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
   ): Promise<SocialTrendingHashtag[]> {
     return this.socialService.getTrendingHashtags(limit);
   }
 
+  @Query(() => PaginatedPosts, { name: 'userLikedPosts' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async getUserLikedPosts(
+    @Args('userId', { type: () => ID }) userId: string,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @CurrentUser() viewer?: { id: string },
+  ): Promise<PaginatedPosts> {
+    return this.socialService.getUserLikedPosts(userId, limit, offset, viewer?.id);
+  }
+
+  @Query(() => PaginatedComments, { name: 'userComments' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async getUserComments(
+    @Args('userId', { type: () => ID }) userId: string,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @CurrentUser() viewer?: { id: string },
+  ): Promise<PaginatedComments> {
+    return this.socialService.getUserComments(userId, limit, offset, viewer?.id);
+  }
+
   // ==================== Comment Queries ====================
 
   @Query(() => PaginatedComments, { name: 'postComments' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async getPostComments(
     @Args('postId', { type: () => ID }) postId: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
@@ -129,6 +167,23 @@ export class SocialResolver {
   ): Promise<PaginatedComments> {
     return this.socialService.getPostComments(
       postId,
+      limit,
+      offset,
+      viewer?.id,
+    );
+  }
+
+  @Query(() => PaginatedComments, { name: 'fundraiserComments' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async getFundraiserComments(
+    @Args('fundraiserId', { type: () => ID }) fundraiserId: string,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @CurrentUser() viewer?: { id: string },
+  ): Promise<PaginatedComments> {
+    return this.socialService.getFundraiserComments(
+      fundraiserId,
       limit,
       offset,
       viewer?.id,

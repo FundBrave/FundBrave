@@ -12,6 +12,7 @@ import { InfiniteCommentList } from "@/app/components/ui/comments/InfiniteCommen
 import { StickyCommentInput } from "@/app/components/ui/comments/StickyCommentInput";
 import { CommentInput } from "@/app/components/ui/comments/CommentInput";
 import type { CommentSortOrder } from "@/app/types/comment";
+import { useMentionSearch } from "@/app/hooks/useMentionSearch";
 
 interface Post {
   id: string;
@@ -60,6 +61,7 @@ export function PostDetailClient({
   autoFocusReply = false,
 }: PostDetailClientProps) {
   const router = useRouter();
+  const { searchUsers } = useMentionSearch();
   const { likePost, unlikePost, addComment } = usePosts();
   const [bookmarkPostMutation] = useBookmarkPostMutation();
   const [removeBookmarkMutation] = useRemoveBookmarkMutation();
@@ -187,9 +189,9 @@ export function PostDetailClient({
     console.log("Open donation modal");
   };
 
-  const handleSubmitComment = async (content: string) => {
+  const handleSubmitComment = async (content: string, mentions?: string[]) => {
     try {
-      await addComment(post.id, content);
+      await addComment(post.id, content, mentions);
       setCommentsCount((prev) => prev + 1);
     } catch (error) {
       console.error("Error submitting comment:", error);
@@ -339,6 +341,7 @@ export function PostDetailClient({
               <CommentInput
                 placeholder="Add a comment..."
                 onSubmit={handleSubmitComment}
+                onSearchUsers={searchUsers}
                 autoFocus={autoFocusReply}
               />
             </div>

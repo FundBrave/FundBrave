@@ -22,6 +22,27 @@ export interface Scalars {
   JSON: { input: any; output: any; }
 }
 
+export interface CampaignStake {
+  __typename?: 'CampaignStake';
+  amount: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  shares: Scalars['String']['output'];
+  stakedAt: Scalars['DateTime']['output'];
+  staker: CampaignStakerInfo;
+  txHash: Scalars['String']['output'];
+  unstakedAt?: Maybe<Scalars['DateTime']['output']>;
+}
+
+export interface CampaignStakerInfo {
+  __typename?: 'CampaignStakerInfo';
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  id?: Maybe<Scalars['ID']['output']>;
+  username?: Maybe<Scalars['String']['output']>;
+  walletAddress: Scalars['String']['output'];
+}
+
 export interface CategoryCount {
   __typename?: 'CategoryCount';
   category: Scalars['String']['output'];
@@ -36,8 +57,9 @@ export interface Comment {
   id: Scalars['ID']['output'];
   isLiked?: Maybe<Scalars['Boolean']['output']>;
   likesCount: Scalars['Int']['output'];
+  mentions: Array<Scalars['String']['output']>;
   parentId?: Maybe<Scalars['ID']['output']>;
-  postId: Scalars['ID']['output'];
+  postId?: Maybe<Scalars['ID']['output']>;
   replies: Array<Comment>;
   updatedAt: Scalars['DateTime']['output'];
 }
@@ -84,8 +106,10 @@ export interface ConversationUnreadCount {
 
 export interface CreateCommentInput {
   content: Scalars['String']['input'];
+  fundraiserId?: InputMaybe<Scalars['String']['input']>;
+  mentions?: InputMaybe<Array<Scalars['String']['input']>>;
   parentId?: InputMaybe<Scalars['String']['input']>;
-  postId: Scalars['String']['input'];
+  postId?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface CreateDaoProposalInput {
@@ -98,7 +122,7 @@ export interface CreateDaoProposalInput {
 }
 
 export interface CreateFundraiserInput {
-  beneficiary: Scalars['String']['input'];
+  beneficiary?: InputMaybe<Scalars['String']['input']>;
   categories: Array<Scalars['String']['input']>;
   currency?: Scalars['String']['input'];
   deadline: Scalars['String']['input'];
@@ -760,6 +784,7 @@ export interface Mutation {
   /** Create a new DAO proposal */
   createDAOProposal: DaoProposal;
   createFundraiser: Fundraiser;
+  createFundraiserGasless: Fundraiser;
   createPost: Post;
   createReport: ReportOperationResult;
   deleteAllNotifications: NotificationOperationResult;
@@ -780,9 +805,11 @@ export interface Mutation {
   markNotificationsAsRead: NotificationOperationResult;
   processUnstake: Scalars['Boolean']['output'];
   recordDonation: Donation;
+  recordDonationPublic: RecordDonationResponse;
   /** Record a stake transaction hash for tracking */
   recordImpactDAOStake: Scalars['Boolean']['output'];
   recordStake: Stake;
+  recordStakePublic: RecordStakeResponse;
   removeBookmark: Scalars['Boolean']['output'];
   removeRepost: Scalars['Boolean']['output'];
   repost: Scalars['Boolean']['output'];
@@ -850,7 +877,13 @@ export interface MutationCreateDaoProposalArgs {
 export interface MutationCreateFundraiserArgs {
   input: CreateFundraiserInput;
   onChainId: Scalars['Int']['input'];
+  stakingPoolAddr?: InputMaybe<Scalars['String']['input']>;
   txHash: Scalars['String']['input'];
+}
+
+
+export interface MutationCreateFundraiserGaslessArgs {
+  input: CreateFundraiserInput;
 }
 
 
@@ -930,6 +963,11 @@ export interface MutationRecordDonationArgs {
 }
 
 
+export interface MutationRecordDonationPublicArgs {
+  input: RecordDonationPublicInput;
+}
+
+
 export interface MutationRecordImpactDaoStakeArgs {
   input: ImpactDaoRecordStakeInput;
 }
@@ -937,6 +975,11 @@ export interface MutationRecordImpactDaoStakeArgs {
 
 export interface MutationRecordStakeArgs {
   input: RecordStakeInput;
+}
+
+
+export interface MutationRecordStakePublicArgs {
+  input: RecordStakePublicInput;
 }
 
 
@@ -1067,6 +1110,22 @@ export interface NotificationOperationResult {
   affectedCount?: Maybe<Scalars['Int']['output']>;
   message?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
+}
+
+export interface NotificationPreferences {
+  __typename?: 'NotificationPreferences';
+  emailEnabled: Scalars['Boolean']['output'];
+  notifyOnComment: Scalars['Boolean']['output'];
+  notifyOnDAOProposal: Scalars['Boolean']['output'];
+  notifyOnDonation: Scalars['Boolean']['output'];
+  notifyOnFBTVesting: Scalars['Boolean']['output'];
+  notifyOnFollow: Scalars['Boolean']['output'];
+  notifyOnLike: Scalars['Boolean']['output'];
+  notifyOnMention: Scalars['Boolean']['output'];
+  notifyOnStake: Scalars['Boolean']['output'];
+  notifyOnStockPurchase: Scalars['Boolean']['output'];
+  notifyOnYieldHarvest: Scalars['Boolean']['output'];
+  pushEnabled: Scalars['Boolean']['output'];
 }
 
 export interface NotificationSettings {
@@ -1395,6 +1454,17 @@ export type PostVisibility =
   | 'PRIVATE'
   | 'PUBLIC';
 
+export interface PrivacySettings {
+  __typename?: 'PrivacySettings';
+  allowMessagesFromAnyone: Scalars['Boolean']['output'];
+  isPrivate: Scalars['Boolean']['output'];
+  showDonationHistory: Scalars['Boolean']['output'];
+  showInSearchEngines: Scalars['Boolean']['output'];
+  showOnlineStatus: Scalars['Boolean']['output'];
+  showStakingActivity: Scalars['Boolean']['output'];
+  showWalletBalance: Scalars['Boolean']['output'];
+}
+
 /** Category of DAO proposal */
 export type ProposalCategory =
   | 'EMERGENCY'
@@ -1448,6 +1518,7 @@ export interface Query {
   daoVotingStats: DaoVotingStats;
   donation: Donation;
   donationByTxHash: Donation;
+  donationExistsByTxHash: Scalars['Boolean']['output'];
   donationLeaderboard: DonationLeaderboard;
   donations: PaginatedDonations;
   donationsByAddress: PaginatedDonations;
@@ -1469,12 +1540,14 @@ export interface Query {
   fundraiser: Fundraiser;
   fundraiserByOnChainId: Fundraiser;
   fundraiserCategories: Array<CategoryCount>;
+  fundraiserComments: PaginatedComments;
   fundraiserDonationStats: DonationStats;
   fundraiserDonations: PaginatedDonations;
   /** Get all wealth building donations for a fundraiser */
   fundraiserEndowments: PaginatedWealthBuildingDonations;
   fundraiserRegions: Array<RegionCount>;
   fundraiserStakes: PaginatedStakes;
+  fundraiserStakingStats: StakingStats;
   fundraisers: PaginatedFundraisers;
   fundraisersByCreator: PaginatedFundraisers;
   fundraisersMinimal: FundraisersMinimalResponse;
@@ -1550,6 +1623,7 @@ export interface Query {
   platformFees: PaginatedPlatformFees;
   /** Get platform fees filtered by source type */
   platformFeesBySource: PaginatedPlatformFees;
+  platformStakingStats: StakingStats;
   poolStats: StakingPoolStats;
   post: Post;
   postComments: PaginatedComments;
@@ -1559,6 +1633,7 @@ export interface Query {
   /** Get proposal results breakdown */
   proposalResults: ProposalResults;
   recentDonations: Array<RecentDonationActivity>;
+  recentStakingActivity: Array<RecentStakingActivity>;
   report?: Maybe<Report>;
   reportedContent: PaginatedReports;
   reports: PaginatedReports;
@@ -1566,6 +1641,7 @@ export interface Query {
   searchFundraisers: PaginatedFundraisers;
   searchUsers: UserSearchResult;
   stake: Stake;
+  stakeExistsByTxHash: Scalars['Boolean']['output'];
   stakes: PaginatedStakes;
   stakingLeaderboard: Array<StakingLeaderboardEntry>;
   /** Get stock purchase history for an address */
@@ -1654,6 +1730,11 @@ export interface QueryDonationArgs {
 
 
 export interface QueryDonationByTxHashArgs {
+  txHash: Scalars['String']['input'];
+}
+
+
+export interface QueryDonationExistsByTxHashArgs {
   txHash: Scalars['String']['input'];
 }
 
@@ -1750,6 +1831,13 @@ export interface QueryFundraiserByOnChainIdArgs {
 }
 
 
+export interface QueryFundraiserCommentsArgs {
+  fundraiserId: Scalars['ID']['input'];
+  limit?: Scalars['Int']['input'];
+  offset?: Scalars['Int']['input'];
+}
+
+
 export interface QueryFundraiserDonationStatsArgs {
   fundraiserId: Scalars['ID']['input'];
 }
@@ -1773,6 +1861,11 @@ export interface QueryFundraiserStakesArgs {
   fundraiserId: Scalars['ID']['input'];
   limit?: Scalars['Int']['input'];
   offset?: Scalars['Int']['input'];
+}
+
+
+export interface QueryFundraiserStakingStatsArgs {
+  fundraiserId: Scalars['ID']['input'];
 }
 
 
@@ -1994,6 +2087,12 @@ export interface QueryRecentDonationsArgs {
 }
 
 
+export interface QueryRecentStakingActivityArgs {
+  fundraiserId?: InputMaybe<Scalars['ID']['input']>;
+  limit?: Scalars['Int']['input'];
+}
+
+
 export interface QueryReportArgs {
   id: Scalars['ID']['input'];
 }
@@ -2032,6 +2131,11 @@ export interface QuerySearchUsersArgs {
 
 export interface QueryStakeArgs {
   id: Scalars['ID']['input'];
+}
+
+
+export interface QueryStakeExistsByTxHashArgs {
+  txHash: Scalars['String']['input'];
 }
 
 
@@ -2178,6 +2282,17 @@ export interface RecentDonationActivity {
   id: Scalars['ID']['output'];
 }
 
+export interface RecentStakingActivity {
+  __typename?: 'RecentStakingActivity';
+  amount: Scalars['String']['output'];
+  fundraiserId?: Maybe<Scalars['String']['output']>;
+  fundraiserName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  stakedAt: Scalars['DateTime']['output'];
+  stakerAddress: Scalars['String']['output'];
+  stakerUsername?: Maybe<Scalars['String']['output']>;
+}
+
 export interface RecordDonationInput {
   amount: Scalars['String']['input'];
   chainId: Scalars['Int']['input'];
@@ -2186,6 +2301,25 @@ export interface RecordDonationInput {
   message?: InputMaybe<Scalars['String']['input']>;
   token: Scalars['String']['input'];
   txHash: Scalars['String']['input'];
+}
+
+export interface RecordDonationPublicInput {
+  amount: Scalars['String']['input'];
+  blockNumber?: InputMaybe<Scalars['Float']['input']>;
+  chainId: Scalars['Int']['input'];
+  donorAddress: Scalars['String']['input'];
+  fundraiserId: Scalars['String']['input'];
+  isAnonymous?: InputMaybe<Scalars['Boolean']['input']>;
+  message?: InputMaybe<Scalars['String']['input']>;
+  token: Scalars['String']['input'];
+  txHash: Scalars['String']['input'];
+}
+
+export interface RecordDonationResponse {
+  __typename?: 'RecordDonationResponse';
+  donation: Donation;
+  verificationMessage?: Maybe<Scalars['String']['output']>;
+  verified: Scalars['Boolean']['output'];
 }
 
 export interface RecordStakeInput {
@@ -2197,6 +2331,26 @@ export interface RecordStakeInput {
   shares: Scalars['String']['input'];
   txHash: Scalars['String']['input'];
   yieldSplit?: InputMaybe<YieldSplitInput>;
+}
+
+export interface RecordStakePublicInput {
+  amount: Scalars['String']['input'];
+  blockNumber?: InputMaybe<Scalars['Float']['input']>;
+  chainId: Scalars['Int']['input'];
+  fundraiserId?: InputMaybe<Scalars['String']['input']>;
+  isGlobal?: InputMaybe<Scalars['Boolean']['input']>;
+  poolAddress: Scalars['String']['input'];
+  shares: Scalars['String']['input'];
+  stakerAddress: Scalars['String']['input'];
+  txHash: Scalars['String']['input'];
+  yieldSplit?: InputMaybe<YieldSplitInput>;
+}
+
+export interface RecordStakeResponse {
+  __typename?: 'RecordStakeResponse';
+  stake: Stake;
+  verificationMessage?: Maybe<Scalars['String']['output']>;
+  verified: Scalars['Boolean']['output'];
 }
 
 export interface RegionCount {
@@ -2275,6 +2429,16 @@ export interface ReviewReportInput {
   suspensionReason?: InputMaybe<Scalars['String']['input']>;
 }
 
+export interface SecuritySettings {
+  __typename?: 'SecuritySettings';
+  activeSessions: Scalars['Float']['output'];
+  emailVerified: Scalars['Boolean']['output'];
+  lastPasswordChange?: Maybe<Scalars['DateTime']['output']>;
+  loginAlertsEnabled: Scalars['Boolean']['output'];
+  twoFactorEmail?: Maybe<Scalars['String']['output']>;
+  twoFactorEnabled: Scalars['Boolean']['output'];
+}
+
 export interface SendDirectMessageInput {
   /** The text content of the message */
   content: Scalars['String']['input'];
@@ -2291,6 +2455,21 @@ export interface SendMessageInput {
   conversationId: Scalars['ID']['input'];
   /** Optional media URL attached to the message */
   mediaUrl?: InputMaybe<Scalars['String']['input']>;
+}
+
+export interface SocialLinks {
+  __typename?: 'SocialLinks';
+  facebook?: Maybe<Scalars['String']['output']>;
+  instagram?: Maybe<Scalars['String']['output']>;
+  linkedin?: Maybe<Scalars['String']['output']>;
+  twitter?: Maybe<Scalars['String']['output']>;
+}
+
+export interface SocialLinksInput {
+  facebook?: InputMaybe<Scalars['String']['input']>;
+  instagram?: InputMaybe<Scalars['String']['input']>;
+  linkedin?: InputMaybe<Scalars['String']['input']>;
+  twitter?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface SocialTrendingHashtag {
@@ -2361,6 +2540,17 @@ export interface StakingPoolStats {
   stakersCount: Scalars['Int']['output'];
   totalStaked: Scalars['String']['output'];
   totalYieldGenerated: Scalars['String']['output'];
+}
+
+export interface StakingStats {
+  __typename?: 'StakingStats';
+  apy: Scalars['String']['output'];
+  averageStake: Scalars['String']['output'];
+  largestStake: Scalars['String']['output'];
+  lastStakeAt?: Maybe<Scalars['DateTime']['output']>;
+  stakesCount: Scalars['Int']['output'];
+  totalStaked: Scalars['String']['output'];
+  uniqueStakersCount: Scalars['Int']['output'];
 }
 
 export interface StartConversationInput {
@@ -2626,6 +2816,7 @@ export interface UpdateProfileInput {
   email?: InputMaybe<Scalars['String']['input']>;
   isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
+  socialLinks?: InputMaybe<SocialLinksInput>;
   username?: InputMaybe<Scalars['String']['input']>;
   website?: InputMaybe<Scalars['String']['input']>;
 }
@@ -2652,6 +2843,7 @@ export interface User {
   lastSeenAt?: Maybe<Scalars['DateTime']['output']>;
   location?: Maybe<Scalars['String']['output']>;
   onboardingCompleted: Scalars['Boolean']['output'];
+  socialLinks?: Maybe<SocialLinks>;
   stats: UserStats;
   updatedAt: Scalars['DateTime']['output'];
   username?: Maybe<Scalars['String']['output']>;
@@ -2930,16 +3122,24 @@ export type GetFundraisersByCreatorQueryVariables = Exact<{
 }>;
 
 
-export type GetFundraisersByCreatorQuery = { __typename?: 'Query', fundraisersByCreator: { __typename?: 'PaginatedFundraisers', total: number, hasMore: boolean, items: Array<{ __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, raisedAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, createdAt: string, isActive: boolean, isFeatured: boolean, goalReached: boolean, onChainId: number, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, isVerifiedCreator: boolean }, stats: { __typename?: 'FundraiserStats', donorsCount: number, totalDonations: string, avgDonation: string, percentageRaised: number, daysLeft: number, stakersCount: number, totalStaked: string, updatesCount: number } }> } };
+export type GetFundraisersByCreatorQuery = { __typename?: 'Query', fundraisersByCreator: { __typename?: 'PaginatedFundraisers', total: number, hasMore: boolean, items: Array<{ __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, raisedAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, createdAt: string, isActive: boolean, isFeatured: boolean, goalReached: boolean, onChainId: number, stakingPoolAddr?: string | null, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, isVerifiedCreator: boolean }, stats: { __typename?: 'FundraiserStats', donorsCount: number, totalDonations: string, avgDonation: string, percentageRaised: number, daysLeft: number, stakersCount: number, totalStaked: string, updatesCount: number } }> } };
 
 export type CreateFundraiserMutationVariables = Exact<{
   input: CreateFundraiserInput;
   onChainId: Scalars['Int']['input'];
   txHash: Scalars['String']['input'];
+  stakingPoolAddr?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type CreateFundraiserMutation = { __typename?: 'Mutation', createFundraiser: { __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, onChainId: number, txHash: string, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null } } };
+export type CreateFundraiserMutation = { __typename?: 'Mutation', createFundraiser: { __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, onChainId: number, txHash: string, stakingPoolAddr?: string | null, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null } } };
+
+export type CreateFundraiserGaslessMutationVariables = Exact<{
+  input: CreateFundraiserInput;
+}>;
+
+
+export type CreateFundraiserGaslessMutation = { __typename?: 'Mutation', createFundraiserGasless: { __typename?: 'Fundraiser', id: string, name: string, description: string, goalAmount: string, currency: string, deadline: string, images: Array<string>, categories: Array<string>, region?: string | null, onChainId: number, txHash: string, stakingPoolAddr?: string | null, creator: { __typename?: 'FundraiserCreator', id: string, walletAddress: string, username?: string | null, displayName?: string | null } } };
 
 export type AddFundraiserUpdateMutationVariables = Exact<{
   fundraiserId: Scalars['ID']['input'];
@@ -2981,7 +3181,7 @@ export type PostFundraiserLinkFieldsFragment = { __typename?: 'PostFundraiserLin
 
 export type PostFieldsFragment = { __typename?: 'Post', id: string, content?: string | null, type: PostType, visibility: PostVisibility, createdAt: string, updatedAt: string, isEdited: boolean, isPinned: boolean, mentions: Array<string>, tags: Array<string>, likesCount: number, repostsCount: number, replyCount: number, bookmarksCount: number, viewsCount: number, isLiked?: boolean | null, isReposted?: boolean | null, isBookmarked?: boolean | null, parentId?: string | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean }, media: Array<{ __typename?: 'PostMedia', id: string, type: string, url: string, thumbnail?: string | null, alt?: string | null, width?: number | null, height?: number | null, mimeType?: string | null }>, fundraiser?: { __typename?: 'PostFundraiserLink', id: string, name: string, onChainId: number, images: Array<string>, goalAmount: string, raisedAmount: string } | null };
 
-export type CommentFieldsFragment = { __typename?: 'Comment', id: string, postId: string, parentId?: string | null, content: string, createdAt: string, updatedAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean }, replies: Array<{ __typename?: 'Comment', id: string, content: string, createdAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean } }> };
+export type CommentFieldsFragment = { __typename?: 'Comment', id: string, postId?: string | null, parentId?: string | null, content: string, mentions: Array<string>, createdAt: string, updatedAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean }, replies: Array<{ __typename?: 'Comment', id: string, content: string, mentions: Array<string>, createdAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean } }> };
 
 export type GetFeedQueryVariables = Exact<{
   feedType: FeedType;
@@ -3026,7 +3226,16 @@ export type GetPostCommentsQueryVariables = Exact<{
 }>;
 
 
-export type GetPostCommentsQuery = { __typename?: 'Query', postComments: { __typename?: 'PaginatedComments', hasMore: boolean, total: number, items: Array<{ __typename?: 'Comment', id: string, postId: string, parentId?: string | null, content: string, createdAt: string, updatedAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean }, replies: Array<{ __typename?: 'Comment', id: string, content: string, createdAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean } }> }> } };
+export type GetPostCommentsQuery = { __typename?: 'Query', postComments: { __typename?: 'PaginatedComments', hasMore: boolean, total: number, items: Array<{ __typename?: 'Comment', id: string, postId?: string | null, parentId?: string | null, content: string, mentions: Array<string>, createdAt: string, updatedAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean }, replies: Array<{ __typename?: 'Comment', id: string, content: string, mentions: Array<string>, createdAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean } }> }> } };
+
+export type GetFundraiserCommentsQueryVariables = Exact<{
+  fundraiserId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetFundraiserCommentsQuery = { __typename?: 'Query', fundraiserComments: { __typename?: 'PaginatedComments', hasMore: boolean, total: number, items: Array<{ __typename?: 'Comment', id: string, postId?: string | null, parentId?: string | null, content: string, mentions: Array<string>, createdAt: string, updatedAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean }, replies: Array<{ __typename?: 'Comment', id: string, content: string, mentions: Array<string>, createdAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean } }> }> } };
 
 export type GetPostRepliesQueryVariables = Exact<{
   postId: Scalars['ID']['input'];
@@ -3131,7 +3340,7 @@ export type CreateCommentMutationVariables = Exact<{
 }>;
 
 
-export type CreateCommentMutation = { __typename?: 'Mutation', createComment: { __typename?: 'Comment', id: string, postId: string, parentId?: string | null, content: string, createdAt: string, updatedAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean }, replies: Array<{ __typename?: 'Comment', id: string, content: string, createdAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean } }> } };
+export type CreateCommentMutation = { __typename?: 'Mutation', createComment: { __typename?: 'Comment', id: string, postId?: string | null, parentId?: string | null, content: string, mentions: Array<string>, createdAt: string, updatedAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean }, replies: Array<{ __typename?: 'Comment', id: string, content: string, mentions: Array<string>, createdAt: string, likesCount: number, isLiked?: boolean | null, author: { __typename?: 'PostAuthor', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean } }> } };
 
 export type DeleteCommentMutationVariables = Exact<{
   commentId: Scalars['ID']['input'];
@@ -3289,35 +3498,35 @@ export type UserMinimalFieldsFragment = { __typename?: 'UserMinimal', id: string
 
 export type UserStatsFieldsFragment = { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string };
 
-export type UserFieldsFragment = { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } };
+export type UserFieldsFragment = { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, socialLinks?: { __typename?: 'SocialLinks', linkedin?: string | null, twitter?: string | null, instagram?: string | null, facebook?: string | null } | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } };
 
 export type FollowRelationFieldsFragment = { __typename?: 'FollowRelation', id: string, createdAt: string, user: { __typename?: 'UserMinimal', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, walletAddress: string, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null } };
 
 export type GetMeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } } };
+export type GetMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, socialLinks?: { __typename?: 'SocialLinks', linkedin?: string | null, twitter?: string | null, instagram?: string | null, facebook?: string | null } | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } } };
 
 export type GetUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } } };
+export type GetUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, socialLinks?: { __typename?: 'SocialLinks', linkedin?: string | null, twitter?: string | null, instagram?: string | null, facebook?: string | null } | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } } };
 
 export type GetUserByUsernameQueryVariables = Exact<{
   username: Scalars['String']['input'];
 }>;
 
 
-export type GetUserByUsernameQuery = { __typename?: 'Query', userByUsername: { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } } };
+export type GetUserByUsernameQuery = { __typename?: 'Query', userByUsername: { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, socialLinks?: { __typename?: 'SocialLinks', linkedin?: string | null, twitter?: string | null, instagram?: string | null, facebook?: string | null } | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } } };
 
 export type GetUserByWalletQueryVariables = Exact<{
   walletAddress: Scalars['String']['input'];
 }>;
 
 
-export type GetUserByWalletQuery = { __typename?: 'Query', userByWallet: { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } } };
+export type GetUserByWalletQuery = { __typename?: 'Query', userByWallet: { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, socialLinks?: { __typename?: 'SocialLinks', linkedin?: string | null, twitter?: string | null, instagram?: string | null, facebook?: string | null } | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } } };
 
 export type SearchUsersQueryVariables = Exact<{
   query: Scalars['String']['input'];
@@ -3390,7 +3599,7 @@ export type GetUsersQueryVariables = Exact<{
 }>;
 
 
-export type GetUsersQuery = { __typename?: 'Query', users: { __typename?: 'PaginatedUsers', hasMore: boolean, total: number, items: Array<{ __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } }> } };
+export type GetUsersQuery = { __typename?: 'Query', users: { __typename?: 'PaginatedUsers', hasMore: boolean, total: number, items: Array<{ __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, socialLinks?: { __typename?: 'SocialLinks', linkedin?: string | null, twitter?: string | null, instagram?: string | null, facebook?: string | null } | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } }> } };
 
 export type GetUserActivityQueryVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -3433,7 +3642,7 @@ export type UpdateProfileMutationVariables = Exact<{
 }>;
 
 
-export type UpdateProfileMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } } };
+export type UpdateProfileMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'User', id: string, username?: string | null, displayName?: string | null, avatarUrl?: string | null, bannerUrl?: string | null, bio?: string | null, location?: string | null, website?: string | null, walletAddress: string, email?: string | null, emailVerified: boolean, birthdate?: string | null, interests: Array<string>, goals: Array<string>, isVerifiedCreator: boolean, verificationBadge?: VerificationBadge | null, isPrivate: boolean, isActive: boolean, onboardingCompleted: boolean, createdAt: string, updatedAt: string, lastSeenAt?: string | null, isFollowing?: boolean | null, isFollowedBy?: boolean | null, isBlocked?: boolean | null, socialLinks?: { __typename?: 'SocialLinks', linkedin?: string | null, twitter?: string | null, instagram?: string | null, facebook?: string | null } | null, stats: { __typename?: 'UserStats', followersCount: number, followingCount: number, postsCount: number, fundraisersCount: number, totalDonated: string, totalStaked: string, reputationScore: number, fbtBalance: string, fbtStakedBalance: string, fbtVestedTotal: string, fbtVestedClaimed: string } } };
 
 export type FollowUserMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -3551,6 +3760,7 @@ export const CommentFieldsFragmentDoc = gql`
   postId
   parentId
   content
+  mentions
   createdAt
   updatedAt
   likesCount
@@ -3561,6 +3771,7 @@ export const CommentFieldsFragmentDoc = gql`
   replies {
     id
     content
+    mentions
     createdAt
     likesCount
     isLiked
@@ -3652,6 +3863,12 @@ export const UserFieldsFragmentDoc = gql`
   bio
   location
   website
+  socialLinks {
+    linkedin
+    twitter
+    instagram
+    facebook
+  }
   walletAddress
   email
   emailVerified
@@ -3907,6 +4124,7 @@ export const GetFundraisersByCreatorDocument = gql`
       isFeatured
       goalReached
       onChainId
+      stakingPoolAddr
       creator {
         id
         walletAddress
@@ -3970,8 +4188,13 @@ export type GetFundraisersByCreatorLazyQueryHookResult = ReturnType<typeof useGe
 export type GetFundraisersByCreatorSuspenseQueryHookResult = ReturnType<typeof useGetFundraisersByCreatorSuspenseQuery>;
 export type GetFundraisersByCreatorQueryResult = ApolloReactCommon.QueryResult<GetFundraisersByCreatorQuery, GetFundraisersByCreatorQueryVariables>;
 export const CreateFundraiserDocument = gql`
-    mutation CreateFundraiser($input: CreateFundraiserInput!, $onChainId: Int!, $txHash: String!) {
-  createFundraiser(input: $input, onChainId: $onChainId, txHash: $txHash) {
+    mutation CreateFundraiser($input: CreateFundraiserInput!, $onChainId: Int!, $txHash: String!, $stakingPoolAddr: String) {
+  createFundraiser(
+    input: $input
+    onChainId: $onChainId
+    txHash: $txHash
+    stakingPoolAddr: $stakingPoolAddr
+  ) {
     id
     name
     description
@@ -3983,6 +4206,7 @@ export const CreateFundraiserDocument = gql`
     region
     onChainId
     txHash
+    stakingPoolAddr
     creator {
       id
       walletAddress
@@ -4009,6 +4233,7 @@ export const CreateFundraiserDocument = gql`
  *      input: // value for 'input'
  *      onChainId: // value for 'onChainId'
  *      txHash: // value for 'txHash'
+ *      stakingPoolAddr: // value for 'stakingPoolAddr'
  *   },
  * });
  */
@@ -4019,6 +4244,55 @@ export function useCreateFundraiserMutation(baseOptions?: ApolloReactHooks.Mutat
 export type CreateFundraiserMutationHookResult = ReturnType<typeof useCreateFundraiserMutation>;
 export type CreateFundraiserMutationResult = ApolloReactCommon.MutationResult<CreateFundraiserMutation>;
 export type CreateFundraiserMutationOptions = ApolloReactCommon.BaseMutationOptions<CreateFundraiserMutation, CreateFundraiserMutationVariables>;
+export const CreateFundraiserGaslessDocument = gql`
+    mutation CreateFundraiserGasless($input: CreateFundraiserInput!) {
+  createFundraiserGasless(input: $input) {
+    id
+    name
+    description
+    goalAmount
+    currency
+    deadline
+    images
+    categories
+    region
+    onChainId
+    txHash
+    stakingPoolAddr
+    creator {
+      id
+      walletAddress
+      username
+      displayName
+    }
+  }
+}
+    `;
+
+/**
+ * __useCreateFundraiserGaslessMutation__
+ *
+ * To run a mutation, you first call `useCreateFundraiserGaslessMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateFundraiserGaslessMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createFundraiserGaslessMutation, { data, loading, error }] = useCreateFundraiserGaslessMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateFundraiserGaslessMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateFundraiserGaslessMutation, CreateFundraiserGaslessMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateFundraiserGaslessMutation, CreateFundraiserGaslessMutationVariables>(CreateFundraiserGaslessDocument, options);
+      }
+export type CreateFundraiserGaslessMutationHookResult = ReturnType<typeof useCreateFundraiserGaslessMutation>;
+export type CreateFundraiserGaslessMutationResult = ApolloReactCommon.MutationResult<CreateFundraiserGaslessMutation>;
+export type CreateFundraiserGaslessMutationOptions = ApolloReactCommon.BaseMutationOptions<CreateFundraiserGaslessMutation, CreateFundraiserGaslessMutationVariables>;
 export const AddFundraiserUpdateDocument = gql`
     mutation AddFundraiserUpdate($fundraiserId: ID!, $input: CreateFundraiserUpdateInput!) {
   addFundraiserUpdate(fundraiserId: $fundraiserId, input: $input) {
@@ -4459,6 +4733,55 @@ export type GetPostCommentsQueryHookResult = ReturnType<typeof useGetPostComment
 export type GetPostCommentsLazyQueryHookResult = ReturnType<typeof useGetPostCommentsLazyQuery>;
 export type GetPostCommentsSuspenseQueryHookResult = ReturnType<typeof useGetPostCommentsSuspenseQuery>;
 export type GetPostCommentsQueryResult = ApolloReactCommon.QueryResult<GetPostCommentsQuery, GetPostCommentsQueryVariables>;
+export const GetFundraiserCommentsDocument = gql`
+    query GetFundraiserComments($fundraiserId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  fundraiserComments(fundraiserId: $fundraiserId, limit: $limit, offset: $offset) {
+    items {
+      ...CommentFields
+    }
+    hasMore
+    total
+  }
+}
+    ${CommentFieldsFragmentDoc}`;
+
+/**
+ * __useGetFundraiserCommentsQuery__
+ *
+ * To run a query within a React component, call `useGetFundraiserCommentsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFundraiserCommentsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFundraiserCommentsQuery({
+ *   variables: {
+ *      fundraiserId: // value for 'fundraiserId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetFundraiserCommentsQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetFundraiserCommentsQuery, GetFundraiserCommentsQueryVariables> & ({ variables: GetFundraiserCommentsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetFundraiserCommentsQuery, GetFundraiserCommentsQueryVariables>(GetFundraiserCommentsDocument, options);
+      }
+export function useGetFundraiserCommentsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetFundraiserCommentsQuery, GetFundraiserCommentsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetFundraiserCommentsQuery, GetFundraiserCommentsQueryVariables>(GetFundraiserCommentsDocument, options);
+        }
+// @ts-ignore
+export function useGetFundraiserCommentsSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetFundraiserCommentsQuery, GetFundraiserCommentsQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFundraiserCommentsQuery, GetFundraiserCommentsQueryVariables>;
+export function useGetFundraiserCommentsSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFundraiserCommentsQuery, GetFundraiserCommentsQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetFundraiserCommentsQuery | undefined, GetFundraiserCommentsQueryVariables>;
+export function useGetFundraiserCommentsSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetFundraiserCommentsQuery, GetFundraiserCommentsQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetFundraiserCommentsQuery, GetFundraiserCommentsQueryVariables>(GetFundraiserCommentsDocument, options);
+        }
+export type GetFundraiserCommentsQueryHookResult = ReturnType<typeof useGetFundraiserCommentsQuery>;
+export type GetFundraiserCommentsLazyQueryHookResult = ReturnType<typeof useGetFundraiserCommentsLazyQuery>;
+export type GetFundraiserCommentsSuspenseQueryHookResult = ReturnType<typeof useGetFundraiserCommentsSuspenseQuery>;
+export type GetFundraiserCommentsQueryResult = ApolloReactCommon.QueryResult<GetFundraiserCommentsQuery, GetFundraiserCommentsQueryVariables>;
 export const GetPostRepliesDocument = gql`
     query GetPostReplies($postId: ID!, $limit: Int = 20, $offset: Int = 0) {
   postReplies(postId: $postId, limit: $limit, offset: $offset) {

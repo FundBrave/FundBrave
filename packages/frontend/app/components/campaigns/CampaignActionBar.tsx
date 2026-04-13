@@ -29,6 +29,8 @@ interface CampaignActionBarProps {
   variant?: "buttons" | "icons" | "compact";
   /** Whether to show the donate button */
   showDonate?: boolean;
+  /** Whether to show the stake button */
+  showStake?: boolean;
   /** Additional class names */
   className?: string;
   /** Callback when share is completed */
@@ -45,6 +47,7 @@ export default function CampaignActionBar({
   campaign,
   variant = "buttons",
   showDonate = false,
+  showStake = false,
   className,
   onShare,
   onReminderSet,
@@ -212,7 +215,7 @@ export default function CampaignActionBar({
     );
   }
 
-  // Default: buttons variant - Donate + Share side by side
+  // Default: buttons variant - Donate + Stake + Share
   return (
     <>
       <div
@@ -224,6 +227,11 @@ export default function CampaignActionBar({
         {showDonate && (
           <Button asChild variant="primary" size="lg" className="flex-1">
             <Link href={`/campaigns/${campaign.id}/donate`}>Donate</Link>
+          </Button>
+        )}
+        {showStake && (
+          <Button asChild variant="outline" size="lg" className="flex-1">
+            <Link href={`/campaigns/${campaign.id}/stake`}>Stake</Link>
           </Button>
         )}
         <Button

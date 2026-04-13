@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 interface StickyCommentInputProps {
   postId: string;
   replyTo?: { id: string; username: string };
-  onSubmit: (content: string) => Promise<void>;
+  onSubmit: (content: string, mentions?: string[]) => Promise<void>;
   onCancel?: () => void;
   disabled?: boolean;
   placeholder?: string;
@@ -57,7 +57,12 @@ export function StickyCommentInput({
 
     setIsSubmitting(true);
     try {
-      await onSubmit(content.trim());
+      // Extract @mentions from text for notification purposes
+      const mentionMatches = content.match(/@(\w+)/g);
+      const mentions = mentionMatches
+        ? [...new Set(mentionMatches.map((m) => m.slice(1)))]
+        : undefined;
+      await onSubmit(content.trim(), mentions);
       setContent("");
       setIsFocused(false);
       textareaRef.current?.blur();

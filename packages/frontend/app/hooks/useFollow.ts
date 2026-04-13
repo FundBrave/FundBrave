@@ -75,39 +75,50 @@ export function useFollow({
 
     try {
       if (action === 'follow') {
-        await followUserMutation({
+        const result = await followUserMutation({
           variables: { userId },
           optimisticResponse: {
             followUser: true,
           },
           update: (cache) => {
-            // Update user cache if needed
             cache.modify({
               id: cache.identify({ __typename: 'User', id: userId }),
               fields: {
-                isFollowedByMe: () => true,
-                followersCount: (prev: number) => prev + 1,
+                isFollowing: () => true,
+                // followersCount lives inside stats, so update the stats object
+                stats: (prevStats) => ({
+                  ...prevStats,
+                  followersCount: (prevStats?.followersCount ?? 0) + 1,
+                }),
               },
             });
           },
         });
+        if (result.errors?.length) {
+          throw new Error(result.errors[0].message);
+        }
       } else {
-        await unfollowUserMutation({
+        const result = await unfollowUserMutation({
           variables: { userId },
           optimisticResponse: {
             unfollowUser: true,
           },
           update: (cache) => {
-            // Update user cache if needed
             cache.modify({
               id: cache.identify({ __typename: 'User', id: userId }),
               fields: {
-                isFollowedByMe: () => false,
-                followersCount: (prev: number) => Math.max(0, prev - 1),
+                isFollowing: () => false,
+                stats: (prevStats) => ({
+                  ...prevStats,
+                  followersCount: Math.max(0, (prevStats?.followersCount ?? 1) - 1),
+                }),
               },
             });
           },
         });
+        if (result.errors?.length) {
+          throw new Error(result.errors[0].message);
+        }
       }
 
       onSuccess?.(newIsFollowing);

@@ -4,15 +4,17 @@ import { CommentInput } from "./CommentInput";
 import { CommentCard } from "./CommentCard";
 import type { Comment } from "@/app/types/comment";
 import { cn } from "@/lib/utils";
+import type { MentionUser } from "@/app/components/social/PostEditor";
 
 interface CommentSectionProps {
   postId: string;
   comments: Comment[];
-  onAddComment: (content: string) => void;
+  onAddComment: (content: string, mentions?: string[]) => void;
   onLikeComment: (commentId: string) => void;
   onUnlikeComment: (commentId: string) => void;
   onReplyToComment: (commentId: string, content: string) => void;
   onDeleteComment?: (commentId: string) => void;
+  onSearchUsers?: (query: string) => Promise<MentionUser[]>;
   showHeader?: boolean;
   className?: string;
 }
@@ -31,6 +33,7 @@ export function CommentSection({
   onUnlikeComment,
   onReplyToComment,
   onDeleteComment,
+  onSearchUsers,
   showHeader = true,
   className,
 }: CommentSectionProps) {
@@ -50,6 +53,7 @@ export function CommentSection({
       <CommentInput
         placeholder="Write a comment..."
         onSubmit={onAddComment}
+        onSearchUsers={onSearchUsers}
       />
 
       {/* Comments List */}
@@ -63,6 +67,7 @@ export function CommentSection({
               onUnlike={onUnlikeComment}
               onReply={onReplyToComment}
               onDelete={onDeleteComment}
+              onSearchUsers={onSearchUsers}
             />
           ))}
         </div>

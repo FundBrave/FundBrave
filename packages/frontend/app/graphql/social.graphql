@@ -68,6 +68,7 @@ fragment CommentFields on Comment {
   postId
   parentId
   content
+  mentions
   createdAt
   updatedAt
   likesCount
@@ -78,6 +79,7 @@ fragment CommentFields on Comment {
   replies {
     id
     content
+    mentions
     createdAt
     likesCount
     isLiked
@@ -148,6 +150,17 @@ query GetPostComments($postId: ID!, $limit: Int = 20, $offset: Int = 0) {
   }
 }
 
+# Get fundraiser comments
+query GetFundraiserComments($fundraiserId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  fundraiserComments(fundraiserId: $fundraiserId, limit: $limit, offset: $offset) {
+    items {
+      ...CommentFields
+    }
+    hasMore
+    total
+  }
+}
+
 # Get post replies
 query GetPostReplies($postId: ID!, $limit: Int = 20, $offset: Int = 0) {
   postReplies(postId: $postId, limit: $limit, offset: $offset) {
@@ -179,6 +192,28 @@ query GetTrendingHashtags($limit: Int = 10, $period: TrendingPeriod = TWENTY_FOU
     score
     period
     calculatedAt
+  }
+}
+
+# Get posts liked by a user
+query GetUserLikedPosts($userId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  userLikedPosts(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      ...PostFields
+    }
+    hasMore
+    total
+  }
+}
+
+# Get comments made by a user
+query GetUserComments($userId: ID!, $limit: Int = 20, $offset: Int = 0) {
+  userComments(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      ...CommentFields
+    }
+    hasMore
+    total
   }
 }
 

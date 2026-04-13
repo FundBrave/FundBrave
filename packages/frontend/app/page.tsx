@@ -117,8 +117,8 @@ export default function HomePage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Show loading spinner while checking authentication
-  if (authLoading || !isAuthenticated) {
+  // Show loading spinner while checking authentication or fetching user data
+  if (authLoading || !isAuthenticated || meLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Spinner size="lg" />
@@ -126,7 +126,7 @@ export default function HomePage() {
     );
   }
 
-  // Show error if user data failed to load
+  // Show error if user data failed to load (only after loading is complete)
   if (meError || !meData?.me) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -160,9 +160,9 @@ export default function HomePage() {
     points: parseInt(entry.totalDonated) || 0,
   })) || [];
 
-  // Transform suggested users data
+  // Transform suggested users data — exclude self and already-followed users
   const suggestedUsers: SuggestedUser[] = suggestedUsersData?.suggestedUsers
-    .filter(user => !user.isFollowing)
+    .filter(user => !user.isFollowing && user.id !== meData.me.id)
     .map(user => ({
       id: user.id,
       name: user.displayName || user.username || "Anonymous",

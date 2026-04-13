@@ -41,6 +41,7 @@ model User {
   bannerUrl   String?
   location    String?
   website     String?
+  socialLinks Json?   // { linkedin?: string, twitter?: string, instagram?: string, facebook?: string }
 
   // Verification & Reputation
   isVerifiedCreator Boolean            @default(false)
@@ -415,13 +416,19 @@ model Comment {
   content  String @db.Text
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  postId   String
-  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // Support both posts and fundraisers
+  postId       String?
+  post         Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  fundraiserId String?
+  fundraiser   Fundraiser? @relation(fields: [fundraiserId], references: [id], onDelete: Cascade)
 
   // Nested comments
   parentId String?
   parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies  Comment[] @relation("CommentReplies")
+
+  mentions String[] @default([])
 
   likesCount Int           @default(0)
   likes      CommentLike[]
@@ -430,6 +437,7 @@ model Comment {
   updatedAt DateTime @updatedAt
 
   @@index([postId])
+  @@index([fundraiserId])
   @@index([authorId])
   @@index([parentId])
   @@map("comments")
@@ -540,6 +548,7 @@ model Fundraiser {
   donations               Donation[]
   stakes                  Stake[]
   posts                   Post[]
+  comments                Comment[]
   updates                 FundraiserUpdate[]
   milestones              Milestone[]
   proposals               Proposal[]

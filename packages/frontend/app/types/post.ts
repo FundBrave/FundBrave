@@ -104,10 +104,10 @@ export interface PostCardHandlers {
   onPostClick?: (postId: string) => void;
 
   // Comment handlers (for embedded comment section)
-  onAddComment?: (postId: string, content: string) => void;
+  onAddComment?: (postId: string, content: string, mentions?: string[]) => void;
   onLikeComment?: (postId: string, commentId: string) => void;
   onUnlikeComment?: (postId: string, commentId: string) => void;
-  onReplyToComment?: (postId: string, commentId: string, content: string) => void;
+  onReplyToComment?: (postId: string, commentId: string, content: string, mentions?: string[]) => void;
   onDeleteComment?: (postId: string, commentId: string) => void;
 }
 

@@ -6,7 +6,9 @@ import { useGetUserPostsQuery } from "@/app/generated/graphql";
 import { PostCard, fromContextPost } from "@/app/components/ui/post";
 
 interface PostsTabProps {
-  // Optional: pass username externally
+  // Pass the actual user ID for the GraphQL query
+  userId?: string;
+  // Optional: pass username externally (fallback)
   username?: string;
   // Optional: pass posts externally (for non-context usage)
   posts?: Post[];
@@ -17,9 +19,10 @@ interface PostsTabProps {
  * Uses GraphQL to fetch user posts
  * Uses the unified PostCard component for consistent rendering
  */
-export default function PostsTab({ username: externalUsername, posts: externalPosts }: PostsTabProps) {
+export default function PostsTab({ userId, username: externalUsername, posts: externalPosts }: PostsTabProps) {
   const params = useParams();
-  const username = externalUsername || (params.username as string);
+  // Prefer userId prop, fall back to username from props/params
+  const resolvedUserId = userId || externalUsername || (params.username as string);
 
   const {
     likePost,
@@ -34,11 +37,11 @@ export default function PostsTab({ username: externalUsername, posts: externalPo
   // Fetch user posts from GraphQL
   const { data, loading, error } = useGetUserPostsQuery({
     variables: {
-      userId: username, // API expects userId, not username
+      userId: resolvedUserId,
       limit: 50,
       offset: 0,
     },
-    skip: !username || !!externalPosts,
+    skip: !resolvedUserId || !!externalPosts,
     fetchPolicy: 'cache-and-network',
   });
 
@@ -101,10 +104,10 @@ export default function PostsTab({ username: externalUsername, posts: externalPo
           enableComments
           onLike={(postId) => likePost(postId)}
           onUnlike={(postId) => unlikePost(postId)}
-          onAddComment={(postId, content) => addComment(postId, content)}
+          onAddComment={(postId, content, mentions) => addComment(postId, content, mentions)}
           onLikeComment={(postId, commentId) => likeComment(postId, commentId)}
           onUnlikeComment={(postId, commentId) => unlikeComment(postId, commentId)}
-          onReplyToComment={(postId, commentId, content) => replyToComment(postId, commentId, content)}
+          onReplyToComment={(postId, commentId, content, mentions) => replyToComment(postId, commentId, content, mentions)}
           onDeleteComment={(postId, commentId) => deleteComment(postId, commentId)}
         />
       ))}

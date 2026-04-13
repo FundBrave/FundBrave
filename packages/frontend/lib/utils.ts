@@ -27,6 +27,22 @@ export function formatNumber(
 }
 
 /**
+ * Format a date string as "3 March, 2026 · 11:42 AM"
+ */
+export function formatPostDate(dateString: string): string {
+  const date = new Date(dateString);
+  const day = date.getDate();
+  const month = date.toLocaleDateString("en-US", { month: "long" });
+  const year = date.getFullYear();
+  const time = date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${day} ${month}, ${year} · ${time}`;
+}
+
+/**
  * Format a date string to a relative time (e.g., "2h", "3d", "Just now")
  * @param dateString - ISO date string
  * @param style - "short" for "2h" or "long" for "2h ago"

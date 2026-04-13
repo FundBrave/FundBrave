@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   Prisma,
   Post as PrismaPost,
@@ -104,7 +105,10 @@ type CommentWithRelations = Prisma.CommentGetPayload<{
 export class SocialService {
   private readonly logger = new Logger(SocialService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   // ==================== Post Methods ====================
 
@@ -355,6 +359,13 @@ export class SocialService {
       include: this.getPostIncludes(),
     });
 
+    // Send mention notifications (fire-and-forget, don't block post creation)
+    if (input.mentions && input.mentions.length > 0) {
+      this.sendMentionNotifications(userId, input.mentions, post.id).catch(
+        (err) => this.logger.debug(`Mention notifications failed: ${err}`),
+      );
+    }
+
     return this.mapToPostDto(fullPost!, userId);
   }
 
@@ -461,6 +472,15 @@ export class SocialService {
       }),
     ]);
 
+    // Send like notification (skip self-like)
+    if (post.authorId !== userId) {
+      this.notificationsService
+        .notifyLike(post.authorId, userId, postId)
+        .catch((err) =>
+          this.logger.debug(`Like notification failed: ${err}`),
+        );
+    }
+
     return true;
   }
 
@@ -534,6 +554,15 @@ export class SocialService {
         },
       }),
     ]);
+
+    // Send repost notification (skip self-repost)
+    if (post.authorId !== userId) {
+      this.notificationsService
+        .notifyRepost(post.authorId, userId, input.postId)
+        .catch((err) =>
+          this.logger.debug(`Repost notification failed: ${err}`),
+        );
+    }
 
     return true;
   }
@@ -668,6 +697,105 @@ export class SocialService {
     };
   }
 
+  /**
+   * Get posts liked by a user
+   */
+  async getUserLikedPosts(
+    userId: string,
+    limit: number,
+    offset: number,
+    viewerId?: string,
+  ): Promise<PaginatedPosts> {
+    const [likes, total] = await Promise.all([
+      this.prisma.like.findMany({
+        where: { userId },
+        include: {
+          post: {
+            include: this.getPostIncludes(),
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.like.count({ where: { userId } }),
+    ]);
+
+    const items = await Promise.all(
+      likes.map((l) =>
+        this.mapToPostDto(l.post as PostWithRelations, viewerId),
+      ),
+    );
+
+    return {
+      items,
+      total,
+      hasMore: offset + limit < total,
+    };
+  }
+
+  /**
+   * Get comments made by a user
+   */
+  async getUserComments(
+    userId: string,
+    limit: number,
+    offset: number,
+    viewerId?: string,
+  ): Promise<PaginatedComments> {
+    const commentIncludes = {
+      author: {
+        select: {
+          id: true,
+          walletAddress: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+          isVerifiedCreator: true,
+        },
+      },
+      replies: {
+        include: {
+          author: {
+            select: {
+              id: true,
+              walletAddress: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+              isVerifiedCreator: true,
+            },
+          },
+        },
+        take: 3,
+        orderBy: { createdAt: 'asc' as const },
+      },
+    };
+
+    const [comments, total] = await Promise.all([
+      this.prisma.comment.findMany({
+        where: { authorId: userId, parentId: null },
+        include: commentIncludes,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.comment.count({ where: { authorId: userId, parentId: null } }),
+    ]);
+
+    const items = await Promise.all(
+      comments.map((c) =>
+        this.mapToCommentDto(c as CommentWithRelations, viewerId),
+      ),
+    );
+
+    return {
+      items,
+      total,
+      hasMore: offset + limit < total,
+    };
+  }
+
   // ==================== Comment Methods ====================
 
   /**
@@ -731,18 +859,103 @@ export class SocialService {
   }
 
   /**
+   * Get comments for a fundraiser
+   */
+  async getFundraiserComments(
+    fundraiserId: string,
+    limit: number,
+    offset: number,
+    viewerId?: string,
+  ): Promise<PaginatedComments> {
+    const [comments, total] = await Promise.all([
+      this.prisma.comment.findMany({
+        where: { fundraiserId, parentId: null },
+        include: {
+          author: {
+            select: {
+              id: true,
+              walletAddress: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+              isVerifiedCreator: true,
+            },
+          },
+          replies: {
+            include: {
+              author: {
+                select: {
+                  id: true,
+                  walletAddress: true,
+                  username: true,
+                  displayName: true,
+                  avatarUrl: true,
+                  isVerifiedCreator: true,
+                },
+              },
+            },
+            take: 3,
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.comment.count({ where: { fundraiserId, parentId: null } }),
+    ]);
+
+    const items = await Promise.all(
+      comments.map((c) =>
+        this.mapToCommentDto(c as CommentWithRelations, viewerId),
+      ),
+    );
+
+    return {
+      items,
+      total,
+      hasMore: offset + limit < total,
+    };
+  }
+
+  /**
    * Create a comment
    */
   async createComment(
     userId: string,
     input: CreateCommentInput,
   ): Promise<Comment> {
-    const post = await this.prisma.post.findUnique({
-      where: { id: input.postId },
-    });
+    // Validate that either postId or fundraiserId is provided
+    if (!input.postId && !input.fundraiserId) {
+      throw new InvalidInputException(
+        'Either postId or fundraiserId must be provided',
+      );
+    }
 
-    if (!post) {
-      throw new PostNotFoundException(input.postId);
+    if (input.postId && input.fundraiserId) {
+      throw new InvalidInputException(
+        'Cannot provide both postId and fundraiserId',
+      );
+    }
+
+    // Validate post if provided
+    if (input.postId) {
+      const post = await this.prisma.post.findUnique({
+        where: { id: input.postId },
+      });
+      if (!post) {
+        throw new PostNotFoundException(input.postId);
+      }
+    }
+
+    // Validate fundraiser if provided
+    if (input.fundraiserId) {
+      const fundraiser = await this.prisma.fundraiser.findUnique({
+        where: { id: input.fundraiserId },
+      });
+      if (!fundraiser) {
+        throw new InvalidInputException('Fundraiser not found');
+      }
     }
 
     // Validate parent comment if replying to a comment
@@ -750,7 +963,12 @@ export class SocialService {
       const parentComment = await this.prisma.comment.findUnique({
         where: { id: input.parentId },
       });
-      if (!parentComment || parentComment.postId !== input.postId) {
+      if (
+        !parentComment ||
+        (input.postId && parentComment.postId !== input.postId) ||
+        (input.fundraiserId &&
+          parentComment.fundraiserId !== input.fundraiserId)
+      ) {
         throw new InvalidInputException('Invalid parent comment');
       }
     }
@@ -760,7 +978,9 @@ export class SocialService {
         content: input.content,
         authorId: userId,
         postId: input.postId,
+        fundraiserId: input.fundraiserId,
         parentId: input.parentId,
+        mentions: input.mentions || [],
       },
       include: {
         author: {
@@ -790,14 +1010,40 @@ export class SocialService {
       },
     });
 
-    // Update post comment count (reply count)
-    await this.prisma.post.update({
-      where: { id: input.postId },
-      data: {
-        replyCount: { increment: 1 },
-        engagementScore: { increment: 1.5 },
-      },
-    });
+    // Update post comment count if this is a post comment
+    if (input.postId) {
+      await this.prisma.post.update({
+        where: { id: input.postId },
+        data: {
+          replyCount: { increment: 1 },
+          engagementScore: { increment: 1.5 },
+        },
+      });
+
+      // Send comment notification to post author (skip self-comment)
+      const post = await this.prisma.post.findUnique({
+        where: { id: input.postId },
+        select: { authorId: true },
+      });
+      if (post && post.authorId !== userId) {
+        this.notificationsService
+          .notifyComment(post.authorId, userId, input.postId, comment.id)
+          .catch((err) =>
+            this.logger.debug(`Comment notification failed: ${err}`),
+          );
+      }
+    }
+
+    // Send mention notifications from comment
+    if (input.mentions && input.mentions.length > 0) {
+      this.sendMentionNotifications(
+        userId,
+        input.mentions,
+        input.postId || comment.id,
+      ).catch((err) =>
+        this.logger.debug(`Comment mention notifications failed: ${err}`),
+      );
+    }
 
     return this.mapToCommentDto(comment as CommentWithRelations, userId);
   }
@@ -820,16 +1066,24 @@ export class SocialService {
       );
     }
 
-    await this.prisma.$transaction([
+    const operations = [
       this.prisma.comment.delete({ where: { id: commentId } }),
-      this.prisma.post.update({
-        where: { id: comment.postId },
-        data: {
-          replyCount: { decrement: 1 },
-          engagementScore: { decrement: 1.5 },
-        },
-      }),
-    ]);
+    ];
+
+    // Update post reply count if this is a post comment
+    if (comment.postId) {
+      operations.push(
+        this.prisma.post.update({
+          where: { id: comment.postId },
+          data: {
+            replyCount: { decrement: 1 },
+            engagementScore: { decrement: 1.5 },
+          },
+        }) as any,
+      );
+    }
+
+    await this.prisma.$transaction(operations);
 
     return true;
   }
@@ -1197,8 +1451,9 @@ export class SocialService {
           avatarUrl: reply.author.avatarUrl ?? undefined,
           isVerifiedCreator: reply.author.isVerifiedCreator,
         },
-        postId: reply.postId,
+        postId: reply.postId ?? undefined,
         parentId: reply.parentId ?? undefined,
+        mentions: (reply as any).mentions || [],
         likesCount: reply.likesCount,
         replies: [],
         createdAt: reply.createdAt,
@@ -1211,13 +1466,47 @@ export class SocialService {
       id: comment.id,
       content: comment.content,
       author,
-      postId: comment.postId,
+      postId: comment.postId ?? undefined,
       parentId: comment.parentId ?? undefined,
+      mentions: (comment as any).mentions || [],
       likesCount: comment.likesCount,
       replies,
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
       isLiked,
     };
+  }
+
+  // ==================== Notification Helpers ====================
+
+  /**
+   * Send mention notifications to all mentioned users
+   * Resolves usernames to user IDs and calls notifyMention for each
+   */
+  private async sendMentionNotifications(
+    actorId: string,
+    mentionedUsernames: string[],
+    postId: string,
+  ): Promise<void> {
+    for (const username of mentionedUsernames) {
+      try {
+        const user = await this.prisma.user.findFirst({
+          where: { username },
+          select: { id: true },
+        });
+
+        if (user && user.id !== actorId) {
+          await this.notificationsService.notifyMention(
+            user.id,
+            actorId,
+            postId,
+          );
+        }
+      } catch (err) {
+        this.logger.debug(
+          `Failed to notify mention for @${username}: ${err}`,
+        );
+      }
+    }
   }
 }

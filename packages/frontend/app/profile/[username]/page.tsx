@@ -19,9 +19,86 @@ import { CreatePost } from "@/app/components/ui";
 import { usePosts } from "@/app/provider/PostsContext";
 import { useUserProfile } from "@/app/hooks/useUserProfile";
 import { useGetFundraisersByCreatorQuery } from "@/app/generated/graphql";
+import { gql, useQuery } from "@apollo/client";
+import type { Donation } from "@/app/generated/graphql";
 import type { PublishData } from "@/app/components/ui/types/CreatePost.types";
 import { useAuth } from "@/app/provider/AuthProvider";
 import { useMessageUser } from "@/app/hooks/useMessageUser";
+
+const GET_USER_LIKED_POSTS = gql`
+  query GetUserLikedPosts($userId: ID!, $limit: Int, $offset: Int) {
+    userLikedPosts(userId: $userId, limit: $limit, offset: $offset) {
+      total
+      hasMore
+      items {
+        id
+        content
+        type
+        createdAt
+        isLiked
+        isBookmarked
+        likesCount
+        replyCount
+        repostsCount
+        bookmarksCount
+        author {
+          id
+          username
+          displayName
+          avatarUrl
+          isVerifiedCreator
+        }
+      }
+    }
+  }
+`;
+
+const GET_USER_COMMENTS = gql`
+  query GetUserComments($userId: ID!, $limit: Int, $offset: Int) {
+    userComments(userId: $userId, limit: $limit, offset: $offset) {
+      total
+      hasMore
+      items {
+        id
+        content
+        createdAt
+        likesCount
+        isLiked
+        postId
+        author {
+          id
+          username
+          displayName
+          avatarUrl
+          isVerifiedCreator
+        }
+      }
+    }
+  }
+`;
+
+const GET_USER_DONATIONS = gql`
+  query GetUserDonations($userId: ID!, $limit: Int, $offset: Int) {
+    userDonations(userId: $userId, limit: $limit, offset: $offset) {
+      total
+      hasMore
+      items {
+        id
+        amount
+        amountUSD
+        token
+        createdAt
+        isAnonymous
+        message
+        fundraiser {
+          id
+          name
+          images
+        }
+      }
+    }
+  }
+`;
 
 // Tab options for the profile page
 type ProfileTab = "posts" | "donations" | "campaigns" | "likes" | "comments";
@@ -37,8 +114,8 @@ export default function ProfilePage() {
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const { addPost } = usePosts();
   const plusIconRef = useRef<SVGSVGElement>(null);
-  const { user: currentUser } = useAuth();
-  const { messageUser, isNavigating } = useMessageUser();
+  const { user: currentUser, isLoading: authLoading } = useAuth();
+//   const { messageUser, isNavigating } = useMessageUser();
 
   const username = params.username as string;
 
@@ -60,6 +137,33 @@ export default function ProfilePage() {
 
   // Fetch user profile data from GraphQL
   const { user, isLoading: userLoading, error: userError } = useUserProfile(shouldFetch ? username : "");
+
+  // Fetch user's donations
+  const { data: donationsData, loading: donationsLoading } = useQuery(GET_USER_DONATIONS, {
+    variables: { userId: user?.id || '', limit: 20, offset: 0 },
+    skip: !user?.id || activeTab !== "donations",
+    fetchPolicy: 'network-only',
+  });
+
+  const donations: Donation[] = donationsData?.userDonations?.items || [];
+
+  // Fetch user's liked posts
+  const { data: likedPostsData, loading: likedPostsLoading } = useQuery(GET_USER_LIKED_POSTS, {
+    variables: { userId: user?.id || '', limit: 20, offset: 0 },
+    skip: !user?.id || activeTab !== "likes",
+    fetchPolicy: 'network-only',
+  });
+
+  const likedPosts = likedPostsData?.userLikedPosts?.items || [];
+
+  // Fetch user's comments
+  const { data: userCommentsData, loading: userCommentsLoading } = useQuery(GET_USER_COMMENTS, {
+    variables: { userId: user?.id || '', limit: 20, offset: 0 },
+    skip: !user?.id || activeTab !== "comments",
+    fetchPolicy: 'network-only',
+  });
+
+  const userComments = userCommentsData?.userComments?.items || [];
 
   // Fetch user's campaigns
   const { data: campaignsData, loading: campaignsLoading } = useGetFundraisersByCreatorQuery({
@@ -93,24 +197,33 @@ export default function ProfilePage() {
   };
 
   // Transform user data for ProfileHeader
+  // Compare by ID first, then fall back to username match (handles cases where
+  // auth cookie check fails but user is clearly on their own profile URL)
+  const isCurrentUser = !!(
+    currentUser && (
+      (user && currentUser.id === user.id) ||
+      (currentUser.username && currentUser.username === username)
+    )
+  );
+
   const userData = user ? {
     id: user.id,
     name: user.displayName || user.username || "Anonymous",
     username: user.username || "",
-    country: "", // TODO: Add country field to GraphQL
-    countryFlag: "", // TODO: Add country flag
-    points: 0, // TODO: Calculate points
+    country: user.location || "",
+    countryFlag: "",
+    points: user.stats?.reputationScore || 0,
     bio: user.bio || "",
-    followers: user.stats.followersCount || 0,
-    following: user.stats.followingCount || 0,
+    followers: user.stats?.followersCount || 0,
+    following: user.stats?.followingCount || 0,
     memberSince: user.createdAt,
     isCurrentUser: currentUser?.id === user.id,
     isFollowing: false, // TODO: Implement follow status check
     socialLinks: {
-      linkedin: "",
-      instagram: "",
-      twitter: "",
-      facebook: "",
+      linkedin: (user as any).socialLinks?.linkedin || "",
+      instagram: (user as any).socialLinks?.instagram || "",
+      twitter: (user as any).socialLinks?.twitter || "",
+      facebook: (user as any).socialLinks?.facebook || "",
     },
   } : null;
 
@@ -133,8 +246,8 @@ export default function ProfilePage() {
     setIsCreatePostOpen(true);
   }, []);
 
-  // Loading state
-  if (userLoading) {
+  // Loading state — include auth loading to prevent premature "not found"
+  if (authLoading || userLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -269,16 +382,18 @@ export default function ProfilePage() {
               </>
             )}
 
-            {activeTab === "posts" && <PostsTab />}
+            {activeTab === "posts" && <PostsTab userId={user.id} />}
 
             {activeTab === "donations" && (
-              <DonationsTab donations={[]} />
+              <DonationsTab donations={donations} isLoading={donationsLoading} />
             )}
 
-            {activeTab === "likes" && <LikesTab likes={[]} />}
+            {activeTab === "likes" && (
+              <LikesTab posts={likedPosts} isLoading={likedPostsLoading} />
+            )}
 
             {activeTab === "comments" && (
-              <CommentsTab comments={[]} />
+              <CommentsTab comments={userComments} isLoading={userCommentsLoading} />
             )}
           </div>
         </div>

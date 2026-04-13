@@ -33,8 +33,9 @@ type Comment {
   id: ID!
   isLiked: Boolean
   likesCount: Int!
+  mentions: [String!]!
   parentId: ID
-  postId: ID!
+  postId: ID
   replies: [Comment!]!
   updatedAt: DateTime!
 }
@@ -89,8 +90,10 @@ type ConversationUnreadCount {
 
 input CreateCommentInput {
   content: String!
+  fundraiserId: String
+  mentions: [String!]
   parentId: String
-  postId: String!
+  postId: String
 }
 
 input CreateDAOProposalInput {
@@ -103,7 +106,7 @@ input CreateDAOProposalInput {
 }
 
 input CreateFundraiserInput {
-  beneficiary: String!
+  beneficiary: String
   categories: [String!]!
   currency: String! = "USDC"
   deadline: String!
@@ -754,7 +757,8 @@ type Mutation {
 
   """Create a new DAO proposal"""
   createDAOProposal(input: CreateDAOProposalInput!): DAOProposal!
-  createFundraiser(input: CreateFundraiserInput!, onChainId: Int!, txHash: String!): Fundraiser!
+  createFundraiser(input: CreateFundraiserInput!, onChainId: Int!, stakingPoolAddr: String, txHash: String!): Fundraiser!
+  createFundraiserGasless(input: CreateFundraiserInput!): Fundraiser!
   createPost(input: CreatePostInput!): Post!
   createReport(input: CreateReportInput!): ReportOperationResult!
   deleteAllNotifications: NotificationOperationResult!
@@ -1262,6 +1266,7 @@ type Query {
   fundraiser(id: ID!): Fundraiser!
   fundraiserByOnChainId(onChainId: Int!): Fundraiser!
   fundraiserCategories: [CategoryCount!]!
+  fundraiserComments(fundraiserId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedComments!
   fundraiserDonationStats(fundraiserId: ID!): DonationStats!
   fundraiserDonations(fundraiserId: ID!, limit: Int! = 20, offset: Int! = 0): PaginatedDonations!
 
@@ -1424,8 +1429,10 @@ type Query {
   userActivity(userId: ID!): UserActivitySummary!
   userByUsername(username: String!): User!
   userByWallet(walletAddress: String!): User!
+  userComments(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedComments!
   userDonationStats(userId: ID!): UserDonationStats!
   userDonations(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedDonations!
+  userLikedPosts(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedPosts!
   userPosts(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedPosts!
   userStakes(limit: Int! = 20, offset: Int! = 0, userId: ID!): PaginatedStakes!
   userStakingStats(userId: ID!): UserStakingStats!
@@ -1627,6 +1634,20 @@ input SendMessageInput {
 
   """Optional media URL attached to the message"""
   mediaUrl: String
+}
+
+type SocialLinks {
+  facebook: String
+  instagram: String
+  linkedin: String
+  twitter: String
+}
+
+input SocialLinksInput {
+  facebook: String
+  instagram: String
+  linkedin: String
+  twitter: String
 }
 
 type SocialTrendingHashtag {
@@ -1927,6 +1948,7 @@ input UpdateProfileInput {
   email: String
   isPrivate: Boolean
   location: String
+  socialLinks: SocialLinksInput
   username: String
   website: String
 }
@@ -1952,6 +1974,7 @@ type User {
   lastSeenAt: DateTime
   location: String
   onboardingCompleted: Boolean!
+  socialLinks: SocialLinks
   stats: UserStats!
   updatedAt: DateTime!
   username: String

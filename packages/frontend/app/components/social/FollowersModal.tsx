@@ -102,7 +102,7 @@ export function FollowersModal({
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
               ref={modalRef}
-              className="bg-[var(--neutral-dark-500)] border border-white/10 rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col"
+              className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col"
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -112,23 +112,23 @@ export function FollowersModal({
               aria-labelledby="followers-modal-title"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
                   aria-label="Go back"
                 >
                   <ArrowLeftIcon className="w-5 h-5" />
                 </button>
                 <h2
                   id="followers-modal-title"
-                  className="text-lg font-semibold text-foreground"
+                  className="text-lg font-semibold text-gray-900"
                 >
                   {activeTab === 'followers' ? 'Followers' : 'Following'}
                 </h2>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
                   aria-label="Close modal"
                 >
                   <CloseIcon className="w-5 h-5" />
@@ -136,13 +136,13 @@ export function FollowersModal({
               </div>
 
               {/* Tabs */}
-              <div className="flex border-b border-white/10">
+              <div className="flex border-b border-gray-200">
                 <button
                   onClick={() => setActiveTab('followers')}
                   className={`flex-1 px-4 py-3 text-sm font-medium transition-colors relative ${
                     activeTab === 'followers'
-                      ? 'text-foreground'
-                      : 'text-foreground/60 hover:text-foreground/80'
+                      ? 'text-gray-900'
+                      : 'text-gray-500 hover:text-gray-700'
                   }`}
                   aria-selected={activeTab === 'followers'}
                   role="tab"
@@ -159,8 +159,8 @@ export function FollowersModal({
                   onClick={() => setActiveTab('following')}
                   className={`flex-1 px-4 py-3 text-sm font-medium transition-colors relative ${
                     activeTab === 'following'
-                      ? 'text-foreground'
-                      : 'text-foreground/60 hover:text-foreground/80'
+                      ? 'text-gray-900'
+                      : 'text-gray-500 hover:text-gray-700'
                   }`}
                   aria-selected={activeTab === 'following'}
                   role="tab"
@@ -184,7 +184,7 @@ export function FollowersModal({
                     placeholder={`Search ${activeTab}...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-[var(--neutral-dark-400)] border border-white/10 rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                     aria-label={`Search ${activeTab}`}
                   />
                 </div>
@@ -229,7 +229,7 @@ export function FollowersModal({
 // User List Item Component
 function UserListItem({ user }: { user: FollowListUser }) {
   return (
-    <div className="flex items-start gap-3 p-3 hover:bg-white/5 rounded-lg transition-colors">
+    <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
       {/* Avatar */}
       <div className="relative flex-shrink-0">
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--purple)] flex items-center justify-center text-white font-semibold">
@@ -245,15 +245,15 @@ function UserListItem({ user }: { user: FollowListUser }) {
       {/* User Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1">
-          <h3 className="font-semibold text-foreground truncate">
+          <h3 className="font-semibold text-gray-900 truncate">
             {user.name}
           </h3>
         </div>
-        <p className="text-sm text-foreground/60 truncate">
+        <p className="text-sm text-gray-500 truncate">
           @{user.username}
         </p>
         {user.mutualFollowers && user.mutualFollowers.count > 0 && (
-          <p className="text-xs text-foreground/50 mt-1">
+          <p className="text-xs text-gray-400 mt-1">
             Followed by {user.mutualFollowers.sample.map(f => f.name).join(', ')}
             {user.mutualFollowers.count > user.mutualFollowers.sample.length &&
               ` and ${user.mutualFollowers.count - user.mutualFollowers.sample.length} others`}
@@ -275,7 +275,7 @@ function UserListItem({ user }: { user: FollowListUser }) {
 // Loading State
 function LoadingState() {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-foreground/50">
+    <div className="flex flex-col items-center justify-center py-12 text-gray-400">
       <motion.div
         className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full"
         animate={{ rotate: 360 }}
@@ -290,15 +290,15 @@ function LoadingState() {
 function EmptyState({ type, hasSearchQuery }: { type: 'followers' | 'following'; hasSearchQuery: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <EmptyIcon className="w-16 h-16 text-foreground/20 mb-4" />
-      <h3 className="text-lg font-semibold text-foreground mb-2">
+      <EmptyIcon className="w-16 h-16 text-gray-300 mb-4" />
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">
         {hasSearchQuery
           ? 'No results found'
           : type === 'followers'
           ? 'No followers yet'
           : 'Not following anyone yet'}
       </h3>
-      <p className="text-sm text-foreground/60 max-w-xs">
+      <p className="text-sm text-gray-500 max-w-xs">
         {hasSearchQuery
           ? 'Try adjusting your search query'
           : type === 'followers'

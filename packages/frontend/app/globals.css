@@ -729,6 +729,10 @@ a,
     border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
 }
 
+button {
+  cursor: pointer;
+}
+
 @layer base {
   @font-face {
     font-family: "Gilgan";

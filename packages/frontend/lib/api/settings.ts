@@ -1,74 +1,78 @@
 /**
  * Settings API Client
  * Handles all settings-related requests to the backend
+ *
+ * Types aligned with backend DTOs in:
+ *   packages/backend/src/modules/settings/dto/settings.response.ts
  */
 
 import { apiClient } from './client';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-// Types
-export interface ProfileSettings {
-  displayName: string;
-  username: string;
-  bio?: string;
-  website?: string;
-  location?: string;
-  isPrivate: boolean;
-}
+// ==================== Types matching backend DTOs ====================
 
 export interface PrivacySettings {
-  showEmail: boolean;
-  showDonations: boolean;
-  showCampaigns: boolean;
-  allowMessages: boolean;
+  isPrivate: boolean;
+  showWalletBalance: boolean;
+  showDonationHistory: boolean;
+  showStakingActivity: boolean;
+  allowMessagesFromAnyone: boolean;
+  showOnlineStatus: boolean;
+  showInSearchEngines: boolean;
 }
 
 export interface NotificationSettings {
-  donationAlerts: boolean;
-  campaignFunded: boolean;
-  campaignUpdates: boolean;
-  newFollowers: boolean;
-  comments: boolean;
-  replies: boolean;
-  mentions: boolean;
-  weeklyDigest: boolean;
-  marketing: boolean;
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  notifyOnLike: boolean;
+  notifyOnComment: boolean;
+  notifyOnFollow: boolean;
+  notifyOnMention: boolean;
+  notifyOnDonation: boolean;
+  notifyOnStake: boolean;
+  notifyOnYieldHarvest: boolean;
+  notifyOnStockPurchase: boolean;
+  notifyOnFBTVesting: boolean;
+  notifyOnDAOProposal: boolean;
 }
 
 export interface SecuritySettings {
   twoFactorEnabled: boolean;
-  twoFactorMethod?: 'totp' | 'sms';
+  twoFactorEmail?: string;
+  emailVerified: boolean;
+  lastPasswordChange?: string | Date;
+  activeSessions: number;
+  loginAlertsEnabled: boolean;
 }
 
 export interface TwoFactorSetupResponse {
-  secret: string;
-  qrCode: string;
-  backupCodes: string[];
+  success: boolean;
+  qrCodeUrl?: string;
+  secret?: string;
+  backupCodes?: string[];
+  message: string;
 }
 
 export interface Session {
   id: string;
-  deviceType: 'desktop' | 'mobile' | 'tablet';
-  deviceName: string;
-  browser: string;
-  os: string;
-  location: {
-    city: string;
-    country: string;
-    countryCode: string;
-  };
+  device: string;
   ipAddress: string;
+  location: string;
+  lastActive: string;
   isCurrent: boolean;
-  lastActiveAt: string;
-  createdAt: string;
 }
 
 export interface AllSettingsResponse {
-  profile: ProfileSettings;
-  privacy: PrivacySettings;
+  userId: string;
   notifications: NotificationSettings;
+  privacy: PrivacySettings;
   security: SecuritySettings;
+  language: string;
+  timezone: string;
+  currency: string;
+  darkMode: boolean;
+  updatedAt: string;
 }
 
 class SettingsApiClient {
@@ -78,6 +82,8 @@ class SettingsApiClient {
     this.baseUrl = baseUrl;
   }
 
+  // ==================== GET Endpoints ====================
+
   /**
    * Get all settings at once
    */
@@ -86,11 +92,27 @@ class SettingsApiClient {
   }
 
   /**
-   * Update profile settings
+   * Get privacy settings
    */
-  async updateProfile(settings: Partial<ProfileSettings>): Promise<ProfileSettings> {
-    return apiClient.put<ProfileSettings>('/api/settings/profile', settings);
+  async getPrivacySettings(): Promise<PrivacySettings> {
+    return apiClient.get<PrivacySettings>('/api/settings/privacy');
   }
+
+  /**
+   * Get notification settings
+   */
+  async getNotificationSettings(): Promise<NotificationSettings> {
+    return apiClient.get<NotificationSettings>('/api/settings/notifications');
+  }
+
+  /**
+   * Get security settings
+   */
+  async getSecuritySettings(): Promise<SecuritySettings> {
+    return apiClient.get<SecuritySettings>('/api/settings/security');
+  }
+
+  // ==================== PUT Endpoints ====================
 
   /**
    * Update privacy settings
@@ -102,32 +124,42 @@ class SettingsApiClient {
   /**
    * Update notification settings
    */
-  async updateNotifications(
-    settings: Partial<NotificationSettings>
-  ): Promise<NotificationSettings> {
+  async updateNotifications(settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
     return apiClient.put<NotificationSettings>('/api/settings/notifications', settings);
   }
 
+  // ==================== Password Management ====================
+
   /**
-   * Update security settings
+   * Change password
    */
-  async updateSecurity(settings: Partial<SecuritySettings>): Promise<SecuritySettings> {
-    return apiClient.put<SecuritySettings>('/api/settings/security', settings);
+  async changePassword(data: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+    logoutAllSessions?: boolean;
+  }): Promise<{ success: boolean; message: string }> {
+    return apiClient.post<{ success: boolean; message: string }>(
+      '/api/settings/security/password/change',
+      data
+    );
+  }
+
+  // ==================== Two-Factor Authentication ====================
+
+  /**
+   * Enable 2FA - Step 1: Generate secret and QR code
+   */
+  async enable2FA(password: string = ''): Promise<TwoFactorSetupResponse> {
+    return apiClient.post<TwoFactorSetupResponse>('/api/settings/security/2fa/enable', { password });
   }
 
   /**
-   * Enable 2FA
+   * Verify 2FA code during setup - Step 2
    */
-  async enable2FA(): Promise<TwoFactorSetupResponse> {
-    return apiClient.post<TwoFactorSetupResponse>('/api/settings/2fa/enable');
-  }
-
-  /**
-   * Verify 2FA code during setup
-   */
-  async verify2FA(code: string): Promise<{ success: boolean; backupCodes: string[] }> {
-    return apiClient.post<{ success: boolean; backupCodes: string[] }>(
-      '/api/settings/2fa/verify',
+  async verify2FA(code: string): Promise<TwoFactorSetupResponse> {
+    return apiClient.post<TwoFactorSetupResponse>(
+      '/api/settings/security/2fa/verify',
       { code }
     );
   }
@@ -135,16 +167,24 @@ class SettingsApiClient {
   /**
    * Disable 2FA
    */
-  async disable2FA(password: string): Promise<{ success: boolean }> {
-    return apiClient.post<{ success: boolean }>('/api/settings/2fa/disable', { password });
+  async disable2FA(password: string, code: string = ''): Promise<{ success: boolean; message: string }> {
+    return apiClient.post<{ success: boolean; message: string }>(
+      '/api/settings/security/2fa/disable',
+      { password, code }
+    );
   }
 
   /**
    * Regenerate backup codes
    */
-  async regenerateBackupCodes(): Promise<{ codes: string[] }> {
-    return apiClient.post<{ codes: string[] }>('/api/settings/2fa/backup-codes');
+  async regenerateBackupCodes(password: string = '', code: string = ''): Promise<{ success: boolean; backupCodes: string[]; message: string }> {
+    return apiClient.post<{ success: boolean; backupCodes: string[]; message: string }>(
+      '/api/settings/security/2fa/backup-codes/regenerate',
+      { password, code }
+    );
   }
+
+  // ==================== Session Management ====================
 
   /**
    * Get active sessions
@@ -164,8 +204,8 @@ class SettingsApiClient {
    * Revoke all other sessions except current
    */
   async revokeAllOtherSessions(): Promise<{ success: boolean; revokedCount: number }> {
-    return apiClient.post<{ success: boolean; revokedCount: number }>(
-      '/api/settings/sessions/revoke-all'
+    return apiClient.delete<{ success: boolean; revokedCount: number }>(
+      '/api/settings/sessions'
     );
   }
 }
