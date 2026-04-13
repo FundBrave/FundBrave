@@ -595,6 +595,11 @@
     scrollbar-color: rgba(135, 98, 250, 0.5) transparent;
   }
 
+  /* Safe area padding for mobile bottom nav (iOS home indicator) */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
   /* Brand gradient backgrounds for buttons and elements */
   .bg-brand-gradient {
     background: linear-gradient(

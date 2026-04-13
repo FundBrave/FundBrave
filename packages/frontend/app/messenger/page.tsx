@@ -628,8 +628,8 @@ function MessengerInner() {
                   Select a chat to start messaging
                 </p>
                 {encryptionReady && (
-                  <p className="text-xs text-green-500 flex items-center justify-center gap-1">
-                    <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
+                  <p className="text-xs text-success flex items-center justify-center gap-1">
+                    <span className="inline-block h-2 w-2 rounded-full bg-success" />
                     All messages are end-to-end encrypted
                   </p>
                 )}

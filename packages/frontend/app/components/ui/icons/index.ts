@@ -20,7 +20,7 @@ export {
   BarChart3,
 } from './action';
 
-// Navigation Icons (menu, chevrons, close, panels)
+// Navigation Icons (menu, chevrons, close, panels, home)
 export {
   Menu,
   X,
@@ -30,6 +30,8 @@ export {
   ChevronUp,
   PanelRightClose,
   PanelRightOpen,
+  Home,
+  Compass,
 } from './navigation';
 
 // UI Icons (loader, search, utilities)

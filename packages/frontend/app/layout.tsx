@@ -20,7 +20,7 @@ export default async function RootLayout({
     <html lang={locale} suppressHydrationWarning>
       <body className="custom-scrollbar overflow-x-hidden" suppressHydrationWarning>
         <ClientProviders messages={messages} locale={locale}>
-          <div className="w-full mx-auto max-w-[1400px]">
+          <div className="w-full mx-auto max-w-[1400px] pb-16 md:pb-0">
             {children}
           </div>
         </ClientProviders>

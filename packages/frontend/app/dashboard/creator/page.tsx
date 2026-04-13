@@ -268,8 +268,8 @@ export default function CreatorDashboard() {
                                     campaign.status === "active"
                                       ? "bg-success/10 text-success"
                                       : campaign.status === "completed"
-                                      ? "bg-blue-500/10 text-blue-500"
-                                      : "bg-gray-500/10 text-gray-500"
+                                      ? "bg-info/10 text-info"
+                                      : "bg-surface-sunken text-text-tertiary"
                                   )}>
                                     {campaign.status}
                                   </span>

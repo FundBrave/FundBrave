@@ -149,9 +149,9 @@ export default function TransactionsPage() {
         return "text-orange-500 bg-orange-500/10";
       case "received":
       case "unstake":
-        return "text-green-500 bg-green-500/10";
+        return "text-success bg-success/10";
       default:
-        return "text-blue-500 bg-blue-500/10";
+        return "text-info bg-info/10";
     }
   };
 
