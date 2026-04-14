@@ -19,8 +19,8 @@ async function ensureImports() {
   // Everything is re-exported from @waku/sdk
   const sdk = await import('@waku/sdk');
 
-  _createDecoder = sdk.createDecoder;
-  _createEncoder = sdk.createEncoder;
+  _createDecoder = sdk.createDecoder as unknown as typeof _createDecoder;
+  _createEncoder = sdk.createEncoder as unknown as typeof _createEncoder;
   _createRoutingInfo = (sdk.utils as { createRoutingInfo: typeof _createRoutingInfo }).createRoutingInfo;
   _defaultNetworkConfig = (sdk as unknown as { DefaultNetworkConfig: unknown }).DefaultNetworkConfig;
 }

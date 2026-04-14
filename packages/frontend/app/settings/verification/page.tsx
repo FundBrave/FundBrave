@@ -278,7 +278,7 @@ export default function VerificationPage() {
               {selectedDocType !== "passport" && (
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    Document Back Side {selectedDocType === "passport" ? "(Optional)" : "*"}
+                    Document Back Side *
                   </label>
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border-default rounded-lg cursor-pointer hover:border-primary transition-colors">
                     {backImageFile ? (

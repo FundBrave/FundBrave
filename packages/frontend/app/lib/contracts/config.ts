@@ -12,6 +12,7 @@ export const CONTRACT_ADDRESSES = {
   fundraiserFactory: '0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE' as Address,
   fbtToken: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as Address,
   mockUsdc: '0x9A676e781A523b5d0C0e43731313A708CB607508' as Address,
+  globalStakingPool: '0x0000000000000000000000000000000000000000' as Address,
 } as const;
 
 // Base Sepolia Addresses (Updated: 2026-02-18)

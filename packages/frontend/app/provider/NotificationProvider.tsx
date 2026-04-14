@@ -173,10 +173,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         const data = await notificationsApi.getNotifications(20, offset);
 
         if (reset) {
-          setNotifications(data.notifications);
+          setNotifications(data.notifications as Notification[]);
           setCursor(null);
         } else {
-          setNotifications((prev) => [...(prev || []), ...data.notifications]);
+          setNotifications((prev) => [...(prev || []), ...(data.notifications as Notification[])]);
         }
 
         setHasMore(data.hasMore);

@@ -176,7 +176,7 @@ export default function WalletPage() {
                 <div className="text-sm text-foreground/80 mb-1">Wallet Address</div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-mono font-semibold text-foreground">
-                    {formatAddress(address)}
+                    {formatAddress(address || "")}
                   </span>
                   <button
                     onClick={handleCopyAddress}
