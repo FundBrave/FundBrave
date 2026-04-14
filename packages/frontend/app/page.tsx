@@ -27,7 +27,7 @@ import {
   useFollowUserMutation,
 } from "@/app/generated/graphql";
 
-// Mock data (keep stories for now - TODO: implement Status feature)
+// Stories use static data — Status feature is a future milestone
 import { MOCK_STORIES } from "@/lib/constants/mock-home-data";
 
 // Types
@@ -84,7 +84,7 @@ export default function HomePage() {
 
   // Handlers - MUST be before any conditional returns
   const handleCreateStory = useCallback(() => {
-    console.log("Create story clicked - TODO: implement Status feature");
+    console.log("Create story clicked — Status feature planned for future milestone");
   }, []);
 
   const handleStoryClick = useCallback((storyId: string) => {
@@ -221,7 +221,7 @@ export default function HomePage() {
 
       {/* Main Layout */}
       <HomeLayout leftSidebar={leftSidebar} rightSidebar={rightSidebar}>
-        {/* Stories Row - TODO: Replace with real Status feature when available */}
+        {/* Stories Row — uses static data until Status feature ships */}
         <StoriesRow
           stories={MOCK_STORIES}
           onCreateStory={handleCreateStory}
