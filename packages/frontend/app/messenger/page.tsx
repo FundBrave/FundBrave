@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from "react";
+import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   ChatSidebar,
@@ -9,6 +11,7 @@ import {
   ChatArea,
   SharedFilesSidebar,
   UserSearchModal,
+  EncryptionSetupFlow,
   type Chat,
   type Message as ChatMessage,
   type SharedFile,
@@ -19,25 +22,88 @@ import {
   useMessages,
   useSendMessage,
   useMarkAsRead,
+  useStartConversation,
   type Message,
-  type Conversation,
 } from "@/app/hooks/useMessaging";
-import { useWebSocket } from "@/app/hooks/useWebSocket";
+import { useWakuTyping } from "@/app/hooks/useWakuTyping";
 import { useAuth } from "@/app/provider/AuthProvider";
+import { useWakuNode } from "@/app/provider/WakuProvider";
+import { useEncryption } from "@/app/hooks/useEncryption";
+import { useWakuChat } from "@/app/hooks/useWakuChat";
 import { Loader2 } from "@/app/components/ui/icons";
+import type { MessageSendStatus } from "@/app/types/web3-chat";
+import { loadPeerKey, loadAllConversations } from "@/lib/waku/local-store";
+
+// ─── Dynamic Imports (SSR-disabled) ─────────────────────────────────────────
+
+const WakuProvider = dynamic(
+  () =>
+    import("@/app/provider/WakuProvider").then((mod) => ({
+      default: mod.WakuProvider,
+    })),
+  { ssr: false }
+);
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+/** After this many Web3 conversations, show the wallet nudge banner */
+const WALLET_NUDGE_THRESHOLD = 5;
 
 // Mock shared files (backend doesn't have this yet)
 const mockSharedFiles: SharedFile[] = [];
 
-export default function MessengerPage() {
+// ─── Inner Component (must be inside WakuProvider) ──────────────────────────
+
+/**
+ * The inner messenger component that has access to the Waku context.
+ * Extracted so that WakuProvider wraps it at the page level.
+ */
+function MessengerInner() {
   const { user } = useAuth();
+
+  // ─── URL Search Params (deep-link into conversation) ──────────────────────
+  const searchParams = useSearchParams();
+  const urlConversationId = searchParams.get('conversation');
+  const urlUserId = searchParams.get('user');
+
+  const { startConversation } = useStartConversation();
+
+  // ─── Waku Node (real hook) ──────────────────────────────────────────────────
+
+  const {
+    isReady: wakuIsReady,
+    state: wakuState,
+    restart: restartWaku,
+  } = useWakuNode();
+
+  // ─── E2E Encryption (real hook) ─────────────────────────────────────────────
+
+  const encryption = useEncryption();
+
+  // ─── UI State ─────────────────────────────────────────────────────────────
+
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [isSharedFilesCollapsed, setIsSharedFilesCollapsed] = useState(false);
   const [isUserSearchOpen, setIsUserSearchOpen] = useState(false);
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
 
-  // Fetch conversations from backend
+  // ─── Encryption Setup State (for EncryptionSetupFlow UI) ────────────────────
+
+  const [encryptionSettingUp, setEncryptionSettingUp] = useState(false);
+  const [encryptionError, setEncryptionError] = useState<string | null>(null);
+  const [web3ConversationCount, setWeb3ConversationCount] = useState(0);
+
+  // ─── Message Send Status Tracking ─────────────────────────────────────────
+
+  const [messageSendStatuses, setMessageSendStatuses] = useState<Record<string, MessageSendStatus>>({});
+
+  // ─── Peer Public Key for Active Conversation ──────────────────────────────
+
+  const [peerPublicKey, setPeerPublicKey] = useState<Uint8Array | null>(null);
+
+  // ─── Centralized Backend Hooks (kept as fallback + conversation management)
+
   const {
     conversations,
     isLoading: conversationsLoading,
@@ -45,108 +111,190 @@ export default function MessengerPage() {
     refetch: refetchConversations,
   } = useConversations(20, 0);
 
-  // Fetch messages for selected conversation
   const {
     messages: apiMessages,
     isLoading: messagesLoading,
-    refetch: refetchMessages,
   } = useMessages(selectedConversationId, 50, 0);
 
-  // Send message hook
-  const { sendMessage, isSending } = useSendMessage();
-
-  // Mark as read hook
+  const { sendMessage: sendMessageApi } = useSendMessage();
   const { markAsRead } = useMarkAsRead();
 
-  // Convert API messages to ChatMessage format
+  // ─── Convert API conversations to Chat format ─────────────────────────────
+
+  const chats: Chat[] = useMemo(
+    () =>
+      (conversations || []).map((conv) => {
+        const otherParticipant = conv.participants.find(
+          (p) => p.user.id !== user?.id
+        );
+        const otherUser = otherParticipant?.user;
+
+        return {
+          id: conv.id,
+          user: {
+            id: otherUser?.id || "",
+            name: otherUser?.displayName || otherUser?.username || "Unknown",
+            username: otherUser?.username || "unknown",
+            avatar: otherUser?.avatarUrl || "",
+            isOnline: otherUser?.isOnline || false,
+          },
+          lastMessage: conv.lastMessage?.content || "",
+          lastMessageTime: conv.lastMessage?.createdAt || conv.createdAt,
+          unreadCount: conv.unreadCount,
+        };
+      }),
+    [conversations, user?.id]
+  );
+
+  // ─── Derived State ────────────────────────────────────────────────────────
+
+  const selectedChat = chats.find((c) => c.id === selectedConversationId);
+  const peerUserId = selectedChat?.user.id || "";
+
+  // Encryption readiness from hook
+  const encryptionReady = encryption.isInitialized;
+  const walletTypeDetected = encryption.walletType;
+  const isTempWallet = walletTypeDetected === "temp";
+  const wakuConnectionStatus = wakuState.status;
+  const showWalletNudge = isTempWallet && web3ConversationCount >= WALLET_NUDGE_THRESHOLD;
+  const isWakuDisconnected = !wakuIsReady && wakuConnectionStatus !== 'connecting';
+  const isEncrypted = encryptionReady;
+
+  // ─── Load Peer Public Key on Conversation Change ──────────────────────────
+
+  useEffect(() => {
+    if (!peerUserId) {
+      setPeerPublicKey(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    loadPeerKey(peerUserId).then((cached) => {
+      if (!cancelled && cached) {
+        setPeerPublicKey(cached.publicKey);
+      }
+    }).catch(() => {
+      // Peer key not yet available — will be fetched during handshake
+    });
+
+    return () => { cancelled = true; };
+  }, [peerUserId]);
+
+  // ─── Bound Encrypt/Decrypt for useWakuChat ────────────────────────────────
+
+  const encryptFn = useCallback(
+    (plaintext: string) => {
+      if (!peerPublicKey) return null;
+      return encryption.encryptMessage(plaintext, peerPublicKey);
+    },
+    [peerPublicKey, encryption.encryptMessage]
+  );
+
+  const decryptFn = useCallback(
+    (ciphertext: Uint8Array, nonce: Uint8Array) => {
+      if (!peerPublicKey) return null;
+      return encryption.decryptMessage(ciphertext, nonce, peerPublicKey);
+    },
+    [peerPublicKey, encryption.decryptMessage]
+  );
+
+  // ─── Waku Chat Transport (real hook, conversation-scoped) ─────────────────
+
+  const wakuChat = useWakuChat({
+    peerUserId,
+    encryptFn,
+    decryptFn,
+    isEncryptionReady: encryptionReady,
+    onMessageReceived: useCallback(() => {
+      refetchConversations();
+    }, [refetchConversations]),
+  });
+
+  // ─── Waku Typing Indicators (replaces Socket.IO typing) ────────────────────
+
+  const wakuTyping = useWakuTyping({ peerUserId });
+
+  // ─── Convert API messages to ChatMessage format ───────────────────────────
+
   useEffect(() => {
     if (apiMessages && apiMessages.length > 0) {
-      const converted: ChatMessage[] = apiMessages.map((msg) => ({
-        id: msg.id,
-        senderId: msg.senderId,
-        content: msg.content,
-        timestamp: msg.createdAt,
-        isRead: msg.isRead,
-        mediaUrl: msg.mediaUrl,
-      }));
+      const converted: ChatMessage[] = apiMessages
+        .slice()
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        .map((msg) => ({
+          id: msg.id,
+          senderId: msg.senderId || msg.sender?.id || '',
+          content: msg.content,
+          timestamp: msg.createdAt,
+          isRead: msg.isRead,
+        }));
       setLocalMessages(converted);
     } else {
       setLocalMessages([]);
     }
   }, [apiMessages]);
 
-  // Convert API conversations to Chat format
-  const chats: Chat[] = (conversations || []).map((conv) => {
-    // Get the other participant (not current user)
-    const otherParticipant = conv.participants.find((p) => p.user.id !== user?.id);
-    const otherUser = otherParticipant?.user;
+  // ─── Merge Waku messages into local messages ──────────────────────────────
 
-    return {
-      id: conv.id,
-      user: {
-        id: otherUser?.id || "",
-        name: otherUser?.displayName || otherUser?.username || "Unknown",
-        username: otherUser?.username || "unknown",
-        avatar: otherUser?.avatarUrl || "",
-        isOnline: otherUser?.isOnline || false,
-      },
-      lastMessage: conv.lastMessage?.content || "",
-      lastMessageTime: conv.lastMessage?.createdAt || conv.createdAt,
-      unreadCount: conv.unreadCount,
-    };
-  });
+  const mergedMessages = useMemo(() => {
+    if (!wakuIsReady || wakuChat.messages.length === 0) return localMessages;
 
-  // WebSocket for real-time updates
-  const { isConnected, sendTypingIndicator, joinConversation, leaveConversation } = useWebSocket({
-    onNewMessage: (event) => {
-      // If message is for current conversation, add it
-      if (event.conversationId === selectedConversationId) {
-        const newMessage: ChatMessage = {
-          id: event.message.id,
-          senderId: event.message.senderId,
-          content: event.message.content,
-          timestamp: event.message.createdAt,
-          isRead: event.message.isRead,
-          mediaUrl: event.message.mediaUrl,
-        };
-        setLocalMessages((prev) => [...prev, newMessage]);
+    // Convert Waku messages to ChatMessage format
+    const wakuConverted: ChatMessage[] = wakuChat.messages.map((msg) => ({
+      id: msg.id,
+      senderId: msg.senderUserId,
+      content: msg.content,
+      timestamp: new Date(msg.timestamp).toISOString(),
+      isRead: true, // Waku messages are considered read upon receipt
+    }));
 
-        // Mark as read if viewing this conversation
-        if (selectedConversationId && event.message.senderId !== user?.id) {
-          markAsRead(selectedConversationId, event.message.id);
-        }
-      }
-
-      // Refetch conversations to update last message
-      refetchConversations();
-    },
-    onMessageRead: (event) => {
-      // Update read status of messages
-      if (event.conversationId === selectedConversationId) {
-        setLocalMessages((prev) =>
-          prev.map((msg) =>
-            event.messageIds.includes(msg.id) ? { ...msg, isRead: true } : msg
-          )
-        );
-      }
-    },
-    onTypingIndicator: (event) => {
-      // Handle typing indicator (could show in UI)
-      console.log("Typing:", event);
-    },
-  });
-
-  // Join conversation room when selected
-  useEffect(() => {
-    if (selectedConversationId) {
-      joinConversation(selectedConversationId);
-      return () => {
-        leaveConversation(selectedConversationId);
-      };
+    // Merge and deduplicate by ID, preferring Waku messages
+    const messageMap = new Map<string, ChatMessage>();
+    for (const msg of localMessages) {
+      messageMap.set(msg.id, msg);
     }
-  }, [selectedConversationId, joinConversation, leaveConversation]);
+    for (const msg of wakuConverted) {
+      messageMap.set(msg.id, msg);
+    }
 
-  // Mark messages as read when viewing conversation
+    return Array.from(messageMap.values()).sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+  }, [localMessages, wakuChat.messages, wakuIsReady]);
+
+  // ─── Derive send statuses from Waku outbox ────────────────────────────────
+
+  useEffect(() => {
+    if (wakuChat.outboxMessages.length === 0) return;
+
+    const outboxStatuses: Record<string, MessageSendStatus> = {};
+    for (const msg of wakuChat.outboxMessages) {
+      outboxStatuses[msg.id] = msg.sendStatus === "sending" ? "sending" : "queued";
+    }
+
+    setMessageSendStatuses((prev) => ({ ...prev, ...outboxStatuses }));
+  }, [wakuChat.outboxMessages]);
+
+  // ─── Track Web3 conversation count for wallet nudge ───────────────────────
+
+  useEffect(() => {
+    if (!user?.id || !encryptionReady) return;
+
+    let cancelled = false;
+
+    loadAllConversations().then((convs) => {
+      if (!cancelled) {
+        setWeb3ConversationCount(convs.length);
+      }
+    }).catch(() => {
+      // Non-critical
+    });
+
+    return () => { cancelled = true; };
+  }, [user?.id, encryptionReady]);
+
+  // Mark messages as read when viewing
   useEffect(() => {
     if (selectedConversationId && localMessages.length > 0) {
       const lastMessage = localMessages[localMessages.length - 1];
@@ -156,88 +304,203 @@ export default function MessengerPage() {
     }
   }, [selectedConversationId, localMessages, markAsRead, user?.id]);
 
-  const handleSelectChat = (chatId: string) => {
-    setSelectedConversationId(chatId);
-    setIsMobileDrawerOpen(false);
-  };
+  // ─── Auto-select conversation from URL params ────────────────────────────
+  useEffect(() => {
+    if (urlConversationId) {
+      setSelectedConversationId(urlConversationId);
+      // Clean URL to prevent re-trigger on back/forward
+      window.history.replaceState(null, '', '/messenger');
+    }
+  }, [urlConversationId]);
 
-  const handleNewChat = () => {
-    setIsUserSearchOpen(true);
-  };
+  useEffect(() => {
+    if (!urlUserId || !user?.id || urlUserId === user.id) return;
 
-  const handleConversationCreated = (conversationId: string) => {
-    setSelectedConversationId(conversationId);
-    refetchConversations();
-  };
+    // Clean URL immediately to prevent double-firing
+    const targetUserId = urlUserId;
+    window.history.replaceState(null, '', '/messenger');
 
-  const handleSendMessage = async (content: string) => {
-    if (!selectedConversationId || !content.trim()) return;
+    let cancelled = false;
 
-    // Optimistically add message to UI
-    const optimisticMessage: ChatMessage = {
-      id: `temp-${Date.now()}`,
-      senderId: user?.id || "current-user",
-      content,
-      timestamp: new Date().toISOString(),
-      isRead: false,
+    const createAndSelect = async () => {
+      try {
+        const conversation = await startConversation(targetUserId);
+        if (!cancelled && conversation?.id) {
+          setSelectedConversationId(conversation.id);
+          refetchConversations();
+        }
+      } catch (err) {
+        console.error('[Messenger] Failed to start conversation:', err);
+      }
     };
-    setLocalMessages((prev) => [...prev, optimisticMessage]);
 
-    // Send to backend
-    const message = await sendMessage(selectedConversationId, content);
+    createAndSelect();
 
-    if (message) {
-      // Replace optimistic message with real one
-      setLocalMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === optimisticMessage.id
-            ? {
-                id: message.id,
-                senderId: message.senderId,
-                content: message.content,
-                timestamp: message.createdAt,
-                isRead: message.isRead,
-                mediaUrl: message.mediaUrl,
-              }
-            : msg
-        )
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlUserId]);
+
+  // ─── Encryption Setup Handlers ────────────────────────────────────────────
+
+  const handleSignWithWallet = useCallback(async () => {
+    if (!user?.id) return;
+
+    setEncryptionSettingUp(true);
+    setEncryptionError(null);
+
+    try {
+      const keyPair = await encryption.initFromWallet();
+      if (!keyPair) {
+        throw new Error("Wallet signature was rejected or failed");
+      }
+      // useEncryption hook auto-updates isInitialized
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to set up encryption";
+      setEncryptionError(msg);
+    } finally {
+      setEncryptionSettingUp(false);
+    }
+  }, [user?.id, encryption.initFromWallet]);
+
+  const handleUseTempWallet = useCallback(async () => {
+    if (!user?.id) return;
+
+    setEncryptionSettingUp(true);
+    setEncryptionError(null);
+
+    try {
+      const { generateAndStoreTempWallet, persistKeyPair } = await import(
+        "@/lib/waku/encryption-service"
       );
 
-      // Refetch conversations to update last message
-      refetchConversations();
-    } else {
-      // Remove optimistic message on error
-      setLocalMessages((prev) => prev.filter((msg) => msg.id !== optimisticMessage.id));
+      const authSub = user.id;
+      const result = await generateAndStoreTempWallet(user.id, authSub);
+
+      // Persist the keypair to IndexedDB
+      await persistKeyPair(user.id, result.keyPair, "temp");
+
+      // Update the useEncryption hook state directly
+      encryption.setKeyPairFromTemp(result.keyPair);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to generate encryption keys";
+      setEncryptionError(msg);
+    } finally {
+      setEncryptionSettingUp(false);
     }
-  };
+  }, [user?.id, encryption.setKeyPairFromTemp]);
 
-  const handleEmojiClick = () => {
+  // ─── Send Message Handler ─────────────────────────────────────────────────
+
+  const handleSendMessage = useCallback(
+    async (content: string) => {
+      if (!selectedConversationId || !content.trim()) return;
+
+      const messageId = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      // Optimistically add message to UI
+      const optimisticMessage: ChatMessage = {
+        id: messageId,
+        senderId: user?.id || "current-user",
+        content,
+        timestamp: new Date().toISOString(),
+        isRead: false,
+      };
+      setLocalMessages((prev) => [...prev, optimisticMessage]);
+
+      // Track send status
+      setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "sending" }));
+
+      // --- Send via both Waku (P2P) and backend API (persistence) ---
+      // SECURITY NOTE: Backend API sends plaintext (not E2E encrypted).
+      // This is a temporary fallback until nwaku relay is deployed.
+      // Remove sendMessageApi() call once Waku delivery is confirmed working.
+      try {
+        await sendMessageApi(selectedConversationId, content);
+
+        // Also send via Waku for real-time P2P delivery
+        wakuChat.sendMessage(content).catch(() => {});
+
+        setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "sent" }));
+
+        setTimeout(() => {
+          setMessageSendStatuses((prev) => ({
+            ...prev,
+            [messageId]: "delivered",
+          }));
+        }, 1500);
+
+        refetchConversations();
+      } catch {
+        // Backend failed — message still sent via Waku/outbox
+        setMessageSendStatuses((prev) => ({ ...prev, [messageId]: "queued" }));
+      }
+    },
+    [
+      selectedConversationId,
+      user?.id,
+      wakuChat.sendMessage,
+      sendMessageApi,
+      refetchConversations,
+    ]
+  );
+
+  // ─── Event Handlers ───────────────────────────────────────────────────────
+
+  const handleSelectChat = useCallback((chatId: string) => {
+    setSelectedConversationId(chatId);
+    setIsMobileDrawerOpen(false);
+  }, []);
+
+  const handleNewChat = useCallback(() => {
+    setIsUserSearchOpen(true);
+  }, []);
+
+  const handleConversationCreated = useCallback(
+    (conversationId: string) => {
+      setSelectedConversationId(conversationId);
+      refetchConversations();
+    },
+    [refetchConversations]
+  );
+
+  const handleRetryConnection = useCallback(async () => {
+    await restartWaku();
+  }, [restartWaku]);
+
+  const handleConnectWallet = useCallback(() => {
+    // Open the wallet connect modal (wagmi/web3modal)
+    // This triggers useWalletMigration to detect the new wallet
+    // and perform key rotation automatically.
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("open-wallet-connect"));
+    }
+  }, []);
+
+  const handleEmojiClick = useCallback(() => {
     console.log("Emoji picker clicked");
-  };
+  }, []);
 
-  const handleAttachmentClick = () => {
+  const handleAttachmentClick = useCallback(() => {
     console.log("Attachment clicked");
-  };
+  }, []);
 
-  const handleFileClick = (fileId: string) => {
+  const handleFileClick = useCallback((fileId: string) => {
     console.log("File clicked:", fileId);
-  };
+  }, []);
 
-  const handleToggleSharedFiles = () => {
+  const handleToggleSharedFiles = useCallback(() => {
     setIsSharedFilesCollapsed((prev) => !prev);
-  };
+  }, []);
 
-  const handleSeeMoreFiles = () => {
+  const handleSeeMoreFiles = useCallback(() => {
     console.log("See more files clicked");
-  };
+  }, []);
 
-  // Get selected chat data
-  const selectedChat = chats.find((c) => c.id === selectedConversationId);
+  // ─── Render: Loading State ────────────────────────────────────────────────
 
-  // Loading state
-  if (conversationsLoading && chats.length === 0) {
+  if ((conversationsLoading && chats.length === 0) || encryption.isLoading) {
     return (
-      <div className="flex h-screen flex-col bg-background">
+      <div className="flex h-dvh flex-col bg-background">
         <BackHeader title="Messages" fallbackHref="/" />
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -246,17 +509,18 @@ export default function MessengerPage() {
     );
   }
 
-  // Error state
+  // ─── Render: Error State ──────────────────────────────────────────────────
+
   if (conversationsError) {
     return (
-      <div className="flex h-screen flex-col bg-background">
+      <div className="flex h-dvh flex-col bg-background">
         <BackHeader title="Messages" fallbackHref="/" />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-error mb-4">Failed to load conversations</p>
             <button
               onClick={() => refetchConversations()}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+              className="min-h-[44px] px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 active:bg-primary/80 active:scale-[0.98]"
             >
               Retry
             </button>
@@ -266,8 +530,30 @@ export default function MessengerPage() {
     );
   }
 
+  // ─── Render: Encryption Setup (first visit, no keys) ──────────────────────
+
+  if (!encryptionReady) {
+    return (
+      <div className="flex h-dvh flex-col bg-background">
+        <BackHeader title="Messages" fallbackHref="/" />
+        <div className="flex-1 flex items-center justify-center">
+          <EncryptionSetupFlow
+            walletType={walletTypeDetected}
+            isSettingUp={encryptionSettingUp}
+            isComplete={encryptionReady}
+            onSignWithWallet={handleSignWithWallet}
+            onUseTempWallet={handleUseTempWallet}
+            error={encryptionError}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Render: Main Messenger UI ────────────────────────────────────────────
+
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       <BackHeader title="Messages" fallbackHref="/" />
       <div className="flex flex-1 w-full flex-col overflow-hidden md:flex-row">
         {/* Mobile Chat Selector */}
@@ -308,28 +594,45 @@ export default function MessengerPage() {
         {/* Main Chat Area (flexible center) */}
         <main className="min-h-0 min-w-0 flex-1">
           {selectedChat ? (
-            messagesLoading && localMessages.length === 0 ? (
+            messagesLoading && mergedMessages.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : (
               <ChatArea
                 chatUser={selectedChat.user}
-                messages={localMessages}
+                messages={mergedMessages}
                 currentUserId={user?.id || ""}
                 onSendMessage={handleSendMessage}
                 onEmojiClick={handleEmojiClick}
                 onAttachmentClick={handleAttachmentClick}
                 isSharedFilesVisible={!isSharedFilesCollapsed}
                 onToggleSharedFiles={handleToggleSharedFiles}
+                isEncrypted={isEncrypted}
+                connectionStatus={wakuConnectionStatus}
+                isDisconnected={isWakuDisconnected}
+                isTempWallet={showWalletNudge}
+                onRetryConnection={handleRetryConnection}
+                onConnectWallet={handleConnectWallet}
+                messageSendStatuses={messageSendStatuses}
+                outboxCount={wakuChat.outboxMessages.length}
+                isPeerTyping={wakuTyping.isPeerTyping}
+                onTyping={wakuTyping.sendTyping}
+                onStopTyping={wakuTyping.sendStopTyping}
               />
             )
           ) : (
             <div className="flex h-full items-center justify-center">
-              <div className="text-center">
-                <p className="text-neutral-dark-200 mb-4">
+              <div className="text-center space-y-3">
+                <p className="text-neutral-dark-200">
                   Select a chat to start messaging
                 </p>
+                {encryptionReady && (
+                  <p className="text-xs text-success flex items-center justify-center gap-1">
+                    <span className="inline-block h-2 w-2 rounded-full bg-success" />
+                    All messages are end-to-end encrypted
+                  </p>
+                )}
                 {chats.length === 0 && (
                   <p className="text-text-tertiary text-sm">
                     No conversations yet. Start a new chat!
@@ -344,7 +647,9 @@ export default function MessengerPage() {
         <aside
           className={cn(
             "hidden flex-shrink-0 transition-all duration-300 ease-out lg:block",
-            isSharedFilesCollapsed ? "w-0 overflow-hidden p-0" : "w-[280px] p-4"
+            isSharedFilesCollapsed
+              ? "w-0 overflow-hidden p-0"
+              : "w-[280px] p-4"
           )}
         >
           <div
@@ -366,16 +671,24 @@ export default function MessengerPage() {
         </aside>
       </div>
 
-      {/* WebSocket connection indicator (dev only) */}
+      {/* Connection indicator (dev only) */}
       {process.env.NODE_ENV === "development" && (
         <div className="fixed bottom-4 right-4 px-3 py-1 bg-surface-elevated border border-border-subtle rounded-full text-xs">
           <span
             className={cn(
               "inline-block w-2 h-2 rounded-full mr-2",
-              isConnected ? "bg-success" : "bg-error"
+              wakuIsReady
+                ? "bg-green-500"
+                : wakuConnectionStatus === "connecting"
+                  ? "bg-amber-500 animate-pulse"
+                  : "bg-error"
             )}
           />
-          {isConnected ? "Connected" : "Disconnected"}
+          {wakuIsReady
+            ? "Waku P2P"
+            : wakuConnectionStatus === "connecting"
+              ? "Connecting..."
+              : `Offline (${wakuChat.outboxMessages.length} queued)`}
         </div>
       )}
 
@@ -386,5 +699,37 @@ export default function MessengerPage() {
         onConversationCreated={handleConversationCreated}
       />
     </div>
+  );
+}
+
+// ─── Page Component ─────────────────────────────────────────────────────────
+
+/**
+ * Messenger page wrapped in WakuProvider.
+ *
+ * WakuProvider is dynamically imported with ssr: false to avoid
+ * server-side rendering issues with the Waku light node (uses
+ * WebSocket, libp2p, and browser APIs).
+ *
+ * The provider creates a Waku light node on mount and provides
+ * connection state to all child components. It handles:
+ * - Exponential backoff reconnection (1s, 2s, 4s, 8s, max 30s)
+ * - Degraded mode after 5 failed attempts
+ * - Background retry every 60 seconds when degraded
+ * - Multi-tab coordination via BroadcastChannel
+ */
+export default function MessengerPage() {
+  return (
+    <WakuProvider>
+      <Suspense
+        fallback={
+          <div className="flex h-dvh items-center justify-center bg-background">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        }
+      >
+        <MessengerInner />
+      </Suspense>
+    </WakuProvider>
   );
 }

@@ -11,6 +11,7 @@ import { SearchProvider } from './SearchProvider';
 import { NotificationProvider } from './NotificationProvider';
 import { SkipLink } from '../components/ui/SkipLink';
 import { NotificationToast } from '../components/notifications';
+import { BottomNavBar } from '../components/common/BottomNavBar';
 
 // Dynamically import WalletProvider to prevent SSR issues with indexedDB
 const WalletProvider = dynamic(
@@ -42,6 +43,9 @@ export function ClientProviders({ children, messages, locale }: ClientProvidersP
                       <NotificationToast />
 
                       {children}
+
+                      {/* Mobile Bottom Navigation */}
+                      <BottomNavBar />
                     </NotificationProvider>
                   </SearchProvider>
                 </PostsProvider>

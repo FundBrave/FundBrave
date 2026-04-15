@@ -237,7 +237,7 @@ export default function ResetPasswordPage() {
                   damping: 15,
                 }}
               >
-                <AlertCircle className="h-10 w-10 text-red-400" />
+                <AlertCircle className="h-10 w-10 text-destructive" />
               </motion.div>
             </motion.div>
 
@@ -334,7 +334,7 @@ export default function ResetPasswordPage() {
                   damping: 15,
                 }}
               >
-                <CheckCircle className="h-10 w-10 text-green-400" />
+                <CheckCircle className="h-10 w-10 text-success" />
               </motion.div>
             </motion.div>
 

@@ -37,11 +37,11 @@ export default function ImpactDAOPage() {
   const myPrincipal = myStake ? parseFloat(myStake.principal) : 0;
   const myVotingPower = totalPrincipal > 0 ? (myPrincipal / totalPrincipal) * 100 : 0;
 
-  // Yield allocation percentages (from DAO votes)
+  // Yield allocation percentages — defaults until DAO voting is implemented
   const yieldAllocation = {
-    stakers: myStake?.stakerShare || 30,
-    platform: myStake?.platformShare || 20,
-    dao: myStake?.daoShare || 50,
+    stakers: 30,
+    platform: 20,
+    dao: 50,
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {

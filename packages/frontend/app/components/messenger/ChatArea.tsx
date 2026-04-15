@@ -1,12 +1,18 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Smile, Paperclip, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { Send, Smile, Paperclip, PanelRightClose, PanelRightOpen } from "@/app/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/app/components/ui/Avatar";
 import { Button } from "@/app/components/ui/button";
 import { MessageBubble, DateSeparator } from "./MessageBubble";
+import { EncryptionBadge } from "./EncryptionBadge";
+import { ConnectionStatus } from "./ConnectionStatus";
+import { motion, AnimatePresence } from "motion/react";
+import { WakuDisconnectedBanner } from "./WakuDisconnectedBanner";
+import { WalletNudgeBanner } from "./WalletNudgeBanner";
 import type { Message, ChatUser } from "@/app/types/messenger";
+import type { WakuConnectionStatus, MessageSendStatus } from "@/app/types/web3-chat";
 
 export interface ChatAreaProps {
   /** Current chat user info */
@@ -25,6 +31,28 @@ export interface ChatAreaProps {
   isSharedFilesVisible?: boolean;
   /** Called when user toggles shared files visibility */
   onToggleSharedFiles?: () => void;
+  /** Whether the current conversation is E2E encrypted */
+  isEncrypted?: boolean;
+  /** Waku connection status for the connection indicator */
+  connectionStatus?: WakuConnectionStatus;
+  /** Whether Waku is disconnected (queuing mode) */
+  isDisconnected?: boolean;
+  /** Number of messages in the outbox queue */
+  outboxCount?: number;
+  /** Whether the peer is currently typing */
+  isPeerTyping?: boolean;
+  /** Called on each keystroke to broadcast typing indicator */
+  onTyping?: () => void;
+  /** Called when typing stops (blur, send) */
+  onStopTyping?: () => void;
+  /** Whether the current user is using a temp wallet */
+  isTempWallet?: boolean;
+  /** Callback to retry Waku connection from fallback banner */
+  onRetryConnection?: () => void;
+  /** Callback to open wallet connect flow from nudge banner */
+  onConnectWallet?: () => void;
+  /** Optional map of messageId -> sendStatus for WhatsApp-style indicators */
+  messageSendStatuses?: Record<string, MessageSendStatus>;
 }
 
 /**
@@ -65,12 +93,20 @@ interface ChatHeaderProps {
   user: ChatUser;
   isSharedFilesVisible?: boolean;
   onToggleSharedFiles?: () => void;
+  isEncrypted?: boolean;
+  connectionStatus?: WakuConnectionStatus;
 }
 
 /**
  * Chat header component showing user info, status, and actions
  */
-function ChatHeader({ user, isSharedFilesVisible = true, onToggleSharedFiles }: ChatHeaderProps) {
+function ChatHeader({
+  user,
+  isSharedFilesVisible = true,
+  onToggleSharedFiles,
+  isEncrypted,
+  connectionStatus,
+}: ChatHeaderProps) {
   return (
     <div className="flex items-center gap-3 border-b border-border-default bg-surface-elevated px-4 py-3 md:px-6">
       {/* Avatar */}
@@ -104,13 +140,23 @@ function ChatHeader({ user, isSharedFilesVisible = true, onToggleSharedFiles }: 
         </p>
       </div>
 
+      {/* Encryption badge + connection status */}
+      <div className="hidden items-center gap-2 md:flex">
+        {isEncrypted !== undefined && (
+          <EncryptionBadge isEncrypted={isEncrypted} />
+        )}
+        {connectionStatus && (
+          <ConnectionStatus status={connectionStatus} />
+        )}
+      </div>
+
       {/* Header actions - Toggle shared files sidebar */}
       <div className="hidden items-center gap-2 lg:flex">
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggleSharedFiles}
-          className="h-9 w-9 rounded-full hover:bg-surface-overlay"
+          className="h-11 w-11 rounded-full hover:bg-surface-overlay active:bg-foreground/10 active:scale-[0.98]"
           aria-label={isSharedFilesVisible ? "Hide shared files" : "Show shared files"}
         >
           {isSharedFilesVisible ? (
@@ -131,10 +177,14 @@ function MessageInput({
   onSend,
   onEmojiClick,
   onAttachmentClick,
+  onTyping,
+  onStopTyping,
 }: {
   onSend: (content: string) => void;
   onEmojiClick?: () => void;
   onAttachmentClick?: () => void;
+  onTyping?: () => void;
+  onStopTyping?: () => void;
 }) {
   const [message, setMessage] = useState("");
 
@@ -143,6 +193,7 @@ function MessageInput({
     if (message.trim()) {
       onSend(message.trim());
       setMessage("");
+      onStopTyping?.();
     }
   };
 
@@ -173,10 +224,16 @@ function MessageInput({
         <input
           type="text"
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value);
+            onTyping?.();
+          }}
           onKeyDown={handleKeyDown}
+          onBlur={() => onStopTyping?.()}
           placeholder="Enter your message here..."
-          className="w-full rounded-full border border-border-default bg-surface-overlay py-3 pl-4 pr-12 text-sm text-foreground placeholder:text-text-tertiary focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+          inputMode="text"
+          enterKeyHint="send"
+          className="w-full min-h-[44px] rounded-full border border-border-default bg-surface-overlay py-3 pl-4 pr-12 text-sm text-foreground placeholder:text-text-tertiary focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
         />
         {/* Attachment button inside input */}
         <button
@@ -219,6 +276,17 @@ export function ChatArea({
   onAttachmentClick,
   isSharedFilesVisible = true,
   onToggleSharedFiles,
+  isEncrypted,
+  connectionStatus,
+  isDisconnected,
+  outboxCount = 0,
+  isPeerTyping,
+  onTyping,
+  onStopTyping,
+  isTempWallet,
+  onRetryConnection,
+  onConnectWallet,
+  messageSendStatuses,
 }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -240,7 +308,19 @@ export function ChatArea({
         user={chatUser}
         isSharedFilesVisible={isSharedFilesVisible}
         onToggleSharedFiles={onToggleSharedFiles}
+        isEncrypted={isEncrypted}
+        connectionStatus={connectionStatus}
       />
+
+      {/* Disconnected mode banner */}
+      {isDisconnected && onRetryConnection && (
+        <WakuDisconnectedBanner outboxCount={outboxCount} onRetry={onRetryConnection} />
+      )}
+
+      {/* Wallet nudge banner for temp-wallet users */}
+      {isTempWallet && onConnectWallet && (
+        <WalletNudgeBanner onConnect={onConnectWallet} />
+      )}
 
       {/* Messages Area */}
       <div className="scrollbar-auto-hide flex-1 overflow-y-auto px-4 py-4 md:px-6">
@@ -257,11 +337,45 @@ export function ChatArea({
                   message={message}
                   isSent={message.senderId === currentUserId}
                   showTimestamp
+                  sendStatus={messageSendStatuses?.[message.id]}
+                  isEncrypted={isEncrypted}
                 />
               ))}
             </div>
           </div>
         ))}
+
+        {/* Typing indicator */}
+        <AnimatePresence>
+          {isPeerTyping && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center gap-2 px-1 py-2"
+            >
+              <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-2">
+                <motion.span className="flex gap-0.5">
+                  {[0, 1, 2].map((i) => (
+                    <motion.span
+                      key={i}
+                      className="h-1.5 w-1.5 rounded-full bg-white/50"
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{
+                        duration: 0.6,
+                        repeat: Infinity,
+                        delay: i * 0.15,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  ))}
+                </motion.span>
+                <span className="text-xs text-white/40">typing</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Scroll anchor */}
         <div ref={messagesEndRef} />
@@ -272,6 +386,8 @@ export function ChatArea({
         onSend={handleSendMessage}
         onEmojiClick={onEmojiClick}
         onAttachmentClick={onAttachmentClick}
+        onTyping={onTyping}
+        onStopTyping={onStopTyping}
       />
     </div>
   );

@@ -18,7 +18,7 @@ export function searchCampaignToCampaignCard(campaign: SearchCampaign): Campaign
     amountRaised: parseFloat(campaign.amountRaised),
     targetAmount: campaign.targetAmount,
     currency: 'USD',
-    status: campaign.status,
+    status: campaign.status as CampaignCardProps["status"],
     category: campaign.category as any, // Type assertion needed due to category string flexibility
   };
 }

@@ -5,6 +5,7 @@
 
 // Components
 export { default as Navbar } from "./Navbar";
+export { BottomNavBar } from "./BottomNavBar";
 export { ProfileSidebar } from "./ProfileSidebar";
 export { Leaderboard } from "./Leaderboard";
 export { PremiumBanner } from "./PremiumBanner";

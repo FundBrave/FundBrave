@@ -177,3 +177,47 @@ export const PanelRightOpen = forwardRef<SVGSVGElement, IconProps>(
   )
 );
 PanelRightOpen.displayName = 'PanelRightOpen';
+
+export const Home = forwardRef<SVGSVGElement, IconProps>(
+  ({ size = 24, className, ...props }, ref) => (
+    <svg
+      ref={ref}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+      <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    </svg>
+  )
+);
+Home.displayName = 'Home';
+
+export const Compass = forwardRef<SVGSVGElement, IconProps>(
+  ({ size = 24, className, ...props }, ref) => (
+    <svg
+      ref={ref}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+    </svg>
+  )
+);
+Compass.displayName = 'Compass';

@@ -122,7 +122,7 @@ export default function VerificationPage() {
         );
       default:
         return (
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-500/10 text-gray-500 border border-gray-500/20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-sunken text-text-tertiary border border-border-subtle">
             <AlertCircle className="w-5 h-5" />
             <span className="font-semibold">Unverified</span>
           </div>
@@ -278,7 +278,7 @@ export default function VerificationPage() {
               {selectedDocType !== "passport" && (
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    Document Back Side {selectedDocType === "passport" ? "(Optional)" : "*"}
+                    Document Back Side *
                   </label>
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border-default rounded-lg cursor-pointer hover:border-primary transition-colors">
                     {backImageFile ? (
@@ -334,11 +334,11 @@ export default function VerificationPage() {
             </div>
 
             {/* Privacy Notice */}
-            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <div className="mb-6 p-4 bg-info/10 border border-info/20 rounded-lg">
               <div className="flex items-start gap-3">
-                <Shield className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <Shield className="w-5 h-5 text-info flex-shrink-0 mt-0.5" />
                 <div className="text-xs text-text-secondary">
-                  <p className="font-medium text-blue-400 mb-1">Privacy & Security</p>
+                  <p className="font-medium text-info mb-1">Privacy & Security</p>
                   <p>
                     Your documents are encrypted and stored securely. They will only be used for verification
                     purposes and will never be shared with third parties. We comply with GDPR and international

@@ -72,7 +72,7 @@ export {
 export { Label } from "./label";
 
 // TabNavigation
-export { TabNavigation } from "./TabNavigation";
+export { default as TabNavigation } from "./TabNavigation";
 
 // NotFoundPage
 export { NotFoundPage } from "./NotFoundPage";

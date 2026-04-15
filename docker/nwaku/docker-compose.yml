@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  nwaku:
+    image: wakuorg/nwaku:latest
+    ports:
+      - "60000:60000"  # libp2p
+      - "8000:8000"    # WebSocket
+      - "8003:8003"    # REST API (monitoring)
+    command:
+      - --listen-address=0.0.0.0
+      - --nodekey=${NWAKU_NODE_KEY:?Set NWAKU_NODE_KEY in .env}
+      - --websocket-support=true
+      - --websocket-port=8000
+      - --cluster-id=1
+      - --relay=true
+      - --filter=true
+      - --lightpush=true
+      - --store=true
+      - --store-message-db-url=sqlite:///data/store.db
+      - --rest=true
+      - --rest-address=0.0.0.0
+      - --rest-port=8003
+    volumes:
+      - nwaku-data:/data
+    restart: unless-stopped
+
+volumes:
+  nwaku-data:

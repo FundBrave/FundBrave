@@ -162,14 +162,14 @@ export default function ProposalDetailPage() {
         );
       case "executed":
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-500 text-sm font-medium">
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-info/10 text-info text-sm font-medium">
             <TrendingUp className="w-4 h-4" />
             Executed
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gray-500/10 text-gray-500 text-sm font-medium">
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-sunken text-text-tertiary text-sm font-medium">
             <Clock className="w-4 h-4" />
             Pending
           </span>
@@ -182,11 +182,11 @@ export default function ProposalDetailPage() {
       case "yield-allocation":
         return "text-purple-400 bg-purple-500/10";
       case "parameter-change":
-        return "text-blue-400 bg-blue-500/10";
+        return "text-info bg-info/10";
       case "treasury":
-        return "text-green-400 bg-green-500/10";
+        return "text-success bg-success/10";
       default:
-        return "text-gray-400 bg-gray-500/10";
+        return "text-text-tertiary bg-surface-sunken";
     }
   };
 

@@ -14,6 +14,7 @@ import { Navbar } from "@/app/components/common";
 import { Button } from "@/app/components/ui/button";
 import { Spinner } from "@/app/components/ui/Spinner";
 import { cn } from "@/lib/utils";
+import { useGetFundraisersQuery } from "@/app/generated/graphql";
 
 interface Campaign {
   id: string;
@@ -41,7 +42,8 @@ const CATEGORIES = [
   "Animal Welfare",
 ];
 
-const mockCampaigns: Campaign[] = [
+// Mock data kept as fallback only when API is unavailable
+const FALLBACK_CAMPAIGNS: Campaign[] = [
   {
     id: "explore-1",
     name: "Clean Water Initiative",
@@ -151,11 +153,35 @@ export default function ExplorePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"trending" | "newest" | "funded">("trending");
-  const [isLoading] = useState(false);
+
+  // Fetch real campaigns from API
+  const { data: fundraisersData, loading: isLoading } = useGetFundraisersQuery({
+    variables: { limit: 50, offset: 0 },
+    fetchPolicy: "cache-first",
+  });
+
+  // Transform API data to Campaign interface, fall back to mock if API fails
+  const campaigns: Campaign[] = useMemo(() => {
+    if (!fundraisersData?.fundraisers?.items?.length) return FALLBACK_CAMPAIGNS;
+    return fundraisersData.fundraisers.items.map((f) => ({
+      id: f.id,
+      name: f.name,
+      description: f.description,
+      image: f.images?.[0] || "",
+      goal: parseFloat(f.goalAmount) || 0,
+      raised: parseFloat(f.raisedAmount) || 0,
+      supporters: f.stats.donorsCount,
+      category: f.categories?.[0] || "Other",
+      isFeatured: f.isFeatured,
+      isTrending: f.stats.donorsCount > 10,
+      creatorName: f.creator.displayName || f.creator.username || "Anonymous",
+      creatorImage: f.creator.avatarUrl || "",
+    }));
+  }, [fundraisersData]);
 
   // Filter and sort campaigns
   const filteredCampaigns = useMemo(() => {
-    let filtered = mockCampaigns.filter((campaign) => {
+    let filtered = campaigns.filter((campaign) => {
       const matchesCategory = selectedCategory === "All" || campaign.category === selectedCategory;
       const matchesSearch =
         searchQuery === "" ||
@@ -181,8 +207,8 @@ export default function ExplorePage() {
     return filtered;
   }, [selectedCategory, searchQuery, sortBy]);
 
-  const featuredCampaigns = mockCampaigns.filter((c) => c.isFeatured);
-  const trendingCampaigns = mockCampaigns.filter((c) => c.isTrending);
+  const featuredCampaigns = campaigns.filter((c) => c.isFeatured);
+  const trendingCampaigns = campaigns.filter((c) => c.isTrending);
 
   return (
     <div className="min-h-screen bg-background">
@@ -440,7 +466,7 @@ export default function ExplorePage() {
         {/* Results Count */}
         {!isLoading && filteredCampaigns.length > 0 && (
           <div className="mt-8 text-center text-sm text-text-tertiary">
-            Showing {filteredCampaigns.length} of {mockCampaigns.length} campaigns
+            Showing {filteredCampaigns.length} of {campaigns.length} campaigns
           </div>
         )}
       </div>

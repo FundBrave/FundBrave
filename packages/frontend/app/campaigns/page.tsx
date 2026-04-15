@@ -257,7 +257,7 @@ export default function CampaignsPage() {
           {/* Campaigns Grid - Scrollable container with responsive columns */}
           <div className="flex-1 overflow-y-auto custom-scrollbar pb-6 pr-2">
             {error && (
-              <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
+              <div className="mb-4 p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
                 Failed to load campaigns from API. Showing fallback data.
               </div>
             )}

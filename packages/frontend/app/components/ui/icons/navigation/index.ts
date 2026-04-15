@@ -7,4 +7,6 @@ export {
   ChevronUp,
   PanelRightClose,
   PanelRightOpen,
+  Home,
+  Compass,
 } from './NavigationIcons';

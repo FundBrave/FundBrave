@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import {
@@ -17,8 +17,9 @@ import { Navbar } from "@/app/components/common";
 import { Button } from "@/app/components/ui/button";
 import { Spinner } from "@/app/components/ui/Spinner";
 import { cn } from "@/lib/utils";
+import { useGetMeQuery, useGetFundraisersByCreatorQuery } from "@/app/generated/graphql";
+import { useAuth } from "@/app/provider/AuthProvider";
 
-// Mock campaign data - Replace with actual GraphQL query
 interface Campaign {
   id: string;
   name: string;
@@ -32,59 +33,47 @@ interface Campaign {
   category: string;
 }
 
-const mockCampaigns: Campaign[] = [
-  {
-    id: "camp-1",
-    name: "Clean Water Initiative",
-    image: "https://images.unsplash.com/photo-1541675154750-0444c7d51e8e?w=300&h=200&fit=crop",
-    goal: 50000,
-    raised: 32500,
-    supporters: 245,
-    views: 3421,
-    status: "active",
-    createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
-    category: "Environment",
-  },
-  {
-    id: "camp-2",
-    name: "Girls Education Fund",
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=300&h=200&fit=crop",
-    goal: 75000,
-    raised: 48000,
-    supporters: 512,
-    views: 5234,
-    status: "active",
-    createdAt: new Date(Date.now() - 86400000 * 45).toISOString(),
-    category: "Education",
-  },
-  {
-    id: "camp-3",
-    name: "Community Health Clinic",
-    image: "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=300&h=200&fit=crop",
-    goal: 100000,
-    raised: 100000,
-    supporters: 623,
-    views: 7892,
-    status: "completed",
-    createdAt: new Date(Date.now() - 86400000 * 120).toISOString(),
-    category: "Healthcare",
-  },
-];
-
 export default function CreatorDashboard() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
+  const { isAuthenticated } = useAuth();
 
-  const [isLoading] = React.useState(false);
+  const { data: meData } = useGetMeQuery({
+    skip: !isAuthenticated,
+    fetchPolicy: "cache-first",
+  });
+
+  const { data: fundraisersData, loading: isLoading } = useGetFundraisersByCreatorQuery({
+    variables: { creatorId: meData?.me?.id || "", limit: 50 },
+    skip: !meData?.me?.id,
+    fetchPolicy: "cache-first",
+  });
+
+  // Transform API data to Campaign interface
+  const campaigns: Campaign[] = useMemo(() => {
+    if (!fundraisersData?.fundraisersByCreator?.items?.length) return [];
+    return fundraisersData.fundraisersByCreator.items.map((f) => ({
+      id: f.id,
+      name: f.name,
+      image: f.images?.[0] || "",
+      goal: parseFloat(f.goalAmount) || 0,
+      raised: parseFloat(f.raisedAmount) || 0,
+      supporters: f.stats.donorsCount,
+      views: 0, // Not available in current schema
+      status: (f.goalReached ? "completed" : f.isActive ? "active" : "draft") as Campaign["status"],
+      createdAt: f.createdAt,
+      category: f.categories?.[0] || "Other",
+    }));
+  }, [fundraisersData]);
 
   // Calculate aggregate stats
   const stats = useMemo(() => {
-    const totalRaised = mockCampaigns.reduce((sum, c) => sum + c.raised, 0);
-    const totalGoal = mockCampaigns.reduce((sum, c) => sum + c.goal, 0);
-    const totalSupporters = mockCampaigns.reduce((sum, c) => sum + c.supporters, 0);
-    const totalViews = mockCampaigns.reduce((sum, c) => sum + c.views, 0);
-    const activeCampaigns = mockCampaigns.filter((c) => c.status === "active").length;
-    const completedCampaigns = mockCampaigns.filter((c) => c.status === "completed").length;
+    const totalRaised = campaigns.reduce((sum, c) => sum + c.raised, 0);
+    const totalGoal = campaigns.reduce((sum, c) => sum + c.goal, 0);
+    const totalSupporters = campaigns.reduce((sum, c) => sum + c.supporters, 0);
+    const totalViews = campaigns.reduce((sum, c) => sum + c.views, 0);
+    const activeCampaigns = campaigns.filter((c) => c.status === "active").length;
+    const completedCampaigns = campaigns.filter((c) => c.status === "completed").length;
 
     return {
       totalRaised,
@@ -95,7 +84,7 @@ export default function CreatorDashboard() {
       completedCampaigns,
       avgConversion: totalViews > 0 ? ((totalSupporters / totalViews) * 100).toFixed(2) : "0",
     };
-  }, []);
+  }, [campaigns]);
 
   if (!isConnected) {
     return (
@@ -222,7 +211,7 @@ export default function CreatorDashboard() {
                 </h3>
               </div>
 
-              {mockCampaigns.length === 0 ? (
+              {campaigns.length === 0 ? (
                 <div className="p-12 text-center">
                   <TrendingUp className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-foreground mb-2">No Campaigns Yet</h4>
@@ -236,7 +225,7 @@ export default function CreatorDashboard() {
                 </div>
               ) : (
                 <div className="divide-y divide-border-subtle">
-                  {mockCampaigns.map((campaign) => {
+                  {campaigns.map((campaign) => {
                     const progress = (campaign.raised / campaign.goal) * 100;
                     const daysActive = Math.floor(
                       (Date.now() - new Date(campaign.createdAt).getTime()) / (1000 * 60 * 60 * 24)
@@ -268,8 +257,8 @@ export default function CreatorDashboard() {
                                     campaign.status === "active"
                                       ? "bg-success/10 text-success"
                                       : campaign.status === "completed"
-                                      ? "bg-blue-500/10 text-blue-500"
-                                      : "bg-gray-500/10 text-gray-500"
+                                      ? "bg-info/10 text-info"
+                                      : "bg-surface-sunken text-text-tertiary"
                                   )}>
                                     {campaign.status}
                                   </span>

@@ -23,6 +23,7 @@ import { gql, useQuery } from "@apollo/client";
 import type { Donation } from "@/app/generated/graphql";
 import type { PublishData } from "@/app/components/ui/types/CreatePost.types";
 import { useAuth } from "@/app/provider/AuthProvider";
+import { useMessageUser } from "@/app/hooks/useMessageUser";
 
 const GET_USER_LIKED_POSTS = gql`
   query GetUserLikedPosts($userId: ID!, $limit: Int, $offset: Int) {
@@ -114,6 +115,7 @@ export default function ProfilePage() {
   const { addPost } = usePosts();
   const plusIconRef = useRef<SVGSVGElement>(null);
   const { user: currentUser, isLoading: authLoading } = useAuth();
+//   const { messageUser, isNavigating } = useMessageUser();
 
   const username = params.username as string;
 
@@ -215,8 +217,8 @@ export default function ProfilePage() {
     followers: user.stats?.followersCount || 0,
     following: user.stats?.followingCount || 0,
     memberSince: user.createdAt,
-    isCurrentUser,
-    isFollowing: user.isFollowing ?? false,
+    isCurrentUser: currentUser?.id === user.id,
+    isFollowing: false, // TODO: Implement follow status check
     socialLinks: {
       linkedin: (user as any).socialLinks?.linkedin || "",
       instagram: (user as any).socialLinks?.instagram || "",
@@ -327,16 +329,29 @@ export default function ProfilePage() {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pb-2">
-                {isCurrentUser ? (
+                {userData?.isCurrentUser ? (
                   <Link href="/settings/profile">
                     <button className="px-5 py-2 rounded-full bg-white text-black font-bold text-sm hover:bg-white/90 transition-colors">
                       Edit profile
                     </button>
                   </Link>
                 ) : (
-                  <button className="p-2.5 rounded-full border border-border-subtle hover:bg-surface-overlay transition-colors">
-                    <MessageIcon className="w-5 h-5 text-white" />
-                  </button>
+                  <>
+                    <button
+                      onClick={() => user?.id && messageUser(user.id)}
+                      disabled={isNavigating}
+                      className="p-2.5 rounded-full border border-border-subtle hover:bg-surface-overlay transition-colors disabled:opacity-50"
+                    >
+                      {isNavigating ? (
+                        <span className="block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <MessageIcon className="w-5 h-5 text-white" />
+                      )}
+                    </button>
+                    <button className="px-5 py-2 rounded-full bg-white text-black font-bold text-sm hover:bg-white/90 transition-colors">
+                      Follow
+                    </button>
+                  </>
                 )}
               </div>
             </div>

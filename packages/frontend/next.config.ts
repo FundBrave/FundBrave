@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
     "/": ["./packages/frontend/**/*"],
   },
   experimental: {},
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      crypto: false,
+      stream: false,
+      buffer: false,
+    };
+    return config;
+  },
   // Allow external images from picsum.photos and unsplash for placeholder campaign images for now it still be deleted
   images: {
     remotePatterns: [

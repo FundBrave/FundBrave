@@ -141,7 +141,7 @@ export default function ForgotPasswordPage() {
                   damping: 15,
                 }}
               >
-                <CheckCircle className="h-10 w-10 text-green-400" />
+                <CheckCircle className="h-10 w-10 text-success" />
               </motion.div>
             </motion.div>
 

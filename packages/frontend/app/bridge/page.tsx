@@ -13,6 +13,14 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import {
+  EthereumIcon,
+  PolygonIcon,
+  BNBIcon,
+  ArbitrumIcon,
+  OptimismIcon,
+  AvalancheIcon,
+} from "@/app/components/ui/icons/chains";
 import { Navbar } from "@/app/components/common";
 import { Button } from "@/app/components/ui/button";
 import { EmptyState } from "@/app/components/ui/EmptyState";
@@ -27,7 +35,7 @@ interface Chain {
   id: number;
   name: string;
   shortName: string;
-  icon: string;
+  Icon: React.ComponentType<{ size?: number; className?: string }>;
   nativeCurrency: string;
   layerZeroChainId?: number;
 }
@@ -52,7 +60,7 @@ const CHAINS: Chain[] = [
     id: 1,
     name: "Ethereum",
     shortName: "ETH",
-    icon: "⟠",
+    Icon: EthereumIcon,
     nativeCurrency: "ETH",
     layerZeroChainId: 101,
   },
@@ -60,7 +68,7 @@ const CHAINS: Chain[] = [
     id: 137,
     name: "Polygon",
     shortName: "MATIC",
-    icon: "◆",
+    Icon: PolygonIcon,
     nativeCurrency: "MATIC",
     layerZeroChainId: 109,
   },
@@ -68,7 +76,7 @@ const CHAINS: Chain[] = [
     id: 56,
     name: "BNB Chain",
     shortName: "BNB",
-    icon: "◉",
+    Icon: BNBIcon,
     nativeCurrency: "BNB",
     layerZeroChainId: 102,
   },
@@ -76,7 +84,7 @@ const CHAINS: Chain[] = [
     id: 42161,
     name: "Arbitrum",
     shortName: "ARB",
-    icon: "▲",
+    Icon: ArbitrumIcon,
     nativeCurrency: "ETH",
     layerZeroChainId: 110,
   },
@@ -84,7 +92,7 @@ const CHAINS: Chain[] = [
     id: 10,
     name: "Optimism",
     shortName: "OP",
-    icon: "⚡",
+    Icon: OptimismIcon,
     nativeCurrency: "ETH",
     layerZeroChainId: 111,
   },
@@ -92,7 +100,7 @@ const CHAINS: Chain[] = [
     id: 43114,
     name: "Avalanche",
     shortName: "AVAX",
-    icon: "❄",
+    Icon: AvalancheIcon,
     nativeCurrency: "AVAX",
     layerZeroChainId: 106,
   },
@@ -277,7 +285,7 @@ export default function BridgePage() {
               onClick={() => setShowSourceChains(!showSourceChains)}
             >
               <div className="flex items-center gap-3">
-                <div className="text-3xl">{sourceChain.icon}</div>
+                <sourceChain.Icon size={32} className="text-foreground" />
                 <div>
                   <div className="font-semibold text-foreground">{sourceChain.name}</div>
                   <div className="text-sm text-text-tertiary">{sourceChain.shortName}</div>
@@ -309,7 +317,7 @@ export default function BridgePage() {
               onClick={() => setShowDestChains(!showDestChains)}
             >
               <div className="flex items-center gap-3">
-                <div className="text-3xl">{destinationChain.icon}</div>
+                <destinationChain.Icon size={32} className="text-foreground" />
                 <div>
                   <div className="font-semibold text-foreground">{destinationChain.name}</div>
                   <div className="text-sm text-text-tertiary">{destinationChain.shortName}</div>
@@ -330,7 +338,7 @@ export default function BridgePage() {
                     }}
                     className="w-full p-4 flex items-center gap-3 hover:bg-surface-elevated transition-colors border-b border-border-subtle last:border-b-0"
                   >
-                    <div className="text-2xl">{chain.icon}</div>
+                    <chain.Icon size={28} className="text-foreground" />
                     <div className="text-left">
                       <div className="font-medium text-foreground">{chain.name}</div>
                       <div className="text-sm text-text-tertiary">{chain.shortName}</div>
@@ -461,9 +469,9 @@ export default function BridgePage() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{tx.from.icon}</span>
+                      <tx.from.Icon size={20} className="text-foreground" />
                       <ArrowDownUp className="w-4 h-4 text-text-tertiary" />
-                      <span className="text-lg">{tx.to.icon}</span>
+                      <tx.to.Icon size={20} className="text-foreground" />
                       <span className="font-semibold text-foreground">{tx.amount} FBT</span>
                     </div>
                     <div
