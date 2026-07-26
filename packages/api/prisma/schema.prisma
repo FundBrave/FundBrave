@@ -1,0 +1,220 @@
+// FundBrave MVP schema — see docs/MVP_PLAN.md §5
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users & access ─────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String   @id @default(uuid())
+  privyDid      String   @unique // Privy user id (did:privy:...)
+  email         String   @unique
+  walletAddress String   @unique // Privy embedded wallet address
+  username      String?  @unique
+  displayName   String?
+  avatarUrl     String?
+  bio           String?  @db.Text
+  role          Role     @default(USER)
+  isSuspended   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  campaigns Campaign[]
+  donations Donation[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model WhitelistEntry {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  invitedBy String? // admin user id
+  usedAt    DateTime? // set when the invitee signs up
+  createdAt DateTime  @default(now())
+
+  @@map("whitelist_entries")
+}
+
+// ─── Campaigns ──────────────────────────────────────────────────
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  SUSPENDED
+}
+
+model Campaign {
+  id          String         @id @default(uuid())
+  slug        String         @unique
+  title       String
+  description String         @db.Text
+  category    String
+  goalUsd     Decimal        @db.Decimal(18, 2)
+  raisedUsd   Decimal        @default(0) @db.Decimal(18, 2) // denormalized sum of confirmed donations
+  deadline    DateTime?
+  status      CampaignStatus @default(DRAFT)
+  isFeatured  Boolean        @default(false)
+
+  // Safe 2-of-2 (creator + root admin). Counterfactual address, identical on all supported chains.
+  safeAddress String @unique
+  safeSalt    String // saltNonce used for CREATE2 prediction
+
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id])
+
+  donorsCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  media       CampaignMedia[]
+  donations   Donation[]
+  withdrawals WithdrawalRequest[]
+  deployments SafeDeployment[]
+
+  @@index([status, category])
+  @@index([creatorId])
+  @@map("campaigns")
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model CampaignMedia {
+  id         String    @id @default(uuid())
+  campaignId String
+  campaign   Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  type       MediaType
+  url        String
+  order      Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  @@index([campaignId])
+  @@map("campaign_media")
+}
+
+model SafeDeployment {
+  id         String   @id @default(uuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  chainId    Int
+  txHash     String
+  deployedAt DateTime @default(now())
+
+  @@unique([campaignId, chainId])
+  @@map("safe_deployments")
+}
+
+// ─── Donations ──────────────────────────────────────────────────
+
+enum DonationStatus {
+  DETECTED // seen via webhook/poll, awaiting confirmations
+  CONFIRMED // counted in raisedUsd
+  EXCLUDED // non-allowlisted token; stored but not counted
+}
+
+model Donation {
+  id           String         @id @default(uuid())
+  campaignId   String
+  campaign     Campaign       @relation(fields: [campaignId], references: [id])
+  chainId      Int
+  txHash       String
+  logIndex     Int            @default(-1) // -1 for native transfers
+  tokenAddress String? // null = native token
+  tokenSymbol  String
+  amountRaw    String // integer string in token base units
+  amountUsd    Decimal        @db.Decimal(18, 2) // frozen at receipt
+  priceUsd     Decimal        @db.Decimal(18, 8)
+  donorAddress String
+  donorId      String?
+  donor        User?          @relation(fields: [donorId], references: [id])
+  status       DonationStatus @default(DETECTED)
+  blockNumber  Int
+  createdAt    DateTime       @default(now())
+
+  @@unique([chainId, txHash, logIndex])
+  @@index([campaignId, status])
+  @@index([donorAddress])
+  @@map("donations")
+}
+
+// ─── Withdrawals ────────────────────────────────────────────────
+
+enum WithdrawalStatus {
+  PENDING // creator signed, awaiting admin
+  APPROVED // both signatures collected
+  EXECUTED
+  REJECTED
+  FAILED
+}
+
+model WithdrawalRequest {
+  id               String           @id @default(uuid())
+  campaignId       String
+  campaign         Campaign         @relation(fields: [campaignId], references: [id])
+  chainId          Int
+  tokenAddress     String? // null = native
+  amountRaw        String
+  toAddress        String // creator wallet
+  /** Safe nonce this request was built against (signatures bind to it) */
+  nonce            Int              @default(0)
+  safeTxHash       String?
+  creatorSignature String?
+  adminSignature   String?
+  execTxHash       String?
+  deployTxHash     String? // set when the Safe had to be deployed first
+  status           WithdrawalStatus @default(PENDING)
+  rejectionReason  String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([campaignId])
+  @@index([status])
+  @@map("withdrawal_requests")
+}
+
+// ─── Infrastructure ─────────────────────────────────────────────
+
+model TokenPrice {
+  id        String   @id @default(uuid())
+  symbol    String
+  usd       Decimal  @db.Decimal(18, 8)
+  fetchedAt DateTime @default(now())
+
+  @@index([symbol, fetchedAt])
+  @@map("token_prices")
+}
+
+model ChainSyncState {
+  id        String   @id @default(uuid())
+  chainId   Int      @unique
+  lastBlock Int
+  updatedAt DateTime @updatedAt
+
+  @@map("chain_sync_states")
+}
+
+model AdminAuditLog {
+  id        String   @id @default(uuid())
+  adminId   String
+  action    String // e.g. WHITELIST_ADD, CAMPAIGN_SUSPEND, WITHDRAWAL_APPROVE
+  targetId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
+  @@map("admin_audit_logs")
+}

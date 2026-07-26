@@ -3,12 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/web",
+    "packages/api"
   ],
   "scripts": {
-    "dev": "npm-run-all --parallel dev:*",
-    "dev:frontend": "npm run dev --workspace=fundbrave",
-    "dev:backend": "npm run start:dev --workspace=backend",
+    "dev": "npm run mvp",
+    "mvp": "npm-run-all --parallel mvp:web mvp:api",
+    "mvp:web": "npm run dev --workspace=web",
+    "mvp:api": "npm run start:dev --workspace=api",
+    "mvp:db": "docker compose up -d postgres",
+    "db:push": "npm run prisma:push --workspace=api",
+    "db:migrate": "npm run prisma:migrate --workspace=api",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
